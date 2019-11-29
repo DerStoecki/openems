@@ -3,17 +3,10 @@ package io.openems.edge.controller.temperature.simple;
 import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 
-/*
- * Example JUNit test case
- *
- */
 
 public class TemperatureRelaisActivationControllerTest {
-
-	/*
-	 * Example test method
-	 */
 
 	@Test
 	public void simple() {
@@ -21,4 +14,16 @@ public class TemperatureRelaisActivationControllerTest {
 		assertNotNull(impl);
 	}
 
+	@Test
+	void activate() {
+	}
+
+	@Test
+	void deactivate() {
+	}
+
+	@Test
+	void run() {
+
+	}
 }
