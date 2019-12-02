@@ -87,45 +87,13 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         this.timeToHeatUp = config.heating_Time() * 1000;
 
         try {
-            if (cpm.getComponent(config.primary_Forward_Sensor()) instanceof Thermometer) {
-                this.primaryForward = cpm.getComponent(config.primary_Forward_Sensor());
-            } else {
-                throw new ConfigurationException(config.primary_Forward_Sensor(), "The primary forward sensor " + config.primary_Forward_Sensor() + "Not a (configured) temperature sensor");
-            }
-            if (cpm.getComponent(config.primary_Rewind_Sensor()) instanceof Thermometer) {
-                this.primaryRewind = cpm.getComponent(config.primary_Rewind_Sensor());
-            } else {
-                throw new ConfigurationException(config.primary_Rewind_Sensor(), "The primary rewind sensor " + config.primary_Rewind_Sensor() + "Not a (configured) temperature sensor");
-            }
-            if (cpm.getComponent(config.secundary_Forward_Sensor()) instanceof Thermometer) {
-                this.secundaryForward = cpm.getComponent(config.secundary_Forward_Sensor());
-            } else {
-                throw new ConfigurationException(config.secundary_Forward_Sensor(), "The secundary forward sensor " + config.secundary_Forward_Sensor() + "Not a (configured) temperature sensor");
-            }
-            if (cpm.getComponent(config.secundary_Rewind_Sensor()) instanceof Thermometer) {
-                this.secundaryRewind = cpm.getComponent(config.secundary_Rewind_Sensor());
-            } else {
-                throw new ConfigurationException(config.secundary_Rewind_Sensor(), "The secundary rewind sensor " + config.secundary_Rewind_Sensor() + "Not a (configured) temperature sensor");
-            }
-
-            if (cpm.getComponent(config.pump_id()) instanceof RelaisActuator) {
-                this.pump = cpm.getComponent(config.pump_id());
-            } else {
-                throw new ConfigurationException(config.pump_id(), "The relais Id " + config.pump_id() + "Not a (configured) relais");
-            }
-
-            if (cpm.getComponent(config.valve_Open_Relais()) instanceof RelaisActuator) {
-                this.valveOpen = cpm.getComponent(config.valve_Open_Relais());
-            } else {
-                throw new ConfigurationException(config.valve_Open_Relais(), "The relais Id " + config.valve_Open_Relais() + "Not a (configured) relais");
-            }
-
-            if (cpm.getComponent(config.valve_Close_Relais()) instanceof RelaisActuator) {
-                this.valveClose = cpm.getComponent(config.valve_Close_Relais());
-            } else {
-                throw new ConfigurationException(config.pump_id(), "The relais Id " + config.valve_Close_Relais() + "Not a (configured) relais");
-            }
-
+            allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
+            allocate_Component(config.primary_Rewind_Sensor(), "Thermometer", "PR");
+            allocate_Component(config.secundary_Forward_Sensor(), "Thermometer", "SF");
+            allocate_Component(config.secundary_Rewind_Sensor(), "Thermometer", "SR");
+            allocate_Component(config.pump_id(), "Relais", "Pump");
+            allocate_Component(config.valve_Open_Relais(), "Relais", "Open");
+            allocate_Component(config.valve_Close_Relais(), "Relais", "Close");
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
         }
@@ -158,22 +126,18 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     } else {
                         return;
                     }
-
                 }
-                if (primaryForward.getTemperature().getNextValue().get()
-                        >= this.getMinTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE) {
+                if (primaryForwardReadyToHeat()) {
 
                     timeSetHeating = false;
 
                     controlRelais(true, "Pump");
-                    if (!tooHot()) {
-                        return;
-                    } else {
+
+                    if (tooHot()) {
                         controlRelais(false, "Pump");
                         noError = false;
                         throw new NoHeatNeededException("Heat is not needed; Shutting down pump and Valves");
                     }
-
 
                 } else {
                     if (isOpen && !timeSetHeating) {
@@ -214,6 +178,55 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 }
             }
         }
+    }
+
+    private boolean primaryForwardReadyToHeat() {
+        return primaryForward.getTemperature().getNextValue().get()
+                >= this.getMinTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE;
+    }
+
+    private void allocate_Component(String id, String type, String exactType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        if (type.equals("Thermometer")) {
+            if (cpm.getComponent(id) instanceof Thermometer) {
+                Thermometer th = cpm.getComponent(id);
+                switch (exactType) {
+                    case "PF":
+                        this.primaryForward = th;
+                        break;
+                    case "PR":
+                        this.primaryRewind = th;
+                        break;
+                    case "SF":
+                        this.secundaryForward = th;
+                        break;
+                    case "SR":
+                        this.secundaryRewind = th;
+                        break;
+                }
+            } else {
+                throw new ConfigurationException(id, "The temperaturesensor " + id + "Not a (configured) temperature sensor.");
+            }
+
+        } else if (type.equals("Relais")) {
+            if (cpm.getComponent(id) instanceof RelaisActuator) {
+                RelaisActuator r = cpm.getComponent(id);
+                switch (exactType) {
+                    case "Pump":
+                        this.pump = r;
+                        break;
+                    case "Open":
+                        this.valveOpen = r;
+                        break;
+                    case "Close":
+                        this.valveClose = r;
+                        break;
+                }
+
+            } else {
+                throw new ConfigurationException(id, "The Relais" + id + "Not a (configured) relais.");
+            }
+        }
+
     }
 
     @Override

@@ -29,7 +29,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     private long timeSet;
     private boolean waitingTimeSet = false;
     //2 Seconds in Miliseconds
-    private int buffer = 2 * 1000;
+    private static int BUFFER = 2 * 1000;
 
     public ControllerOverseerImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
@@ -103,7 +103,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
                 timeSet = System.currentTimeMillis();
                 waitingTimeSet = true;
             }
-            if (System.currentTimeMillis() - timeSet > waitingTimeValveToClose + buffer) {
+            if (System.currentTimeMillis() - timeSet > waitingTimeValveToClose + BUFFER) {
                 changeRelaisValue(false);
             }
 

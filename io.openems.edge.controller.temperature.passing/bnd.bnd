@@ -20,6 +20,11 @@ Private-Package:  \
 	io.openems.edge.controller.temperature.passing.api;version=latest,\
 	io.openems.edge.relais.api;version=latest,\
 	io.openems.edge.thermometer.api;version=latest,\
+	org.mockito.mockito-all,\
+	org.mockito.mockito-core,\
+	org.junit.jupiter,\
+	org.apache.sling.testing.osgi-mock.junit5,\
+	io.wcm.testing.aem-mock.junit5,\
 
 
 -testpath: \
