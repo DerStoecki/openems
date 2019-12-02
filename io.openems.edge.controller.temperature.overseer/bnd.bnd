@@ -1,23 +1,25 @@
-#
-# io.openems.edge.controller.temperature.overseer PROVIDER BUNDLE
-#
+Bundle-Name: OpenEMS Edge Controller Temperature Overseer
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 
-Bundle-Version:					1.0.0.${tstamp}
-Bundle-Description: \
-	The provider bundle for io.openems.edge.controller.temperature.overseer. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.controller.temperature.overseer/api.bnd}
 
 Export-Package:  \
-	io.openems.edge.controller.temperature.overseer.api;-provide=true
+	io.openems.edge.controller.temperature.overseer,\
 
 Private-Package:  \
-	io.openems.edge.controller.temperature.overseer
+	io.openems.edge.controller.temperature.overseer,\
 
 -includeresource: {readme.md}
 
 -buildpath:  \
-	osgi.enroute.base.api;version=2.1
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.controller.api;version=latest,\
+	io.openems.edge.controller.temperature.passing.api;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.common;version=latest,\
+	io.openems.edge.relais.api;version=latest,\
+	io.openems.edge.thermometer.api;version=latest,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \

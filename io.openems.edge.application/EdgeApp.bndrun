@@ -63,6 +63,8 @@
 	bnd.identity;id='io.openems.edge.controller.symmetric.peakshaving',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.randompower',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.reactivepowervoltagecharacteristic',\
+	bnd.identity;id='io.openems.edge.controller.temperature.overseer',\
+	bnd.identity;id='io.openems.edge.controller.temperature.passing',\
 	bnd.identity;id='io.openems.edge.controller.temperature.simple',\
 	bnd.identity;id='io.openems.edge.core',\
 	bnd.identity;id='io.openems.edge.ess.byd.container',\
@@ -177,6 +179,8 @@
 	io.openems.edge.controller.symmetric.peakshaving;version=snapshot,\
 	io.openems.edge.controller.symmetric.randompower;version=snapshot,\
 	io.openems.edge.controller.symmetric.reactivepowervoltagecharacteristic;version=snapshot,\
+	io.openems.edge.controller.temperature.passing;version=snapshot,\
+	io.openems.edge.controller.temperature.overseer;version=snapshot,\
 	io.openems.edge.controller.temperature.simple;version=snapshot,\
 	io.openems.edge.core;version=snapshot,\
 	io.openems.edge.ess.byd.container;version=snapshot,\

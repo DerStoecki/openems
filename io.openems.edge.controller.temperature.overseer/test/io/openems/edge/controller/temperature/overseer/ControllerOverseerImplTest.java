@@ -1,4 +1,4 @@
-package io.openems.edge.controller.temperature.passing.api;
+package io.openems.edge.controller.temperature.overseer;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -9,7 +9,7 @@ import org.junit.Test;
  *
  */
 
-public class ControllerPassingChannelTest {
+public class ControllerOverseerImplTest {
 
 	/*
 	 * Example test method
@@ -17,7 +17,7 @@ public class ControllerPassingChannelTest {
 
 	@Test
 	public void simple() {
-		ControllerPassingChannel impl = new ControllerPassingChannel();
+		ControllerOverseerImpl impl = new ControllerOverseerImpl();
 		assertNotNull(impl);
 	}
 

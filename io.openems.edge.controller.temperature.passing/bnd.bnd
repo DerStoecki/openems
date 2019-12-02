@@ -14,12 +14,12 @@ Private-Package:  \
 
 -buildpath:  \
 	osgi.enroute.base.api;version=2.1,\
-	io.openems.edge.thermometer.api;version=latest,\
-	io.openems.edge.relais.api;version=latest,\
-	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	io.openems.edge.controller.temperature.passing.api;version=latest,\
+	io.openems.edge.common;version=latest,\
 	io.openems.edge.controller.api;version=latest,\
+	io.openems.edge.controller.temperature.passing.api;version=latest,\
+	io.openems.edge.relais.api;version=latest,\
+	io.openems.edge.thermometer.api;version=latest,\
 
 
 -testpath: \
