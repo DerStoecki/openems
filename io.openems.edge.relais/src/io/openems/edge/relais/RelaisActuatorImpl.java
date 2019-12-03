@@ -42,7 +42,7 @@ public class RelaisActuatorImpl extends AbstractOpenemsComponent implements Actu
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         allocateRelaisValue(config.relaisType());
-
+        this.isCloser().setNextValue(relaisValue);
         if (cpm.getComponent(config.relaisBoard_id()) instanceof RelaisBoard) {
             RelaisBoard relaisBoard = cpm.getComponent(config.relaisBoard_id());
             if (relaisBoard.getId().equals(config.relaisBoard_id())) {
@@ -67,11 +67,11 @@ public class RelaisActuatorImpl extends AbstractOpenemsComponent implements Actu
             case "Closer":
             case "Reverse":
                 this.relaisValue = true;
-                this.isCloser().setNextValue(true);
+
                 break;
             default:
                 this.relaisValue = false;
-                this.isCloser().setNextValue(true);
+
         }
     }
 

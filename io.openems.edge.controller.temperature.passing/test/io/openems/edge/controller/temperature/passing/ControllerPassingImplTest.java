@@ -1,18 +1,18 @@
 package io.openems.edge.controller.temperature.passing;
 
 import io.openems.common.exceptions.OpenemsError;
+import io.openems.common.types.ChannelAddress;
 import io.openems.edge.common.test.AbstractComponentConfig;
 import io.openems.edge.common.test.DummyComponentManager;
-import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.controller.test.ControllerTest;
 import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.relais.api.test.DummyRelais;
 import io.openems.edge.thermometer.api.Thermometer;
+import io.openems.edge.thermometer.api.test.DummyThermometer;
 import org.junit.Before;
-
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import io.openems.edge.common.test.AbstractComponentTest.TestCase;
 
 
 public class ControllerPassingImplTest {
@@ -98,7 +98,6 @@ public class ControllerPassingImplTest {
 
     private static ControllerPassingImpl passing;
     private static DummyComponentManager cpm;
-    private ControllerPassingChannel ch;
     private Thermometer primaryForward;
     private Thermometer primaryRewind;
     private Thermometer secundaryForward;
@@ -107,21 +106,60 @@ public class ControllerPassingImplTest {
     private ActuatorRelaisChannel valveOpen;
     private ActuatorRelaisChannel valveClose;
     private MyConfig config;
+    private ChannelAddress pF;
+    private ChannelAddress pR;
+    private ChannelAddress sF;
+    private ChannelAddress sR;
+    private ChannelAddress p;
+    private ChannelAddress pO;
+    private ChannelAddress vO;
+    private ChannelAddress vOC;
+    private ChannelAddress vC;
+    private ChannelAddress vCc;
 
     @Before
     public void setUp() throws Exception {
         passing = new ControllerPassingImpl();
         cpm = new DummyComponentManager();
-        passing.cpm = this.cpm;
-
-
-
-        ch = mock(ControllerPassingChannel.class);
+        passing.cpm = cpm;
 
         config = new MyConfig("ControllerPassing0", "", true, "",
                 "TemperatureSensor0", "TemperatureSensor1",
                 "TemperatureSensor2", "TemperatureSensor3",
                 "Relais0", "Relais1", "Relais2", 500);
+
+        primaryForward = new DummyThermometer(config.primary_Forward_Sensor());
+        primaryRewind = new DummyThermometer(config.primary_Rewind_Sensor());
+        secundaryForward = new DummyThermometer(config.secundary_Forward_Sensor());
+        secundaryRewind = new DummyThermometer(config.secundary_Rewind_Sensor());
+
+        valveOpen = new DummyRelais(config.valve_Open_Relais());
+        valveClose = new DummyRelais(config.valve_Close_Relais());
+        pump = new DummyRelais(config.pump_id());
+
+        pF = new ChannelAddress(config.primary_Forward_Sensor(), "Temperature");
+        pR = new ChannelAddress(config.primary_Rewind_Sensor(), "Temperature");
+        sF = new ChannelAddress(config.secundary_Forward_Sensor(), "Temperature");
+        sR = new ChannelAddress(config.secundary_Rewind_Sensor(), "Temperature");
+
+        vO = new ChannelAddress(config.valve_Open_Relais(), "OnOff");
+        vOC = new ChannelAddress(config.valve_Open_Relais(), "IsCloser");
+
+        vC = new ChannelAddress(config.valve_Close_Relais(), "OnOff");
+        vCc = new ChannelAddress(config.valve_Close_Relais(), "IsCloser");
+
+        p = new ChannelAddress(config.pump_id(), "OnOff");
+        pO = new ChannelAddress(config.pump_id(), "IsCloser");
+
+        cpm.addComponent(primaryForward);
+        cpm.addComponent(primaryRewind);
+        cpm.addComponent(secundaryForward);
+        cpm.addComponent(secundaryRewind);
+        cpm.addComponent(valveOpen);
+        cpm.addComponent(valveClose);
+        cpm.addComponent(pump);
+
+
     }
 
     /*	6 TestCases
@@ -137,11 +175,30 @@ public class ControllerPassingImplTest {
      */
 
     @Test
-    public void testEverythingsFine() throws OpenemsError.OpenemsNamedException {
-        passing.run();
-        when(passing.getOnOff_PassingController().getNextValue().get()).thenReturn(true);
-        when(passing.getMinTemperature().value().isDefined()).thenReturn(true);
-        when(this.valveOpen.isCloser().value().get()).thenReturn(true);
+    public void testEverythingsFine() throws Exception {
+        primaryRewind.getTemperature().setNextValue(200);
+        passing.activate(null, config);
+        passing.activate(null, config);
+        passing.getMinTemperature().setNextValue(500);
+        passing.getOnOff_PassingController().setNextWriteValue(true);
+
+        new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
+                secundaryRewind, valveOpen, valveClose, pump, passing).next(
+                        new TestCase()
+                .input(pF, 700)
+                .input(pR, 400)
+                .input(sF, 650)
+                .input(sR, 500)
+                .input(vO, false)
+                .input(vOC, true)
+                .input(vC, false)
+                .input(vCc, true)
+                .input(p, false)
+                .input(pO, true)
+                .output(vC, false)
+                .output(vO, false)
+        ).run();
+
 
     }
 
@@ -152,6 +209,11 @@ public class ControllerPassingImplTest {
 
     @Test(expected = io.openems.common.exceptions.HeatToLowException.class)
     public void testHeatToLow() throws Exception {
+    }
+
+    @Test(expected = io.openems.common.exceptions.ValveDefectException.class)
+    public void testValveDefect() throws Exception {
+
     }
 
     @Test(expected = ConfigurationException.class)
