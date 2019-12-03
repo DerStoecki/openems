@@ -112,7 +112,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
-        if (noError && this.getOnOff_PassingController().getNextValue().get() && this.getMinTemperature().value().isDefined()) {
+        if (noError && this.getOnOff_PassingController().getNextValue().get() && this.getMinTemperature().getNextValue().isDefined()) {
             try {
                 if (!isOpen) {
                     if (valveOpen()) {
@@ -160,12 +160,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 }
 
             } catch (ValveDefectException | HeatToLowException | NoHeatNeededException e) {
-                e.printStackTrace();
-
-            } finally {
-                //just in case if error accures while is opening
                 controlRelais(false, "Open");
                 valveClose();
+                e.printStackTrace();
+
+
             }
         } else {
             valveClose();
