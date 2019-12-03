@@ -35,10 +35,11 @@ public class ControllerPassingImplTest {
         private final String valve_Close_Relais;
         private final String pump_id;
         private final int heating_Time;
+        private final int valveTime;
 
 
         public MyConfig(String id, String alias, boolean enabled, String service_pid, String primary_Forward_Sensor, String primary_Rewind_Sensor, String secundary_Forward_Sensor, String secundary_Rewind_Sensor, String valve_Open_Relais,
-                        String valve_Close_Relais, String pump_id, int heating_Time) {
+                        String valve_Close_Relais, String pump_id, int heating_Time, int valveTime) {
             super(Config.class, id);
             this.id = id;
             this.alias = alias;
@@ -52,6 +53,7 @@ public class ControllerPassingImplTest {
             this.valve_Close_Relais = valve_Close_Relais;
             this.pump_id = pump_id;
             this.heating_Time = heating_Time;
+            this.valveTime = valveTime;
         }
 
         @Override
@@ -98,6 +100,11 @@ public class ControllerPassingImplTest {
         public int heating_Time() {
             return this.heating_Time;
         }
+
+        @Override
+        public int valve_Time() {
+            return this.valveTime;
+        }
     }
 
     private static ControllerPassingImpl passing;
@@ -130,7 +137,7 @@ public class ControllerPassingImplTest {
         config = new MyConfig("ControllerPassing0", "", true, "",
                 "TemperatureSensor0", "TemperatureSensor1",
                 "TemperatureSensor2", "TemperatureSensor3",
-                "Relais0", "Relais1", "Relais2", 500);
+                "Relais0", "Relais1", "Relais2", 500, 1);
 
         primaryForward = new DummyThermometer(config.primary_Forward_Sensor());
         primaryRewind = new DummyThermometer(config.primary_Rewind_Sensor());
@@ -202,9 +209,9 @@ public class ControllerPassingImplTest {
                             .input(pO, true)
             );
             int count = 0;
-            while (count < 3) {
+            while (count < 2) {
                 controllerTest.run();
-                Thread.sleep(10_000);
+                Thread.sleep(1000);
                 count++;
             }
         }catch (Exception e) {

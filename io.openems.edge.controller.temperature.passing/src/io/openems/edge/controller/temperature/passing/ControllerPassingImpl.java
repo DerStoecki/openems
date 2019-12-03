@@ -58,7 +58,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private static int ROUND_ABOUT_TEMP = 20;
     //30 seconds * 1000 = 30 000 mS
 
-    private static int TIME_VALVE_NEEDS_TO_OPEN_AND_CLOSE = 30 * 1000;
+    private int timeValveNeedsToOpenAndClose;
     //ty
     private long timeStampHeating;
     //tx
@@ -85,6 +85,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             this.timeToHeatUp = 5 * 60 * 1000;
         }
         this.timeToHeatUp = config.heating_Time() * 1000;
+
+        this.timeValveNeedsToOpenAndClose = config.valve_Time() * 1000;
 
         try {
             allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
@@ -230,7 +232,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     @Override
     public boolean readyToChangeValve() {
-        return System.currentTimeMillis() - timeStampValve > TIME_VALVE_NEEDS_TO_OPEN_AND_CLOSE + this.extraBufferTime;
+        return System.currentTimeMillis() - timeStampValve > timeValveNeedsToOpenAndClose + this.extraBufferTime;
     }
 
     private boolean valveOpen() {
@@ -304,7 +306,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     @Override
     public int getTimeValveNeedsToOpenAndClose() {
-        return TIME_VALVE_NEEDS_TO_OPEN_AND_CLOSE;
+        return timeValveNeedsToOpenAndClose;
     }
 
     @Override

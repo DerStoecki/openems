@@ -41,6 +41,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Heating Time", description = "The Time needed to heat up the Primary Forward (t in seconds).")
     int heating_Time() default 50;
 
+    @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds)")
+    int valve_Time() default 30;
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Gaspedal [{id}]";
