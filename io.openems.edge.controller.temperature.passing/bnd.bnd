@@ -22,12 +22,11 @@ Private-Package:  \
 	io.openems.edge.thermometer.api;version=latest,\
 	org.mockito.mockito-all,\
 	org.mockito.mockito-core,\
-	org.junit.jupiter,\
-	org.apache.sling.testing.osgi-mock.junit5,\
-	io.wcm.testing.aem-mock.junit5,\
+    org.apache.sling.testing.osgi-mock.junit4;version=2.4.0,\
+
 
 
 -testpath: \
-	osgi.enroute.junit.wrapper;version=4.12, \
+    osgi.enroute.junit.wrapper;version=4.12, \
 	osgi.enroute.hamcrest.wrapper;version=1.3
 

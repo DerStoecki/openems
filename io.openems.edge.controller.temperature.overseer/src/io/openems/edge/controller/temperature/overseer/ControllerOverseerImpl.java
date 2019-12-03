@@ -6,7 +6,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassing;
-import io.openems.edge.relais.api.RelaisActuator;
+import io.openems.edge.relais.api.ActuatorRelaisChannel;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -21,7 +21,7 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "TemperatureControllerOverseer")
 public class ControllerOverseerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
-    private RelaisActuator closeValve;
+    private ActuatorRelaisChannel closeValve;
     private ControllerPassing passing;
     private Thermometer temperatureSensor;
     private int tolerance;
@@ -119,12 +119,14 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
     private void changeRelaisValue(boolean closer) {
         try {
-            if (this.closeValve.isCloser()) {
-                this.closeValve.getRelaisChannelValue().setNextWriteValue(closer);
+            if (this.closeValve.isCloser().value().get()) {
+                this.closeValve.getRelaisChannel().setNextWriteValue(closer);
             } else {
-                this.closeValve.getRelaisChannelValue().setNextWriteValue(!closer);
+                this.closeValve.getRelaisChannel().setNextWriteValue(!closer);
             }
-        } catch (OpenemsError.OpenemsNamedException e) {
+
+        } catch (
+                OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
     }

@@ -2,7 +2,7 @@ package io.openems.edge.controller.temperature.passing.api;
 
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.WriteChannel;
-import io.openems.edge.relais.api.RelaisActuator;
+import io.openems.edge.relais.api.ActuatorRelaisChannel;
 
 public interface ControllerPassing {
 
@@ -12,7 +12,7 @@ public interface ControllerPassing {
 
     void controlRelais(boolean activate, String whichRelais);
 
-    RelaisActuator getValveClose();
+    ActuatorRelaisChannel getValveClose();
 
     int getTimeValveNeedsToOpenAndClose();
 

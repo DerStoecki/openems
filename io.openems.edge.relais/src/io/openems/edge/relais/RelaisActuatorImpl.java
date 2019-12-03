@@ -1,12 +1,10 @@
 package io.openems.edge.relais;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.relais.api.ActuatorRelaisChannel;
-import io.openems.edge.relais.api.RelaisActuator;
 import io.openems.edge.relais.board.RelaisBoard;
 import io.openems.edge.relais.board.api.Mcp;
 
@@ -25,7 +23,7 @@ import java.util.Optional;
 @Component(name = "ConsolinnoRelais",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
-public class RelaisActuatorImpl extends AbstractOpenemsComponent implements ActuatorRelaisChannel, OpenemsComponent, RelaisActuator {
+public class RelaisActuatorImpl extends AbstractOpenemsComponent implements ActuatorRelaisChannel, OpenemsComponent {
 
     private Mcp allocatedMcp;
 
@@ -69,9 +67,11 @@ public class RelaisActuatorImpl extends AbstractOpenemsComponent implements Actu
             case "Closer":
             case "Reverse":
                 this.relaisValue = true;
+                this.isCloser().setNextValue(true);
                 break;
             default:
                 this.relaisValue = false;
+                this.isCloser().setNextValue(true);
         }
     }
 
@@ -83,28 +83,13 @@ public class RelaisActuatorImpl extends AbstractOpenemsComponent implements Actu
 
     @Override
     public String debugLog() {
-        if (this.getRelaisChannelValue().getNextWriteValue().isPresent() && !this.getRelaisChannelValue().getNextWriteValue().equals(Optional.empty())) {
-            Optional<Boolean> status = this.getRelaisChannelValue().getNextWriteValue();
+        if (this.getRelaisChannel().getNextWriteValue().isPresent() && !this.getRelaisChannel().getNextWriteValue().equals(Optional.empty())) {
+            Optional<Boolean> status = this.getRelaisChannel().getNextWriteValue();
             return "Status of " + super.id() + " alias: " + super.alias() + " will be " + this.getRelaisChannel().getNextWriteValue();
         } else {
             return "Status of " + super.id() + " alias " + super.alias() + " is " + this.getRelaisChannel().value().get();
         }
     }
 
-    //For Controller
-    @Override
-    public WriteChannel<Boolean> getRelaisChannelValue() {
-        return this.getRelaisChannel();
-    }
-
-    @Override
-    public String getRelaisId() {
-        return super.id();
-    }
-
-    @Override
-    public boolean isCloser() {
-        return this.relaisValue;
-    }
 
 }

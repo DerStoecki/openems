@@ -12,7 +12,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassing;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
-import io.openems.edge.relais.api.RelaisActuator;
+import io.openems.edge.relais.api.ActuatorRelaisChannel;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -28,15 +28,15 @@ import org.osgi.service.metatype.annotations.Designate;
 public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller, ControllerPassing {
 
     @Reference
-    ComponentManager cpm;
+    protected ComponentManager cpm;
 
     private Thermometer primaryForward;
     private Thermometer primaryRewind;
     private Thermometer secundaryForward;
     private Thermometer secundaryRewind;
-    private RelaisActuator valveOpen;
-    private RelaisActuator valveClose;
-    private RelaisActuator pump;
+    private ActuatorRelaisChannel valveOpen;
+    private ActuatorRelaisChannel valveClose;
+    private ActuatorRelaisChannel pump;
 
     private boolean isOpen = false;
     private boolean isClosed = true;
@@ -208,8 +208,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             }
 
         } else if (type.equals("Relais")) {
-            if (cpm.getComponent(id) instanceof RelaisActuator) {
-                RelaisActuator r = cpm.getComponent(id);
+            if (cpm.getComponent(id) instanceof ActuatorRelaisChannel) {
+                ActuatorRelaisChannel r = cpm.getComponent(id);
                 switch (exactType) {
                     case "Pump":
                         this.pump = r;
@@ -270,25 +270,25 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         try {
             switch (whichRelais) {
                 case "Open":
-                    if (this.valveOpen.isCloser()) {
-                        this.valveOpen.getRelaisChannelValue().setNextWriteValue(activate);
+                    if (this.valveOpen.isCloser().value().get()) {
+                        this.valveOpen.getRelaisChannel().setNextWriteValue(activate);
                     } else {
-                        this.valveOpen.getRelaisChannelValue().setNextWriteValue(!activate);
+                        this.valveOpen.getRelaisChannel().setNextWriteValue(!activate);
                     }
                     break;
                 case "Closed":
-                    if (this.valveClose.isCloser()) {
-                        this.valveClose.getRelaisChannelValue().setNextWriteValue(activate);
+                    if (this.valveClose.isCloser().value().get()) {
+                        this.valveClose.getRelaisChannel().setNextWriteValue(activate);
                     } else {
-                        this.valveClose.getRelaisChannelValue().setNextWriteValue(!activate);
+                        this.valveClose.getRelaisChannel().setNextWriteValue(!activate);
                     }
                     break;
 
                 case "Pump":
-                    if (this.pump.isCloser()) {
-                        this.pump.getRelaisChannelValue().setNextWriteValue(activate);
+                    if (this.pump.isCloser().value().get()) {
+                        this.pump.getRelaisChannel().setNextWriteValue(activate);
                     } else {
-                        this.pump.getRelaisChannelValue().setNextWriteValue(!activate);
+                        this.pump.getRelaisChannel().setNextWriteValue(!activate);
                     }
                     break;
             }
@@ -299,7 +299,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     //For the Overseer if needed
     @Override
-    public RelaisActuator getValveClose() {
+    public ActuatorRelaisChannel getValveClose() {
         return valveClose;
     }
 
