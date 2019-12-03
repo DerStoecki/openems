@@ -72,7 +72,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     }
 
     @Activate
-    void activate(ComponentContext context, Config config) {
+    void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         //just to make sure; (for the Overseer Controller)
         this.noError = true;
@@ -98,6 +98,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             allocate_Component(config.valve_Close_Relais(), "Relais", "Close");
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
+            throw e;
+
         }
         //later for error Handling
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
@@ -124,7 +126,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         } else {
                             return;
                         }
-                        //should only occur once
+                        // should only occur once
                     } else {
                         return;
                     }
@@ -147,7 +149,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         timeSetHeating = true;
                         return;
                     }
-                    if (System.currentTimeMillis() - timeStampHeating > timeToHeatUp + this.extraBufferTime) {
+                    if (shouldBeHeatingByNow()) {
 
                         this.noError = false;
 
@@ -161,13 +163,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     }
                 }
 
-            } catch (ValveDefectException | HeatToLowException | NoHeatNeededException e) {
+            } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
+                this.noError = false;
                 controlRelais(false, "Open");
                 valveClose();
-                e.printStackTrace();
-
-
+                throw e;
             }
+
+
         } else {
             valveClose();
             if (!isClosed) {
@@ -179,6 +182,10 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 }
             }
         }
+    }
+
+    private boolean shouldBeHeatingByNow() {
+        return System.currentTimeMillis() - timeStampHeating > timeToHeatUp + this.extraBufferTime;
     }
 
     private boolean primaryForwardReadyToHeat() {
@@ -261,8 +268,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     }
 
     private boolean tooHot() {
-
-        return this.secundaryRewind.getTemperature().getNextValue().get() - TOLERANCE_TEMPERATURE
+        return this.secundaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
                 > this.secundaryForward.getTemperature().getNextValue().get();
     }
 
