@@ -34,7 +34,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     ComponentManager cpm;
 
     @Activate
-    void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         allocateComponents(config.allocated_Passing_Controller(), config.allocated_Temperature_Sensor());
