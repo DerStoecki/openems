@@ -5,7 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.relais.api.RelaisActuator;
+import io.openems.edge.relais.api.ActuatorRelaisChannel;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -23,7 +23,7 @@ public class TemperatureRelaisActivationController extends AbstractOpenemsCompon
     ComponentManager cpm;
 
     private Thermometer temperatureSensor;
-    private RelaisActuator relaisActuator;
+    private ActuatorRelaisChannel relaisActuator;
     private float toleranceTemperature;
     private float maxTemp;
     private float minTemp;
@@ -41,7 +41,7 @@ public class TemperatureRelaisActivationController extends AbstractOpenemsCompon
         this.maxTemp = config.TemperatureMax();
         this.minTemp = config.TemperatureMin();
 
-        if (cpm.getComponent(config.relaisId()) instanceof RelaisActuator) {
+        if (cpm.getComponent(config.relaisId()) instanceof ActuatorRelaisChannel) {
             this.relaisActuator = cpm.getComponent(config.relaisId());
         }
 
@@ -62,20 +62,20 @@ public class TemperatureRelaisActivationController extends AbstractOpenemsCompon
         int temperature = temperatureSensor.getTemperature().value().get();
         if (temperature + toleranceTemperature < minTemp) {
             //increase Temperature
-            if (relaisActuator.isCloser()) {
+            if (relaisActuator.isCloser().value().get()) {
                 //for warming purposes a closer relais has to be closed --> closed circuit default
-                relaisActuator.getRelaisChannelValue().setNextWriteValue(true);
+                relaisActuator.getRelaisChannel().setNextWriteValue(true);
             } else {
                 //same as above; relais is a opener --> so it has to be deactivated for closed circuit
-                relaisActuator.getRelaisChannelValue().setNextWriteValue(false);
+                relaisActuator.getRelaisChannel().setNextWriteValue(false);
             }
         } else if (temperature - toleranceTemperature > maxTemp) {
-            if (relaisActuator.isCloser()) {
+            if (relaisActuator.isCloser().value().get()) {
                 //logic is Vice Versa here: | | <-- inactive |_| <---active
-                relaisActuator.getRelaisChannelValue().setNextWriteValue(false);
+                relaisActuator.getRelaisChannel().setNextWriteValue(false);
             } else {
                 //inactive --> |_|   active --> | |
-                relaisActuator.getRelaisChannelValue().setNextWriteValue(true);
+                relaisActuator.getRelaisChannel().setNextWriteValue(true);
             }
         }
     }
