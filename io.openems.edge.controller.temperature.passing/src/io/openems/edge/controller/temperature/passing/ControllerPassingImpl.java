@@ -4,13 +4,10 @@ import io.openems.common.exceptions.HeatToLowException;
 import io.openems.common.exceptions.NoHeatNeededException;
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.exceptions.ValveDefectException;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.controller.temperature.passing.api.ControllerPassing;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
 import io.openems.edge.relais.api.ActuatorRelaisChannel;
 import io.openems.edge.thermometer.api.Thermometer;
@@ -25,7 +22,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "TemperatureControllerPassing ")
-public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller, ControllerPassing {
+public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller {
 
     @Reference
     protected ComponentManager cpm;
@@ -44,7 +41,6 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private boolean closing = false;
 
     private boolean timeSetHeating = false;
-    private boolean noError = true;
 
 
     //for Tpv> minTemp + toleranceTemp
@@ -75,18 +71,19 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         //just to make sure; (for the Overseer Controller)
-        this.noError = true;
+        this.noError().setNextValue(true);
         this.isOpen = false;
         this.opens = false;
         this.isClosed = true;
         this.closing = false;
         //if user doesn't know ; default == 5 min
         if (config.heating_Time() == 0) {
-            this.timeToHeatUp = 5 * 60 * 1000;
+            this.timeToHeatUp = 5 * 1000;
         }
         this.timeToHeatUp = config.heating_Time() * 1000;
 
         this.timeValveNeedsToOpenAndClose = config.valve_Time() * 1000;
+        this.valveTime().setNextValue(config.valve_Time());
 
         try {
             allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
@@ -110,13 +107,15 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     @Deactivate
     public void deactivate() {
         this.getOnOff_PassingController().setNextValue(false);
+        controlRelais(false, "Open");
+        controlRelais(true, "Closed");
         super.deactivate();
     }
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
-        if (noError && this.getOnOff_PassingController().getNextValue().get() && this.getMinTemperature().getNextValue().isDefined()) {
+        if (this.noError().getNextValue().get() && this.getOnOff_PassingController().getNextValue().get() && this.getMinTemperature().getNextValue().isDefined()) {
             try {
                 if (!isOpen) {
                     if (valveOpen()) {
@@ -139,7 +138,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                     if (tooHot()) {
                         controlRelais(false, "Pump");
-                        noError = false;
+                        this.noError().setNextValue(false);
                         throw new NoHeatNeededException("Heat is not needed; Shutting down pump and Valves");
                     }
 
@@ -151,7 +150,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     }
                     if (shouldBeHeatingByNow()) {
 
-                        this.noError = false;
+                        this.noError().setNextValue(false);
 
                         if (Math.abs(primaryRewind.getTemperature().getNextValue().get() - startingTemperature) <= ROUND_ABOUT_TEMP) {
                             throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
@@ -164,7 +163,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 }
 
             } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
-                this.noError = false;
+                this.noError().setNextValue(false);
                 controlRelais(false, "Open");
                 valveClose();
                 throw e;
@@ -237,15 +236,15 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     }
 
-    @Override
-    public boolean readyToChangeValve() {
-        return System.currentTimeMillis() - timeStampValve > timeValveNeedsToOpenAndClose + this.extraBufferTime;
+    private boolean readyToChangeValve() {
+        return ((System.currentTimeMillis() - timeStampValve) > (timeValveNeedsToOpenAndClose + this.extraBufferTime));
     }
 
     private boolean valveOpen() {
         //opens will be set true when closing is done
         if (!opens) {
             controlRelais(true, "Open");
+            isOpen = false;
             isClosed = false;
             closing = false;
             opens = true;
@@ -255,10 +254,10 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         return true;
     }
 
-    @Override
-    public void valveClose() {
+    private void valveClose() {
         if (!closing) {
             controlRelais(true, "Closed");
+            isClosed = false;
             isOpen = false;
             opens = false;
             closing = true;
@@ -272,8 +271,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 > this.secundaryForward.getTemperature().getNextValue().get();
     }
 
-    @Override
-    public void controlRelais(boolean activate, String whichRelais) {
+    private void controlRelais(boolean activate, String whichRelais) {
         try {
             switch (whichRelais) {
                 case "Open":
@@ -304,42 +302,4 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         }
     }
 
-    //For the Overseer if needed
-    @Override
-    public ActuatorRelaisChannel getValveClose() {
-        return valveClose;
-    }
-
-    @Override
-    public int getTimeValveNeedsToOpenAndClose() {
-        return timeValveNeedsToOpenAndClose;
-    }
-
-    @Override
-    public long getTimeStampValve() {
-        return timeStampValve;
-    }
-
-    @Override
-    public boolean isNoError() {
-        return noError;
-    }
-
-    @Override
-    public boolean isActive() {
-        if (this.getOnOff_PassingController().value().isDefined()) {
-            return this.getOnOff_PassingController().getNextValue().get();
-        }
-        return false;
-    }
-
-    @Override
-    public WriteChannel<Boolean> onOrOffChannel() {
-        return this.getOnOff_PassingController();
-    }
-
-    @Override
-    public Channel<Integer> minTemperature() {
-        return this.getMinTemperature();
-    }
 }

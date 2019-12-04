@@ -34,8 +34,8 @@ public class ControllerPassingImplTest {
         private  String valve_Open_Relais;
         private final String valve_Close_Relais;
         private final String pump_id;
-        private final int heating_Time;
-        private final int valveTime;
+        private int heating_Time;
+        private int valveTime;
 
 
         public MyConfig(String id, String alias, boolean enabled, String service_pid, String primary_Forward_Sensor, String primary_Rewind_Sensor, String secundary_Forward_Sensor, String secundary_Rewind_Sensor, String valve_Open_Relais,
@@ -180,15 +180,16 @@ public class ControllerPassingImplTest {
 
     }
 
-    /*	6 TestCases
+    /*	7 TestCases
 
-     * 1. Everythings working fine
-     * 2. Too Hot --> Everythings fine Except T SR + Buffer >0 T SF
-     * 3. Valve Defect Exception
-     * 4. Heat To Low
-     * 5. Configuration Exception
-     * 5.1 Configuration Exception Thermometer
-     * 5.2 Configuration Exception Relais
+     * 1. Everythings working fine On
+       2. Everythings working fine first On then off
+     * 3. Too Hot --> Everythings fine Except T SR + Buffer >0 T SF
+     * 4. Valve Defect Exception
+     * 5. Heat To Low
+     * 6. Configuration Exception
+     * 6.1 Configuration Exception Thermometer
+     * 6.2 Configuration Exception Relais
      *
      */
 
@@ -224,6 +225,88 @@ public class ControllerPassingImplTest {
         }catch (Exception e) {
             fail();
         }
+        passing.deactivate();
+        //Bc of waiting time outputs can't be controlled, but as long no exception is thrown everythings fine
+        Assert.assertTrue(true);
+
+
+    }
+
+    @Test
+    public void testEverythingsFineOnRelaisOpener() {
+        try {
+            primaryRewind.getTemperature().setNextValue(200);
+            passing.activate(null, config);
+            passing.activate(null, config);
+            passing.getMinTemperature().setNextValue(500);
+            passing.getOnOff_PassingController().setNextValue(true);
+
+            AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
+                    secundaryRewind, valveOpen, valveClose, pump, passing).next(
+                    new TestCase()
+                            .input(pF, 700)
+                            .input(pR, 400)
+                            .input(sF, 650)
+                            .input(sR, 500)
+                            .input(vO, false)
+                            .input(vOC, false)
+                            .input(vC, false)
+                            .input(vCc, false)
+                            .input(p, false)
+                            .input(pO, false)
+            );
+            int count = 0;
+            while (count < 2) {
+                controllerTest.run();
+                Thread.sleep(1000);
+                count++;
+            }
+        }catch (Exception e) {
+            fail();
+        }
+        passing.deactivate();
+        //Bc of waiting time outputs can't be controlled, but as long no exception is thrown everythings fine
+        Assert.assertTrue(true);
+
+
+    }
+
+
+    @Test
+    public void testEverythingsFineOffWithWaitingTime() {
+        try {
+            config.valveTime = 10;
+            config.heating_Time = 0;
+            primaryRewind.getTemperature().setNextValue(200);
+            passing.activate(null, config);
+            passing.activate(null, config);
+            passing.getMinTemperature().setNextValue(500);
+            passing.getOnOff_PassingController().setNextValue(false);
+
+            AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
+                    secundaryRewind, valveOpen, valveClose, pump, passing).next(
+                    new TestCase()
+                            .input(pF, 700)
+                            .input(pR, 400)
+                            .input(sF, 650)
+                            .input(sR, 500)
+                            .input(vO, false)
+                            .input(vOC, true)
+                            .input(vC, false)
+                            .input(vCc, true)
+                            .input(p, false)
+                            .input(pO, true)
+            );
+            int count = 0;
+            while (count < 20) {
+                controllerTest.run();
+                Thread.sleep(1000);
+                count++;
+            }
+        }catch (Exception e) {
+            fail();
+        }
+        passing.deactivate();
         //Bc of waiting time outputs can't be controlled, but as long no exception is thrown everythings fine
         Assert.assertTrue(true);
 
@@ -299,6 +382,37 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
+
+    }
+
+    @Test(expected = io.openems.common.exceptions.NoHeatNeededException.class)
+    public void testTooHotPumpOpener() throws Exception {
+        primaryRewind.getTemperature().setNextValue(200);
+        passing.activate(null, config);
+        passing.activate(null, config);
+        passing.getMinTemperature().setNextValue(500);
+        passing.getOnOff_PassingController().setNextValue(true);
+
+        AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
+                secundaryRewind, valveOpen, valveClose, pump, passing).next(
+                new TestCase()
+                        .input(pF, 900)
+                        .input(pR, 800)
+                        .input(sF, 650)
+                        .input(sR, 650)
+                        .input(vO, false)
+                        .input(vOC, true)
+                        .input(vC, false)
+                        .input(vCc, true)
+                        .input(p, false)
+                        .input(pO, false)
+        );
+        int count = 0;
+        while (count < 6) {
+            controllerTest.run();
+            Thread.sleep(1000);
+            count++;
+        }
 
     }
 

@@ -10,6 +10,7 @@ import io.openems.edge.common.channel.StateChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.modbusslave.ModbusSlaveNatureTable;
 import io.openems.edge.common.modbusslave.ModbusType;
+import org.osgi.service.cm.ConfigurationException;
 
 @ProviderType
 public interface Controller extends OpenemsComponent {

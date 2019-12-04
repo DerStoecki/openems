@@ -1,12 +1,12 @@
 package io.openems.edge.controller.temperature.overseer;
 
 import io.openems.common.exceptions.OpenemsError;
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.controller.temperature.passing.api.ControllerPassing;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -21,15 +21,10 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "TemperatureControllerOverseer")
 public class ControllerOverseerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
-    private ActuatorRelaisChannel closeValve;
-    private ControllerPassing passing;
-    private Thermometer temperatureSensor;
+    protected ControllerPassingChannel passing;
+    protected Thermometer temperatureSensor;
     private int tolerance;
-    private int waitingTimeValveToClose;
-    private long timeSet;
-    private boolean waitingTimeSet = false;
-    //2 Seconds in Miliseconds
-    private static int BUFFER = 2 * 1000;
+    protected int waitingTimeValveToClose;
 
     public ControllerOverseerImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
@@ -39,15 +34,14 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     ComponentManager cpm;
 
     @Activate
-    void activate(ComponentContext context, Config config) {
+    void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         allocateComponents(config.allocated_Passing_Controller(), config.allocated_Temperature_Sensor());
 
-        closeValve = passing.getValveClose();
-        passing.minTemperature().setNextValue(config.min_Temperature());
+        passing.getMinTemperature().setNextValue(config.min_Temperature());
         this.tolerance = config.tolerated_Temperature_Range();
-        this.waitingTimeValveToClose = passing.getTimeValveNeedsToOpenAndClose();
+        this.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
 
     }
 
@@ -56,15 +50,15 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
         super.deactivate();
         try {
-            this.passing.onOrOffChannel().setNextWriteValue(false);
+            this.passing.getOnOff_PassingController().setNextWriteValue(false);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
     }
 
-    private void allocateComponents(String controller, String temperatureSensor) {
+    private void allocateComponents(String controller, String temperatureSensor) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         try {
-            if (cpm.getComponent(controller) instanceof ControllerPassing) {
+            if (cpm.getComponent(controller) instanceof ControllerPassingChannel) {
                 passing = cpm.getComponent(controller);
 
             } else {
@@ -79,55 +73,32 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
             }
         } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
+            throw e;
         }
     }
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
-        if (!heatingReached() && passing.isNoError()) {
-            this.passing.onOrOffChannel().setNextWriteValue(true);
 
-        } else if (passing.isNoError()) {
-            this.passing.onOrOffChannel().setNextWriteValue(false);
-            //shouldnt be needed but code will remain here till it's tested
-            /*
-            passing.valveClose();
-            if (passing.readyToChangeValve()) {
-                passing.controlRelais(false, "Closed");
-            */
+        if (!heatingReached() && passing != null && passing.noError().getNextValue().get()) {
+            this.passing.getOnOff_PassingController().setNextWriteValue(true);
+
+        } else if (heatingReached() && passing.noError().getNextValue().get() && passing != null) {
+            this.passing.getOnOff_PassingController().setNextWriteValue(false);
+
+        } else if (passing != null && !passing.noError().getNextValue().get()) {
+            throw new OpenemsException("The Passing Controller got an Error!");
+
         } else {
-            //deactivate the Relais in this Object; Error Occured
-            if (!waitingTimeSet) {
-                changeRelaisValue(true);
-                timeSet = System.currentTimeMillis();
-                waitingTimeSet = true;
-            }
-            if (System.currentTimeMillis() - timeSet > waitingTimeValveToClose + BUFFER) {
-                changeRelaisValue(false);
-            }
-
-
+            //deactivate the Relais in this Object; Error Occured Or Passing was deactivated bc of reasons
+            throw new RuntimeException("The Allocated Passing Controller is not active, please Check.");
         }
-
     }
+
 
     private boolean heatingReached() {
         return this.temperatureSensor.getTemperature().value().get() + tolerance
-                >= passing.minTemperature().value().get();
-    }
-
-    private void changeRelaisValue(boolean closer) {
-        try {
-            if (this.closeValve.isCloser().value().get()) {
-                this.closeValve.getRelaisChannel().setNextWriteValue(closer);
-            } else {
-                this.closeValve.getRelaisChannel().setNextWriteValue(!closer);
-            }
-
-        } catch (
-                OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-        }
+                >= passing.getMinTemperature().value().get();
     }
 }
