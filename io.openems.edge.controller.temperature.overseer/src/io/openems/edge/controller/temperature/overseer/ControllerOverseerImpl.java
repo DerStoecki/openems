@@ -80,22 +80,16 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
-
-        if (!heatingReached() && passing != null && passing.noError().getNextValue().get()) {
-            this.passing.getOnOff_PassingController().setNextWriteValue(true);
-
-        } else if (heatingReached() && passing.noError().getNextValue().get() && passing != null) {
-            this.passing.getOnOff_PassingController().setNextWriteValue(false);
-
-        } else if (passing != null && !passing.noError().getNextValue().get()) {
-            throw new OpenemsException("The Passing Controller got an Error!");
-
-        } else {
-            //deactivate the Relais in this Object; Error Occured Or Passing was deactivated bc of reasons
+        if (passing == null) {
             throw new RuntimeException("The Allocated Passing Controller is not active, please Check.");
+        } else if (!heatingReached() && passing.noError().getNextValue().get()) {
+            this.passing.getOnOff_PassingController().setNextWriteValue(true);
+        } else if (heatingReached() && passing.noError().getNextValue().get()) {
+            this.passing.getOnOff_PassingController().setNextWriteValue(false);
+        } else {
+            throw new OpenemsException("The Passing Controller got an Error!");
         }
     }
-
 
     private boolean heatingReached() {
         return this.temperatureSensor.getTemperature().value().get() + tolerance
