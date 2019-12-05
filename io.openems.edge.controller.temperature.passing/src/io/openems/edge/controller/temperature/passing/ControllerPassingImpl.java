@@ -107,10 +107,10 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     @Deactivate
     public void deactivate() {
+        super.deactivate();
         this.getOnOff_PassingController().setNextValue(false);
         controlRelais(false, "Open");
         controlRelais(true, "Closed");
-        super.deactivate();
     }
 
     @Override

@@ -34,5 +34,5 @@ import org.osgi.service.metatype.annotations.Option;
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Actuator Relais [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Relais [{id}]";
 }

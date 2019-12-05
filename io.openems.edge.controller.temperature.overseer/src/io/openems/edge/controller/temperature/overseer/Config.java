@@ -30,4 +30,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             String allocated_Temperature_Sensor() default "TemperatureSensor4";
 
     boolean enabled() default true;
+
+    String webconsole_configurationFactory_nameHint() default "Controller Consolinno Overseer [{id}]";
 }
