@@ -63,5 +63,8 @@ public class TemperatureSimulatorPassing extends AbstractOpenemsComponent implem
         this.getTemperature().setNextValue(temperature);
     }
 
-
+    @Override
+    public String debugLog() {
+        return "T:" + this.getTemperature().value().asString();
+    }
 }
