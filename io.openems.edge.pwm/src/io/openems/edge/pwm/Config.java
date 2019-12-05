@@ -35,5 +35,5 @@ import org.osgi.service.metatype.annotations.Option;
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Pwm Module [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Consolinno Pwm Module [{id}]";
 }

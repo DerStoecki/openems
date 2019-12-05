@@ -4,7 +4,7 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "Controller Consolinno  Passing",
+        name = "Controller Consolinno Passing",
         description = "This Controller regulates the Pump and Valves for Heating."
 )
 @interface Config {
@@ -45,7 +45,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     int valve_Time() default 30;
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Gaspedal [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Controller Consolinno Passing [{id}]";
 
 }
 
