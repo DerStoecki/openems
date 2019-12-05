@@ -106,6 +106,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
 
     @Override
     public String debugLog() {
+
         if (bridgeSpi.getTasks().containsKey(super.id())) {
             return "T:" + this.getTemperature().value().asString() + " of TemperatureSensor: " + super.id() + this.alias;
         } else {
