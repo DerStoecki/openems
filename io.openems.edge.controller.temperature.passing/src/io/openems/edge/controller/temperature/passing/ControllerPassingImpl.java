@@ -21,7 +21,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "TemperatureControllerPassing")
+@Component(name = "Temperature.Controller.Passing")
 public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller {
 
     @Reference
@@ -246,6 +246,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         //opens will be set true when closing is done
         if (!opens) {
             controlRelais(true, "Open");
+            controlRelais(false, "Closed");
             isOpen = false;
             isClosed = false;
             closing = false;
@@ -259,6 +260,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private void valveClose() {
         if (!closing) {
             controlRelais(true, "Closed");
+            controlRelais(false, "Open");
+            controlRelais(false, "Pump");
             isClosed = false;
             isOpen = false;
             opens = false;
