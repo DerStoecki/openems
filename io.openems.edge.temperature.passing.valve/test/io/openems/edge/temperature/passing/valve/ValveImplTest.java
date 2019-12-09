@@ -4,14 +4,12 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
-import io.openems.edge.temperature.passing.valve.ProviderImpl;
-
 /*
  * Example JUNit test case
  *
  */
 
-public class ProviderImplTest {
+public class ValveImplTest {
 
 	/*
 	 * Example test method
@@ -19,7 +17,7 @@ public class ProviderImplTest {
 
 	@Test
 	public void simple() {
-		ProviderImpl impl = new ProviderImpl();
+		ValveImpl impl = new ValveImpl();
 		assertNotNull(impl);
 	}
 

@@ -11,26 +11,7 @@ public interface PassingChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        /**
-         * OnOFF.
-         *
-         * <ul>
-         * <li>Interface: PassingChannel
-         * <li>Type: Boolean
-         * <li>
-         * </ul>
-         */
-        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
 
-        /**
-         * IsCloser.
-         *
-         * <ul>
-         * <li>Type: Boolean
-         * </ul>
-         */
-
-        IS_CLOSER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * PowerLevel.
@@ -63,7 +44,16 @@ public interface PassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        BUSY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
+        BUSY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * How Long does the Device need to do something(e.g. Valve Opening/Closing time)
+         *
+         * <ul>
+         * <li>Type: Boolean
+         * </ul>
+         */
+
+        TIME(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY));
 
         private final Doc doc;
 
@@ -78,27 +68,53 @@ public interface PassingChannel extends OpenemsComponent {
     }
 
     /**
-     * Gets the Temperature in [degree celsius].
+     * .
+     * <ul>
+     * <li> Tells how much percent of the Device is used aka how much the valve is opened or
+     *      how much % of the Pump is on a high / low.
+     * <li> Unit: Float
+     * </ul>
      *
      * @return the Channel
      */
-    default Channel<Boolean> getOnOff() {
-        return this.channel(ChannelId.ON_OFF);
-    }
-
-    default Channel<Boolean> getIsCloser() {
-        return this.channel(ChannelId.IS_CLOSER);
-    }
 
     default Channel<Float> getPowerLevel() {
         return this.channel(ChannelId.POWER_LEVEL);
     }
 
+    /**
+     * <ul>
+     * Same as above, but LastPowerLevel; For calculation purposes and for checking.
+     *
+     * <li> Type: Float
+     * </ul>
+     *
+     * @return the Channel
+     */
+
     default Channel<Float> getLastPowerLevel() {
         return this.channel(ChannelId.LAST_POWER_LEVEL);
     }
 
+    /**
+     * Tells if the PassingDevice is busy or not.
+     * <li> Type: Boolean
+     *
+     * @return the Channel
+     */
+
     default Channel<Boolean> getIsBusy() {
         return this.channel(ChannelId.BUSY);
+    }
+
+    /**
+     * Tells how much time is needed for e.g. Valve to Open or Close 100%.
+     * <li> Type: Boolean
+     *
+     * @return the Channel
+     */
+
+    default Channel<Integer> getTimeNeeded() {
+        return this.channel(ChannelId.TIME);
     }
 }

@@ -119,6 +119,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             if (this.noError().getNextValue().get() && this.getOnOff_PassingController().getNextWriteValue().get()) {
                 try {
                     if (!isOpen) {
+                        //change to valve Busy
                         if (valveOpen()) {
                             if (readyToChangeValve()) {
                                 isOpen = true;
@@ -128,6 +129,10 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             }
                             // should only occur once
                         } else {
+                            controlRelais(true, "Open");
+                            controlRelais(false, "Closed");
+                            isOpen = false;
+                            isClosed = false;
                             return;
                         }
                     }

@@ -1,23 +1,25 @@
-#
-# io.openems.edge.temperature.passing.valve PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
-Bundle-Description: \
-	The provider bundle for io.openems.edge.temperature.passing.valve. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.temperature.passing.valve/api.bnd}
+Bundle-Name: OpenEMS Edge Passing Valve
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 
 Export-Package:  \
-	io.openems.edge.temperature.passing.valve.api;-provide=true
+	io.openems.edge.temperature.passing.valve,\
 
 Private-Package:  \
-	io.openems.edge.temperature.passing.valve
+	io.openems.edge.temperature.passing.valve,\
 
 -includeresource: {readme.md}
 
 -buildpath:  \
-	osgi.enroute.base.api;version=2.1
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.relais.api;version=latest,\
+	io.openems.edge.relais.board.api;version=latest,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.bridge.i2c;version=latest,\
+	io.openems.edge.temperature.passing.valve.api;version=latest,\
+	io.openems.edge.temperature.passing.api;version=latest,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \
