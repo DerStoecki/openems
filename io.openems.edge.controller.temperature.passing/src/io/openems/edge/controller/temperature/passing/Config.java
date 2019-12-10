@@ -29,11 +29,11 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Secundary Rewind Temperature Sensor Id", description = "The TemperatureSensor Id used to measure the Secundary Rewind Temperature.")
     String secundary_Rewind_Sensor() default "TemperatureSensor3";
 
-    @AttributeDefinition(name = "Valve Id", description = "The Unique Valve Id.")
+    @AttributeDefinition(name = "Valve Id", description = "The Unique Valve Id allocated with the passing controller.")
     String valve_id() default "Valve0";
 
-    @AttributeDefinition(name = "Pump Relais Id", description = "The Relais Id used to Activate the Pump.")
-    String pump_id() default "Relais2";
+    @AttributeDefinition(name = "Pump Id", description = "The Unique Pump Id allocated with the passing controller.")
+    String pump_id() default "Pump0";
 
     @AttributeDefinition(name = "Heating Time", description = "The Time needed to heat up the Primary Forward (t in seconds).")
     int heating_Time() default 50;

@@ -9,6 +9,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
@@ -32,7 +33,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private Thermometer secundaryForward;
     private Thermometer secundaryRewind;
     private Valve valve;
-    // private Pump pump;
+    private Pump pump;
 
     private boolean isOpen = false;
     private boolean isClosed = true;
@@ -122,11 +123,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                         timeSetHeating = false;
 
-                        //TODO PUMP!
-                        //controlRelais(true, "Pump");
-                        //TODO PUMP!
+                        pump.changeByPercentage(100);
+
+
                         if (tooHot()) {
-                            // controlRelais(false, "Pump");
+                            pump.changeByPercentage(-100);
                             this.noError().setNextValue(false);
                             throw new NoHeatNeededException("Heat is not needed;"
                                     + "Shutting down pump and Valves");
@@ -209,12 +210,16 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             break;
                     }
                 } else {
-                    throw new ConfigurationException(id, "The temperaturesensor " + id + "Not a (configured) temperature sensor.");
+                    throw new ConfigurationException(id, "The temperaturesensor " + id + " Is Not a (configured) temperature sensor.");
                 }
 
                 break;
             case "Pump":
-                //TODO Do Something
+                if (cpm.getComponent(id) instanceof Pump) {
+                    this.pump = cpm.getComponent(id);
+                } else {
+                    throw new ConfigurationException(id, "The Pump " + id + " Is Not a (configured) Pump.");
+                }
                 break;
             case "Valve":
                 if (cpm.getComponent(id) instanceof Valve) {

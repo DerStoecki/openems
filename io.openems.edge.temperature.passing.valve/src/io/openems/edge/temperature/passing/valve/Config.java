@@ -13,19 +13,19 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     String service_pid();
 
-    @AttributeDefinition(name = "Valve Name", description = "Unique Id of the Relais.")
+    @AttributeDefinition(name = "Valve Name", description = "Unique Id of the Valve.")
     String id() default "Valve0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
 
-    @AttributeDefinition(name = "Closing Relais", description = "What Relais is responsible for closing the Valve")
+    @AttributeDefinition(name = "Closing Relais", description = "What Relais is responsible for closing the Valve.")
     String closing_Relais() default "Relais0";
 
-    @AttributeDefinition(name = "Opening Relais", description = "What Relais is responsible for closing the Valve")
+    @AttributeDefinition(name = "Opening Relais", description = "What Relais is responsible for closing the Valve.")
     String opening_Relais() default "Relais1";
 
-    @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds)")
+    @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds).")
     int valve_Time() default 30;
 
     boolean enabled() default true;
