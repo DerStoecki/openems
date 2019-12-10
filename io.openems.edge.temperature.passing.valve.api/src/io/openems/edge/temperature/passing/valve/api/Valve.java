@@ -1,16 +1,13 @@
 package io.openems.edge.temperature.passing.valve.api;
 
-public interface Valve {
-    void valveClose();
+import io.openems.edge.temperature.passing.api.PassingForPid;
 
-    void valveOpen();
+public interface Valve extends PassingForPid {
+
+    boolean readyToChange();
+
+    boolean changeByPercentage(double percentage);
 
     void controlRelais(boolean activate, String whichRelais);
-
-    boolean readyToChangeValve();
-
-    void calculatePercentageState();
-
-    boolean changeValvePositionByPercentage(double percentage);
 
 }

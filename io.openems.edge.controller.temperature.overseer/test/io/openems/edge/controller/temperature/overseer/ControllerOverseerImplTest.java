@@ -128,7 +128,7 @@ public class ControllerOverseerImplTest {
             overseer.activate(null, config);
             overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
             overseer.passing.noError().setNextValue(true);
-            overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
+            overseer.EMERGENCYTIMESTAMP = passing.valveTime().getNextValue().get();
 
             AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                     .next(
@@ -159,7 +159,7 @@ public class ControllerOverseerImplTest {
             overseer.activate(null, config);
             overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
             overseer.passing.noError().setNextValue(true);
-            overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
+            overseer.EMERGENCYTIMESTAMP = passing.valveTime().getNextValue().get();
 
             AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                     .next(
@@ -189,7 +189,7 @@ public class ControllerOverseerImplTest {
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
+        overseer.EMERGENCYTIMESTAMP = passing.valveTime().getNextValue().get();
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                 .next(
@@ -212,7 +212,7 @@ public class ControllerOverseerImplTest {
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
+        overseer.EMERGENCYTIMESTAMP = passing.valveTime().getNextValue().get();
         overseer.passing = null;
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
@@ -237,7 +237,7 @@ public class ControllerOverseerImplTest {
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
+        overseer.EMERGENCYTIMESTAMP = passing.valveTime().getNextValue().get();
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                 .next(
@@ -260,7 +260,7 @@ public class ControllerOverseerImplTest {
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
+        overseer.EMERGENCYTIMESTAMP = passing.valveTime().getNextValue().get();
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                 .next(

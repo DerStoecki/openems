@@ -29,11 +29,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Secundary Rewind Temperature Sensor Id", description = "The TemperatureSensor Id used to measure the Secundary Rewind Temperature.")
     String secundary_Rewind_Sensor() default "TemperatureSensor3";
 
-    @AttributeDefinition(name = "Valve Open Realis Id", description = "The Relais Id used to open the valve.")
-    String valve_Open_Relais() default "Relais0";
-
-    @AttributeDefinition(name = "Valve Close Realis Id", description = "The Relais Id used to open the valve.")
-    String valve_Close_Relais() default "Relais1";
+    @AttributeDefinition(name = "Valve Id", description = "The Unique Valve Id.")
+    String valve_id() default "Valve0";
 
     @AttributeDefinition(name = "Pump Relais Id", description = "The Relais Id used to Activate the Pump.")
     String pump_id() default "Relais2";
@@ -41,8 +38,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Heating Time", description = "The Time needed to heat up the Primary Forward (t in seconds).")
     int heating_Time() default 50;
 
-    @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds)")
-    int valve_Time() default 30;
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Controller Consolinno Passing [{id}]";

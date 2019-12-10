@@ -18,24 +18,24 @@ public interface PassingChannel extends OpenemsComponent {
          *
          * <ul>
          * <li>Interface: PassingChannel
-         * <li>Type: Float
+         * <li>Type: Double
          * <li> Unit: Percentage
          * </ul>
          */
 
-        POWER_LEVEL(Doc.of(OpenemsType.FLOAT).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
+        POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
 
         /**
          * LastPowerLevel.
          *
          * <ul>
          * <li>
-         * <li>Type: Float
+         * <li>Type: Double
          * <li>Unit: Percentage
          * </ul>
          */
 
-        LAST_POWER_LEVEL(Doc.of(OpenemsType.FLOAT).accessMode(AccessMode.READ_ONLY).unit(Unit.PERCENT)),
+        LAST_POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY).unit(Unit.PERCENT)),
         /**
          * Busy.
          *
@@ -53,7 +53,7 @@ public interface PassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        TIME(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY));
+        TIME(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY));
 
         private final Doc doc;
 
@@ -72,13 +72,13 @@ public interface PassingChannel extends OpenemsComponent {
      * <ul>
      * <li> Tells how much percent of the Device is used aka how much the valve is opened or
      *      how much % of the Pump is on a high / low.
-     * <li> Unit: Float
+     * <li> Unit: Double
      * </ul>
      *
      * @return the Channel
      */
 
-    default Channel<Float> getPowerLevel() {
+    default Channel<Double> getPowerLevel() {
         return this.channel(ChannelId.POWER_LEVEL);
     }
 
@@ -86,13 +86,13 @@ public interface PassingChannel extends OpenemsComponent {
      * <ul>
      * Same as above, but LastPowerLevel; For calculation purposes and for checking.
      *
-     * <li> Type: Float
+     * <li> Type: Double
      * </ul>
      *
      * @return the Channel
      */
 
-    default Channel<Float> getLastPowerLevel() {
+    default Channel<Double> getLastPowerLevel() {
         return this.channel(ChannelId.LAST_POWER_LEVEL);
     }
 
@@ -109,12 +109,12 @@ public interface PassingChannel extends OpenemsComponent {
 
     /**
      * Tells how much time is needed for e.g. Valve to Open or Close 100%.
-     * <li> Type: Boolean
+     * <li> Type: Double
      *
      * @return the Channel
      */
 
-    default Channel<Integer> getTimeNeeded() {
+    default Channel<Double> getTimeNeeded() {
         return this.channel(ChannelId.TIME);
     }
 }

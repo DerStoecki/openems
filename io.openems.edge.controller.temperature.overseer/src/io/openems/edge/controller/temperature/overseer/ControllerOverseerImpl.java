@@ -24,7 +24,6 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     protected ControllerPassingChannel passing;
     protected Thermometer temperatureSensor;
     private int tolerance;
-    protected int waitingTimeValveToClose;
 
     public ControllerOverseerImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
@@ -41,8 +40,6 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
         passing.getMinTemperature().setNextValue(config.min_Temperature());
         this.tolerance = config.tolerated_Temperature_Range();
-        this.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
-
     }
 
     @Deactivate

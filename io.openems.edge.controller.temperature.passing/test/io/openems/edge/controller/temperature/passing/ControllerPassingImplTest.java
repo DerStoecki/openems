@@ -82,7 +82,7 @@ public class ControllerPassingImplTest {
         }
 
         @Override
-        public String valve_Open_Relais() {
+        public String valve_id() {
             return valve_Open_Relais;
         }
 
@@ -146,7 +146,7 @@ public class ControllerPassingImplTest {
         secundaryForward = new DummyThermometer(config.secundary_Forward_Sensor());
         secundaryRewind = new DummyThermometer(config.secundary_Rewind_Sensor());
 
-        valveOpen = new DummyRelais(config.valve_Open_Relais());
+        valveOpen = new DummyRelais(config.valve_id());
         valveClose = new DummyRelais(config.valve_Close_Relais());
         pump = new DummyRelais(config.pump_id());
 
@@ -158,8 +158,8 @@ public class ControllerPassingImplTest {
         sF = new ChannelAddress(config.secundary_Forward_Sensor(), "Temperature");
         sR = new ChannelAddress(config.secundary_Rewind_Sensor(), "Temperature");
 
-        vO = new ChannelAddress(config.valve_Open_Relais(), "OnOff");
-        vOC = new ChannelAddress(config.valve_Open_Relais(), "IsCloser");
+        vO = new ChannelAddress(config.valve_id(), "OnOff");
+        vOC = new ChannelAddress(config.valve_id(), "IsCloser");
 
         vC = new ChannelAddress(config.valve_Close_Relais(), "OnOff");
         vCc = new ChannelAddress(config.valve_Close_Relais(), "IsCloser");

@@ -21,7 +21,8 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     private ActuatorRelaisChannel closing;
     private ActuatorRelaisChannel opens;
-    private boolean opening;
+    private double secondsPerPercentage;
+    private boolean percentageWasSet = false;
 
     @Reference
     ComponentManager cpm;
@@ -46,10 +47,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
-        this.getTimeNeeded().setNextValue(config.valve_Time());
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getLastPowerLevel().setNextValue(0);
+        this.secondsPerPercentage = ((double) config.valve_Time() / 100.d);
     }
 
     @Deactivate
@@ -71,12 +72,17 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
-    @Override
-    public void valveClose() {
+    private void valveClose() {
+        if (!this.getIsBusy().getNextValue().get()) {
+            controlRelais(false, "Open");
+            controlRelais(true, "Closed");
+            this.getIsBusy().setNextValue(true);
+            timeStampValve = System.currentTimeMillis();
+        }
     }
 
-    @Override
-    public void valveOpen() {
+
+    private void valveOpen() {
         //opens will be set true when closing is done
         if (!this.getIsBusy().getNextValue().get()) {
             controlRelais(false, "Closed");
@@ -104,8 +110,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
                         this.closing.getRelaisChannel().setNextWriteValue(!activate);
                     }
                     break;
-
-
             }
             if (!activate) {
                 this.getIsBusy().setNextValue(false);
@@ -116,16 +120,50 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     @Override
-    public boolean readyToChangeValve() {
-        return ((System.currentTimeMillis() - timeStampValve) > (this.getTimeNeeded().getNextValue().get() + EXTRA_BUFFER_TIME));
+    public boolean readyToChange() {
+        if (percentageWasSet) {
+            if ((System.currentTimeMillis() - timeStampValve)
+                    > (this.getTimeNeeded().getNextValue().get() + EXTRA_BUFFER_TIME)) {
+                percentageWasSet = false;
+                return true;
+            }
+        }
+        return false;
+
     }
 
+    /*
+     * Changes Valve Position by incoming percentage
+     * Depending on + or - it changes the current State to open/close it more
+     *
+     * */
     @Override
-    public void calculatePercentageState(){}
+    public boolean changeByPercentage(double percentage) {
+        double currentPowerLevel;
 
-    @Override
-    public boolean changeValvePositionByPercentage(double percentage){
-        return false;
+        //opens / closes valve by a certain percentage value
+        if ((this.getIsBusy().getNextValue().get())) {
+            return false;
+        } else {
+            currentPowerLevel = this.getPowerLevel().getNextValue().get();
+            this.getLastPowerLevel().setNextValue(currentPowerLevel);
+            currentPowerLevel += percentage;
+            if (currentPowerLevel > 100) {
+                currentPowerLevel = 100;
+            } else if (currentPowerLevel < 0) {
+                currentPowerLevel = 0;
+            }
+
+            this.getPowerLevel().setNextValue(currentPowerLevel);
+            this.getTimeNeeded().setNextValue((Math.abs(percentage) <= 100 ? Math.abs(percentage) : 100) * secondsPerPercentage);
+            if (percentage < 0) {
+                valveClose();
+            } else {
+                valveOpen();
+            }
+            percentageWasSet = true;
+            return true;
+        }
     }
 
 
