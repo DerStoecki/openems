@@ -120,6 +120,11 @@
 	bnd.identity;id='io.openems.edge.solaredge',\
 	bnd.identity;id='io.openems.edge.temperature.board',\
 	bnd.identity;id='io.openems.edge.temperature.board.api',\
+	bnd.identity;id='io.openems.edge.temperature.passing.api',\
+	bnd.identity;id='io.openems.edge.temperature.passing.pump',\
+	bnd.identity;id='io.openems.edge.temperature.passing.pump.api',\
+	bnd.identity;id='io.openems.edge.temperature.passing.valve',\
+	bnd.identity;id='io.openems.edge.temperature.passing.valve.api',\
 	bnd.identity;id='io.openems.edge.temperature.sensor',\
 	bnd.identity;id='io.openems.edge.tesla.powerwall2',\
 	bnd.identity;id='io.openems.edge.thermometer.api',\
@@ -234,6 +239,11 @@
 	io.openems.edge.solaredge;version=snapshot,\
 	io.openems.edge.temperature.board;version=snapshot,\
 	io.openems.edge.temperature.board.api;version=snapshot,\
+	io.openems.edge.temperature.passing.api;version=latest,\
+	io.openems.edge.temperature.passing.pump;version=latest,\
+	io.openems.edge.temperature.passing.pump.api;version=latest,\
+	io.openems.edge.temperature.passing.valve;version=latest,\
+	io.openems.edge.temperature.passing.valve.api;version=latest,\
 	io.openems.edge.temperature.sensor;version=snapshot,\
 	io.openems.edge.tesla.powerwall2;version=snapshot,\
 	io.openems.edge.thermometer.api;version=snapshot,\
