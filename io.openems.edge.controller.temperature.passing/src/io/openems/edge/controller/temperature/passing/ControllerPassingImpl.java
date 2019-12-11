@@ -10,7 +10,6 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
-import io.openems.edge.temperature.passing.api.PassingForPid;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.thermometer.api.Thermometer;
@@ -88,9 +87,18 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             throw e;
 
         }
+        defaultOptions();
+    }
+
+    private void defaultOptions() {
         //later for error Handling
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
-
+        //Just for debugging!
+        this.startingTemperature = 100;
+        //just in case
+        this.valve.controlRelais(false, "Open");
+        this.valve.controlRelais(false, "Closed");
+        this.pump.controlRelais(false, "");
     }
 
     @Deactivate
@@ -117,6 +125,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         } else if (valve.readyToChange()) {
                             valve.controlRelais(false, "Open");
                             isOpen = true;
+                            timeSetHeating = false;
                         } else {
                             return;
                         }
@@ -170,13 +179,16 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 if (!isClosed) {
                     if (!valve.getIsBusy().getNextValue().get()) {
                         if (valve.changeByPercentage(-100)) {
+                            pump.changeByPercentage(-100);
                             isOpen = false;
-                        } else if (valve.readyToChange()) {
-                            isClosed = true;
-                            timeSetHeating = false;
-                            valve.controlRelais(false, "Closed");
+                            return;
                         }
+                    } else if (valve.readyToChange()) {
+                        valve.controlRelais(false, "Closed");
+                        isClosed = true;
+                        timeSetHeating = false;
                     }
+
                 }
             }
 
@@ -235,8 +247,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
 
     private boolean tooHot() {
-        return this.secundaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
-                > this.secundaryForward.getTemperature().getNextValue().get();
+        if (this.secundaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
+            return this.secundaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
+                    > this.secundaryForward.getTemperature().getNextValue().get();
+        }
+        return false;
     }
 
 

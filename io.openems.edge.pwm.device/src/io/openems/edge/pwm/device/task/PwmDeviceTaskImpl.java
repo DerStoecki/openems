@@ -50,7 +50,8 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
         float singleDigitValue = (float) (digitRange) / (100 * SCALING);
 
         if (this.powerLevel.getNextWriteValue().isPresent()) {
-
+            //just for REST; value is returned;
+            this.powerLevel.setNextValue(this.powerLevel.getNextWriteValue());
             float power = powerLevel.getNextWriteValue().get();
 
             if (isInverse) {

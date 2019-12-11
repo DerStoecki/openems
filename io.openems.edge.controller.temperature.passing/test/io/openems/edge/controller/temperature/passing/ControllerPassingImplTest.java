@@ -8,6 +8,7 @@
 //import io.openems.edge.controller.test.ControllerTest;
 //import io.openems.edge.relais.api.ActuatorRelaisChannel;
 //import io.openems.edge.relais.api.test.DummyRelais;
+//import io.openems.edge.temperature.passing.valve.ValveImpl;
 //import io.openems.edge.thermometer.api.Thermometer;
 //import io.openems.edge.thermometer.api.test.DummyThermometer;
 //import org.junit.Assert;
@@ -21,7 +22,9 @@
 //
 //public class ControllerPassingImplTest {
 //
-//    private static class MyConfig extends AbstractComponentConfig implements Config {
+//    private static class ConfigOfValve extends AbstractComponentConfig implements
+//
+//    private static class ConfigOfPassing extends AbstractComponentConfig implements Config {
 //
 //        private final String id;
 //        private final String alias;
@@ -31,15 +34,13 @@
 //        private final String primary_Rewind_Sensor;
 //        private final String secundary_Forward_Sensor;
 //        private final String secundary_Rewind_Sensor;
-//        private  String valve_Open_Relais;
-//        private final String valve_Close_Relais;
+//        private  String valveId;
 //        private final String pump_id;
 //        private int heating_Time;
-//        private int valveTime;
 //
 //
-//        public MyConfig(String id, String alias, boolean enabled, String service_pid, String primary_Forward_Sensor, String primary_Rewind_Sensor, String secundary_Forward_Sensor, String secundary_Rewind_Sensor, String valve_Open_Relais,
-//                        String valve_Close_Relais, String pump_id, int heating_Time, int valveTime) {
+//        public ConfigOfPassing(String id, String alias, boolean enabled, String service_pid, String primary_Forward_Sensor, String primary_Rewind_Sensor, String secundary_Forward_Sensor, String secundary_Rewind_Sensor, String valveId,
+//                               String valve_Close_Relais, String pump_id, int heating_Time, int valveTime) {
 //            super(Config.class, id);
 //            this.id = id;
 //            this.alias = alias;
@@ -49,12 +50,11 @@
 //            this.primary_Rewind_Sensor = primary_Rewind_Sensor;
 //            this.secundary_Forward_Sensor = secundary_Forward_Sensor;
 //            this.secundary_Rewind_Sensor = secundary_Rewind_Sensor;
-//            this.valve_Open_Relais = valve_Open_Relais;
-//            this.valve_Close_Relais = valve_Close_Relais;
+//            this.valveId = valveId;
 //            this.pump_id = pump_id;
 //            this.heating_Time = heating_Time;
-//            this.valveTime = valveTime;
 //        }
+//
 //
 //        @Override
 //        public String service_pid() {
@@ -83,12 +83,7 @@
 //
 //        @Override
 //        public String valve_id() {
-//            return valve_Open_Relais;
-//        }
-//
-//        @Override
-//        public String valve_Close_Relais() {
-//            return valve_Close_Relais;
+//            return valveId;
 //        }
 //
 //        @Override
@@ -99,11 +94,6 @@
 //        @Override
 //        public int heating_Time() {
 //            return this.heating_Time;
-//        }
-//
-//        @Override
-//        public int valve_Time() {
-//            return this.valveTime;
 //        }
 //    }
 //
@@ -118,7 +108,7 @@
 //    private ActuatorRelaisChannel valveOpen;
 //    private ActuatorRelaisChannel valveClose;
 //    private ActuatorRelaisChannel testForFailT;
-//    private MyConfig config;
+//    private ConfigOfPassing config;
 //    private ChannelAddress pF;
 //    private ChannelAddress pR;
 //    private ChannelAddress sF;
@@ -136,7 +126,7 @@
 //        cpm = new DummyComponentManager();
 //        passing.cpm = cpm;
 //
-//        config = new MyConfig("ControllerPassing0", "", true, "",
+//        config = new ConfigOfPassing("ControllerPassing0", "", true, "",
 //                "TemperatureSensor0", "TemperatureSensor1",
 //                "TemperatureSensor2", "TemperatureSensor3",
 //                "Relais0", "Relais1", "Relais2", 1, 1);
@@ -145,7 +135,6 @@
 //        primaryRewind = new DummyThermometer(config.primary_Rewind_Sensor());
 //        secundaryForward = new DummyThermometer(config.secundary_Forward_Sensor());
 //        secundaryRewind = new DummyThermometer(config.secundary_Rewind_Sensor());
-//
 //        valveOpen = new DummyRelais(config.valve_id());
 //        valveClose = new DummyRelais(config.valve_Close_Relais());
 //        pump = new DummyRelais(config.pump_id());
@@ -517,7 +506,7 @@
 //
 //    @Test(expected = ConfigurationException.class)
 //    public void testRelaisException() throws Exception {
-//        config.valve_Open_Relais = "TemperatureSensor4";
+//        config.valveId = "TemperatureSensor4";
 //        primaryForward.getTemperature().setNextValue(700);
 //        primaryRewind.getTemperature().setNextValue(200);
 //        passing.activate(null, config);
@@ -550,7 +539,7 @@
 //    @Test(expected = OpenemsError.OpenemsNamedException.class)
 //    public void testComponentManager() throws Exception {
 //        primaryForward.getTemperature().setNextValue(700);
-//        config.valve_Open_Relais = "Relais6";
+//        config.valveId = "Relais6";
 //        primaryRewind.getTemperature().setNextValue(200);
 //        passing.activate(null, config);
 //        passing.activate(null, config);

@@ -124,7 +124,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public boolean readyToChange() {
         if (percentageWasSet) {
             if ((System.currentTimeMillis() - timeStampValve)
-                    > ((this.getTimeNeeded().getNextValue().get() * 1000) + EXTRA_BUFFER_TIME)) {
+                    >= ((this.getTimeNeeded().getNextValue().get() * 1000) + EXTRA_BUFFER_TIME)) {
                 percentageWasSet = false;
                 return true;
             }
@@ -143,19 +143,20 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         double currentPowerLevel;
 
         //opens / closes valve by a certain percentage value
-        if ((this.getIsBusy().getNextValue().get())) {
+        if ((this.getIsBusy().getNextValue().get()) || percentage == 0) {
             return false;
         } else {
             currentPowerLevel = this.getPowerLevel().getNextValue().get();
             this.getLastPowerLevel().setNextValue(currentPowerLevel);
             currentPowerLevel += percentage;
-            if (currentPowerLevel > 100) {
+            if (currentPowerLevel >= 100) {
                 currentPowerLevel = 100;
-            } else if (currentPowerLevel < 0) {
+            } else if (currentPowerLevel <= 0) {
                 currentPowerLevel = 0;
             }
 
             this.getPowerLevel().setNextValue(currentPowerLevel);
+            currentPowerLevel = percentage;
             if (Math.abs(percentage) >= 100) {
                 this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
             } else {
