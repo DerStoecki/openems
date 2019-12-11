@@ -36,7 +36,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String pump_id() default "Pump0";
 
     @AttributeDefinition(name = "Heating Time", description = "The Time needed to heat up the Primary Forward (t in seconds).")
-    int heating_Time() default 50;
+    int heating_Time() default 500;
 
     boolean enabled() default true;
 

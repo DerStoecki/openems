@@ -15,7 +15,7 @@ import org.osgi.service.metatype.annotations.Option;
     String service_pid();
 
     @AttributeDefinition(name = "Pump Name", description = "Unique Id of the Pump.")
-    String id() default "Valve0";
+    String id() default "Pump0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
@@ -29,7 +29,7 @@ import org.osgi.service.metatype.annotations.Option;
     String pump_Type() default "Both";
 
     @AttributeDefinition(name =  "Relais Id", description = "If the Pump is connected to a relais; type the id.")
-    String pump_Relais() default "Relais1";
+    String pump_Relais() default "Relais2";
 
     @AttributeDefinition(name = "PWM Id", description = "If the Pump is connected as a pwm Device; type in the id.")
     String pump_Pwm() default "PwmDevice0";

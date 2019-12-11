@@ -17,7 +17,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Passing.Valve")
-public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, PassingChannel, Valve {
+public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
 
     private ActuatorRelaisChannel closing;
     private ActuatorRelaisChannel opens;
@@ -56,6 +56,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     @Deactivate
     public void deactivate() {
         try {
+            super.deactivate();
             //in case somethings happening; the Valve will be closed.
             if (closing.isCloser().getNextValue().get()) {
                 closing.getRelaisChannel().setNextWriteValue(true);
@@ -123,7 +124,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public boolean readyToChange() {
         if (percentageWasSet) {
             if ((System.currentTimeMillis() - timeStampValve)
-                    > (this.getTimeNeeded().getNextValue().get() + EXTRA_BUFFER_TIME)) {
+                    > ((this.getTimeNeeded().getNextValue().get() * 1000) + EXTRA_BUFFER_TIME)) {
                 percentageWasSet = false;
                 return true;
             }
@@ -155,7 +156,11 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             }
 
             this.getPowerLevel().setNextValue(currentPowerLevel);
-            this.getTimeNeeded().setNextValue((Math.abs(percentage) <= 100 ? Math.abs(percentage) : 100) * secondsPerPercentage);
+            if (Math.abs(percentage) >= 100) {
+                this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
+            } else {
+                this.getTimeNeeded().setNextValue(Math.abs(percentage) * secondsPerPercentage);
+            }
             if (percentage < 0) {
                 valveClose();
             } else {

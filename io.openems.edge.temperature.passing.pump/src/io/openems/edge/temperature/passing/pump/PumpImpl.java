@@ -25,6 +25,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     private ActuatorRelaisChannel relais;
     private PwmPowerLevelChannel pwm;
     private boolean onlyRelais = false;
+    private boolean onlyPwm = false;
 
     @Reference
     ComponentManager cpm;
@@ -65,6 +66,8 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
         }
         if (config.pump_Type().equals("Relais")) {
             this.onlyRelais = true;
+        } else if (config.pump_Type().equals("Pwm")) {
+            this.onlyPwm = true;
         }
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
@@ -76,12 +79,15 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     public void deactivate() {
         super.deactivate();
         try {
-            this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
-
-            if (this.relais.isCloser().getNextValue().get()) {
-                this.relais.getRelaisChannel().setNextWriteValue(false);
-            } else {
-                this.relais.getRelaisChannel().setNextWriteValue(true);
+            if (!this.onlyRelais) {
+                this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
+            }
+            if (!this.onlyPwm) {
+                if (this.relais.isCloser().getNextValue().get()) {
+                    this.relais.getRelaisChannel().setNextWriteValue(false);
+                } else {
+                    this.relais.getRelaisChannel().setNextWriteValue(true);
+                }
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();

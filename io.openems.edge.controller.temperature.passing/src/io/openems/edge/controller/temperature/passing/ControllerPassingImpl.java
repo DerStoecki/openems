@@ -9,6 +9,8 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.temperature.passing.api.PassingChannel;
+import io.openems.edge.temperature.passing.api.PassingForPid;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.thermometer.api.Thermometer;
@@ -96,7 +98,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         super.deactivate();
         this.getOnOff_PassingController().setNextValue(false);
         this.valve.changeByPercentage(-100);
-
+        this.pump.changeByPercentage(-100);
     }
 
     @Override
@@ -215,14 +217,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 break;
             case "Pump":
-                if (cpm.getComponent(id) instanceof Pump) {
+                if (cpm.getComponent(id) instanceof PassingChannel) {
                     this.pump = cpm.getComponent(id);
                 } else {
                     throw new ConfigurationException(id, "The Pump " + id + " Is Not a (configured) Pump.");
                 }
                 break;
             case "Valve":
-                if (cpm.getComponent(id) instanceof Valve) {
+                if (cpm.getComponent(id) instanceof PassingChannel) {
                     this.valve = cpm.getComponent(id);
                 } else {
                     throw new ConfigurationException(id, "The Valve " + id + " Is Not a (configured) Valve");

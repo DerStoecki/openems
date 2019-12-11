@@ -49,11 +49,11 @@ public interface PassingChannel extends OpenemsComponent {
          * How Long does the Device need to do something(e.g. Valve Opening/Closing time)
          *
          * <ul>
-         * <li>Type: Boolean
+         * <li>Type: Double
          * </ul>
          */
 
-        TIME(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY));
+        TIME(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY).unit(Unit.SECONDS));
 
         private final Doc doc;
 
