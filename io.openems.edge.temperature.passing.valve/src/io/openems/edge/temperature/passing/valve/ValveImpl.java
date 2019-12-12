@@ -163,10 +163,8 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
                 this.getTimeNeeded().setNextValue(Math.abs(percentage) * secondsPerPercentage);
             }
             if (percentage < 0) {
-                controlRelais(false, "Open");
                 valveClose();
             } else {
-                controlRelais(false, "Close");
                 valveOpen();
             }
             percentageWasSet = true;

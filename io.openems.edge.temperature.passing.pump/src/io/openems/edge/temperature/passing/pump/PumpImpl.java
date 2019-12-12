@@ -4,7 +4,7 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.pwm.device.PwmPowerLevelChannel;
+import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relais.api.ActuatorRelaisChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.pump.api.Pump;
