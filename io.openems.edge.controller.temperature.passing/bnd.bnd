@@ -28,6 +28,7 @@ Private-Package:  \
     io.openems.edge.temperature.passing.valve;version=latest,\
     io.openems.edge.temperature.passing.pump;version=latest,\
     io.openems.edge.temperature.passing.pump.api;version=latest,\
+    io.openems.edge.pwm.device;version=latest,\
 
 
 

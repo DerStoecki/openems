@@ -23,11 +23,11 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     private ActuatorRelaisChannel opens;
     private double secondsPerPercentage;
     private boolean percentageWasSet = false;
+    private long timeStampValve;
+    private static int EXTRA_BUFFER_TIME = 2 * 1000;
 
     @Reference
     ComponentManager cpm;
-    private long timeStampValve;
-    private static int EXTRA_BUFFER_TIME = 2 * 1000;
 
     public ValveImpl() {
         super(OpenemsComponent.ChannelId.values(), PassingChannel.ChannelId.values());
@@ -163,8 +163,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
                 this.getTimeNeeded().setNextValue(Math.abs(percentage) * secondsPerPercentage);
             }
             if (percentage < 0) {
+                controlRelais(false, "Open");
                 valveClose();
             } else {
+                controlRelais(false, "Close");
                 valveOpen();
             }
             percentageWasSet = true;

@@ -93,8 +93,6 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private void defaultOptions() {
         //later for error Handling
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
-        //Just for debugging!
-        this.startingTemperature = 100;
         //just in case
         this.valve.controlRelais(false, "Open");
         this.valve.controlRelais(false, "Closed");

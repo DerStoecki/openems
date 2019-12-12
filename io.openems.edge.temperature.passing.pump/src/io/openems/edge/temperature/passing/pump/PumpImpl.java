@@ -14,7 +14,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 
 
@@ -24,8 +23,8 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
 
     private ActuatorRelaisChannel relais;
     private PwmPowerLevelChannel pwm;
-    private boolean onlyRelais = false;
-    private boolean onlyPwm = false;
+    private boolean isRelais = false;
+    private boolean isPwm = false;
 
     @Reference
     ComponentManager cpm;
@@ -37,52 +36,57 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     @Activate
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
-        try {
-            if (config.pump_Type().equals("Both") || config.pump_Type().equals("Relais")) {
-                if (cpm.getComponent(config.pump_Relais()) instanceof ActuatorRelaisChannel) {
-                    //close relais via default
-                    this.relais = cpm.getComponent(config.pump_Relais());
-                    if (this.relais.isCloser().getNextValue().get()) {
-                        this.relais.getRelaisChannel().setNextWriteValue(false);
-                    } else {
-                        this.relais.getRelaisChannel().setNextWriteValue(true);
-                    }
-                } else {
-                    throw new ConfigurationException(config.pump_Relais(), "Allocated Relais not a (configured) Relais");
-                }
-            }
-            if (config.pump_Type().equals("Both") || config.pump_Type().equals("Pwm")) {
-                if (cpm.getComponent(config.pump_Pwm()) instanceof PwmPowerLevelChannel) {
-                    //set the powerLevel to 0
-                    this.pwm = cpm.getComponent(config.pump_Pwm());
-                    this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
-                    this.getPowerLevel().setNextValue(0);
-                } else {
-                    throw new ConfigurationException(config.pump_Pwm(), "Allocated Pwm, not a (configured) Relais");
-                }
-            }
-        } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-        }
-        if (config.pump_Type().equals("Relais")) {
-            this.onlyRelais = true;
-        } else if (config.pump_Type().equals("Pwm")) {
-            this.onlyPwm = true;
-        }
+        allocateComponents(config.pump_Type(), config.pump_Relais(), config.pump_Pwm());
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getLastPowerLevel().setNextValue(0);
     }
 
+    private void allocateComponents(String pump_type, String pump_relais, String pump_pwm) {
+        switch (pump_type) {
+            case "Relais":
+                isRelais = true;
+                break;
+            case "Pwm":
+                isPwm = true;
+                break;
+
+            case "Both":
+            default:
+                isRelais = true;
+                isPwm = true;
+                break;
+        }
+        try {
+            if (isRelais) {
+                if (cpm.getComponent(pump_relais) instanceof ActuatorRelaisChannel) {
+                    this.relais = cpm.getComponent(pump_relais);
+                } else {
+                    throw new ConfigurationException(pump_relais, "Allocated Relais not a (configured) Relais");
+                }
+            }
+            if (isPwm) {
+                if (cpm.getComponent(pump_pwm) instanceof PwmPowerLevelChannel) {
+                    this.pwm = cpm.getComponent(pump_pwm);
+                    //reset pwm to 0; so pump is on activation off
+                    this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
+                } else {
+                    throw new ConfigurationException(pump_pwm, "Allocated Pwm, not a (configured) Relais");
+                }
+            }
+        } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Deactivate
     public void deactivate() {
         super.deactivate();
         try {
-            if (!this.onlyRelais) {
+            if (!this.isRelais) {
                 this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
             }
-            if (!this.onlyPwm) {
+            if (!this.isPwm) {
                 if (this.relais.isCloser().getNextValue().get()) {
                     this.relais.getRelaisChannel().setNextWriteValue(false);
                 } else {
@@ -102,43 +106,30 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
 
     @Override
     public boolean changeByPercentage(double percentage) {
-        if (!this.onlyRelais) {
-            double currentPowerLevel;
-            if (this.pwm.getPwmPowerLevelChannel().getNextWriteValue().isPresent()) {
-                this.getLastPowerLevel().setNextValue(this.pwm.getPwmPowerLevelChannel().getNextWriteValue().get());
-            } else {
-                this.getLastPowerLevel().setNextValue(0);
-            }
-            currentPowerLevel = this.getPowerLevel().getNextValue().get();
-            currentPowerLevel += percentage;
-            if (currentPowerLevel > 100) {
-                currentPowerLevel = 100;
-            } else if (currentPowerLevel < 0) {
-                currentPowerLevel = 0;
-                controlRelais(false, "");
-            }
-            if (currentPowerLevel > 0) {
-                controlRelais(true, "");
-            }
-            this.getPowerLevel().setNextValue(currentPowerLevel);
-
-            try {
-                this.pwm.getPwmPowerLevelChannel().setNextWriteValue((float) currentPowerLevel);
-
-                return true;
-            } catch (OpenemsError.OpenemsNamedException e) {
-                e.printStackTrace();
-                return false;
-            }
-            //In Case Pump is only a relais --> relais will be set on or Off; also depending on PID later
-        } else {
+        if (this.isRelais) {
             if (percentage <= 0) {
                 controlRelais(false, "");
             } else {
                 controlRelais(true, "");
             }
-            return true;
         }
+        if (this.isPwm) {
+            double currentPowerLevel;
+            this.getLastPowerLevel().setNextValue(this.getPowerLevel().getNextValue().get());
+            currentPowerLevel = this.getPowerLevel().getNextValue().get();
+            currentPowerLevel += percentage;
+            currentPowerLevel = currentPowerLevel > 100 ? 100
+                    : currentPowerLevel < 0 ? 0 : currentPowerLevel;
+
+            this.getPowerLevel().setNextValue(currentPowerLevel);
+            try {
+                this.pwm.getPwmPowerLevelChannel().setNextWriteValue((float) currentPowerLevel);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

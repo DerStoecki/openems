@@ -1,24 +1,21 @@
-Bundle-Name: OpenEMS Edge Passing Valve Api
+Bundle-Name: OpenEMS Edge PwmDevice Api
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
+
 Export-Package:  \
-	io.openems.edge.temperature.passing.pump.api
+	io.openems.edge.pwm.device.api,\
 
 Private-Package:  \
-	io.openems.edge.temperature.passing.pump.api,\
-	io.openems.edge.temperature.passing.pump.api.test,\
+	io.openems.edge.pwm.device.api,\
 
 -includeresource: {readme.md}
 
 -buildpath:  \
 	osgi.enroute.base.api;version=2.1,\
-	io.openems.edge.temperature.passing.api;version=latest,\
-	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	io.openems.edge.relais.api;version=latest,\
-	io.openems.edge.pwm.device;version=latest,\
+	io.openems.edge.common;version=latest,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \
