@@ -36,6 +36,7 @@ public interface ActuatorRelaisChannel extends OpenemsComponent {
         }
 
     }
+
     /**
      * Gets the On or Off Value as Boolean.
      *
@@ -45,7 +46,9 @@ public interface ActuatorRelaisChannel extends OpenemsComponent {
         return this.channel(ChannelId.ON_OFF);
     }
 
-    default Channel<Boolean> isCloser(){return this.channel(ChannelId.IS_CLOSER);}
+    default Channel<Boolean> isCloser() {
+        return this.channel(ChannelId.IS_CLOSER);
+    }
 
 
 }

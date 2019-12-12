@@ -9,7 +9,9 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.temperature.passing.api.PassingChannel;
+import io.openems.edge.temperature.passing.pump.api.Pump;
+import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -31,14 +33,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private Thermometer primaryRewind;
     private Thermometer secundaryForward;
     private Thermometer secundaryRewind;
-    private ActuatorRelaisChannel valveOpen;
-    private ActuatorRelaisChannel valveClose;
-    private ActuatorRelaisChannel pump;
+    private Valve valve;
+    private Pump pump;
 
     private boolean isOpen = false;
     private boolean isClosed = true;
-    private boolean opens = false;
-    private boolean closing = false;
 
     private boolean timeSetHeating = false;
 
@@ -47,18 +46,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private static int TOLERANCE_TEMPERATURE = 20;
     private int timeToHeatUp;
 
-    private int extraBufferTime = 2 * 1000;
+    private static int EXTRA_BUFFER_TIME = 2 * 1000;
 
     //for errorHandling
     private int startingTemperature;
+    //T in dC
     private static int ROUND_ABOUT_TEMP = 20;
-    //30 seconds * 1000 = 30 000 mS
-
-    private int timeValveNeedsToOpenAndClose;
     //ty
     private long timeStampHeating;
-    //tx
-    private long timeStampValve;
 
 
     public ControllerPassingImpl() {
@@ -74,59 +69,61 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         //just to make sure; (for the Overseer Controller)
         this.noError().setNextValue(true);
         this.isOpen = false;
-        this.opens = false;
         this.isClosed = true;
-        this.closing = false;
         //if user doesn't know ; default == 5 min
         if (config.heating_Time() == 0) {
-            this.timeToHeatUp = 5 * 1000;
+            this.timeToHeatUp = 5 * 1000 * 60;
         }
         this.timeToHeatUp = config.heating_Time() * 1000;
-
-        this.timeValveNeedsToOpenAndClose = config.valve_Time() * 1000;
-        this.valveTime().setNextValue(config.valve_Time());
-
-
         try {
             allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
             allocate_Component(config.primary_Rewind_Sensor(), "Thermometer", "PR");
             allocate_Component(config.secundary_Forward_Sensor(), "Thermometer", "SF");
             allocate_Component(config.secundary_Rewind_Sensor(), "Thermometer", "SR");
-            allocate_Component(config.pump_id(), "Relais", "Pump");
-            allocate_Component(config.valve_Open_Relais(), "Relais", "Open");
-            allocate_Component(config.valve_Close_Relais(), "Relais", "Close");
+            allocate_Component(config.valve_id(), "Valve", "Valve");
+            allocate_Component(config.pump_id(), "Pump", "Pump");
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
             throw e;
 
         }
+        defaultOptions();
+    }
+
+    private void defaultOptions() {
         //later for error Handling
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
-
+        //just in case
+        this.valve.controlRelais(false, "Open");
+        this.valve.controlRelais(false, "Closed");
+        this.pump.controlRelais(false, "");
     }
 
     @Deactivate
     public void deactivate() {
         super.deactivate();
         this.getOnOff_PassingController().setNextValue(false);
-        controlRelais(false, "Open");
-        controlRelais(true, "Closed");
+        this.valve.changeByPercentage(-100);
+        this.pump.changeByPercentage(-100);
     }
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (this.getMinTemperature().getNextValue().isDefined() && this.getOnOff_PassingController().getNextWriteValue().isPresent()) {
-            if (this.noError().getNextValue().get() && this.getOnOff_PassingController().getNextWriteValue().get()) {
+        if (this.getMinTemperature().getNextValue().isDefined()
+                && this.getOnOff_PassingController().getNextWriteValue().isPresent()) {
+            if (this.noError().getNextValue().get()
+                    && this.getOnOff_PassingController().getNextWriteValue().get()) {
                 try {
                     if (!isOpen) {
-                        if (valveOpen()) {
-                            if (readyToChangeValve()) {
-                                isOpen = true;
-                                controlRelais(false, "Open");
-                            } else {
+                        if (!valve.getIsBusy().getNextValue().get()) {
+                            if (valve.changeByPercentage(100)) {
+                                isClosed = false;
                                 return;
                             }
-                            // should only occur once
+                        } else if (valve.readyToChange()) {
+                            valve.controlRelais(false, "Open");
+                            isOpen = true;
+                            timeSetHeating = false;
                         } else {
                             return;
                         }
@@ -135,15 +132,17 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                         timeSetHeating = false;
 
-                        controlRelais(true, "Pump");
+                        pump.changeByPercentage(100);
+
 
                         if (tooHot()) {
-                            controlRelais(false, "Pump");
+                            pump.changeByPercentage(-100);
                             this.noError().setNextValue(false);
-                            throw new NoHeatNeededException("Heat is not needed; Shutting down pump and Valves");
+                            throw new NoHeatNeededException("Heat is not needed;"
+                                    + "Shutting down pump and Valves");
                         }
 
-                    } else {
+                    } else { //Check if there's something wrong with Valve or Heat to low
                         if (isOpen && !timeSetHeating) {
                             timeStampHeating = System.currentTimeMillis();
                             timeSetHeating = true;
@@ -153,11 +152,13 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                             this.noError().setNextValue(false);
 
-                            if (Math.abs(primaryRewind.getTemperature().getNextValue().get() - startingTemperature) <= ROUND_ABOUT_TEMP) {
+                            if (Math.abs(primaryRewind.getTemperature().getNextValue().get()
+                                    - startingTemperature) <= ROUND_ABOUT_TEMP) {
                                 throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
 
                             } else {
-                                throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; Closing Valve");
+                                throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; "
+                                        + "Closing Valve");
 
                             }
                         }
@@ -165,28 +166,35 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
                     this.noError().setNextValue(false);
-                    controlRelais(false, "Open");
-                    valveClose();
+                    valve.controlRelais(false, "Open");
+                    valve.controlRelais(true, "Closed");
                     throw e;
                 }
 
 
             } else {
-                valveClose();
+
                 if (!isClosed) {
-                    if (readyToChangeValve()) {
-                        isOpen = false;
+                    if (!valve.getIsBusy().getNextValue().get()) {
+                        if (valve.changeByPercentage(-100)) {
+                            pump.changeByPercentage(-100);
+                            isOpen = false;
+                            return;
+                        }
+                    } else if (valve.readyToChange()) {
+                        valve.controlRelais(false, "Closed");
                         isClosed = true;
                         timeSetHeating = false;
-                        controlRelais(false, "Closed");
                     }
+
                 }
             }
+
         }
     }
 
     private boolean shouldBeHeatingByNow() {
-        return System.currentTimeMillis() - timeStampHeating > timeToHeatUp + this.extraBufferTime;
+        return System.currentTimeMillis() - timeStampHeating > timeToHeatUp + EXTRA_BUFFER_TIME;
     }
 
     private boolean primaryForwardReadyToHeat() {
@@ -195,116 +203,53 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     }
 
     private void allocate_Component(String id, String type, String exactType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
-        if (type.equals("Thermometer")) {
-            if (cpm.getComponent(id) instanceof Thermometer) {
-                Thermometer th = cpm.getComponent(id);
-                switch (exactType) {
-                    case "PF":
-                        this.primaryForward = th;
-                        break;
-                    case "PR":
-                        this.primaryRewind = th;
-                        break;
-                    case "SF":
-                        this.secundaryForward = th;
-                        break;
-                    case "SR":
-                        this.secundaryRewind = th;
-                        break;
-                }
-            } else {
-                throw new ConfigurationException(id, "The temperaturesensor " + id + "Not a (configured) temperature sensor.");
-            }
-
-        } else if (type.equals("Relais")) {
-            if (cpm.getComponent(id) instanceof ActuatorRelaisChannel) {
-                ActuatorRelaisChannel r = cpm.getComponent(id);
-                switch (exactType) {
-                    case "Pump":
-                        this.pump = r;
-                        break;
-                    case "Open":
-                        this.valveOpen = r;
-                        break;
-                    case "Close":
-                        this.valveClose = r;
-                        break;
+        switch (type) {
+            case "Thermometer":
+                if (cpm.getComponent(id) instanceof Thermometer) {
+                    Thermometer th = cpm.getComponent(id);
+                    switch (exactType) {
+                        case "PF":
+                            this.primaryForward = th;
+                            break;
+                        case "PR":
+                            this.primaryRewind = th;
+                            break;
+                        case "SF":
+                            this.secundaryForward = th;
+                            break;
+                        case "SR":
+                            this.secundaryRewind = th;
+                            break;
+                    }
+                } else {
+                    throw new ConfigurationException(id, "The temperaturesensor " + id + " Is Not a (configured) temperature sensor.");
                 }
 
-            } else {
-                throw new ConfigurationException(id, "The Relais" + id + "Not a (configured) relais.");
-            }
+                break;
+            case "Pump":
+                if (cpm.getComponent(id) instanceof PassingChannel) {
+                    this.pump = cpm.getComponent(id);
+                } else {
+                    throw new ConfigurationException(id, "The Pump " + id + " Is Not a (configured) Pump.");
+                }
+                break;
+            case "Valve":
+                if (cpm.getComponent(id) instanceof PassingChannel) {
+                    this.valve = cpm.getComponent(id);
+                } else {
+                    throw new ConfigurationException(id, "The Valve " + id + " Is Not a (configured) Valve");
+                }
+                break;
         }
-
     }
 
-    private boolean readyToChangeValve() {
-        return ((System.currentTimeMillis() - timeStampValve) > (timeValveNeedsToOpenAndClose + this.extraBufferTime));
-    }
-
-    private boolean valveOpen() {
-        //opens will be set true when closing is done
-        if (!opens) {
-            controlRelais(true, "Open");
-            controlRelais(false, "Closed");
-            isOpen = false;
-            isClosed = false;
-            closing = false;
-            opens = true;
-            timeStampValve = System.currentTimeMillis();
-            return false;
-        }
-        return true;
-    }
-
-    private void valveClose() {
-        if (!closing) {
-            controlRelais(true, "Closed");
-            controlRelais(false, "Open");
-            controlRelais(false, "Pump");
-            isClosed = false;
-            isOpen = false;
-            opens = false;
-            closing = true;
-            timeStampValve = System.currentTimeMillis();
-        }
-
-    }
 
     private boolean tooHot() {
-        return this.secundaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
-                > this.secundaryForward.getTemperature().getNextValue().get();
-    }
-
-    private void controlRelais(boolean activate, String whichRelais) {
-        try {
-            switch (whichRelais) {
-                case "Open":
-                    if (this.valveOpen.isCloser().value().get()) {
-                        this.valveOpen.getRelaisChannel().setNextWriteValue(activate);
-                    } else {
-                        this.valveOpen.getRelaisChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-                case "Closed":
-                    if (this.valveClose.isCloser().value().get()) {
-                        this.valveClose.getRelaisChannel().setNextWriteValue(activate);
-                    } else {
-                        this.valveClose.getRelaisChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-
-                case "Pump":
-                    if (this.pump.isCloser().value().get()) {
-                        this.pump.getRelaisChannel().setNextWriteValue(activate);
-                    } else {
-                        this.pump.getRelaisChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-            }
-        } catch (OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
+        if (this.secundaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
+            return this.secundaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
+                    > this.secundaryForward.getTemperature().getNextValue().get();
         }
+        return false;
     }
 
 

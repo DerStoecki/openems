@@ -1,5 +1,6 @@
 package io.openems.edge.pwm.device;
 
+import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.pwm.device.task.PwmDeviceTaskImpl;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Reference;
@@ -15,7 +16,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.bridge.i2c.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
-import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 
 

@@ -23,7 +23,6 @@ public interface ControllerPassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-
         ON_OFF(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE)), //
 
         /**
@@ -46,18 +45,7 @@ public interface ControllerPassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        NO_ERROR(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
-
-        /**
-         * Valve Closing and Opening Time.
-         * <ul>
-         * <li> Time in Seconds the Valve needs to open and close
-         * <li>Type: Integer
-         * <li>
-         * </ul>
-         */
-
-        VALVE_TIME(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY).unit(Unit.SECONDS));
+        NO_ERROR(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
 
         private final Doc doc;
 
@@ -98,16 +86,5 @@ public interface ControllerPassingChannel extends OpenemsComponent {
     default Channel<Boolean> noError() {
         return this.channel(ChannelId.NO_ERROR);
     }
-
-    /**
-     * Valve Opening and Close Time.
-     *
-     * @return the Channel
-     */
-
-    default Channel<Integer> valveTime() {
-        return this.channel(ChannelId.VALVE_TIME);
-    }
-
 
 }

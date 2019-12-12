@@ -1,4 +1,4 @@
-package io.openems.edge.pwm.device;
+package io.openems.edge.pwm.device.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;

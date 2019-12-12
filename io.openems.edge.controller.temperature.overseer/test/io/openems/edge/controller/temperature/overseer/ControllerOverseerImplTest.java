@@ -32,7 +32,7 @@ public class ControllerOverseerImplTest {
         private final int toleratedTemperatureRange;
         private String allocatedTemperatureSensor;
 
-        public MyConfig(String id, String alias, boolean enabled, String service_pid, String allocated_Passing_Controller, int minTemperature, int toleratedTemperatureRange, String allocatedTemperatureSensor) {
+        MyConfig(String id, String alias, boolean enabled, String service_pid, String allocated_Passing_Controller, int minTemperature, int toleratedTemperatureRange, String allocatedTemperatureSensor) {
             super(Config.class, id);
             this.id = id;
             this.alias = alias;
@@ -111,24 +111,16 @@ public class ControllerOverseerImplTest {
         cpm.addComponent(allocatedRelais);
         cpm.addComponent(errorR);
         cpm.addComponent(errorT);
-        passing.valveTime().setNextValue(5);
     }
-
-    @Test
-    public void simple() {
-        ControllerOverseerImpl impl = new ControllerOverseerImpl();
-        assertNotNull(impl);
-    }
-
 
     @Test
     public void testHeatingNotReachedNoError() {
         try {
+
             overseer.activate(null, config);
             overseer.activate(null, config);
             overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
             overseer.passing.noError().setNextValue(true);
-            overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
 
             AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                     .next(
@@ -159,7 +151,6 @@ public class ControllerOverseerImplTest {
             overseer.activate(null, config);
             overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
             overseer.passing.noError().setNextValue(true);
-            overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
 
             AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                     .next(
@@ -184,12 +175,10 @@ public class ControllerOverseerImplTest {
 
     @Test(expected = OpenemsException.class)
     public void testHeatingError() throws Exception {
-
         overseer.activate(null, config);
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                 .next(
@@ -207,12 +196,10 @@ public class ControllerOverseerImplTest {
 
     @Test(expected = RuntimeException.class)
     public void testHeatingPassingNull() throws Exception {
-
         overseer.activate(null, config);
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
         overseer.passing = null;
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
@@ -237,7 +224,6 @@ public class ControllerOverseerImplTest {
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                 .next(
@@ -260,7 +246,6 @@ public class ControllerOverseerImplTest {
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
-        overseer.waitingTimeValveToClose = passing.valveTime().getNextValue().get();
 
         AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
                 .next(

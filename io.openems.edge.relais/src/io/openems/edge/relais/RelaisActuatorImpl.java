@@ -83,9 +83,12 @@ public class RelaisActuatorImpl extends AbstractOpenemsComponent implements Actu
 
     @Override
     public String debugLog() {
-        if (this.getRelaisChannel().getNextWriteValue().isPresent() && !this.getRelaisChannel().getNextWriteValue().equals(Optional.empty())) {
-            Optional<Boolean> status = this.getRelaisChannel().getNextWriteValue();
-            return "Status of " + super.id() + " alias: " + super.alias() + " will be " + this.getRelaisChannel().getNextWriteValue();
+        if (this.getRelaisChannel().getNextValue().isDefined()) {
+            String onOrOff = "off";
+            if (this.getRelaisChannel().getNextValue().get()) {
+                onOrOff = "on";
+            }
+            return "Status of " + super.id() + " alias: " + super.alias() + " is " + onOrOff;
         } else {
             return "";
         }
