@@ -109,8 +109,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (this.getMinTemperature().getNextValue().isDefined()
+        if (this.getMinTemperature().getNextWriteValue().isPresent()
                 && this.getOnOff_PassingController().getNextWriteValue().isPresent()) {
+            this.getMinTemperature().setNextValue(this.getMinTemperature().getNextWriteValue().get());
             if (this.noError().getNextValue().get()
                     && this.getOnOff_PassingController().getNextWriteValue().get()) {
                 try {

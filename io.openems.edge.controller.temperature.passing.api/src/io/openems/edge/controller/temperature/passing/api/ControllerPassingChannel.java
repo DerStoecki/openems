@@ -73,7 +73,7 @@ public interface ControllerPassingChannel extends OpenemsComponent {
      *
      * @return the Channel
      */
-    default Channel<Integer> getMinTemperature() {
+    default WriteChannel<Integer> getMinTemperature() {
         return this.channel(ChannelId.MIN_TEMPERATURE);
     }
 

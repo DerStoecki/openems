@@ -38,7 +38,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
         allocateComponents(config.allocated_Passing_Controller(), config.allocated_Temperature_Sensor());
 
-        passing.getMinTemperature().setNextValue(config.min_Temperature());
+        passing.getMinTemperature().setNextWriteValue(config.min_Temperature());
         this.tolerance = config.tolerated_Temperature_Range();
     }
 
@@ -89,7 +89,12 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     }
 
     private boolean heatingReached() {
-        return this.temperatureSensor.getTemperature().value().get() + tolerance
-                >= passing.getMinTemperature().value().get();
+        if (passing.getMinTemperature().getNextWriteValue().isPresent()) {
+            return this.temperatureSensor.getTemperature().value().get() + tolerance
+                    >= passing.getMinTemperature().getNextWriteValue().get();
+        } else {
+            //if next Write value is not present; return true; so everything will be shut down; just in case
+            return true;
+        }
     }
 }
