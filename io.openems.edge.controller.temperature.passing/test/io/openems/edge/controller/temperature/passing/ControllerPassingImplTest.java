@@ -37,13 +37,13 @@ public class ControllerPassingImplTest {
         private final String primary_Rewind_Sensor;
         private final String secundary_Forward_Sensor;
         private final String secundary_Rewind_Sensor;
-        private  String valveId;
+        private String valveId;
         private final String pumpId;
         private int heating_Time;
 
 
         public ConfigOfPassing(String id, String alias, boolean enabled, String service_pid, String primary_Forward_Sensor, String primary_Rewind_Sensor, String secundary_Forward_Sensor, String secundary_Rewind_Sensor, String valveId,
-                                  String pumpId) {
+                               String pumpId) {
             super(Config.class, id);
             this.id = id;
             this.alias = alias;
@@ -149,7 +149,7 @@ public class ControllerPassingImplTest {
 
 
         valve = new DummyValve(valveOpen, valveClose, "Valve0", 1);
-       
+
 
         pF = new ChannelAddress(config.primary_Forward_Sensor(), "Temperature");
         pR = new ChannelAddress(config.primary_Rewind_Sensor(), "Temperature");
@@ -167,7 +167,6 @@ public class ControllerPassingImplTest {
         //PumpRelais channel
         p = new ChannelAddress(pumpRelais.id(), "OnOff");
         pO = new ChannelAddress(pumpRelais.id(), "IsCloser");
-
 
 
         cpm.addComponent(primaryForward);
@@ -203,7 +202,7 @@ public class ControllerPassingImplTest {
     @Test
     public void testEverythingsFineOnPumpIsRelais() {
         try {
-            pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+            pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
             cpm.addComponent(pump);
             primaryRewind.getTemperature().setNextValue(200);
             primaryForward.getTemperature().setNextValue(700);
@@ -232,7 +231,10 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
+            fail();
+        }
+        if (!passing.noError().getNextValue().get()) {
             fail();
         }
         passing.deactivate();
@@ -245,7 +247,7 @@ public class ControllerPassingImplTest {
     @Test
     public void testEverythingsFineOnRelaisOpener() {
         try {
-            pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+            pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
             cpm.addComponent(pump);
             primaryRewind.getTemperature().setNextValue(200);
             primaryForward.getTemperature().setNextValue(700);
@@ -274,7 +276,7 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             fail();
         }
         passing.deactivate();
@@ -288,14 +290,14 @@ public class ControllerPassingImplTest {
     @Test
     public void testEverythingsFineOffWithWaitingTime() {
         try {
-            pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+            pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
             cpm.addComponent(pump);
 
             primaryRewind.getTemperature().setNextValue(200);
             primaryForward.getTemperature().setNextValue(700);
             passing.activate(null, config);
             passing.activate(null, config);
-            passing.getMinTemperature().setNextValue(500);
+            passing.getMinTemperature().setNextWriteValue(500);
             passing.getOnOff_PassingController().setNextWriteValue(false);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -318,7 +320,7 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             fail();
         }
         passing.deactivate();
@@ -329,17 +331,17 @@ public class ControllerPassingImplTest {
     }
 
     @Test
-    public void testEverythingsFineOff(){
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+    public void testEverythingsFineOff() {
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
 
         try {
-            pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+            pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
             cpm.addComponent(pump);
             primaryRewind.getTemperature().setNextValue(200);
             passing.activate(null, config);
             passing.activate(null, config);
-            passing.getMinTemperature().setNextValue(500);
+            passing.getMinTemperature().setNextWriteValue(500);
             passing.getOnOff_PassingController().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -366,7 +368,7 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             fail();
         }
         //Bc of waiting time outputs can't be controlled, but as long no exception is thrown everythings fine
@@ -377,46 +379,46 @@ public class ControllerPassingImplTest {
 
     @Test(expected = io.openems.common.exceptions.NoHeatNeededException.class)
     public void testTooHot() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
-            primaryRewind.getTemperature().setNextValue(200);
-            passing.activate(null, config);
-            passing.activate(null, config);
-            passing.getMinTemperature().setNextValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(true);
+        primaryRewind.getTemperature().setNextValue(200);
+        passing.activate(null, config);
+        passing.activate(null, config);
+        passing.getMinTemperature().setNextWriteValue(500);
+        passing.getOnOff_PassingController().setNextWriteValue(true);
 
-            AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
-                    secundaryRewind, valveOpen, valveClose, pumpRelais, passing).next(
-                    new TestCase()
-                            .input(pF, 900)
-                            .input(pR, 800)
-                            .input(sF, 650)
-                            .input(sR, 650)
-                            .input(vO, false)
-                            .input(vOC, true)
-                            .input(vC, false)
-                            .input(vCc, true)
-                            .input(p, false)
-                            .input(pO, true)
-            );
-            int count = 0;
-            while (count < 6) {
-                controllerTest.run();
-                Thread.sleep(1000);
-                count++;
-            }
+        AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
+                secundaryRewind, valveOpen, valveClose, pumpRelais, passing).next(
+                new TestCase()
+                        .input(pF, 900)
+                        .input(pR, 800)
+                        .input(sF, 650)
+                        .input(sR, 650)
+                        .input(vO, false)
+                        .input(vOC, true)
+                        .input(vC, false)
+                        .input(vCc, true)
+                        .input(p, false)
+                        .input(pO, true)
+        );
+        int count = 0;
+        while (count < 6) {
+            controllerTest.run();
+            Thread.sleep(1000);
+            count++;
+        }
 
     }
 
     @Test(expected = io.openems.common.exceptions.NoHeatNeededException.class)
     public void testTooHotPumpOpener() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
         primaryForward.getTemperature().setNextValue(700);
         primaryRewind.getTemperature().setNextValue(200);
         passing.activate(null, config);
         passing.activate(null, config);
-        passing.getMinTemperature().setNextValue(500);
+        passing.getMinTemperature().setNextWriteValue(500);
         passing.getOnOff_PassingController().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -444,13 +446,13 @@ public class ControllerPassingImplTest {
 
     @Test(expected = io.openems.common.exceptions.HeatToLowException.class)
     public void testHeatToLow() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
         primaryForward.getTemperature().setNextValue(700);
         primaryRewind.getTemperature().setNextValue(200);
         passing.activate(null, config);
         passing.activate(null, config);
-        passing.getMinTemperature().setNextValue(500);
+        passing.getMinTemperature().setNextWriteValue(500);
         passing.getOnOff_PassingController().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -477,14 +479,14 @@ public class ControllerPassingImplTest {
 
     @Test(expected = io.openems.common.exceptions.ValveDefectException.class)
     public void testValveDefect() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
         config.heating_Time = 1;
         primaryForward.getTemperature().setNextValue(700);
         primaryRewind.getTemperature().setNextValue(200);
         passing.activate(null, config);
         passing.activate(null, config);
-        passing.getMinTemperature().setNextValue(500);
+        passing.getMinTemperature().setNextWriteValue(500);
         passing.getOnOff_PassingController().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -512,14 +514,14 @@ public class ControllerPassingImplTest {
 
     @Test(expected = ConfigurationException.class)
     public void testThermometerException() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
         primaryForward.getTemperature().setNextValue(700);
         config.primary_Forward_Sensor = "Relais4";
         primaryRewind.getTemperature().setNextValue(200);
         passing.activate(null, config);
         passing.activate(null, config);
-        passing.getMinTemperature().setNextValue(500);
+        passing.getMinTemperature().setNextWriteValue(500);
         passing.getOnOff_PassingController().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -546,14 +548,14 @@ public class ControllerPassingImplTest {
 
     @Test(expected = ConfigurationException.class)
     public void testRelaisException() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
         config.valveId = "TemperatureSensor4";
         primaryForward.getTemperature().setNextValue(700);
         primaryRewind.getTemperature().setNextValue(200);
         passing.activate(null, config);
         passing.activate(null, config);
-        passing.getMinTemperature().setNextValue(500);
+        passing.getMinTemperature().setNextWriteValue(500);
         passing.getOnOff_PassingController().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -580,14 +582,14 @@ public class ControllerPassingImplTest {
 
     @Test(expected = OpenemsError.OpenemsNamedException.class)
     public void testComponentManager() throws Exception {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Relais");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Relais");
         cpm.addComponent(pump);
         primaryForward.getTemperature().setNextValue(700);
         config.valveId = "Relais6";
         primaryRewind.getTemperature().setNextValue(200);
         passing.activate(null, config);
         passing.activate(null, config);
-        passing.getMinTemperature().setNextValue(500);
+        passing.getMinTemperature().setNextWriteValue(500);
         passing.getOnOff_PassingController().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -614,14 +616,14 @@ public class ControllerPassingImplTest {
 
     @Test
     public void testEverythingsFineOnPumpIsBoth() {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Both");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Both");
         cpm.addComponent(pump);
         try {
             primaryRewind.getTemperature().setNextValue(200);
             primaryForward.getTemperature().setNextValue(700);
             passing.activate(null, config);
             passing.activate(null, config);
-            passing.getMinTemperature().setNextValue(500);
+            passing.getMinTemperature().setNextWriteValue(500);
             passing.getOnOff_PassingController().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -644,7 +646,7 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             fail();
         }
         passing.deactivate();
@@ -657,14 +659,14 @@ public class ControllerPassingImplTest {
 
     @Test
     public void testEverythingsFineOnPumpIsPwm() {
-        pump = new DummyPump("Pump0", pumpRelais,  pwm,"Pwm");
+        pump = new DummyPump("Pump0", pumpRelais, pwm, "Pwm");
         cpm.addComponent(pump);
         try {
             primaryRewind.getTemperature().setNextValue(200);
             primaryForward.getTemperature().setNextValue(700);
             passing.activate(null, config);
             passing.activate(null, config);
-            passing.getMinTemperature().setNextValue(500);
+            passing.getMinTemperature().setNextWriteValue(500);
             passing.getOnOff_PassingController().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
@@ -687,7 +689,7 @@ public class ControllerPassingImplTest {
                 Thread.sleep(1000);
                 count++;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             fail();
         }
         passing.deactivate();

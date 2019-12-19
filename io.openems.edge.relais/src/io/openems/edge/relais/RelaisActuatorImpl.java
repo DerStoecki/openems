@@ -48,10 +48,10 @@ public class RelaisActuatorImpl extends AbstractOpenemsComponent implements Actu
             if (relaisBoard.getId().equals(config.relaisBoard_id())) {
                 Mcp mcp = relaisBoard.getMcp();
                 allocatedMcp = mcp;
-                //Value if it's activated always true
-                mcp.setPosition(config.position(), !this.relaisValue);
-                //Value if it's deactivated Opener will be closed and Closer will be opened
-                mcp.addToDefault(config.position(), !this.relaisValue);
+                //Relais is always "off" on activation in OSGi --> Means closer and opener will be off
+                mcp.setPosition(config.position(), !this.isCloser().getNextValue().get());
+                //Value if it's deactivated Opener will be opened and Closer will be opened
+                mcp.addToDefault(config.position(), !this.isCloser().getNextValue().get());
                 mcp.shift();
                 mcp.addTask(config.id(), new RelaisActuatorTask(mcp, config.position(),
                         !this.relaisValue, this.getRelaisChannel(),

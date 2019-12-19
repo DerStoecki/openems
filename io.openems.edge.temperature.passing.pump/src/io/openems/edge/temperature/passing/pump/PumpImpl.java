@@ -83,15 +83,15 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     public void deactivate() {
         super.deactivate();
         try {
-            if (!this.isRelais) {
-                this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
-            }
-            if (!this.isPwm) {
+            if (this.isRelais) {
                 if (this.relais.isCloser().getNextValue().get()) {
                     this.relais.getRelaisChannel().setNextWriteValue(false);
                 } else {
                     this.relais.getRelaisChannel().setNextWriteValue(true);
                 }
+            }
+            if (this.isPwm) {
+                this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
