@@ -1,13 +1,14 @@
-package io.openems.edge.chp.module;
+package io.openems.edge.relays.module;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 import io.openems.edge.bridge.i2c.api.I2cBridge;
-import io.openems.edge.chp.module.api.ChpModule;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
+
 import io.openems.edge.i2c.mcp.api.Mcp;
-import io.openems.edge.i2c.mcp.api.Mcp4728;
+import io.openems.edge.i2c.mcp.api.Mcp23008;
+import io.openems.edge.relays.module.api.RelaysModule;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.Component;
@@ -17,30 +18,59 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Deactivate;
-
 import org.osgi.service.metatype.annotations.Designate;
-
 import java.io.IOException;
+import java.util.Map;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Gaspedal",
+@Component(name = "RelaisBoard",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
-public class ChpModuleImpl extends AbstractOpenemsComponent implements OpenemsComponent, ChpModule {
+public class RelaysModuleImpl extends AbstractOpenemsComponent implements RelaysModule, OpenemsComponent {
+
+    private String id;
+    private I2CBus bus;
+    private Mcp mcp;
+
+
+    public RelaysModuleImpl() {
+        super(OpenemsComponent.ChannelId.values());
+    }
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     I2cBridge refI2cBridge;
 
-    private Mcp allocatedMcp;
-    private I2CBus bus;
-    private String address;
-    private String id;
+    @Activate
+    public void activate(ComponentContext context, Config config) {
+        super.activate(context,config.id(), config.alias(), config.enabled());
+        this.id = config.id();
 
-    public ChpModuleImpl() {
-        super(OpenemsComponent.ChannelId.values());
+        String address = config.address();
+        allocateBus(config.bus());
+
+        try {
+            //more to come with further versions
+            switch (config.version()) {
+                case "1":
+                    this.mcp = new Mcp23008(address, this.bus, this.id);
+                    this.refI2cBridge.addMcp(this.mcp);
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
+    @Deactivate
+    public void deactivate() {
+        super.deactivate();
+            for (Map.Entry<Integer, Boolean> entry : mcp.getValuesPerDefault().entrySet()) {
+                mcp.setPosition(entry.getKey(), entry.getValue());
+            }
+            mcp.shift();
+            this.refI2cBridge.removeMcp(this.mcp);
+    }
 
     private void allocateBus(int config) {
         try {
@@ -110,43 +140,13 @@ public class ChpModuleImpl extends AbstractOpenemsComponent implements OpenemsCo
 
     }
 
-
-    @Activate
-    public void activate(ComponentContext context, Config config) {
-        super.activate(context, config.id(), config.alias(), config.enabled());
-        this.id = config.id();
-        this.address = config.address();
-        allocateBus(config.bus());
-
-        switch (config.version()) {
-            case "1":
-                try {
-                    this.allocatedMcp = new Mcp4728(config.address(), super.id(), this.bus);
-                    this.refI2cBridge.addMcp(this.allocatedMcp);
-                    break;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-        }
-    }
-
-    @Deactivate
-    public void deactivate() {
-
-        super.deactivate();
-        this.allocatedMcp.deactivate();
-        this.refI2cBridge.removeMcp(this.allocatedMcp);
-    }
-
-    @Override
     public String getId() {
-        return super.id();
+        return id;
     }
 
-    @Override
     public Mcp getMcp() {
-        return this.allocatedMcp;
+        return this.mcp;
     }
+
 
 }

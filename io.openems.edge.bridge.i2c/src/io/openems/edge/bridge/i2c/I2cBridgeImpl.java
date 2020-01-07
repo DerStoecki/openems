@@ -7,7 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 
 import io.openems.edge.bridge.i2c.api.I2cBridge;
-import io.openems.edge.relais.module.api.McpChannelRegister;
+import io.openems.edge.i2c.mcp.api.Mcp;
+import io.openems.edge.i2c.mcp.api.McpChannelRegister;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -25,8 +26,7 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
-import io.openems.edge.pwm.module.api.IpcaGpioProvider;
-import io.openems.edge.relais.module.api.Mcp;
+import io.openems.edge.pwm.module.module.api.IpcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)

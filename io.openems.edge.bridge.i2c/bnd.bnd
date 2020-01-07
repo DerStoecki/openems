@@ -21,6 +21,7 @@ Private-Package:  \
 	io.openems.common;version=latest,\
     io.openems.edge.relais.board.api;version=latest,\
     io.openems.edge.pwm.module.api;version=latest,\
+    io.openems.edge.i2c.mcp.api;version=latest,\
     pi4j-core,\
 
 -testpath: \

@@ -11,7 +11,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     String service_pid();
 
-    @AttributeDefinition(name = "Pwm Device Name", description = "")
+    @AttributeDefinition(name = "Pwm Device Id", description = "Unique Id of the Pwm Device.")
     String id() default "PwmDevice0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")

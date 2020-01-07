@@ -9,6 +9,7 @@ Export-Package:  \
 
 Private-Package: \
     io.openems.edge.relays.device,\
+    io.openems.edge.relays.device.task,\
 
 -includeresource: {readme.md}
 
@@ -16,9 +17,10 @@ Private-Package: \
 	osgi.enroute.base.api;version=2.1,\
 		io.openems.edge.common;version=latest,\
     	io.openems.common;version=latest,\
-    	io.openems.edge.relais.board;version=latest,\
-    	io.openems.edge.relais.board.api;version=latest,\
-    	io.openems.edge.relais.api;version=latest,\
+    	io.openems.edge.relays.module.api;version=latest,\
+    	io.openems.edge.relays.api;version=latest,\
+    	io.openems.edge.i2c.mcp.api;version=latest,\
+    	io.openems.edge.relays.device.api;version=latest,\
     	pi4j-core,\
 
 

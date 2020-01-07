@@ -4,10 +4,10 @@ import io.openems.edge.common.channel.WriteChannel;
 
 public abstract class McpTask {
 
-    private String relaisBoard;
+    private String relaysModule;
 
-    public McpTask(String relaisBoard) {
-        this.relaisBoard = relaisBoard;
+    public McpTask(String relaysModule) {
+        this.relaysModule = relaysModule;
     }
 
     public abstract int getPosition();
