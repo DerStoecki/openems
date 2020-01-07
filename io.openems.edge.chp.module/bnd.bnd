@@ -1,27 +1,26 @@
-Bundle-Name: OpenEMS Edge SpiBridge
+Bundle-Name: OpenEMS Edge ChpModule
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-    This Bundle provides the basis for the communication with modules and devices using Spi.
-    Further more the tasks will be handled during the work-cycle so used devices need to add SpiTasks.
+    This Bundle works like a basis for the Chp Devices by creating a dac and adding it to the I2cBridge
+
 
 Export-Package:  \
-	io.openems.edge.bridge.spi.api,\
+
 
 Private-Package:  \
-	io.openems.edge.bridge.spi,\
-	io.openems.edge.bridge.spi.task,\
+	io.openems.edge.chp.module,\
 
 -includeresource: {readme.md}
 
 -buildpath:  \
 	osgi.enroute.base.api;version=2.1,\
-	io.openems.common;version=latest,\
 	io.openems.edge.common;version=latest,\
-	io.openems.edge.temperature.board.api;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.bridge.i2c;version=latest,\
+	io.openems.edge.relais.board.api;version=latest,\
 	pi4j-core,\
-
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \
