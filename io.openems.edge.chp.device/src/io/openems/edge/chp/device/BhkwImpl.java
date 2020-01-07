@@ -7,7 +7,7 @@ import io.openems.edge.chp.device.task.BhkwTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.relais.board.api.Mcp;
+import io.openems.edge.relais.module.api.Mcp;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Component;

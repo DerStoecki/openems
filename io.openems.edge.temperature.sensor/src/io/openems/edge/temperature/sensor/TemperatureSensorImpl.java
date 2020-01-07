@@ -6,7 +6,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.temperature.sensor.task.TemperatureDigitalReadTask;
-import io.openems.edge.temperature.board.api.Adc;
+import io.openems.edge.spi.mcp.api.Adc;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -72,7 +72,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
                     ).findFirst().ifPresent(pinValue -> {
                         if (pinValue.setUsedBy(super.id()) || pinValue.getUsedBy().equals(super.id())) {
                             TemperatureDigitalReadTask task = new TemperatureDigitalReadTask(this.getTemperature(),
-                                    adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition, this.temperatureBoardId, super.id());
+                                    adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition);
                             try {
                                 bridgeSpi.addSpiTask(super.id(), task);
                             } catch (ConfigurationException e) {

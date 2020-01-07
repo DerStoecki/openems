@@ -4,7 +4,7 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import org.osgi.service.component.ComponentContext;
@@ -19,8 +19,8 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "Passing.Valve")
 public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
 
-    private ActuatorRelaisChannel closing;
-    private ActuatorRelaisChannel opens;
+    private ActuatorRelaysChannel closing;
+    private ActuatorRelaysChannel opens;
     private double secondsPerPercentage;
     private boolean percentageWasSet = false;
     private long timeStampValve;
@@ -38,10 +38,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
-            if (cpm.getComponent(config.closing_Relais()) instanceof ActuatorRelaisChannel) {
+            if (cpm.getComponent(config.closing_Relais()) instanceof ActuatorRelaysChannel) {
                 closing = cpm.getComponent(config.closing_Relais());
             }
-            if (cpm.getComponent(config.opening_Relais()) instanceof ActuatorRelaisChannel) {
+            if (cpm.getComponent(config.opening_Relais()) instanceof ActuatorRelaysChannel) {
                 opens = cpm.getComponent(config.opening_Relais());
             }
         } catch (OpenemsError.OpenemsNamedException e) {

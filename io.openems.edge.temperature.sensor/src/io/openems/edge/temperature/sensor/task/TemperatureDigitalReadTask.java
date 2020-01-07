@@ -3,32 +3,29 @@ package io.openems.edge.temperature.sensor.task;
 import io.openems.edge.bridge.spi.task.SpiTask;
 import io.openems.edge.bridge.spi.task.AbstractSpiTask;
 import io.openems.edge.common.channel.Channel;
-import io.openems.edge.temperature.board.TemperatureBoardVersions;
-import io.openems.edge.temperature.board.api.Adc;
+import io.openems.edge.spi.mcp.api.Adc;
+import io.openems.edge.temperature.module.api.TemperatureModuleVersions;
 
 
 //Only for one Pin
 public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTask {
 
     private final Channel<Integer> channel;
-    private String temperatureSensorId;
     private double regressionValueA;
     private double regressionValueB;
     private double regressionValueC;
     private int lastValue = -666;
     private long lastTimestamp = 0;
     //10 °C
-    private int temperatureChange = 1000;
-    private int timestamp = 300;
-    private String version;
+    private static int TEMPERATURE_CHANGE = 1000;
+    private static int TIMESTAMP = 300;
+
 
     private long pinValue;
 
-    public TemperatureDigitalReadTask(Channel<Integer> channel, String version, Adc adc, int pin, String parentCircuitBoard, String temperatureSensorId) {
+    public TemperatureDigitalReadTask(Channel<Integer> channel, String version, Adc adc, int pin) {
         super(adc.getSpiChannel());
         this.channel = channel;
-        this.version = version;
-        this.temperatureSensorId = temperatureSensorId;
         pinValue = adc.getPins().get(pin).getValue();
         allocateRegressionValues(version);
     }
@@ -37,9 +34,9 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
         switch (version) {
             //more to come with further versions
             case "1":
-                this.regressionValueA = TemperatureBoardVersions.TEMPERATURE_BOARD_V_1.getRegressionValueA();
-                this.regressionValueB = TemperatureBoardVersions.TEMPERATURE_BOARD_V_1.getRegressionValueB();
-                this.regressionValueC = TemperatureBoardVersions.TEMPERATURE_BOARD_V_1.getRegressionValueC();
+                this.regressionValueA = TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getRegressionValueA();
+                this.regressionValueB = TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getRegressionValueB();
+                this.regressionValueC = TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getRegressionValueC();
                 break;
 
         }
@@ -72,12 +69,7 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
 
     }
 
-    @Override
-    public String getTemperatureSensorId() {
-        return this.temperatureSensorId;
-    }
-
-    //to avoid to big temperature Fluctuations (measured within sec)
+    //to avoid to big temperature fluctuations (measured within sec)
     private void compareLastValueWithCurrent(int value) {
 
         if (lastTimestamp == 0) {
@@ -90,7 +82,7 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
             lastValue = value;
         }
 
-        if (Math.abs(lastValue) - Math.abs(value) > temperatureChange || Math.abs(lastValue) - Math.abs(value) < -(temperatureChange) && lastTimestamp - System.currentTimeMillis() < timestamp) {
+        if (Math.abs(lastValue) - Math.abs(value) > TEMPERATURE_CHANGE || Math.abs(lastValue) - Math.abs(value) < -(TEMPERATURE_CHANGE) && lastTimestamp - System.currentTimeMillis() < TIMESTAMP) {
             return;
         }
         lastTimestamp = System.currentTimeMillis();

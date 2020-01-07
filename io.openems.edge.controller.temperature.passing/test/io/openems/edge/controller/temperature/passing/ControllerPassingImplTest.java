@@ -9,8 +9,8 @@ import io.openems.edge.common.test.DummyComponentManager;
 import io.openems.edge.controller.test.ControllerTest;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.pwm.device.api.test.DummyPwm;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
-import io.openems.edge.relais.api.test.DummyRelais;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
+import io.openems.edge.relays.device.api.test.DummyRelays;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.pump.api.test.DummyPump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
@@ -106,10 +106,10 @@ public class ControllerPassingImplTest {
     private Thermometer secundaryForward;
     private Thermometer secundaryRewind;
     private Thermometer testForFailR;
-    private ActuatorRelaisChannel pumpRelais;
-    private ActuatorRelaisChannel valveOpen;
-    private ActuatorRelaisChannel valveClose;
-    private ActuatorRelaisChannel testForFailT;
+    private ActuatorRelaysChannel pumpRelais;
+    private ActuatorRelaysChannel valveOpen;
+    private ActuatorRelaysChannel valveClose;
+    private ActuatorRelaysChannel testForFailT;
     private PwmPowerLevelChannel pwm;
     private ConfigOfPassing config;
     private ChannelAddress pF;
@@ -140,12 +140,12 @@ public class ControllerPassingImplTest {
         primaryRewind = new DummyThermometer(config.primary_Rewind_Sensor());
         secundaryForward = new DummyThermometer(config.secundary_Forward_Sensor());
         secundaryRewind = new DummyThermometer(config.secundary_Rewind_Sensor());
-        valveClose = new DummyRelais("Relais0");
-        valveOpen = new DummyRelais("Relais1");
-        pumpRelais = new DummyRelais("Relais2");
+        valveClose = new DummyRelays("Relais0");
+        valveOpen = new DummyRelays("Relais1");
+        pumpRelais = new DummyRelays("Relais2");
         pwm = new DummyPwm("PwmDevice0");
         testForFailR = new DummyThermometer("TemperatureSensor4");
-        testForFailT = new DummyRelais("Relais4");
+        testForFailT = new DummyRelays("Relais4");
 
 
         valve = new DummyValve(valveOpen, valveClose, "Valve0", 1);

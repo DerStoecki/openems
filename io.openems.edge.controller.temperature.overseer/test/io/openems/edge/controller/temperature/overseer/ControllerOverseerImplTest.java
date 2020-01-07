@@ -8,8 +8,8 @@ import io.openems.edge.common.test.AbstractComponentTest.TestCase;
 import io.openems.edge.common.test.DummyComponentManager;
 import io.openems.edge.controller.temperature.passing.api.test.DummyControllerPassing;
 import io.openems.edge.controller.test.ControllerTest;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
-import io.openems.edge.relais.api.test.DummyRelais;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
+import io.openems.edge.relays.device.api.test.DummyRelays;
 import io.openems.edge.thermometer.api.Thermometer;
 import io.openems.edge.thermometer.api.test.DummyThermometer;
 import org.junit.Before;
@@ -78,12 +78,12 @@ public class ControllerOverseerImplTest {
     private ChannelAddress passingOnOff;
     private ChannelAddress passingMinTemp;
     private ChannelAddress passingNoError;
-    private ActuatorRelaisChannel allocatedRelais;
+    private ActuatorRelaysChannel allocatedRelais;
     private ChannelAddress relaisOnOff;
     private ChannelAddress relaisIsCloser;
     private MyConfig config;
     private Thermometer errorT;
-    private ActuatorRelaisChannel errorR;
+    private ActuatorRelaysChannel errorR;
 
     @Before
     public void setUp() throws Exception {
@@ -96,14 +96,14 @@ public class ControllerOverseerImplTest {
                 400, 20, "TemperatureSensor8");
         allocatedThermometer = new DummyThermometer(config.allocated_Temperature_Sensor());
         passing = new DummyControllerPassing(config.allocated_Passing_Controller());
-        allocatedRelais = new DummyRelais("Relais1");
+        allocatedRelais = new DummyRelays("Relais1");
         passingOnOff = new ChannelAddress(config.allocated_Passing_Controller(), "OnOff");
         passingMinTemp = new ChannelAddress(config.allocated_Passing_Controller(), "MinTemperature");
         passingNoError = new ChannelAddress(config.allocated_Passing_Controller(), "NoError");
         relaisOnOff = new ChannelAddress("Relais1", "OnOff");
         relaisIsCloser = new ChannelAddress("Relais1", "IsCloser");
         thermometer = new ChannelAddress(config.allocated_Temperature_Sensor(), "Temperature");
-        errorR = new DummyRelais("Relais20");
+        errorR = new DummyRelays("Relais20");
         errorT = new DummyThermometer("TemperatureSensor20");
 
         cpm.addComponent(allocatedThermometer);

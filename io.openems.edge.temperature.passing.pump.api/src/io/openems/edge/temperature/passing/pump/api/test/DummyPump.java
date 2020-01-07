@@ -3,19 +3,19 @@ package io.openems.edge.temperature.passing.pump.api.test;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 
 public class DummyPump extends AbstractOpenemsComponent implements OpenemsComponent, Pump {
 
-    private ActuatorRelaisChannel relais;
+    private ActuatorRelaysChannel relais;
     //private PwmPowerLevelChannel pwm;
     private boolean isRelais = false;
     private boolean isPwm = false;
     private PwmPowerLevelChannel pwm;
 
-    public DummyPump(String id, ActuatorRelaisChannel relais, PwmPowerLevelChannel pwm, String type) {
+    public DummyPump(String id, ActuatorRelaysChannel relais, PwmPowerLevelChannel pwm, String type) {
         super(OpenemsComponent.ChannelId.values(), PassingChannel.ChannelId.values());
 
         super.activate(null, id, "", true);

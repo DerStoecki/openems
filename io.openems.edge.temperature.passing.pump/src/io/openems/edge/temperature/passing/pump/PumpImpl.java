@@ -5,7 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import org.osgi.service.cm.ConfigurationException;
@@ -21,7 +21,7 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "Passing.Pump")
 public class PumpImpl extends AbstractOpenemsComponent implements OpenemsComponent, Pump {
 
-    private ActuatorRelaisChannel relais;
+    private ActuatorRelaysChannel relais;
     private PwmPowerLevelChannel pwm;
     private boolean isRelais = false;
     private boolean isPwm = false;
@@ -59,7 +59,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
         }
         try {
             if (isRelais) {
-                if (cpm.getComponent(pump_relais) instanceof ActuatorRelaisChannel) {
+                if (cpm.getComponent(pump_relais) instanceof ActuatorRelaysChannel) {
                     this.relais = cpm.getComponent(pump_relais);
                 } else {
                     throw new ConfigurationException(pump_relais, "Allocated Relais not a (configured) Relais");

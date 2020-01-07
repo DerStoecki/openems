@@ -5,7 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -23,7 +23,7 @@ public class TemperatureRelaisActivationController extends AbstractOpenemsCompon
     ComponentManager cpm;
 
     private Thermometer temperatureSensor;
-    private ActuatorRelaisChannel relaisActuator;
+    private ActuatorRelaysChannel relaisActuator;
     private float toleranceTemperature;
     private float maxTemp;
     private float minTemp;
@@ -41,7 +41,7 @@ public class TemperatureRelaisActivationController extends AbstractOpenemsCompon
         this.maxTemp = config.TemperatureMax();
         this.minTemp = config.TemperatureMin();
 
-        if (cpm.getComponent(config.relaisId()) instanceof ActuatorRelaisChannel) {
+        if (cpm.getComponent(config.relaisId()) instanceof ActuatorRelaysChannel) {
             this.relaisActuator = cpm.getComponent(config.relaisId());
         }
 

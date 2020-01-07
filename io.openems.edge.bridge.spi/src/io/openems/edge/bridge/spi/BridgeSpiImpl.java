@@ -11,7 +11,7 @@ import io.openems.edge.bridge.spi.task.SpiTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
-import io.openems.edge.temperature.board.api.Adc;
+import io.openems.edge.spi.mcp.api.Adc;
 
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
