@@ -1,4 +1,4 @@
-package io.openems.edge.bhkw;
+package io.openems.edge.chp.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;

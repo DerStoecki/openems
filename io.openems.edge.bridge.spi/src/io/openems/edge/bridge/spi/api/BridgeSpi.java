@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.spi;
+package io.openems.edge.bridge.spi.api;
 
 import io.openems.edge.bridge.spi.task.SpiTask;
 import io.openems.edge.temperature.board.api.Adc;

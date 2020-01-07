@@ -1,12 +1,12 @@
 package io.openems.edge.bridge.i2c;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 
+import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.relais.board.api.McpChannelRegister;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -55,7 +55,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     public void deactivate() {
         super.deactivate();
         this.worker.deactivate();
-        //Relais will be default (depending on opener and closer) and Bhkw will be 0
+        //Relais will be default (depending on opener and closer) and Chp will be 0
         mcpList.forEach(McpChannelRegister::deactivate);
 
         // should always be empty already but to make sure..
@@ -109,11 +109,6 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         this.tasks.values().stream().filter(task -> (task.getPwmModuleId().equals(id))).forEach(value -> {
             removeI2cTask(value.getDeviceId());
         });
-        //        for (I2cTask task : tasks.values()) {
-        //            if (task.getPwmModuleId().equals(id)) {
-        //                removeI2cTask(task.getDeviceId());
-        //            }
-        //        }
         this.gpioMap.remove(id);
     }
 
@@ -122,7 +117,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         if (!this.tasks.containsKey(id)) {
             this.tasks.put(id, i2cTask);
         } else {
-            throw new OpenemsException("Attention, id " + id + "is already Key, activate again with a new name");
+            throw new OpenemsException("Attention, id " + id + "is already Key, activate again with a new name.");
         }
     }
 
@@ -144,7 +139,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
 
     }
 
-    public Map<String, IpcaGpioProvider> getGpioMap() {
+    private Map<String, IpcaGpioProvider> getGpioMap() {
         return gpioMap;
     }
 

@@ -11,12 +11,6 @@ public interface Adc {
 
     int getSpiChannel();
 
-    int getInputType();
-
-    boolean isInitialized();
-
-    byte getMaxSize();
-
     String getCircuitBoardId();
 
     void deactivate();

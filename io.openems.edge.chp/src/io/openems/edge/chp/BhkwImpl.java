@@ -1,7 +1,7 @@
-package io.openems.edge.bhkw;
+package io.openems.edge.chp;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bhkw.task.BhkwTask;
+import io.openems.edge.chp.task.BhkwTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;

@@ -2,7 +2,7 @@ package io.openems.edge.relais.board;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
-import io.openems.edge.bridge.i2c.I2cBridge;
+import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 

@@ -1,8 +1,7 @@
 package io.openems.edge.temperature.sensor;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bridge.spi.BridgeSpi;
-import io.openems.edge.common.channel.Doc;
+import io.openems.edge.bridge.spi.api.BridgeSpi;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;

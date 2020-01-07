@@ -1,4 +1,4 @@
-package io.openems.edge.bhkw.task;
+package io.openems.edge.chp.task;
 
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.relais.board.api.task.McpTask;

@@ -1,6 +1,6 @@
 package io.openems.edge.temperature.board;
 
-import io.openems.edge.bridge.spi.BridgeSpi;
+import io.openems.edge.bridge.spi.api.BridgeSpi;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;

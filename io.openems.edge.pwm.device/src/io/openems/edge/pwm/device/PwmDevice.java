@@ -14,7 +14,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.Designate;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bridge.i2c.I2cBridge;
+import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 

@@ -5,20 +5,20 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
-        name = "Consolinno BhkW Module",
-        description = "After Activasion it's possible to activate the Bhkw Devices."
+        name = "Consolinno Chp Module",
+        description = "This Component communicates with the Chp Devices."
 )
 
 @interface Config {
     String service_pid();
 
-    @AttributeDefinition(name = "Gaspedal Name", description = "Name of the Gaspedal Board.")
-    String id() default "BhkWModule0";
+    @AttributeDefinition(name = "ChpModule Id", description = "Name of the ChpModule.")
+    String id() default "ChpModule0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of Board.")
     String alias() default "";
 
-    @AttributeDefinition(name = "VersionNumber", description = "What Version of relaisBoard you are using.",
+    @AttributeDefinition(name = "VersionNumber", description = "What version of ChpBoard are  you using.",
     options = @Option(label = "Version 1.0", value = "1"))
     String version() default "1";
 

@@ -8,8 +8,4 @@ public interface SpiTask {
 
     int getSpiChannel();
 
-    String getParentCircuitBoard();
-
-    String getTemperatureSensorId();
-
 }

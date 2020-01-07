@@ -2,14 +2,16 @@ Bundle-Name: OpenEMS Edge BridgeI2c
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
-
+Bundle-Description: \
+    ${This Bundle provides the basis for the communication with modules and devices using I2c, more in readme.md }
 
 Export-Package:  \
-	io.openems.edge.bridge.i2c,\
-	io.openems.edge.bridge.i2c.task,\
+	io.openems.edge.bridge.i2c.api,\
+
 
 Private-Package:  \
-	io.openems.edge.bridge.i2c
+    io.openems.edge.bridge.i2c,\
+	io.openems.edge.bridge.i2c.task,\
 
 -includeresource: {readme.md}
 

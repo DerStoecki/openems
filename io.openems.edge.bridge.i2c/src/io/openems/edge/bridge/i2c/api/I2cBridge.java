@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.i2c;
+package io.openems.edge.bridge.i2c.api;
 
 import io.openems.edge.bridge.i2c.task.I2cTask;
 import io.openems.edge.pwm.module.api.IpcaGpioProvider;

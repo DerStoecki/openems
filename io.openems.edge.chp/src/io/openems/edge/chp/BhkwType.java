@@ -1,4 +1,4 @@
-package io.openems.edge.bhkw;
+package io.openems.edge.chp;
 
 public enum BhkwType {
     Vito_EM_6_15(0, 0, 20, 6, 14.9f, 22.2f, -1, -1, 7, 14.9f, 4.5f, 3.5f, "Vitobloc_200_EM_6_15"),

@@ -1,4 +1,4 @@
-package io.openems.edge.bhkw;
+package io.openems.edge.chp;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;

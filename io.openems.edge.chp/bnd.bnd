@@ -1,16 +1,14 @@
-Bundle-Name: OpenEMS Edge Bhkw
+Bundle-Name: OpenEMS Edge Chp
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
-
-
 Export-Package:  \
-	io.openems.edge.bhkw,\
-	io.openems.edge.bhkw.task,\
+
 
 Private-Package:  \
-	io.openems.edge.bhkw
+	io.openems.edge.chp,\
+	io.openems.edge.chp.task,\
 
 -includeresource: {readme.md}
 

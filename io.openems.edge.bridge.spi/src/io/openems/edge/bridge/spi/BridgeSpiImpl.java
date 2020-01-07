@@ -6,8 +6,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.openems.common.worker.AbstractCycleWorker;
+import io.openems.edge.bridge.spi.api.BridgeSpi;
 import io.openems.edge.bridge.spi.task.SpiTask;
-import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -33,12 +33,10 @@ import com.pi4j.wiringpi.Spi;
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
-public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi, EventHandler, OpenemsComponent, SpiBridgeChannel {
+public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi, EventHandler, OpenemsComponent {
 
     private final Logger log = LoggerFactory.getLogger(BridgeSpiImpl.class);
 
-    //private List<CircuitBoard> circuitBoards = new ArrayList<>();
-    //private final Map<String, Task> tasks = new ConcurrentHashMap<>();
 
     private Set<Adc> adcList = new HashSet<>();
     private final SpiWorker worker = new SpiWorker();
@@ -60,21 +58,6 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         adcList.forEach(this::removeAdc);
     }
 
-    public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-        ;
-
-        private final Doc doc;
-
-        private ChannelId(Doc doc) {
-            this.doc = doc;
-        }
-
-        @Override
-        public Doc doc() {
-            return this.doc;
-        }
-    }
-
     public BridgeSpiImpl() {
         super(OpenemsComponent.ChannelId.values());
     }
@@ -86,11 +69,17 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         }
     }
 
-
     @Override
     public Set<Adc> getAdcs() {
         return this.adcList;
     }
+
+    /**
+     * Removes the given Adc and every Task that is connected to this Adc.
+     * @param adc is the given Adc, tasks are checked by SpiChannel and adcList is checked
+     *            and correct Adc will be deactivated.
+     *
+     * */
 
     @Override
     public void removeAdc(Adc adc) {
@@ -98,6 +87,12 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         this.adcList.removeIf(value -> value.getCircuitBoardId().equals(adc.getCircuitBoardId()));
         adc.deactivate();
     }
+    /**
+     * Adds an Spi Task, called by the SpiDevices.
+     * @param id , the unique Id of the SpiDevice.
+     * @param spiTask the spiTask which will be handled during the work-cycle.
+     *
+     * */
 
     @Override
     public void addSpiTask(String id, SpiTask spiTask) throws ConfigurationException {
