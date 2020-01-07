@@ -3,6 +3,7 @@ Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
+    Provides the Api for the Chp. Including the OpenemsChannel PowerLevel (Percent).
 
 Export-Package:  \
 	io.openems.edge.chp.device.api,\

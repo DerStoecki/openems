@@ -2,6 +2,8 @@ Bundle-Name: OpenEMS Edge Relais Api
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This Bundle Provides a Dummy Relays for testing purposes and the OpenemsChannel Actuatorrelays.
 
 
 Export-Package:  \

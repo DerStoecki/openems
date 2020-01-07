@@ -2,6 +2,7 @@ Bundle-Name: OpenEMS Edge Passing Api
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: Provides the Api used by the passing devices pump and valve.
 
 Export-Package:  \
 	io.openems.edge.temperature.passing.api,\

@@ -1,8 +1,9 @@
-Bundle-Name: OpenEMS Edge Relais Board
+Bundle-Name: OpenEMS Edge Relays Board
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
-
+Bundle-Description: \
+    This Bundle is the basis for the Relays Devices. Activate this first before the Relays.
 
 
 Export-Package:  \

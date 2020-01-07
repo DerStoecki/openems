@@ -3,7 +3,7 @@ Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-    This Bundle works like a basis for the Chp Devices by creating a dac and adding it to the I2cBridge
+    This Bundle works like a basis for the Chp Devices by creating a dac and adding it to the I2C-Bridge.
 
 
 Export-Package:  \

@@ -2,7 +2,7 @@ package io.openems.edge.bridge.i2c.api;
 
 import io.openems.edge.bridge.i2c.task.I2cTask;
 import io.openems.edge.i2c.mcp.api.Mcp;
-import io.openems.edge.pwm.module.module.api.IpcaGpioProvider;
+import io.openems.edge.pwm.module.api.IpcaGpioProvider;
 import io.openems.common.exceptions.OpenemsException;
 
 import java.util.List;

@@ -1,7 +1,10 @@
-Bundle-Name: OpenEMS Edge Relais
+Bundle-Name: OpenEMS Edge Relais Device
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
+
+Bundle-Description: \
+    This Bundle provides the User with the Relay and the Task. Further Description in the readme.
 
 
 

@@ -11,8 +11,6 @@ public interface PassingChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-
-
         /**
          * PowerLevel.
          *

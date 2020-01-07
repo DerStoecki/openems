@@ -2,6 +2,9 @@ Bundle-Name: OpenEMS Edge PwmModule
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This Bundle is Used to create a Pwm Module. It access the Pwm Module Api to create a new PcaGpioProvider.
+    This Provider will be utilized by the devices, and added to the I2c Bridge.
 
 Export-Package:  \
 

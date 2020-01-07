@@ -20,9 +20,9 @@ import org.osgi.service.metatype.annotations.Designate;
 import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.pwm.module.module.api.IpcaGpioProvider;
-import io.openems.edge.pwm.module.module.api.Pca9685GpioProvider;
-import io.openems.edge.pwm.module.module.api.PcaGpioProvider;
+import io.openems.edge.pwm.module.api.IpcaGpioProvider;
+import io.openems.edge.pwm.module.api.Pca9685GpioProvider;
+import io.openems.edge.pwm.module.api.PcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -68,7 +68,7 @@ public class PwmModule extends AbstractOpenemsComponent implements OpenemsCompon
                 case "1":
                     provider = new Pca9685GpioProvider(this.i2CBus, config.pwm_address(),
                             this.frequency, this.frequencyCorrectionFactor);
-                    this.refI2cBridge.addGpioDevice(super.id(), (IpcaGpioProvider) provider);
+                    this.refI2cBridge.addGpioDevice(super.id(), provider);
                     break;
             }
         } catch (IOException e) {

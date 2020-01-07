@@ -1,4 +1,4 @@
-package io.openems.edge.pwm.module.module.api;
+package io.openems.edge.pwm.module.api;
 /*..
  * This Class is somewhat copied of the official pi4j GpioProvider,
  * got problems with it (Devices won't activate in Osgi bc of it)

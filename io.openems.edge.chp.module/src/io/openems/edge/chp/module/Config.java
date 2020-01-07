@@ -12,7 +12,7 @@ import org.osgi.service.metatype.annotations.Option;
 @interface Config {
     String service_pid();
 
-    @AttributeDefinition(name = "ChpModule Id", description = "Name of the ChpModule.")
+    @AttributeDefinition(name = "ChpModule Id", description = "Unique Id of the ChpModule.")
     String id() default "ChpModule0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of Board.")

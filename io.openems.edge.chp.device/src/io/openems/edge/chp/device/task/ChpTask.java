@@ -10,7 +10,7 @@ public class ChpTask extends McpTask {
     private float maxValue;
     private float scaling;
     private static final int DIGIT_SCALING = 10;
-    int prevDigitValue = -69;
+    private int prevDigitValue = -69;
     private WriteChannel<Integer> powerLevel;
 
 

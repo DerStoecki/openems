@@ -26,7 +26,7 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
-import io.openems.edge.pwm.module.module.api.IpcaGpioProvider;
+import io.openems.edge.pwm.module.api.IpcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)

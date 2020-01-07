@@ -1,4 +1,4 @@
-package io.openems.edge.pwm.module.module.api;
+package io.openems.edge.pwm.module.api;
 
 import java.math.BigDecimal;
 
