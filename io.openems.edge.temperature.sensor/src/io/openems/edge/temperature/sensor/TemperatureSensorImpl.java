@@ -28,7 +28,8 @@ import org.slf4j.LoggerFactory;
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 
 public class TemperatureSensorImpl extends AbstractOpenemsComponent implements OpenemsComponent, Thermometer {
-    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    @Reference(policy = ReferencePolicy.STATIC,
+            policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     BridgeSpi bridgeSpi;
 
     @Reference
@@ -37,7 +38,6 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
     private String temperatureBoardId;
     private int spiChannel;
     private int pinPosition;
-    private String servicePid;
     private String alias;
     private Adc adcForTemperature;
     private final Logger log = LoggerFactory.getLogger(TemperatureSensorImpl.class);
@@ -59,6 +59,15 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
 
     }
 
+    /**
+     * Checks if the DigitalReadTask is allowed to be created.
+     * It Checks if the adc is correct (Spi Channel)
+     * Checks if the Pin position is correct and if it's already used by another device.
+     * If everything's okay, the task will be created and added to the spiTasks.
+     *
+     * @throws ConfigurationException if the User configured something wrong.
+     *
+     * */
     private void createTemperatureDigitalReadTask() throws ConfigurationException {
         try {
             ConfigurationException[] ex = {null};

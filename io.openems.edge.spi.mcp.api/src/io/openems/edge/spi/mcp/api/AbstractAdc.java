@@ -27,6 +27,14 @@ public abstract class AbstractAdc implements Adc {
         this.maxSize = maxSize;
     }
 
+    /**
+     * initialize the Mcp.
+     *
+     * @param circuitBoardId unique id of the tempereature module.
+     * @param frequency      frequency set by user.
+     * @param spiChannel     spiChannel set by user (== dipswitch)
+     * @param versionId      the version of the temperature-module.
+     */
     @Override
     public void initialize(int spiChannel, int frequency, String circuitBoardId, String versionId) {
         if (!initialized) {
@@ -77,7 +85,7 @@ public abstract class AbstractAdc implements Adc {
 
     @Override
     public void deactivate() {
-        //TODO actually nothing to do, for Temperature purposes, but maybe in future
+        //Nothing for temperature Purposes bc it's just reading data.
     }
 
     @Override

@@ -5,8 +5,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 
 @ObjectClassDefinition(
-        name = "Consolinno Valve",
-        description = "A Valve mainly used for the Passing Station and Controller"
+        name = "Passing Station Valve",
+        description = "A Valve mainly used for the Passing Station and Controller."
 )
 @interface Config {
 

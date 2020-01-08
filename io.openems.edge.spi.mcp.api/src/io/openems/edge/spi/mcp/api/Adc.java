@@ -20,4 +20,10 @@ public interface Adc {
     String getVersionId();
 
     boolean equals(Object o);
+
+    boolean isInitialized();
+
+    int getInputType();
+
+    byte getMaxSize();
 }

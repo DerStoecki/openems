@@ -6,8 +6,8 @@ import org.osgi.service.metatype.annotations.Option;
 
 
 @ObjectClassDefinition(
-        name = "Consolinno Pump",
-        description = "A Valve mainly used for the Passing Station and Controller"
+        name = "Passing Station Pump",
+        description = "A Pump mainly used for the Passing Station and Controller"
 )
 @interface Config {
 
@@ -29,7 +29,7 @@ import org.osgi.service.metatype.annotations.Option;
     String pump_Type() default "Both";
 
     @AttributeDefinition(name =  "Relays Id", description = "If the Pump is connected to a relays; type the id.")
-    String pump_Relais() default "Relays2";
+    String pump_Relays() default "Relays2";
 
     @AttributeDefinition(name = "PWM Id", description = "If the Pump is connected as a pwm Device; type in the id.")
     String pump_Pwm() default "PwmDevice0";

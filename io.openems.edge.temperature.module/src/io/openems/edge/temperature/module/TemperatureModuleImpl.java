@@ -37,7 +37,7 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
     private String circuitBoardId;
     private String versionId;
     private short maxCapacity;
-    private Set<Adc> adcList = new HashSet<>();
+    private Set<Adc> adcSet = new HashSet<>();
 
     public TemperatureModuleImpl() {
         super(OpenemsComponent.ChannelId.values());
@@ -67,11 +67,21 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
         createTemperatureBoard(this.versionId, frequency, dipSwitch);
     }
 
+    /**
+     * Creates the mcps from the enum list and initializes them.
+     *
+     * @param versionNumber what version is the board --> what mcps are built in.
+     * @param frequency     what frequency should be used with the allocated mcp.
+     * @param dipSwitch     dip-switch == spi channel.
+     *                      <p>
+     *                      the mcp-container has all the mcp's without initializing them --> basic properties are set
+     *                      e.g. pin values.
+     *                      </p>
+     */
     private void createTemperatureBoard(String versionNumber, List<String> frequency, List<Integer> dipSwitch) {
         switch (versionNumber) {
             //more to come with further impl
             case "1":
-                this.maxCapacity = TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getMaxSize();
                 short counter = 0;
                 for (Adc mcpWantToCreate : TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getMcpContainer()) {
                     createAdc(mcpWantToCreate, frequency.get(counter), dipSwitch.get(counter));
@@ -81,9 +91,18 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
         }
     }
 
+    /**
+     * Initializes the Adc.
+     *
+     * @param mcpWantToCreate the Mcp (it's an adc) from the Enum.
+     * @param frequency       set by the user.
+     * @param dipSwitch       == spi channel.
+     *
+     *<p>Adds the Adc to the spi bridge.</p>
+     */
     private void createAdc(Adc mcpWantToCreate, String frequency, int dipSwitch) {
         mcpWantToCreate.initialize(dipSwitch, Integer.parseInt(frequency), this.circuitBoardId, this.versionId);
-        this.adcList.add(mcpWantToCreate);
+        this.adcSet.add(mcpWantToCreate);
         bridgeSpi.addAdc(mcpWantToCreate);
     }
 
@@ -95,7 +114,7 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        this.adcList.forEach(adc -> {
+        this.adcSet.forEach(adc -> {
             bridgeSpi.removeAdc(adc);
         });
     }
@@ -111,7 +130,7 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
     }
 
     @Override
-    public Set<Adc> getAdcList() {
-        return adcList;
+    public Set<Adc> getAdcSet() {
+        return adcSet;
     }
 }

@@ -9,23 +9,23 @@ import io.openems.edge.temperature.passing.pump.api.Pump;
 
 public class DummyPump extends AbstractOpenemsComponent implements OpenemsComponent, Pump {
 
-    private ActuatorRelaysChannel relais;
+    private ActuatorRelaysChannel relays;
     //private PwmPowerLevelChannel pwm;
-    private boolean isRelais = false;
+    private boolean isRelays = false;
     private boolean isPwm = false;
     private PwmPowerLevelChannel pwm;
 
-    public DummyPump(String id, ActuatorRelaysChannel relais, PwmPowerLevelChannel pwm, String type) {
+    public DummyPump(String id, ActuatorRelaysChannel relays, PwmPowerLevelChannel pwm, String type) {
         super(OpenemsComponent.ChannelId.values(), PassingChannel.ChannelId.values());
 
         super.activate(null, id, "", true);
 
-        this.relais = relais;
+        this.relays = relays;
         this.pwm = pwm;
 
         switch (type) {
-            case "Relais":
-                isRelais = true;
+            case "Relays":
+                isRelays = true;
                 break;
 
             case "Pwm":
@@ -33,7 +33,7 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
                 break;
 
             default:
-                isRelais = true;
+                isRelays = true;
                 isPwm = true;
         }
 
@@ -50,8 +50,14 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
 
     @Override
     public boolean changeByPercentage(double percentage) {
-        if (this.isRelais) {
-            if (percentage <= 0) {
+        if (this.isRelays) {
+            if (this.isPwm) {
+                if (this.getPowerLevel().getNextValue().get() + percentage < 0) {
+                    controlRelays(false, "");
+                    System.out.println("Set Next WriteValue to 0.f");
+                    return true;
+                }
+            } else if (percentage <= 0) {
                 controlRelays(false, "");
             } else {
                 controlRelays(true, "");
@@ -71,11 +77,11 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     @Override
-    public void controlRelays(boolean activate, String whichRelais) {
-        if (this.relais.isCloser().getNextValue().get()) {
-            System.out.println("Relais is " + activate);
+    public void controlRelays(boolean activate, String whichRelays) {
+        if (this.relays.isCloser().getNextValue().get()) {
+            System.out.println("Relays is " + activate);
         } else {
-            System.out.println("Relais is " + !activate);
+            System.out.println("Relays is " + !activate);
         }
     }
 }

@@ -8,7 +8,6 @@ Export-Package:  \
 	io.openems.edge.temperature.passing.api,\
 
 Private-Package:  \
-	io.openems.edge.temperature.passing.api
 
 -includeresource: {readme.md}
 

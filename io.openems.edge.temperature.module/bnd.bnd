@@ -7,7 +7,7 @@ Bundle-Description: \
 
 
 Export-Package:  \
-	io.openems.edge.temperature.board,\
+
 
 
 Private-Package:  \
