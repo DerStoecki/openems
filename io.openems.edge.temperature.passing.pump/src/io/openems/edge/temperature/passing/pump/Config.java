@@ -22,14 +22,14 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "Pump Type", description = "What Kind of Pump is it?",
     options = {
-            @Option(label = "Relais", value = "Relais"),
+            @Option(label = "Relays", value = "Relays"),
             @Option(label = "Pwm", value = "Pwm"),
             @Option(label = "Both", value = "Both")
     })
     String pump_Type() default "Both";
 
-    @AttributeDefinition(name =  "Relais Id", description = "If the Pump is connected to a relais; type the id.")
-    String pump_Relais() default "Relais2";
+    @AttributeDefinition(name =  "Relays Id", description = "If the Pump is connected to a relays; type the id.")
+    String pump_Relais() default "Relays2";
 
     @AttributeDefinition(name = "PWM Id", description = "If the Pump is connected as a pwm Device; type in the id.")
     String pump_Pwm() default "PwmDevice0";

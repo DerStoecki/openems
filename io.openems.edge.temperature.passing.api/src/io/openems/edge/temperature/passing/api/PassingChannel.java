@@ -35,7 +35,7 @@ public interface PassingChannel extends OpenemsComponent {
 
         LAST_POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY).unit(Unit.PERCENT)),
         /**
-         * Busy.
+         * Tells if the Device is Busy or not.
          *
          * <ul>
          * <li>Type: Boolean

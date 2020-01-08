@@ -21,9 +21,9 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "Passing.Pump")
 public class PumpImpl extends AbstractOpenemsComponent implements OpenemsComponent, Pump {
 
-    private ActuatorRelaysChannel relais;
+    private ActuatorRelaysChannel relays;
     private PwmPowerLevelChannel pwm;
-    private boolean isRelais = false;
+    private boolean isRelays = false;
     private boolean isPwm = false;
 
     @Reference
@@ -42,10 +42,10 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
         this.getLastPowerLevel().setNextValue(0);
     }
 
-    private void allocateComponents(String pump_type, String pump_relais, String pump_pwm) {
+    private void allocateComponents(String pump_type, String pump_relays, String pump_pwm) {
         switch (pump_type) {
             case "Relais":
-                isRelais = true;
+                isRelays = true;
                 break;
             case "Pwm":
                 isPwm = true;
@@ -53,16 +53,16 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
 
             case "Both":
             default:
-                isRelais = true;
+                isRelays = true;
                 isPwm = true;
                 break;
         }
         try {
-            if (isRelais) {
-                if (cpm.getComponent(pump_relais) instanceof ActuatorRelaysChannel) {
-                    this.relais = cpm.getComponent(pump_relais);
+            if (isRelays) {
+                if (cpm.getComponent(pump_relays) instanceof ActuatorRelaysChannel) {
+                    this.relays = cpm.getComponent(pump_relays);
                 } else {
-                    throw new ConfigurationException(pump_relais, "Allocated Relais not a (configured) Relais");
+                    throw new ConfigurationException(pump_relays, "Allocated relays not a (configured) relays.");
                 }
             }
             if (isPwm) {
@@ -71,7 +71,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
                     //reset pwm to 0; so pump is on activation off
                     this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
                 } else {
-                    throw new ConfigurationException(pump_pwm, "Allocated Pwm, not a (configured) Relais");
+                    throw new ConfigurationException(pump_pwm, "Allocated Pwm, not a (configured) pwm-device.");
                 }
             }
         } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
@@ -83,11 +83,11 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     public void deactivate() {
         super.deactivate();
         try {
-            if (this.isRelais) {
-                if (this.relais.isCloser().getNextValue().get()) {
-                    this.relais.getRelaisChannel().setNextWriteValue(false);
+            if (this.isRelays) {
+                if (this.relays.isCloser().getNextValue().get()) {
+                    this.relays.getRelaysChannel().setNextWriteValue(false);
                 } else {
-                    this.relais.getRelaisChannel().setNextWriteValue(true);
+                    this.relays.getRelaysChannel().setNextWriteValue(true);
                 }
             }
             if (this.isPwm) {
@@ -106,11 +106,11 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
 
     @Override
     public boolean changeByPercentage(double percentage) {
-        if (this.isRelais) {
+        if (this.isRelays) {
             if (percentage <= 0) {
-                controlRelais(false, "");
+                controlRelays(false, "");
             } else {
-                controlRelais(true, "");
+                controlRelays(true, "");
             }
         }
         if (this.isPwm) {
@@ -133,12 +133,12 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     }
 
     @Override
-    public void controlRelais(boolean activate, String whichRelais) {
+    public void controlRelays(boolean activate, String whichRelais) {
         try {
-            if (this.relais.isCloser().value().get()) {
-                this.relais.getRelaisChannel().setNextWriteValue(activate);
+            if (this.relays.isCloser().value().get()) {
+                this.relays.getRelaysChannel().setNextWriteValue(activate);
             } else {
-                this.relais.getRelaisChannel().setNextWriteValue(!activate);
+                this.relays.getRelaysChannel().setNextWriteValue(!activate);
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();

@@ -59,14 +59,14 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             super.deactivate();
             //in case somethings happening; the Valve will be closed.
             if (closing.isCloser().getNextValue().get()) {
-                closing.getRelaisChannel().setNextWriteValue(true);
+                closing.getRelaysChannel().setNextWriteValue(true);
             } else {
-                closing.getRelaisChannel().setNextWriteValue(false);
+                closing.getRelaysChannel().setNextWriteValue(false);
             }
             if (opens.isCloser().getNextValue().get()) {
-                opens.getRelaisChannel().setNextWriteValue(false);
+                opens.getRelaysChannel().setNextWriteValue(false);
             } else {
-                opens.getRelaisChannel().setNextWriteValue(true);
+                opens.getRelaysChannel().setNextWriteValue(true);
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -75,8 +75,8 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     private void valveClose() {
         if (!this.getIsBusy().getNextValue().get()) {
-            controlRelais(false, "Open");
-            controlRelais(true, "Closed");
+            controlRelays(false, "Open");
+            controlRelays(true, "Closed");
             this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
@@ -86,29 +86,29 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     private void valveOpen() {
         //opens will be set true when closing is done
         if (!this.getIsBusy().getNextValue().get()) {
-            controlRelais(false, "Closed");
-            controlRelais(true, "Open");
+            controlRelays(false, "Closed");
+            controlRelays(true, "Open");
             this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
     }
 
     @Override
-    public void controlRelais(boolean activate, String whichRelais) {
+    public void controlRelays(boolean activate, String whichRelays) {
         try {
-            switch (whichRelais) {
+            switch (whichRelays) {
                 case "Open":
                     if (this.opens.isCloser().value().get()) {
-                        this.opens.getRelaisChannel().setNextWriteValue(activate);
+                        this.opens.getRelaysChannel().setNextWriteValue(activate);
                     } else {
-                        this.opens.getRelaisChannel().setNextWriteValue(!activate);
+                        this.opens.getRelaysChannel().setNextWriteValue(!activate);
                     }
                     break;
                 case "Closed":
                     if (this.closing.isCloser().value().get()) {
-                        this.closing.getRelaisChannel().setNextWriteValue(activate);
+                        this.closing.getRelaysChannel().setNextWriteValue(activate);
                     } else {
-                        this.closing.getRelaisChannel().setNextWriteValue(!activate);
+                        this.closing.getRelaysChannel().setNextWriteValue(!activate);
                     }
                     break;
             }
@@ -156,7 +156,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             }
 
             this.getPowerLevel().setNextValue(currentPowerLevel);
-            currentPowerLevel = percentage;
             if (Math.abs(percentage) >= 100) {
                 this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
             } else {

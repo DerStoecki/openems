@@ -2,16 +2,16 @@ Bundle-Name: OpenEMS Edge Temperature Sensor
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This Bundle provides an anlogue temperature sensor and it's task. Using the Spi Communication Bridge.
 
 
-Export-Package:  \
-	io.openems.edge.temperature.sensor,\
-	io.openems.edge.temperature.sensor.task,\
-	io.openems.edge.temperature.sensor.temperaturesensor,\
+Export-Package:
 
 Private-Package:  \
 	io.openems.edge.temperature.sensor,\
 	io.openems.edge.temperature.sensor.task,\
+	io.openems.edge.temperature.sensor.temperaturesensor,\
 
 -includeresource: {readme.md}
 

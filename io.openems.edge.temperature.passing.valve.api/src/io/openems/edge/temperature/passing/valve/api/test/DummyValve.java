@@ -20,12 +20,12 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
     private long timeStampValve;
 
 
-    public DummyValve(ActuatorRelaysChannel valveOpen, ActuatorRelaysChannel valveClose, String id, double valveTimeinSeconds) {
+    public DummyValve(ActuatorRelaysChannel valveOpen, ActuatorRelaysChannel valveClose, String id, double valveTimeInSeconds) {
         super(OpenemsComponent.ChannelId.values(), PassingChannel.ChannelId.values());
         super.activate(null, id, "", true);
         this.opens = valveOpen;
         this.closing = valveClose;
-        this.secondsPerPercentage = valveTimeinSeconds / 100.d;
+        this.secondsPerPercentage = valveTimeInSeconds / 100.d;
         this.getLastPowerLevel().setNextValue(0);
         this.getPowerLevel().setNextValue(0);
     }
@@ -33,8 +33,8 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
 
     private void valveClose() {
         if (!this.getIsBusy().getNextValue().get()) {
-            controlRelais(false, "Open");
-            controlRelais(true, "Closed");
+            controlRelays(false, "Open");
+            controlRelays(true, "Closed");
             this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
@@ -44,8 +44,8 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
     private void valveOpen() {
         //opens will be set true when closing is done
         if (!this.getIsBusy().getNextValue().get()) {
-            controlRelais(false, "Closed");
-            controlRelais(true, "Open");
+            controlRelays(false, "Closed");
+            controlRelays(true, "Open");
             this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
@@ -87,10 +87,10 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
                 this.getTimeNeeded().setNextValue(Math.abs(percentage) * secondsPerPercentage);
             }
             if (percentage < 0) {
-                controlRelais(false, "Open");
+                controlRelays(false, "Open");
                 valveClose();
             } else {
-                controlRelais(false, "Closed");
+                controlRelays(false, "Closed");
                 valveOpen();
             }
             percentageWasSet = true;
@@ -99,8 +99,8 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
     }
 
     @Override
-    public void controlRelais(boolean activate, String whichRelais) {
-            switch (whichRelais) {
+    public void controlRelays(boolean activate, String whichRelays) {
+            switch (whichRelays) {
                 case "Open":
                     if (this.opens.isCloser().getNextValue().get()) {
                         System.out.println(activate);

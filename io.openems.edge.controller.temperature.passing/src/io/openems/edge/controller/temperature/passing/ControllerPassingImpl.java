@@ -94,9 +94,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         //later for error Handling
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
         //just in case
-        this.valve.controlRelais(false, "Open");
-        this.valve.controlRelais(false, "Closed");
-        this.pump.controlRelais(false, "");
+        this.valve.controlRelays(false, "Open");
+        this.valve.controlRelays(false, "Closed");
+        this.pump.controlRelays(false, "");
     }
 
     @Deactivate
@@ -122,7 +122,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                                 return;
                             }
                         } else if (valve.readyToChange()) {
-                            valve.controlRelais(false, "Open");
+                            valve.controlRelays(false, "Open");
                             isOpen = true;
                             timeSetHeating = false;
                         } else {
@@ -167,8 +167,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
                     this.noError().setNextValue(false);
-                    valve.controlRelais(false, "Open");
-                    valve.controlRelais(true, "Closed");
+                    valve.controlRelays(false, "Open");
+                    valve.controlRelays(true, "Closed");
                     throw e;
                 }
 
@@ -180,10 +180,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         if (valve.changeByPercentage(-100)) {
                             pump.changeByPercentage(-100);
                             isOpen = false;
-                            return;
                         }
                     } else if (valve.readyToChange()) {
-                        valve.controlRelais(false, "Closed");
+                        valve.controlRelays(false, "Closed");
                         isClosed = true;
                         timeSetHeating = false;
                     }
@@ -223,7 +222,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             break;
                     }
                 } else {
-                    throw new ConfigurationException(id, "The temperaturesensor " + id + " Is Not a (configured) temperature sensor.");
+                    throw new ConfigurationException(id, "The temperature-sensor " + id + " Is not a (configured) temperature sensor.");
                 }
 
                 break;
@@ -231,14 +230,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 if (cpm.getComponent(id) instanceof PassingChannel) {
                     this.pump = cpm.getComponent(id);
                 } else {
-                    throw new ConfigurationException(id, "The Pump " + id + " Is Not a (configured) Pump.");
+                    throw new ConfigurationException(id, "The Pump " + id + " Is not a (configured) Pump.");
                 }
                 break;
             case "Valve":
                 if (cpm.getComponent(id) instanceof PassingChannel) {
                     this.valve = cpm.getComponent(id);
                 } else {
-                    throw new ConfigurationException(id, "The Valve " + id + " Is Not a (configured) Valve");
+                    throw new ConfigurationException(id, "The Valve " + id + " Is not a (configured) Valve.");
                 }
                 break;
         }

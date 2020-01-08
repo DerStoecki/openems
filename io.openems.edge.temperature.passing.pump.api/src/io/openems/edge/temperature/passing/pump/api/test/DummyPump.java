@@ -52,9 +52,9 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
     public boolean changeByPercentage(double percentage) {
         if (this.isRelais) {
             if (percentage <= 0) {
-                controlRelais(false, "");
+                controlRelays(false, "");
             } else {
-                controlRelais(true, "");
+                controlRelays(true, "");
             }
         }
         if (this.isPwm) {
@@ -71,7 +71,7 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     @Override
-    public void controlRelais(boolean activate, String whichRelais) {
+    public void controlRelays(boolean activate, String whichRelais) {
         if (this.relais.isCloser().getNextValue().get()) {
             System.out.println("Relais is " + activate);
         } else {
