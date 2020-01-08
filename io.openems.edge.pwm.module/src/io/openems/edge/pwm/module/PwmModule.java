@@ -20,9 +20,8 @@ import org.osgi.service.metatype.annotations.Designate;
 import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.pwm.module.api.IpcaGpioProvider;
 import io.openems.edge.pwm.module.api.Pca9685GpioProvider;
-import io.openems.edge.pwm.module.api.PcaGpioProvider;
+import io.openems.edge.pwm.module.api.AbstractPcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -37,7 +36,7 @@ public class PwmModule extends AbstractOpenemsComponent implements OpenemsCompon
     private BigDecimal frequency;
     private BigDecimal frequencyCorrectionFactor;
     private I2CBus i2CBus;
-    private PcaGpioProvider provider;
+    private AbstractPcaGpioProvider provider;
 
     public PwmModule() {
         super(OpenemsComponent.ChannelId.values());

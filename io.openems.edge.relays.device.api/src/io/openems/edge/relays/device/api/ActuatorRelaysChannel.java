@@ -10,11 +10,10 @@ import io.openems.edge.common.component.OpenemsComponent;
 
 public interface ActuatorRelaysChannel extends OpenemsComponent {
     /**
-     * .
-     * Is active or not
+     * Is active or not.
      *
      * <ul>
-     * <li>Interface: ActuatorRelais
+     * <li>Interface: ActuatorRelays
      * <li>Type: boolean
      * <li>Unit: ON_OFF
      * </ul>

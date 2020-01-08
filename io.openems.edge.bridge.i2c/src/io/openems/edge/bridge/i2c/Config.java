@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
         name = "Bridge I2C",
-        description = "Bridge to communicate with the connected devices."
+        description = "Bridge to communicate with the connected devices communicating via I2C."
 )
 @interface Config {
     String service_pid();

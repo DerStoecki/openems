@@ -56,7 +56,7 @@ public class ChpImpl extends AbstractOpenemsComponent implements OpenemsComponen
                 this.chpType = ChpType.Vito_EM_70_115;
                 break;
             case "EM_100_167":
-                this.chpType = ChpType.Vito_Em_100_167;
+                this.chpType = ChpType.Vito_EM_100_167;
                 break;
             case "EM_140_207":
                 this.chpType = ChpType.Vito_EM_140_207;
@@ -97,8 +97,8 @@ public class ChpImpl extends AbstractOpenemsComponent implements OpenemsComponen
 
         }
 
-        if (cpm.getComponent(config.chpModuleid()) instanceof ChpModule) {
-            ChpModule chpModule = cpm.getComponent(config.chpModuleid());
+        if (cpm.getComponent(config.chpModuleId()) instanceof ChpModule) {
+            ChpModule chpModule = cpm.getComponent(config.chpModuleId());
             mcp = chpModule.getMcp();
             mcp.addTask(super.id(), new ChpTask(super.id(),
                     config.position(), config.minLimit(), config.maxLimit(),

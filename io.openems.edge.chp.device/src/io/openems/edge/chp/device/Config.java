@@ -5,21 +5,21 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
-        name = "Bhkw Vitobloc",
-        description = "Depending on VersionId you can activate up to X Devices per Bhkw Module."
+        name = "Chp Vitobloc",
+        description = "Depending on VersionId you can activate up to X Devices per Chp Module."
 )
-
 @interface Config {
 
     String service_pid();
 
-    @AttributeDefinition(name = "Chp Id", description = "Unique Id of the Chp Device.")
+    @AttributeDefinition(name = "Chp-Device ID", description = "Unique Id of the Chp Device.")
     String id() default "Chp0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of Chp.")
     String alias() default "";
 
-    @AttributeDefinition(name = "Chp Type", description = "What Chp Type do you want to use(Not important for pure" + "Controlling and no further Information ).",
+    @AttributeDefinition(name = "Chp Type", description = "What Chp Type do you want to use(Not important for pure"
+            + "controlling if no further information is needed).",
             options = {
                     @Option(label = "Vitobloc 200 EM - 6/15", value = "EM_6_15"),
                     @Option(label = "Vitobloc 200 EM - 9/20", value = "EM_9_20"),
@@ -44,15 +44,16 @@ import org.osgi.service.metatype.annotations.Option;
     String chpType() default "EM_140_207";
 
     @AttributeDefinition(name = "ChpModule Id", description = "Id of the ChpModule you previously activated.")
-    String chpModuleid() default "ChpModule0";
+    String chpModuleId() default "ChpModule0";
 
-    @AttributeDefinition(name = "min Limit of Chp", description = "Minimum of your Chp API mA.")
+    @AttributeDefinition(name = "min - Limit of Chp", description = "Minimum of your Chp API mA.")
     short minLimit() default 0;
 
-    @AttributeDefinition(name = "max Limit of Chp", description = "Maximum of your Chp API mA.")
+    @AttributeDefinition(name = "max - Limit of Chp", description = "Maximum of your Chp API mA.")
     short maxLimit() default 20;
 
-    @AttributeDefinition(name = "Percentage Range", description = "Where is your percentage range (depending on API) starting: 0-100%(type0) or 50-100% (type 50).")
+    @AttributeDefinition(name = "Percentage - range", description = "Where is your percentage range (depending on API)"
+            + "starting: 0-100%(type 0) or 50-100% (type 50).")
     int percentageRange() default 0;
 
     @AttributeDefinition(name = "Position on Module", description = "On what Position is your Chp connected with the Module?")

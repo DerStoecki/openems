@@ -7,7 +7,6 @@ Export-Package:  \
 	io.openems.edge.controller.temperature.passing.api.test,\
 
 Private-Package:  \
-	io.openems.edge.controller.temperature.passing.api,\
 
 -includeresource: {readme.md}
 

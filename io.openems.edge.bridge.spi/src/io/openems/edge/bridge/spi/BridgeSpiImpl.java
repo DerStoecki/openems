@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.pi4j.wiringpi.Spi;
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "SpiInitial",
+@Component(name = "SpiBridge",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
@@ -123,6 +123,11 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
             super.deactivate();
         }
 
+        /**
+         * for every task the temperature is read by the pin value, written in the pin and then
+         * in the response, written in the Thermometer Nature. (Temperature)
+         *
+         * */
         @Override
         public void forever() throws Throwable {
             tasks.values().forEach(task -> {

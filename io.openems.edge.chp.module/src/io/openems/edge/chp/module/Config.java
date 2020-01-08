@@ -25,12 +25,12 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Address", description = "The allocated address of the Module.")
     String address() default "0x60";
 
-    @AttributeDefinition(name = "Bus Device", description = "The Bus you want to use on your device; Raspberry pi 3 only supports 1.")
+    @AttributeDefinition(name = "Bus Device", description = "The Bus you want to use on your device; Raspberry pi only supports 1.")
     int bus() default 1;
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Consolinno BhkW Module [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Consolinno Chp Module [{id}]";
 
 }
 

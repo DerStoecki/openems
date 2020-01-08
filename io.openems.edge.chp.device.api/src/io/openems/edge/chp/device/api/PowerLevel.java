@@ -8,16 +8,17 @@ import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PowerLevel extends OpenemsComponent {
-        /**
-         * How much Percent of the Bhkw Power will be used.
-         *
-         * <ul>
-         * <li>Interface: PowerLevel
-         * <li>Type: Integer
-         * <li>Unit: Percent
-         * </ul>
-         */
+
         public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+            /**
+             * How much Percent of the Chp Power will be used.
+             *
+             * <ul>
+             * <li>Interface: PowerLevel
+             * <li>Type: Integer
+             * <li>Unit: Percent
+             * </ul>
+             */
 
             POWER_LEVEL(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)); //
             private final Doc doc;

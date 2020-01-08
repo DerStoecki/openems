@@ -1,12 +1,10 @@
-Bundle-Name: OpenEMS Edge Relais Module Api
+Bundle-Name: OpenEMS Edge Relays Module Api
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
 Bundle-Description: \
-	The provider bundle for io.openems.edge.relais.module.api. \
-	\
-	It's the api that the relays implementations are using
+	This Bundle provides the Api, that the Relays devices are accessing.
 
 Export-Package:  \
 	io.openems.edge.relays.module.api,\

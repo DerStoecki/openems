@@ -24,7 +24,7 @@ import java.util.Map;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "RelaisBoard",
+@Component(name = "RelaysBoard",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class RelaysModuleImpl extends AbstractOpenemsComponent implements RelaysModule, OpenemsComponent {

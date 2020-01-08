@@ -26,7 +26,7 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
-import io.openems.edge.pwm.module.api.IpcaGpioProvider;
+import io.openems.edge.pwm.module.api.PcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -39,7 +39,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     private final I2cWorker worker = new I2cWorker();
     private List<Mcp> mcpList = new ArrayList<>();
     //String --> PwmModule
-    private Map<String, IpcaGpioProvider> gpioMap = new ConcurrentHashMap<>();
+    private Map<String, PcaGpioProvider> gpioMap = new ConcurrentHashMap<>();
     //String --> PwmDevice
     private Map<String, I2cTask> tasks = new ConcurrentHashMap<>();
 
@@ -100,10 +100,18 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     }
 
     @Override
-    public void addGpioDevice(String id, IpcaGpioProvider gpio) {
+    public void addGpioDevice(String id, PcaGpioProvider gpio) {
         this.gpioMap.put(id, gpio);
     }
 
+
+    /**
+     * This method removes the tasks and pwm module linked to the given param.
+     *
+     * @param id The Unique Id of the Pwm Module
+     *           If the pwm module is deactivated, all it's tasks needs to be removed too.
+     *           In the end the pwm module will be removed from the gpioMap and be set off.
+     */
     @Override
     public void removeGpioDevice(String id) {
         this.tasks.values().stream().filter(task -> (task.getPwmModuleId().equals(id))).forEach(value -> {
@@ -127,8 +135,13 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         this.tasks.remove(id);
     }
 
+    /**
+     * If an I2c Task will be removed, it'll be set off.
+     *
+     * @param id unique id of the I2cTask.
+     */
     private void shutdown(String id) {
-        IpcaGpioProvider gpio = gpioMap.get(tasks.get(id).getPwmModuleId());
+        PcaGpioProvider gpio = gpioMap.get(tasks.get(id).getPwmModuleId());
         if (gpio != null) {
             if (tasks.get(id).isInverse()) {
                 gpio.setAlwaysOn(tasks.get(id).getPinPosition());
@@ -139,7 +152,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
 
     }
 
-    private Map<String, IpcaGpioProvider> getGpioMap() {
+    private Map<String, PcaGpioProvider> getGpioMap() {
         return gpioMap;
     }
 
@@ -154,6 +167,11 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
             super.deactivate();
         }
 
+        /**
+         * The I2c shifts all it's containing mcps. e.g. all relays OnOff values will be set.
+         * Furthermore every I2c Task (Pwm tasks) will be handled. So every digit-value will be calculated
+         * and written in the device.
+         */
         @Override
         public void forever() throws Throwable {
             for (Mcp mcp : getMcpList()) {
@@ -161,7 +179,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
             }
             tasks.values().forEach(task -> {
                 Optional.ofNullable(getGpioMap().get(task.getPwmModuleId())).ifPresent(gpio -> {
-                    //with or without offset?
+
                     int digit = task.calculateDigit(4096);
 
                     if (digit <= 0) {
@@ -177,7 +195,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
                             gpio.setAlwaysOn(task.getPinPosition());
                         }
                     } else {
-                        gpio.setPwm(task.getPinPosition(), 0, digit);
+                        gpio.setPwm(task.getPinPosition(), digit);
                     }
                 });
             });

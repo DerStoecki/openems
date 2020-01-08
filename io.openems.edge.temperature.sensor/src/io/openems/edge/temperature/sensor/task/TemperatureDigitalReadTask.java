@@ -42,6 +42,11 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
         }
     }
 
+    /**
+     * returns the pinValue in a byte array, needed by the SpiWiringPi --> temperature.
+     *
+     * @return PinValue as byte array
+     */
     @Override
     public byte[] getRequest() {
         long output = this.pinValue;
@@ -53,6 +58,10 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
         return data;
     }
 
+    /**
+     * Calculates the Temperature written in the pin; using the SpiWiringPi before.
+     * regressionValues are given by the developers of the Module.
+     */
     @Override
     public void setResponse(byte[] data) {
         int digit = (data[1] << 8) + (data[2] & 0xFF);
@@ -69,7 +78,13 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
 
     }
 
-    //to avoid to big temperature fluctuations (measured within sec)
+    /**
+     * to avoid to big temperature fluctuations (measured within sec).
+     *
+     * @param value the calculated temperature in setResponse.
+     *              if the change is way too big in a too short time --> it won't be displayed.
+     */
+
     private void compareLastValueWithCurrent(int value) {
 
         if (lastTimestamp == 0) {

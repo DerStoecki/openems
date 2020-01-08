@@ -9,6 +9,7 @@ import java.util.Set;
 
 
 public interface BridgeSpi {
+
     void addAdc(Adc adc);
 
     Set<Adc> getAdcs();

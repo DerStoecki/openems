@@ -8,10 +8,6 @@ public abstract class AbstractSpiTask implements SpiTask {
         this.spiChannel = spiChannel;
     }
 
-    public abstract byte[] getRequest();
-
-    public abstract void setResponse(byte[] data);
-
     @Override
     public int getSpiChannel() {
         return spiChannel;

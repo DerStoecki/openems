@@ -51,13 +51,14 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
                 mcp.setPosition(config.position(), !this.isCloser().getNextValue().get());
                 //Value if it's deactivated Opener will be opened and Closer will be opened
                 mcp.addToDefault(config.position(), !this.isCloser().getNextValue().get());
-                /* if closer should be off and Closer on uncomment the following code:
-                *  mcp.setPosition(config.position(), 0);
-                *  mcp.addToDefault(config.position(), 0);
-                * */
+                // if closer should be off and Closer on uncomment the following code:
+                // mcp.setPosition(config.position(), 0);
+                // mcp.addToDefault(config.position(), 0);
+
+
                 mcp.shift();
-                mcp.addTask(config.id(), new RelaysActuatorTask(mcp, config.position(),
-                        !this.relaysValue, this.getRelaysChannel(),
+                mcp.addTask(config.id(), new RelaysActuatorTask(config.position(),
+                        this.getRelaysChannel(),
                         config.relaysBoard_id()));
             }
         }
@@ -70,8 +71,8 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
             case "Closer":
             case "Reverse":
                 this.relaysValue = true;
-
                 break;
+
             default:
                 this.relaysValue = false;
 
@@ -87,9 +88,9 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     @Override
     public String debugLog() {
         if (this.getRelaysChannel().getNextValue().isDefined()) {
-            String onOrOff = "off";
+            String onOrOff = "deactivated";
             if (this.getRelaysChannel().getNextValue().get()) {
-                onOrOff = "on";
+                onOrOff = "activated";
             }
             return "Status of " + super.id() + " alias: " + super.alias() + " is " + onOrOff;
         } else {

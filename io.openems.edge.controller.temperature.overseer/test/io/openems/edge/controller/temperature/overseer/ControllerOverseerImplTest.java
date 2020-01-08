@@ -78,9 +78,9 @@ public class ControllerOverseerImplTest {
     private ChannelAddress passingOnOff;
     private ChannelAddress passingMinTemp;
     private ChannelAddress passingNoError;
-    private ActuatorRelaysChannel allocatedRelais;
-    private ChannelAddress relaisOnOff;
-    private ChannelAddress relaisIsCloser;
+    private ActuatorRelaysChannel allocatedRelays;
+    private ChannelAddress relaysOnOff;
+    private ChannelAddress relaysIsCloser;
     private MyConfig config;
     private Thermometer errorT;
     private ActuatorRelaysChannel errorR;
@@ -96,19 +96,19 @@ public class ControllerOverseerImplTest {
                 400, 20, "TemperatureSensor8");
         allocatedThermometer = new DummyThermometer(config.allocated_Temperature_Sensor());
         passing = new DummyControllerPassing(config.allocated_Passing_Controller());
-        allocatedRelais = new DummyRelays("Relais1");
+        allocatedRelays = new DummyRelays("Relays1");
         passingOnOff = new ChannelAddress(config.allocated_Passing_Controller(), "OnOff");
         passingMinTemp = new ChannelAddress(config.allocated_Passing_Controller(), "MinTemperature");
         passingNoError = new ChannelAddress(config.allocated_Passing_Controller(), "NoError");
-        relaisOnOff = new ChannelAddress("Relais1", "OnOff");
-        relaisIsCloser = new ChannelAddress("Relais1", "IsCloser");
+        relaysOnOff = new ChannelAddress("Relays1", "OnOff");
+        relaysIsCloser = new ChannelAddress("Relays1", "IsCloser");
         thermometer = new ChannelAddress(config.allocated_Temperature_Sensor(), "Temperature");
-        errorR = new DummyRelays("Relais20");
+        errorR = new DummyRelays("Relays20");
         errorT = new DummyThermometer("TemperatureSensor20");
 
         cpm.addComponent(allocatedThermometer);
         cpm.addComponent(passing);
-        cpm.addComponent(allocatedRelais);
+        cpm.addComponent(allocatedRelays);
         cpm.addComponent(errorR);
         cpm.addComponent(errorT);
     }
@@ -122,14 +122,14 @@ public class ControllerOverseerImplTest {
             overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
             overseer.passing.noError().setNextValue(true);
 
-            AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
+            AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelays, overseer)
                     .next(
                             new TestCase()
                                     .input(passingOnOff, false)
                                     .input(passingMinTemp, 400)
                                     .input(passingNoError, true)
-                                    .input(relaisOnOff, false)
-                                    .input(relaisIsCloser, true)
+                                    .input(relaysOnOff, false)
+                                    .input(relaysIsCloser, true)
                                     .input(thermometer, 100)
                                     .output(passingOnOff, true)
                     );
@@ -152,14 +152,14 @@ public class ControllerOverseerImplTest {
             overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
             overseer.passing.noError().setNextValue(true);
 
-            AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
+            AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelays, overseer)
                     .next(
                             new TestCase()
                                     .input(passingOnOff, true)
                                     .input(passingMinTemp, 400)
                                     .input(passingNoError, true)
-                                    .input(relaisOnOff, false)
-                                    .input(relaisIsCloser, true)
+                                    .input(relaysOnOff, false)
+                                    .input(relaysIsCloser, true)
                                     .input(thermometer, 400)
                                     .output(passingOnOff, false)
                     );
@@ -180,14 +180,14 @@ public class ControllerOverseerImplTest {
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
 
-        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
+        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelays, overseer)
                 .next(
                         new TestCase()
                                 .input(passingOnOff, false)
                                 .input(passingMinTemp, 400)
                                 .input(passingNoError, false)
-                                .input(relaisOnOff, false)
-                                .input(relaisIsCloser, true)
+                                .input(relaysOnOff, false)
+                                .input(relaysIsCloser, true)
                                 .input(thermometer, 100)
 
                 );
@@ -202,14 +202,14 @@ public class ControllerOverseerImplTest {
         overseer.passing.noError().setNextValue(true);
         overseer.passing = null;
 
-        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
+        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelays, overseer)
                 .next(
                         new TestCase()
                                 .input(passingOnOff, false)
                                 .input(passingMinTemp, 400)
                                 .input(passingNoError, false)
-                                .input(relaisOnOff, false)
-                                .input(relaisIsCloser, true)
+                                .input(relaysOnOff, false)
+                                .input(relaysIsCloser, true)
                                 .input(thermometer, 100)
 
                 );
@@ -219,20 +219,20 @@ public class ControllerOverseerImplTest {
 
     @Test(expected = ConfigurationException.class)
     public void testHeatingConfigurationErrorPassing() throws Exception {
-        config.allocated_Passing_Controller = "Relais20";
+        config.allocated_Passing_Controller = "Relays20";
         overseer.activate(null, config);
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
 
-        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
+        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelays, overseer)
                 .next(
                         new TestCase()
                                 .input(passingOnOff, false)
                                 .input(passingMinTemp, 400)
                                 .input(passingNoError, false)
-                                .input(relaisOnOff, false)
-                                .input(relaisIsCloser, true)
+                                .input(relaysOnOff, false)
+                                .input(relaysIsCloser, true)
                                 .input(thermometer, 100)
 
                 );
@@ -241,20 +241,20 @@ public class ControllerOverseerImplTest {
 
     @Test(expected = ConfigurationException.class)
     public void testHeatingConfigurationErrorThermo() throws Exception {
-        config.allocatedTemperatureSensor = "Relais20";
+        config.allocatedTemperatureSensor = "Relays20";
         overseer.activate(null, config);
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);
         overseer.passing.noError().setNextValue(true);
 
-        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelais, overseer)
+        AbstractComponentTest controllerTest = new ControllerTest(overseer, cpm, allocatedThermometer, passing, allocatedRelays, overseer)
                 .next(
                         new TestCase()
                                 .input(passingOnOff, false)
                                 .input(passingMinTemp, 400)
                                 .input(passingNoError, false)
-                                .input(relaisOnOff, false)
-                                .input(relaisIsCloser, true)
+                                .input(relaysOnOff, false)
+                                .input(relaysIsCloser, true)
                                 .input(thermometer, 100)
 
                 );

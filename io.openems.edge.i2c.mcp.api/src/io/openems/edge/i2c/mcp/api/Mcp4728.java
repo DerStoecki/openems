@@ -45,11 +45,14 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
         }
     }
 
-
+    /**
+     * gets the digit-value of it's chp-tasks, save them to their correct position and
+     * setting them all in one in this.device.write .
+     */
     public void shift() {
 
         for (McpTask task : tasks.values()) {
-            //-69 default value of digitValue in BhkwTask
+            //-69 default value of digitValue in ChpTask
             int digitValue = task.getDigitValue();
             if (digitValue != -69) {
                 values[task.getPosition()] = digitValue;
@@ -75,19 +78,38 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
 
     }
 
+    /**
+     * Adds the Chp Task to the task-map.
+     *
+     * @param id      unique id of the Chp Device
+     * @param mcpTask the created McpTask by the Chp device.
+     */
     @Override
     public void addTask(String id, McpTask mcpTask) {
         this.tasks.put(id, mcpTask);
     }
 
+    /**
+     * Deactivating the Chp's and removing them from the map.
+     *
+     * @param id Chp Id.
+     */
     @Override
     public void removeTask(String id) {
         this.values[this.tasks.get(id).getPosition()] = 0;
         this.prevValues[this.tasks.get(id).getPosition()] = 0;
         this.tasks.remove(id);
+        this.shift();
     }
 
-    public byte[] setAllVoltage() {
+    /**
+     * Writing all the digit-values from the correct position into a byte array.
+     * 2 bytes == one digit byte[0][1] for position 0; [2][3] for pos 1 ....
+     *
+     * @return the byteArray that'll be written in the device.
+     */
+
+    private byte[] setAllVoltage() {
 
         byte[] allVoltage = new byte[8];
         int change1;
@@ -102,6 +124,10 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
         }
         return allVoltage;
     }
+
+    /**
+     * Setting every value to 0 and write them in the device to deactivate them.
+     */
 
     public void deactivate() {
         for (short x = 0; x < length; x++) {
@@ -121,16 +147,18 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
         return parentCircuitBoard;
     }
 
+    //only needed by relays atm
     @Override
     public void setPosition(int position, boolean activate) {
     }
 
 
-    //not needed yet
+    //not needed yet here
     @Override
     public void addToDefault(int position, boolean activate) {
     }
 
+    //not needed yet here
     @Override
     public Map<Integer, Boolean> getValuesPerDefault() {
         return null;

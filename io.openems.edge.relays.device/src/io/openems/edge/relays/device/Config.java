@@ -29,10 +29,10 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Relays-Module Id", description = "Id of the Relays-Module allocated to this Relays-Device.")
     String relaysBoard_id() default "relayModule0";
 
-    @AttributeDefinition(name = "Position", description = "The position of the Relais. Starting with 0.")
+    @AttributeDefinition(name = "Position", description = "The position of the Relays. Starting with 0.")
     int position() default 0;
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Relais [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Relays [{id}]";
 }

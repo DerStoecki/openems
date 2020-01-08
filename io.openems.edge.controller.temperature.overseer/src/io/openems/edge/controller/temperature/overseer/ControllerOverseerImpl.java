@@ -18,7 +18,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Temperature.Controller.Overseer")
+@Component(name = "TemperatureControllerOverseer")
 public class ControllerOverseerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
     protected ControllerPassingChannel passing;
