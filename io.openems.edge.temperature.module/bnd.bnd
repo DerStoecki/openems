@@ -6,7 +6,7 @@ Bundle-Description: \
     This Bundle creates Mcps, and add it to the spi list, depending on the Version of the board.
 
 Private-Package:  \
-	io.openems.edge.temperature.board,\
+	io.openems.edge.temperature.module,\
 
 -includeresource: {readme.md}
 

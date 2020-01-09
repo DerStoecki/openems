@@ -8,7 +8,6 @@ Bundle-Description: \
 Private-Package:  \
 	io.openems.edge.temperature.sensor,\
 	io.openems.edge.temperature.sensor.task,\
-	io.openems.edge.temperature.sensor.temperaturesensor,\
 
 -includeresource: {readme.md}
 

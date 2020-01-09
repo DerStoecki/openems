@@ -9,9 +9,6 @@ Bundle-Description: \
 
 Export-Package:  \
 	io.openems.edge.i2c.mcp.api,\
-
-
-Private-Package:  \
 	io.openems.edge.i2c.mcp.api.task,\
 
 -includeresource: {readme.md}

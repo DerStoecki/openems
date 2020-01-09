@@ -13,9 +13,6 @@ Export-Package:  \
 	io.openems.edge.spi.mcp.api.mcpmodels.type8,\
 	io.openems.edge.spi.mcp.api.pins,\
 
-Private-Package:  \
-
-
 -includeresource: {readme.md}
 
 -buildpath:  \

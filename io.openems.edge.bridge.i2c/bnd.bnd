@@ -6,12 +6,9 @@ Bundle-Description: \
     This Bundle provides the basis for the communication with modules and devices using I2C.
 
 Export-Package:  \
+	io.openems.edge.bridge.i2c,\
 	io.openems.edge.bridge.i2c.api,\
-
-
-Private-Package:  \
-    io.openems.edge.bridge.i2c,\
-	io.openems.edge.bridge.i2c.task,\
+    io.openems.edge.bridge.i2c.task,\
 
 -includeresource: {readme.md}
 
@@ -19,7 +16,6 @@ Private-Package:  \
 	osgi.enroute.base.api;version=2.1,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-    io.openems.edge.relais.board.api;version=latest,\
     io.openems.edge.pwm.module.api;version=latest,\
     io.openems.edge.i2c.mcp.api;version=latest,\
     pi4j-core,\

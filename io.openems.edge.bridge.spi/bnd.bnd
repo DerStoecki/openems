@@ -8,10 +8,9 @@ Bundle-Description: \
 
 Export-Package:  \
 	io.openems.edge.bridge.spi.api,\
+		io.openems.edge.bridge.spi,\
+    	io.openems.edge.bridge.spi.task,\
 
-Private-Package:  \
-	io.openems.edge.bridge.spi,\
-	io.openems.edge.bridge.spi.task,\
 
 -includeresource: {readme.md}
 

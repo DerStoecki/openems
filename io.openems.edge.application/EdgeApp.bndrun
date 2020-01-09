@@ -23,6 +23,7 @@
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
 	bnd.identity;id='io.openems.edge.bridge.i2c',\
+	bnd.identity;id='io.openems.edge.bridge.i2c.api',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
 	bnd.identity;id='io.openems.edge.bridge.onewire',\
@@ -113,8 +114,8 @@
 	bnd.identity;id='io.openems.edge.pwm.module.api',\
 	bnd.identity;id='io.openems.edge.relays.device',\
 	bnd.identity;id='io.openems.edge.relays.device.api',\
-	bnd.identity;id='io.openems.edge.relais.module',\
-	bnd.identity;id='io.openems.edge.relais.module.api',\
+	bnd.identity;id='io.openems.edge.relays.module',\
+	bnd.identity;id='io.openems.edge.relays.module.api',\
 	bnd.identity;id='io.openems.edge.scheduler.allalphabetically',\
 	bnd.identity;id='io.openems.edge.scheduler.daily',\
 	bnd.identity;id='io.openems.edge.scheduler.fixedorder',\
@@ -236,7 +237,7 @@
 	io.openems.edge.pwm.module;version=snapshot,\
 	io.openems.edge.pwm.module.api;version=snapshot,\
 	io.openems.edge.relays.device;version=snapshot,\
-	io.openems.edge.relays.device.api;version=snapshot
+	io.openems.edge.relays.device.api;version=snapshot,\
 	io.openems.edge.relays.module;version=snapshot,\
 	io.openems.edge.relays.module.api;version=snapshot,\
 	io.openems.edge.scheduler.allalphabetically;version=snapshot,\

@@ -64,8 +64,8 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
         }
     }
 
-    private void allocateRelaysValue(String relaisType) {
-        switch (relaisType) {
+    private void allocateRelaysValue(String relaysType) {
+        switch (relaysType) {
 
             case "Closer":
             case "Reverse":
