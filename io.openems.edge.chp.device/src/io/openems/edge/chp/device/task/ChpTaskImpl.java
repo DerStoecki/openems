@@ -1,20 +1,20 @@
 package io.openems.edge.chp.device.task;
 
 import io.openems.edge.common.channel.WriteChannel;
-import io.openems.edge.i2c.mcp.api.task.McpTask;
+import io.openems.edge.i2c.mcp.api.task.AbstractChpTask;
 
-public class ChpTask extends McpTask {
+public class ChpTaskImpl extends AbstractChpTask {
     private int position;
     private float minValue;
     private float percentageRange;
     private float maxValue;
     private float scaling;
     private static final int DIGIT_SCALING = 10;
-    private int prevDigitValue = -69;
+    private int digitValue = -1;
     private WriteChannel<Integer> powerLevel;
 
 
-    public ChpTask(String id, int position, float minValue, float maxValue, float percentageRange, float scaling, WriteChannel<Integer> powerLevel) {
+    public ChpTaskImpl(String id, int position, float minValue, float maxValue, float percentageRange, float scaling, WriteChannel<Integer> powerLevel) {
         super(id);
         this.minValue = minValue;
         this.maxValue = maxValue;
@@ -51,6 +51,8 @@ public class ChpTask extends McpTask {
      * starting with 4mA --> 5mA)
      * </p>
      *
+     * @return calculated Digit if PowerLevel is present.
+     *
      */
     @Override
     public int getDigitValue() {
@@ -61,15 +63,11 @@ public class ChpTask extends McpTask {
             float singleDigitValue = this.scaling / ((maxValue) * DIGIT_SCALING);
 
             float actualAmpere = (power - this.percentageRange) / ((100.f - percentageRange) / (maxValue - minValue));
-            prevDigitValue = (int) ((actualAmpere + minValue) * DIGIT_SCALING * singleDigitValue);
+            digitValue = (int) ((actualAmpere + minValue) * DIGIT_SCALING * singleDigitValue);
         }
 
-        return prevDigitValue;
+        return digitValue;
     }
 
-    @Override
-    public WriteChannel<Boolean> getWriteChannel() {
-        return null;
-    }
 
 }

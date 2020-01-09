@@ -24,7 +24,7 @@ import java.io.IOException;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Gaspedal",
+@Component(name = "ChpModule",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class ChpModuleImpl extends AbstractOpenemsComponent implements OpenemsComponent, ChpModule {

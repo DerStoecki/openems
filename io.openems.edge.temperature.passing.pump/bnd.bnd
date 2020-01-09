@@ -6,7 +6,7 @@ Bundle-Description: \
     This Bundle implements a Pump used for heating. It can be part Relais and/or Pwm - Device.
     You need to activate a relais and pwm-device first.
 
-Export-Package:Private-Package:  \
+Private-Package:  \
 	io.openems.edge.temperature.passing.pump
 
 -includeresource: {readme.md}

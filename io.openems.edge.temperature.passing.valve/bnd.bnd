@@ -6,8 +6,6 @@ Bundle-Description: \
     This Bundle implements a valve (for heating purposes). It can be controlled by a percentage value by opening and
     closing itself. It needs two connected relays to function.
 
-Export-Package:
-
 Private-Package:  \
 	io.openems.edge.temperature.passing.valve,\
 

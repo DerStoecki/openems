@@ -6,8 +6,6 @@ Bundle-Description: \
     This Bundle is Used to create a Pwm Module. It access the Pwm Module Api to create a new PcaGpioProvider.
     This Provider will be utilized by the devices, and added to the I2c Bridge.
 
-Export-Package:  \
-
 Private-Package:  \
 	io.openems.edge.pwm.module
 

@@ -175,7 +175,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     }
 
     @Override
-    public void controlRelays(boolean activate, String whichRelais) {
+    public void controlRelays(boolean activate, String whichRelays) {
         try {
             if (this.relays.isCloser().value().get()) {
                 this.relays.getRelaysChannel().setNextWriteValue(activate);

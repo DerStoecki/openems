@@ -6,9 +6,6 @@ Bundle-Description: \
     This Bundle works like a basis for the Chp Devices by creating a dac and adding it to the I2C-Bridge.
 
 
-Export-Package:  \
-
-
 Private-Package:  \
 	io.openems.edge.chp.module,\
 

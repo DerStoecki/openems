@@ -5,8 +5,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 
 @ObjectClassDefinition(
-        name = "Passing Station Valve",
-        description = "A Valve mainly used for the Passing Station and Controller."
+        name = "Passing Valve",
+        description = "A Valve controlled by 2 relays used in the passing station."
 )
 @interface Config {
 
@@ -30,5 +30,5 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Valve [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Valve Two Relays [{id}]";
 }

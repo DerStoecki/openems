@@ -6,8 +6,6 @@ import java.util.Set;
 
 public interface TemperatureModule {
 
-    short getMaxCapacity();
-
     String getCircuitBoardId();
 
     String getVersionId();

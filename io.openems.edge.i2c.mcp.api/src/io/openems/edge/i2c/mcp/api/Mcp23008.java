@@ -3,7 +3,7 @@ package io.openems.edge.i2c.mcp.api;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 import io.openems.edge.i2c.mcp.api.task.McpTask;
-
+import io.openems.edge.i2c.mcp.api.task.RelaysTask;
 
 import java.io.IOException;
 import java.util.Map;
@@ -12,16 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Mcp23008 extends Mcp implements McpChannelRegister {
 
-    private final String address;
     private String parentCircuitBoard;
     private final int length = 8;
     private final I2CDevice device;
     private Map<Integer, Boolean> valuesPerDefault = new ConcurrentHashMap<>();
     private final boolean[] shifters;
-    private final Map<String, McpTask> tasks = new ConcurrentHashMap<>();
+    private final Map<String, RelaysTask> tasks = new ConcurrentHashMap<>();
 
     public Mcp23008(String address, I2CBus device, String parentCircuitBoard) throws IOException {
-        this.address = address;
         this.parentCircuitBoard = parentCircuitBoard;
         this.shifters = new boolean[length];
 
@@ -42,7 +40,6 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
                 this.device = device.getDevice(0x20);
                 break;
         }
-        int zero = 0x00;
         int data = 0x00;
         try {
             this.device.write(0x00, (byte) data);
@@ -61,7 +58,7 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
 
     @Override
     public void shift() {
-        for (McpTask task : tasks.values()) {
+        for (RelaysTask task : tasks.values()) {
 
             task.getWriteChannel().getNextWriteValueAndReset()
                     .ifPresent(aboolean -> {
@@ -78,7 +75,7 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
             }
         }
         try {
-            device.write(0x09, (byte) data);
+            device.write(0x09, data);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -109,7 +106,9 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
 
     @Override
     public void addTask(String id, McpTask mcpTask) {
-        this.tasks.put(id, mcpTask);
+        if (mcpTask instanceof RelaysTask) {
+            this.tasks.put(id, (RelaysTask) mcpTask);
+        }
     }
 
     @Override

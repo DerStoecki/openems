@@ -8,8 +8,6 @@ Bundle-Description: \
 Export-Package:  \
 	io.openems.edge.chp.device.api,\
 
-Private-Package:  \
-
 -includeresource: {readme.md}
 
 -buildpath:  \

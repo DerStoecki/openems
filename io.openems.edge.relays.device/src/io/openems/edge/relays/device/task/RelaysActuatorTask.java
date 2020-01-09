@@ -2,9 +2,10 @@ package io.openems.edge.relays.device.task;
 
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.i2c.mcp.api.task.McpTask;
+import io.openems.edge.i2c.mcp.api.task.RelaysTask;
 
 
-public class RelaysActuatorTask extends McpTask {
+public class RelaysActuatorTask extends RelaysTask {
     private int position;
     private WriteChannel<Boolean> writeOnOrOff;
 
@@ -25,15 +26,4 @@ public class RelaysActuatorTask extends McpTask {
         return this.position;
     }
 
-    //No Usage here, just for the ChpModule
-    @Override
-    public WriteChannel<Integer> getPowerLevel() {
-        return null;
-    }
-
-    //Same here
-    @Override
-    public int getDigitValue() {
-        return -666;
-    }
 }

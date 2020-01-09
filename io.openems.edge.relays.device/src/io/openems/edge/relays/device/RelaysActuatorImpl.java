@@ -40,16 +40,16 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        allocateRelaisValue(config.relaysType());
+        allocateRelaysValue(config.relaysType());
         this.isCloser().setNextValue(relaysValue);
         if (cpm.getComponent(config.relaysBoard_id()) instanceof RelaysModule) {
             RelaysModule relaysModule = cpm.getComponent(config.relaysBoard_id());
             if (relaysModule.getId().equals(config.relaysBoard_id())) {
                 Mcp mcp = relaysModule.getMcp();
                 allocatedMcp = mcp;
-                //Relais is always "off" on activation in OSGi --> Means closer and opener will be off
+                // Relays is always "off" on activation in OSGi --> Means closer and opener will be off
                 mcp.setPosition(config.position(), !this.isCloser().getNextValue().get());
-                //Value if it's deactivated Opener will be opened and Closer will be opened
+                // Value if it's deactivated Opener will be opened and Closer will be opened
                 mcp.addToDefault(config.position(), !this.isCloser().getNextValue().get());
                 // if closer should be off and Closer on uncomment the following code:
                 // mcp.setPosition(config.position(), 0);
@@ -64,8 +64,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
         }
     }
 
-
-    private void allocateRelaisValue(String relaisType) {
+    private void allocateRelaysValue(String relaisType) {
         switch (relaisType) {
 
             case "Closer":

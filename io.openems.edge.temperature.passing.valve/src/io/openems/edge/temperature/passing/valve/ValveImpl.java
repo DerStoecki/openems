@@ -127,8 +127,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     /**
-     * @return if the Valve is ready to change it's position, if the changetime is up.
-     */
+     * Tells if the Time to set the Valve position is up.
+     * 
+     * */
     @Override
     public boolean readyToChange() {
         if (percentageWasSet) {

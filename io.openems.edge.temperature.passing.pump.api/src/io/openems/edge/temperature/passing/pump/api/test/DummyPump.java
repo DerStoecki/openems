@@ -48,6 +48,12 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
         return true;
     }
 
+
+    /**
+     * Like the original changeByPercentage just a bit adjusted.
+     * @param percentage change the PowerLevel by this value.
+     *
+     * */
     @Override
     public boolean changeByPercentage(double percentage) {
         if (this.isRelays) {
@@ -55,6 +61,7 @@ public class DummyPump extends AbstractOpenemsComponent implements OpenemsCompon
                 if (this.getPowerLevel().getNextValue().get() + percentage < 0) {
                     controlRelays(false, "");
                     System.out.println("Set Next WriteValue to 0.f");
+                    this.getPowerLevel().setNextValue(0);
                     return true;
                 }
             } else if (percentage <= 0) {

@@ -5,11 +5,8 @@ Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
     This Bundle provides the Pcas needed by the PwmModule and Devices.
 
-
 Export-Package:  \
 	io.openems.edge.pwm.module.api,\
-
-Private-Package:  \
 
 -includeresource: {readme.md}
 

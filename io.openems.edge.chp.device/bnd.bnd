@@ -6,10 +6,6 @@ Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
     This Bundle provides the Chp Device Implementation, a list of Vitoblocs and ChpTasks for Controlling.
 
-
-Export-Package:  \
-
-
 Private-Package:  \
 	io.openems.edge.chp.device,\
 	io.openems.edge.chp.device.task,\

@@ -10,7 +10,6 @@ Export-Package:  \
 	io.openems.edge.pwm.device.api,\
 
 Private-Package:  \
-	io.openems.edge.pwm.device.api,\
 	io.openems.edge.pwm.device.api.test,\
 
 -includeresource: {readme.md}

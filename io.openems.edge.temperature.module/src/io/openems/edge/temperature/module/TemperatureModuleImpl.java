@@ -26,7 +26,7 @@ import java.util.Set;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "CircuitBoard", immediate = true,
+@Component(name = "TemperatureModule", immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 
 public class TemperatureModuleImpl extends AbstractOpenemsComponent implements OpenemsComponent, TemperatureModule {
@@ -36,7 +36,6 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
 
     private String circuitBoardId;
     private String versionId;
-    private short maxCapacity;
     private Set<Adc> adcSet = new HashSet<>();
 
     public TemperatureModuleImpl() {
@@ -80,7 +79,7 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
      */
     private void createTemperatureBoard(String versionNumber, List<String> frequency, List<Integer> dipSwitch) {
         switch (versionNumber) {
-            //more to come with further impl
+            //more to come with further Versions + development of the hardware
             case "1":
                 short counter = 0;
                 for (Adc mcpWantToCreate : TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getMcpContainer()) {
@@ -104,11 +103,6 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
         mcpWantToCreate.initialize(dipSwitch, Integer.parseInt(frequency), this.circuitBoardId, this.versionId);
         this.adcSet.add(mcpWantToCreate);
         bridgeSpi.addAdc(mcpWantToCreate);
-    }
-
-    @Override
-    public short getMaxCapacity() {
-        return maxCapacity;
     }
 
     @Deactivate

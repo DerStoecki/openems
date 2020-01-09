@@ -11,7 +11,7 @@ import org.osgi.service.metatype.annotations.Option;
 @interface Config {
     String service_pid();
 
-    @AttributeDefinition(name = "Pwm Module Name", description = "The Unique Id of the Module")
+    @AttributeDefinition(name = "Pwm Module Name", description = "The Unique Id of the Module.")
     String id() default "Pwm0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
@@ -30,7 +30,7 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Allocated Frequency", description = "How much Hz supported by the Module (Max 1526).")
             String max_frequency() default "500";
 
-    @AttributeDefinition(name = "Measured Frequency", description = "actual measured Frequency of Module.")
+    @AttributeDefinition(name = "Measured Frequency", description = "Actual measured Frequency of Module.")
             String actual_frequency() default "500";
 
     boolean enabled() default true;

@@ -6,10 +6,6 @@ Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
     This Bundle provides the User with the Relay and the Task. Further Description in the readme.
 
-
-
-Export-Package:  \
-
 Private-Package: \
     io.openems.edge.relays.device,\
     io.openems.edge.relays.device.task,\

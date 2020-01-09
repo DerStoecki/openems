@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
         name = "Bridge Spi",
-        description = " Spi Bridge, needed for the Communciation with Spi Modules and Devices.")
+        description = " Spi Bridge, needed for the communication with Spi Modules and Devices.")
 
 @interface Config {
     String service_pid();

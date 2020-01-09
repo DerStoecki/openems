@@ -5,9 +5,6 @@ Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
     This Bundle provides an anlogue temperature sensor and it's task. Using the Spi Communication Bridge.
 
-
-Export-Package:
-
 Private-Package:  \
 	io.openems.edge.temperature.sensor,\
 	io.openems.edge.temperature.sensor.task,\

@@ -24,8 +24,6 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.pi4j.wiringpi.Spi;
 
 @Designate(ocd = Config.class, factory = true)
@@ -35,12 +33,14 @@ import com.pi4j.wiringpi.Spi;
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
 public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi, EventHandler, OpenemsComponent {
 
-    private final Logger log = LoggerFactory.getLogger(BridgeSpiImpl.class);
-
-
     private Set<Adc> adcList = new HashSet<>();
     private final SpiWorker worker = new SpiWorker();
     private Map<String, SpiTask> tasks = new ConcurrentHashMap<>();
+
+
+    public BridgeSpiImpl() {
+        super(OpenemsComponent.ChannelId.values());
+    }
 
     @Activate
     public void activate(ComponentContext context, Config config) {
@@ -50,16 +50,11 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         }
     }
 
-
     @Deactivate
     public void deactivate() {
         super.deactivate();
         this.worker.deactivate();
         adcList.forEach(this::removeAdc);
-    }
-
-    public BridgeSpiImpl() {
-        super(OpenemsComponent.ChannelId.values());
     }
 
     @Override
@@ -87,6 +82,7 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         this.adcList.removeIf(value -> value.getCircuitBoardId().equals(adc.getCircuitBoardId()));
         adc.deactivate();
     }
+
     /**
      * Adds an Spi Task, called by the SpiDevices.
      * @param id , the unique Id of the SpiDevice.

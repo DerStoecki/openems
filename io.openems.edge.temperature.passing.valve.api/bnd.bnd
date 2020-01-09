@@ -9,8 +9,6 @@ Export-Package:  \
 	io.openems.edge.temperature.passing.valve.api,\
 	io.openems.edge.temperature.passing.valve.api.test,\
 
-Private-Package:
-
 -includeresource: {readme.md}
 
 -buildpath:  \

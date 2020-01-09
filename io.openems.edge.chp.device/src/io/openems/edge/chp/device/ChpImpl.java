@@ -2,7 +2,7 @@ package io.openems.edge.chp.device;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.chp.device.api.PowerLevel;
-import io.openems.edge.chp.device.task.ChpTask;
+import io.openems.edge.chp.device.task.ChpTaskImpl;
 import io.openems.edge.chp.module.api.ChpModule;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
@@ -23,7 +23,6 @@ import org.osgi.service.metatype.annotations.Designate;
         immediate = true)
 public class ChpImpl extends AbstractOpenemsComponent implements OpenemsComponent, PowerLevel {
     private Mcp mcp;
-    //bhkwType only for purposes coming in future
     private ChpType chpType;
     @Reference
     protected ComponentManager cpm;
@@ -100,7 +99,7 @@ public class ChpImpl extends AbstractOpenemsComponent implements OpenemsComponen
         if (cpm.getComponent(config.chpModuleId()) instanceof ChpModule) {
             ChpModule chpModule = cpm.getComponent(config.chpModuleId());
             mcp = chpModule.getMcp();
-            mcp.addTask(super.id(), new ChpTask(super.id(),
+            mcp.addTask(super.id(), new ChpTaskImpl(super.id(),
                     config.position(), config.minLimit(), config.maxLimit(),
                     config.percentageRange(), 4096.f, this.getPowerLevelChannel()));
         }

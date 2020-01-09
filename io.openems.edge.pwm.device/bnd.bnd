@@ -5,10 +5,6 @@ Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
     This Bundle provides the PwmDevice with it's Task. Further Infomration in the readme.md
 
-Export-Package:  \
-	io.openems.edge.pwm.device.task,\
-	io.openems.edge.pwm.device,\
-
 Private-Package:  \
     io.openems.edge.pwm.device,\
     io.openems.edge.pwm.device.task,\

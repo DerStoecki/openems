@@ -1,6 +1,9 @@
 package io.openems.edge.chp.device;
 
 public enum ChpType {
+    /**
+     * Datasheet information. If -1 is given there was no data available.
+     * */
     Vito_EM_6_15(6, 14.9f, 22.2f, -1, -1, 7, 14.9f, 4.5f, 3.5f, "Vitobloc_200_EM_6_15"),
     Vito_EM_9_20(8.5f, 20.1f, 30.1f, -1, -1, 7, 20.1f, 16.1f, 12.3f, "Vitobloc_200_EM_9_20"),
     Vito_EM_20_39(20, 39, 62, -1, -1, 7, 39, 27.5f, 22.3f, "Vitobloc_200_EM_20_39"),

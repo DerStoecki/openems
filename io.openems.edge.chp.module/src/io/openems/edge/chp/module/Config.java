@@ -6,7 +6,7 @@ import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
         name = "Consolinno Chp Module",
-        description = "This Component communicates with the Chp Devices."
+        description = "This Component communicates with the Chp Devices and the I2C-Bridge."
 )
 
 @interface Config {
@@ -15,10 +15,10 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "ChpModule Id", description = "Unique Id of the ChpModule.")
     String id() default "ChpModule0";
 
-    @AttributeDefinition(name = "alias", description = "Human readable name of Board.")
+    @AttributeDefinition(name = "alias", description = "Human readable name of the Module.")
     String alias() default "";
 
-    @AttributeDefinition(name = "VersionNumber", description = "What version of ChpBoard are  you using.",
+    @AttributeDefinition(name = "VersionNumber", description = "What version of ChpModule are you using.",
     options = @Option(label = "Version 1.0", value = "1"))
     String version() default "1";
 

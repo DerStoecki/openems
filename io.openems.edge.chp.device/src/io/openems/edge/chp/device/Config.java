@@ -6,7 +6,7 @@ import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
         name = "Chp Vitobloc",
-        description = "Depending on VersionId you can activate up to X Devices per Chp Module."
+        description = "A combined heat and power system."
 )
 @interface Config {
 
@@ -52,7 +52,7 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "max - Limit of Chp", description = "Maximum of your Chp API mA.")
     short maxLimit() default 20;
 
-    @AttributeDefinition(name = "Percentage - range", description = "Where is your percentage range (depending on API)"
+    @AttributeDefinition(name = "Percentage - range", description = "Where is your percentage range (depending on API)."
             + "starting: 0-100%(type 0) or 50-100% (type 50).")
     int percentageRange() default 0;
 

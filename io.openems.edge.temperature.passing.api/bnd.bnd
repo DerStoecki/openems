@@ -7,8 +7,6 @@ Bundle-Description: Provides the Api used by the passing devices pump and valve.
 Export-Package:  \
 	io.openems.edge.temperature.passing.api,\
 
-Private-Package:  \
-
 -includeresource: {readme.md}
 
 -buildpath:  \

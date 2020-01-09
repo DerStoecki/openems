@@ -22,7 +22,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.i2c.task.I2cTask;
-import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -38,9 +37,9 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
 
     private final I2cWorker worker = new I2cWorker();
     private List<Mcp> mcpList = new ArrayList<>();
-    //String --> PwmModule
+    //String --> PwmModule Id
     private Map<String, PcaGpioProvider> gpioMap = new ConcurrentHashMap<>();
-    //String --> PwmDevice
+    //String --> PwmDevice Id
     private Map<String, I2cTask> tasks = new ConcurrentHashMap<>();
 
     @Activate
@@ -55,27 +54,12 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     public void deactivate() {
         super.deactivate();
         this.worker.deactivate();
-        //Relais will be default (depending on opener and closer) and Chp will be 0
+        //Relays will be default (depending on opener and closer) and Chp will be 0
         mcpList.forEach(McpChannelRegister::deactivate);
 
         // should always be empty already but to make sure..
         this.gpioMap.keySet().forEach(this::removeGpioDevice);
 
-    }
-
-    public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-        ;
-
-        private final Doc doc;
-
-        ChannelId(Doc doc) {
-            this.doc = doc;
-        }
-
-        @Override
-        public Doc doc() {
-            return this.doc;
-        }
     }
 
     public I2cBridgeImpl() {
@@ -120,6 +104,12 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         this.gpioMap.remove(id);
     }
 
+    /**
+     * Adds an I2c task (GpioDevice) to the Map --> handled by the worker.
+     *
+     * @param id      Unique Id of the GpioDevice
+     * @param i2cTask i2cTask by the GpioDevice.
+     */
     @Override
     public void addI2cTask(String id, I2cTask i2cTask) throws OpenemsException {
         if (!this.tasks.containsKey(id)) {

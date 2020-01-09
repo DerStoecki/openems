@@ -9,8 +9,6 @@ Bundle-Description: \
 Export-Package:  \
 	io.openems.edge.relays.module.api,\
 
-Private-Package:  \
-
 -includeresource: {readme.md}
 
 -buildpath:  \

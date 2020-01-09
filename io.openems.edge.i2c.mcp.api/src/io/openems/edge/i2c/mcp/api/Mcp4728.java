@@ -2,6 +2,7 @@ package io.openems.edge.i2c.mcp.api;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
+import io.openems.edge.i2c.mcp.api.task.AbstractChpTask;
 import io.openems.edge.i2c.mcp.api.task.McpTask;
 
 
@@ -10,26 +11,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Mcp4728 extends Mcp implements McpChannelRegister {
-    private String address;
     private String parentCircuitBoard;
     private final int length = 4;
     private I2CDevice device;
     private int[] values;
-    private int[] prevValues;
-    private Map<String, McpTask> tasks = new ConcurrentHashMap<>();
-    private int maxDigitValue = 4095;
+    private Map<String, AbstractChpTask> tasks = new ConcurrentHashMap<>();
 
 
     public Mcp4728(String address, String parentCircuitBoard, I2CBus device) throws IOException {
         values = new int[4];
-        prevValues = new int[4];
         this.parentCircuitBoard = parentCircuitBoard;
         for (short x = 0; x < length; x++) {
             values[x] = 0;
-            prevValues[x] = 0;
-
         }
-        this.address = address;
+        //More addresses to come with further Modules / versions
         switch (address) {
             case "0x60":
             default:
@@ -47,28 +42,22 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
 
     /**
      * gets the digit-value of it's chp-tasks, save them to their correct position and
-     * setting them all in one in this.device.write .
+     * setting them all in one in this.device.write.
+     * max digitValue = 4095 bc Mcp supports only 12bit
      */
     public void shift() {
 
-        for (McpTask task : tasks.values()) {
-            //-69 default value of digitValue in ChpTask
+        int maxDigitValue = 4095;
+        for (AbstractChpTask task : tasks.values()) {
             int digitValue = task.getDigitValue();
-            if (digitValue != -69) {
-                values[task.getPosition()] = digitValue;
-                if (values[task.getPosition()] < 0) {
-                    values[task.getPosition()] = 0;
-                } else if (values[task.getPosition()] > this.maxDigitValue) {
-                    values[task.getPosition()] = this.maxDigitValue;
-
-                }
-                if (values[task.getPosition()] != prevValues[task.getPosition()]) {
-                    prevValues[task.getPosition()] = values[task.getPosition()];
-                }
-            } else {
-                values[task.getPosition()] = prevValues[task.getPosition()];
+            values[task.getPosition()] = digitValue;
+            if (values[task.getPosition()] < 0) {
+                values[task.getPosition()] = 0;
+            } else if (values[task.getPosition()] > maxDigitValue) {
+                values[task.getPosition()] = maxDigitValue;
             }
         }
+
         try {
             byte[] allVoltage = setAllVoltage();
             this.device.write(0x50, allVoltage);
@@ -80,24 +69,24 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
 
     /**
      * Adds the Chp Task to the task-map.
-     *
-     * @param id      unique id of the Chp Device
+     *  @param id      unique id of the Chp Device
      * @param mcpTask the created McpTask by the Chp device.
      */
     @Override
     public void addTask(String id, McpTask mcpTask) {
-        this.tasks.put(id, mcpTask);
+        if (mcpTask instanceof AbstractChpTask) {
+            this.tasks.put(id, (AbstractChpTask) mcpTask);
+        }
     }
 
     /**
-     * Deactivating the Chp's and removing them from the map.
+     * Deactivating the Chp and removing them from the map.
      *
      * @param id Chp Id.
      */
     @Override
     public void removeTask(String id) {
         this.values[this.tasks.get(id).getPosition()] = 0;
-        this.prevValues[this.tasks.get(id).getPosition()] = 0;
         this.tasks.remove(id);
         this.shift();
     }
@@ -132,7 +121,6 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
     public void deactivate() {
         for (short x = 0; x < length; x++) {
             this.values[x] = 0;
-            this.prevValues[x] = 0;
             try {
                 byte[] allVoltage = setAllVoltage();
                 this.device.write(0x50, allVoltage);
@@ -147,20 +135,20 @@ public class Mcp4728 extends Mcp implements McpChannelRegister {
         return parentCircuitBoard;
     }
 
-    //only needed by relays atm
+    //Those Functions are not needed yet.
     @Override
     public void setPosition(int position, boolean activate) {
+
     }
 
-
-    //not needed yet here
-    @Override
-    public void addToDefault(int position, boolean activate) {
-    }
-
-    //not needed yet here
     @Override
     public Map<Integer, Boolean> getValuesPerDefault() {
         return null;
     }
+
+    @Override
+    public void addToDefault(int position, boolean activate) {
+
+    }
+
 }

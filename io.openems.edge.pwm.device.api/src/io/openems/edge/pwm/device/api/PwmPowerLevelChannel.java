@@ -10,7 +10,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface PwmPowerLevelChannel extends OpenemsComponent {
 
     /**
-     * * How much of the low/highflank the device uses. e.g. 80% power --> like a dimming light and
+     * * How much of the low/highFlank the device uses. e.g. 80% power --> like a dimming light and
      * it's "level" of brightness.
      * <ul>
      * <li>Interface: PowerLevel

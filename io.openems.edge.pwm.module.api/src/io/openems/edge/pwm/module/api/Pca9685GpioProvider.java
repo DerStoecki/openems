@@ -133,6 +133,7 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
 
     /**
      * Setting the pwm-sginal to a continuous low-flank.
+     *
      * @param pinPos location of the pwm device.
      */
     @Override
@@ -149,11 +150,10 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
 
     /**
      * Sets the Frequency of the device.
-     * @param targetFrequency wanted frequency.
+     *
+     * @param targetFrequency           wanted frequency.
      * @param frequencyCorrectionFactor actual measured frequency / deviation.
-     *
-     *
-     * */
+     */
     @Override
     public void setFrequency(BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) {
         this.validateFrequency(targetFrequency);
@@ -175,6 +175,7 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
             throw new RuntimeException(e);
         }
     }
+
     //following methods are used from :
     //https://github.com/Pi4J/pi4j/tree/master/pi4j-gpio-extension/src/main/java/com/pi4j/gpio/extension/pca
     private void validateFrequency(BigDecimal frequency) {

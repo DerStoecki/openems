@@ -4,19 +4,17 @@ import io.openems.edge.common.channel.WriteChannel;
 
 public abstract class McpTask {
 
-    private String relaysModule;
+    private String moduleId;
 
-    public McpTask(String relaysModule) {
-        this.relaysModule = relaysModule;
+    McpTask(String moduleId) {
+        this.moduleId = moduleId;
     }
 
     public abstract int getPosition();
 
-    public abstract WriteChannel<Boolean> getWriteChannel();
+    //could be used at some point e.g. identification of the Mcp etc, not needed yet.
 
-    public abstract WriteChannel<Integer> getPowerLevel();
-
-    public abstract int getDigitValue();
-
-
+    public String getModuleId() {
+        return moduleId;
+    }
 }
