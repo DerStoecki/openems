@@ -1,16 +1,18 @@
 package io.openems.edge.pwm.module.api;
 
-import io.openems.common.exceptions.OpenemsException;
+import java.math.BigDecimal;
 
-public abstract class PcaGpioProvider {
+public interface PcaGpioProvider {
 
-    abstract void setPwm(int pinPos, int onPos, int offPos) throws OpenemsException;
+    void setPwm(int pinPos, int onPos, int offPos);
 
-    abstract void setPwm(int pinPos, int offPos) throws OpenemsException;
+    void setPwm(int pinPos, int offPos);
 
-    abstract void validatePositionPwmRange(int onOrOffPos);
+    void validatePositionPwmRange(int onOrOffPos);
 
-    abstract void setAlwaysOn(int pinPos);
+    void setAlwaysOn(int pinPos);
 
-    abstract void setAlwaysOff(int pinPos);
+    void setAlwaysOff(int pinPos);
+
+    void setFrequency(BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor);
 }

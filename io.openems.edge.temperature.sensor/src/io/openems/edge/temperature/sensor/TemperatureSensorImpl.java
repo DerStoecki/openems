@@ -1,13 +1,12 @@
 package io.openems.edge.temperature.sensor;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bridge.spi.BridgeSpi;
-import io.openems.edge.common.channel.Doc;
+import io.openems.edge.bridge.spi.api.BridgeSpi;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.temperature.sensor.task.TemperatureDigitalReadTask;
-import io.openems.edge.temperature.board.api.Adc;
+import io.openems.edge.spi.mcp.api.Adc;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -29,7 +28,8 @@ import org.slf4j.LoggerFactory;
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 
 public class TemperatureSensorImpl extends AbstractOpenemsComponent implements OpenemsComponent, Thermometer {
-    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    @Reference(policy = ReferencePolicy.STATIC,
+            policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     BridgeSpi bridgeSpi;
 
     @Reference
@@ -38,7 +38,6 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
     private String temperatureBoardId;
     private int spiChannel;
     private int pinPosition;
-    private String servicePid;
     private String alias;
     private Adc adcForTemperature;
     private final Logger log = LoggerFactory.getLogger(TemperatureSensorImpl.class);
@@ -60,6 +59,15 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
 
     }
 
+    /**
+     * Checks if the DigitalReadTask is allowed to be created.
+     * It Checks if the adc is correct (Spi Channel)
+     * Checks if the Pin position is correct and if it's already used by another device.
+     * If everything's okay, the task will be created and added to the spiTasks.
+     *
+     * @throws ConfigurationException if the User configured something wrong.
+     *
+     * */
     private void createTemperatureDigitalReadTask() throws ConfigurationException {
         try {
             ConfigurationException[] ex = {null};
@@ -73,7 +81,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
                     ).findFirst().ifPresent(pinValue -> {
                         if (pinValue.setUsedBy(super.id()) || pinValue.getUsedBy().equals(super.id())) {
                             TemperatureDigitalReadTask task = new TemperatureDigitalReadTask(this.getTemperature(),
-                                    adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition, this.temperatureBoardId, super.id());
+                                    adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition);
                             try {
                                 bridgeSpi.addSpiTask(super.id(), task);
                             } catch (ConfigurationException e) {

@@ -16,7 +16,7 @@ import com.pi4j.io.gpio.exception.ValidationException;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 
-public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProvider {
+public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaGpioProvider {
 
     private static final int INTERNAL_CLOCK_FREQ = 25 * 1000 * 1000; // 25 MHz
     private static final BigDecimal MIN_FREQUENCY = new BigDecimal("24");
@@ -46,7 +46,7 @@ public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProv
         this.bus = bus;
         allocateAddress(address);
         this.device.write(PCA9685A_MODE1, (byte) 0);
-        //if not working try (PCA9685A_MODE1), (byte) 5
+        //if not working try (PCA9685A_MODE1, (byte) 5);
         this.setFrequency(targetFrequency, frequencyCorrectionFactor);
     }
 
@@ -64,6 +64,16 @@ public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProv
         }
     }
 
+    /**
+     * Sets the Pwm signal.
+     *
+     * @param pinPos Location of the PwmDevice
+     * @param onPos  where the highflankstarts --> != 0 --> offset, so normally it's 0
+     * @param offPos where the highflank ends --> low Flank starts
+     *
+     *               <p>The device write starts with 6 7 8 9 because the pca9685 is made that way: setting LED on and off
+     *               and then writing the value as a byte.</p>
+     */
     @Override
     public void setPwm(int pinPos, int onPos, int offPos) {
         if (pinPos > maxPinPos) {
@@ -103,6 +113,11 @@ public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProv
 
     }
 
+    /**
+     * Setting the pwm-signal to a continuous high-flank.
+     *
+     * @param pinPos location of the pwm device.
+     */
     @Override
     public void setAlwaysOn(int pinPos) {
         try {
@@ -116,6 +131,11 @@ public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProv
         }
     }
 
+    /**
+     * Setting the pwm-sginal to a continuous low-flank.
+     *
+     * @param pinPos location of the pwm device.
+     */
     @Override
     public void setAlwaysOff(int pinPos) {
         try {
@@ -128,7 +148,12 @@ public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProv
         }
     }
 
-
+    /**
+     * Sets the Frequency of the device.
+     *
+     * @param targetFrequency           wanted frequency.
+     * @param frequencyCorrectionFactor actual measured frequency / deviation.
+     */
     @Override
     public void setFrequency(BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) {
         this.validateFrequency(targetFrequency);
@@ -151,6 +176,8 @@ public class Pca9685GpioProvider extends PcaGpioProvider implements IpcaGpioProv
         }
     }
 
+    //following methods are used from :
+    //https://github.com/Pi4J/pi4j/tree/master/pi4j-gpio-extension/src/main/java/com/pi4j/gpio/extension/pca
     private void validateFrequency(BigDecimal frequency) {
         if (frequency.compareTo(MIN_FREQUENCY) == -1 || frequency.compareTo(MAX_FREQUENCY) == 1) {
             throw new ValidationException("Frequency [" + frequency + "] must be between 40.0 and 1600.0 Hz.");

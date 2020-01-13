@@ -1,6 +1,9 @@
 # io.openems.edge.bridge.spi Provider
 
-${Bundle-Description}
+## Description
+
+This Bundle provides the basis to communicate with Devices using Spi. Including SpiTask.
+
 
 ## Example
 

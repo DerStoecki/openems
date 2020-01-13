@@ -2,9 +2,9 @@ Bundle-Name: OpenEMS Edge Passing Valve
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
-
-Export-Package:  \
-	io.openems.edge.temperature.passing.valve,\
+Bundle-Description: \
+    This Bundle implements a valve (for heating purposes). It can be controlled by a percentage value by opening and
+    closing itself. It needs two connected relays to function.
 
 Private-Package:  \
 	io.openems.edge.temperature.passing.valve,\
@@ -13,8 +13,8 @@ Private-Package:  \
 
 -buildpath:  \
 	osgi.enroute.base.api;version=2.1,\
-	io.openems.edge.relais.api;version=latest,\
-	io.openems.edge.relais.board.api;version=latest,\
+	io.openems.edge.relays.device.api;version=latest,\
+	io.openems.edge.relays.module.api;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
 	io.openems.edge.bridge.i2c;version=latest,\

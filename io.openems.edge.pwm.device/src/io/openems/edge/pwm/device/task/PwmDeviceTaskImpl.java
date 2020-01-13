@@ -10,10 +10,9 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
 
     private short pinPosition;
 
-    private int offset;
     private boolean isInverse;
     private static final float SCALING = 10.f;
-    int digitValue = -5;
+    private int digitValue = -5;
 
 
     public PwmDeviceTaskImpl(String deviceId, WriteChannel<Float> powerLevel, String pwmModule, short pinPosition, boolean isInverse) {
@@ -44,13 +43,19 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
         return isInverse;
     }
 
+
+    /**
+     * calculates the digit what will be written in the pwm module --> device.
+     * straight forward: depending on percentage (inverse or not) the digit value will be written.
+     * If it's inverse --> 80% power becomes 20% digit - wise.
+     */
     @Override
     public int calculateDigit(int digitRange) {
 
         float singleDigitValue = (float) (digitRange) / (100 * SCALING);
 
         if (this.powerLevel.getNextWriteValue().isPresent()) {
-            //just for REST; value is returned;
+            //just for REST/JSON request so that a value is returned;
             this.powerLevel.setNextValue(this.powerLevel.getNextWriteValue());
             float power = powerLevel.getNextWriteValue().get();
 

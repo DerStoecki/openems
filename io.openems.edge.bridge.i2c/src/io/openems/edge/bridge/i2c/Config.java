@@ -5,12 +5,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
         name = "Bridge I2C",
-        description = "Bridge to use the connected Relais"
+        description = "Bridge to communicate with the connected devices communicating via I2C."
 )
 @interface Config {
     String service_pid();
 
-    @AttributeDefinition(name = "I2CBridge-ID", description = "ID of Shiftregister brige.")
+    @AttributeDefinition(name = "I2CBridge-ID", description = "ID of I2c bridge.")
     String id() default "I2C";
 
     @AttributeDefinition(name = "Alias", description = "Human readable Name.")

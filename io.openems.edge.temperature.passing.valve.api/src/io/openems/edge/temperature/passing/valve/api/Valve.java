@@ -8,6 +8,6 @@ public interface Valve extends PassingForPid {
 
     boolean changeByPercentage(double percentage);
 
-    void controlRelais(boolean activate, String whichRelais);
+    void controlRelays(boolean activate, String whichRelays);
 
 }

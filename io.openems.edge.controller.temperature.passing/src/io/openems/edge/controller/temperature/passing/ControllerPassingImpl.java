@@ -31,8 +31,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
     private Thermometer primaryForward;
     private Thermometer primaryRewind;
-    private Thermometer secundaryForward;
-    private Thermometer secundaryRewind;
+    private Thermometer secondaryForward;
+    private Thermometer secondaryRewind;
     private Valve valve;
     private Pump pump;
 
@@ -91,12 +91,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     }
 
     private void defaultOptions() {
-        //later for error Handling
+
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
-        //just in case
-        this.valve.controlRelais(false, "Open");
-        this.valve.controlRelais(false, "Closed");
-        this.pump.controlRelais(false, "");
+        this.valve.controlRelays(false, "Open");
+        this.valve.controlRelays(false, "Closed");
+        this.pump.controlRelays(false, "");
     }
 
     @Deactivate
@@ -107,6 +106,15 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         this.pump.changeByPercentage(-100);
     }
 
+    /**
+     * Checks all the time if the controller is needed, heat is okay etc.
+     * <p>
+     * If the MinTemperature is defined (coming from the overseer controller --> Min Temperature needs to be
+     * reached by the primaryForward), and there's no Error as well as the OnOff Value was set to true (by the overseer)
+     * The Valve is opened. If the Temperature is reached the pump will be activated.
+     * If the Time to heat up the system is up Errors will occur (either the Temperature barely changed --> Valve defect
+     * or the min temperature can't be reached bc heat is too low.)
+     */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (this.getMinTemperature().getNextWriteValue().isPresent()
@@ -122,7 +130,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                                 return;
                             }
                         } else if (valve.readyToChange()) {
-                            valve.controlRelais(false, "Open");
+                            valve.controlRelays(false, "Open");
                             isOpen = true;
                             timeSetHeating = false;
                         } else {
@@ -167,8 +175,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
                     this.noError().setNextValue(false);
-                    valve.controlRelais(false, "Open");
-                    valve.controlRelais(true, "Closed");
+                    valve.controlRelays(false, "Open");
+                    valve.controlRelays(true, "Closed");
                     throw e;
                 }
 
@@ -180,10 +188,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         if (valve.changeByPercentage(-100)) {
                             pump.changeByPercentage(-100);
                             isOpen = false;
-                            return;
                         }
                     } else if (valve.readyToChange()) {
-                        valve.controlRelais(false, "Closed");
+                        valve.controlRelays(false, "Closed");
                         isClosed = true;
                         timeSetHeating = false;
                     }
@@ -198,11 +205,26 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         return System.currentTimeMillis() - timeStampHeating > timeToHeatUp + EXTRA_BUFFER_TIME;
     }
 
+    /**
+     * Checks if the minTemperature is reached, Buffer Temperature is important bc of heatloss.
+     *
+     * @return the temperature is reached or not.
+     */
     private boolean primaryForwardReadyToHeat() {
         return primaryForward.getTemperature().getNextValue().get()
                 >= this.getMinTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE;
     }
 
+
+    /**
+     * This function allocates all Components the Controller needs.
+     *
+     * @param id        The Unique id of the device.
+     * @param type      is the Device a Thermometer, Pump or Valve
+     * @param exactType only important for the TemperatureSensor, to validate it's task.
+     * @throws OpenemsError.OpenemsNamedException coming from the componentManager. if the getComponent method
+     *                                            throws an error.
+     */
     private void allocate_Component(String id, String type, String exactType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         switch (type) {
             case "Thermometer":
@@ -216,14 +238,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             this.primaryRewind = th;
                             break;
                         case "SF":
-                            this.secundaryForward = th;
+                            this.secondaryForward = th;
                             break;
                         case "SR":
-                            this.secundaryRewind = th;
+                            this.secondaryRewind = th;
                             break;
                     }
                 } else {
-                    throw new ConfigurationException(id, "The temperaturesensor " + id + " Is Not a (configured) temperature sensor.");
+                    throw new ConfigurationException(id, "The temperature-sensor " + id + " Is not a (configured) temperature sensor.");
                 }
 
                 break;
@@ -231,24 +253,28 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                 if (cpm.getComponent(id) instanceof PassingChannel) {
                     this.pump = cpm.getComponent(id);
                 } else {
-                    throw new ConfigurationException(id, "The Pump " + id + " Is Not a (configured) Pump.");
+                    throw new ConfigurationException(id, "The Pump " + id + " Is not a (configured) Pump.");
                 }
                 break;
             case "Valve":
                 if (cpm.getComponent(id) instanceof PassingChannel) {
                     this.valve = cpm.getComponent(id);
                 } else {
-                    throw new ConfigurationException(id, "The Valve " + id + " Is Not a (configured) Valve");
+                    throw new ConfigurationException(id, "The Valve " + id + " Is not a (configured) Valve.");
                 }
                 break;
         }
     }
 
-
+    /**
+     * Checks if it's getting too hot (should never occur bc of the overseer controller but you never know).
+     * Can only occur if the minTemperature is reached by the secondary forward.
+     * @return true if the secondary rewind is as hot as the secondary forward --> no heat loss --> no heat needed.
+     */
     private boolean tooHot() {
-        if (this.secundaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
-            return this.secundaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
-                    > this.secundaryForward.getTemperature().getNextValue().get();
+        if (this.secondaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
+            return this.secondaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
+                    > this.secondaryForward.getTemperature().getNextValue().get();
         }
         return false;
     }

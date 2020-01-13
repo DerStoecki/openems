@@ -5,8 +5,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 
 @ObjectClassDefinition(
-        name = "Consolinno Valve",
-        description = "A Valve mainly used for the Passing Station and Controller"
+        name = "Passing Valve",
+        description = "A Valve controlled by 2 relays used in the passing station."
 )
 @interface Config {
 
@@ -19,16 +19,16 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
 
-    @AttributeDefinition(name = "Closing Relais", description = "What Relais is responsible for closing the Valve.")
-    String closing_Relais() default "Relais0";
+    @AttributeDefinition(name = "Closing Relays", description = "What Relays is responsible for closing the Valve.")
+    String closing_Relais() default "Relays0";
 
-    @AttributeDefinition(name = "Opening Relais", description = "What Relais is responsible for closing the Valve.")
-    String opening_Relais() default "Relais1";
+    @AttributeDefinition(name = "Opening Relays", description = "What Relays is responsible for closing the Valve.")
+    String opening_Relais() default "Relays1";
 
     @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds).")
     int valve_Time() default 30;
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Valve [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Valve Two Relays [{id}]";
 }

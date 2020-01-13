@@ -1,0 +1,21 @@
+Bundle-Name: OpenEMS Edge Relays Module Api
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+
+Bundle-Description: \
+	This Bundle provides the Api, that the Relays devices are accessing.
+
+Export-Package:  \
+	io.openems.edge.relays.module.api,\
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.i2c.mcp.api;version=latest,\
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+

@@ -30,7 +30,7 @@ public interface ControllerPassingChannel extends OpenemsComponent {
          * <ul>
          * <li> Min Temperature that has to be reached
          * <li>Type: Integer
-         * <li>Unit: Dezidegree Celsius
+         * <li>Unit: Decimal degrees Celsius
          * </ul>
          */
 
@@ -39,7 +39,7 @@ public interface ControllerPassingChannel extends OpenemsComponent {
         /**
          * Is Error.
          * <ul>
-         * <li> If an Error Occured within this Controller
+         * <li> If an Error occurred within this Controller
          * <li>Type: Boolean
          * <li>
          * </ul>
@@ -78,7 +78,7 @@ public interface ControllerPassingChannel extends OpenemsComponent {
     }
 
     /**
-     * Has an Error Occured or is everythings fine.
+     * Has an Error occurred or is everything's fine.
      *
      * @return the Channel
      */

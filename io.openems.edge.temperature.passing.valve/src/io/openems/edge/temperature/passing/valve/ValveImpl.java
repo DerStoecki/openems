@@ -4,7 +4,7 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.relais.api.ActuatorRelaisChannel;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import org.osgi.service.component.ComponentContext;
@@ -16,11 +16,11 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Passing.Valve")
+@Component(name = "PassingValve")
 public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
 
-    private ActuatorRelaisChannel closing;
-    private ActuatorRelaisChannel opens;
+    private ActuatorRelaysChannel closing;
+    private ActuatorRelaysChannel opens;
     private double secondsPerPercentage;
     private boolean percentageWasSet = false;
     private long timeStampValve;
@@ -38,10 +38,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
-            if (cpm.getComponent(config.closing_Relais()) instanceof ActuatorRelaisChannel) {
+            if (cpm.getComponent(config.closing_Relais()) instanceof ActuatorRelaysChannel) {
                 closing = cpm.getComponent(config.closing_Relais());
             }
-            if (cpm.getComponent(config.opening_Relais()) instanceof ActuatorRelaisChannel) {
+            if (cpm.getComponent(config.opening_Relais()) instanceof ActuatorRelaysChannel) {
                 opens = cpm.getComponent(config.opening_Relais());
             }
         } catch (OpenemsError.OpenemsNamedException e) {
@@ -58,57 +58,63 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         try {
             super.deactivate();
             //in case somethings happening; the Valve will be closed.
-            if (closing.isCloser().getNextValue().get()) {
-                closing.getRelaisChannel().setNextWriteValue(true);
-            } else {
-                closing.getRelaisChannel().setNextWriteValue(false);
-            }
-            if (opens.isCloser().getNextValue().get()) {
-                opens.getRelaisChannel().setNextWriteValue(false);
-            } else {
-                opens.getRelaisChannel().setNextWriteValue(true);
-            }
+            closing.getRelaysChannel().setNextWriteValue(closing.isCloser().getNextValue().get());
+            opens.getRelaysChannel().setNextWriteValue(!opens.isCloser().getNextValue().get());
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * closes the valve and set a time stamp. as well as setting a timestamp.
+     */
     private void valveClose() {
         if (!this.getIsBusy().getNextValue().get()) {
-            controlRelais(false, "Open");
-            controlRelais(true, "Closed");
+            controlRelays(false, "Open");
+            controlRelays(true, "Closed");
             this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
     }
 
-
+    /**
+     * Opens the valve, sets a timestamp and make the valve busy.
+     */
     private void valveOpen() {
         //opens will be set true when closing is done
         if (!this.getIsBusy().getNextValue().get()) {
-            controlRelais(false, "Closed");
-            controlRelais(true, "Open");
+            controlRelays(false, "Closed");
+            controlRelays(true, "Open");
             this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
     }
 
+
+    /**
+     * Controls the relays by typing either activate or not and what relays should be called.
+     *
+     * @param activate    activate or deactivate.
+     * @param whichRelays opening or closing relays ?
+     *                    <p>Writes depending if the relays is an opener or closer, the correct boolean.
+     *                    if the relays was set false (no power) busy will be false.</p>
+     */
     @Override
-    public void controlRelais(boolean activate, String whichRelais) {
+    public void controlRelays(boolean activate, String whichRelays) {
         try {
-            switch (whichRelais) {
+            switch (whichRelays) {
                 case "Open":
                     if (this.opens.isCloser().value().get()) {
-                        this.opens.getRelaisChannel().setNextWriteValue(activate);
+                        this.opens.getRelaysChannel().setNextWriteValue(activate);
                     } else {
-                        this.opens.getRelaisChannel().setNextWriteValue(!activate);
+                        this.opens.getRelaysChannel().setNextWriteValue(!activate);
                     }
                     break;
                 case "Closed":
                     if (this.closing.isCloser().value().get()) {
-                        this.closing.getRelaisChannel().setNextWriteValue(activate);
+                        this.closing.getRelaysChannel().setNextWriteValue(activate);
                     } else {
-                        this.closing.getRelaisChannel().setNextWriteValue(!activate);
+                        this.closing.getRelaysChannel().setNextWriteValue(!activate);
                     }
                     break;
             }
@@ -120,6 +126,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
+    /**
+     * Tells if the Time to set the Valve position is up.
+     * 
+     * */
     @Override
     public boolean readyToChange() {
         if (percentageWasSet) {
@@ -133,9 +143,17 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     }
 
-    /*
+    /**
      * Changes Valve Position by incoming percentage
-     * Depending on + or - it changes the current State to open/close it more
+     * Depending on + or - it changes the current State to open/close it more.
+     * @param percentage adjusting the current powerlevel in %.
+     *                   <p>
+     *                   If the Valve is busy (already changing by a previous percentagechange. return false
+     *                   otherwise: save the current PowerLevel to the old one and overwrite the new one.
+     *                   Then it will check how much time is needed to adjust the position of the valve.
+     *                   If percentage is neg. valve needs to be closed (further)
+     *                   else it needs to open (further).
+     *                   </p>
      *
      * */
     @Override
@@ -156,7 +174,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             }
 
             this.getPowerLevel().setNextValue(currentPowerLevel);
-            currentPowerLevel = percentage;
             if (Math.abs(percentage) >= 100) {
                 this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
             } else {

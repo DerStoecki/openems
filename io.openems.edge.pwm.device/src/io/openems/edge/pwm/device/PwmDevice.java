@@ -14,7 +14,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.Designate;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bridge.i2c.I2cBridge;
+import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 
@@ -25,7 +25,8 @@ import io.openems.edge.common.component.OpenemsComponent;
         immediate = true)
 public class PwmDevice extends AbstractOpenemsComponent implements OpenemsComponent, PwmPowerLevelChannel {
 
-    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY,
+            cardinality = ReferenceCardinality.MANDATORY)
     I2cBridge refI2cBridge;
 
     public PwmDevice() {
@@ -39,8 +40,8 @@ public class PwmDevice extends AbstractOpenemsComponent implements OpenemsCompon
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         try {
-
-            refI2cBridge.addI2cTask(super.id(), new PwmDeviceTaskImpl(super.id(), this.getPwmPowerLevelChannel(), config.pwm_module(), config.pinPosition(), config.isInverse()));
+            refI2cBridge.addI2cTask(super.id(), new PwmDeviceTaskImpl(super.id(), this.getPwmPowerLevelChannel(),
+                    config.pwm_module(), config.pinPosition(), config.isInverse()));
 
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();

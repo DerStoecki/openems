@@ -1,14 +1,15 @@
-Bundle-Name: OpenEMS Edge Passing Valve Api
+Bundle-Name: OpenEMS Edge Passing Pump Api
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This bundle provides the Interface of the Pump and the DummyPump for testing purposes.
 
 Export-Package:  \
-	io.openems.edge.temperature.passing.pump.api
-
-Private-Package:  \
 	io.openems.edge.temperature.passing.pump.api,\
 	io.openems.edge.temperature.passing.pump.api.test,\
+
+Private-Package:
 
 -includeresource: {readme.md}
 
@@ -17,7 +18,7 @@ Private-Package:  \
 	io.openems.edge.temperature.passing.api;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	io.openems.edge.relais.api;version=latest,\
+	io.openems.edge.relays.device.api;version=latest,\
 	io.openems.edge.pwm.device.api;version=latest,\
 
 -testpath: \

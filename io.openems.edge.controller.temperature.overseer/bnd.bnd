@@ -3,9 +3,11 @@ Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
+Bundle-Description: \
+    This Controller oversees a certain temperature and de/activates the passingController if the temp. is (not) reached.
+
 
 Export-Package:  \
-	io.openems.edge.controller.temperature.overseer,\
 
 Private-Package:  \
 	io.openems.edge.controller.temperature.overseer,\
@@ -18,7 +20,7 @@ Private-Package:  \
 	io.openems.edge.controller.temperature.passing.api;version=latest,\
 	io.openems.common;version=latest,\
 	io.openems.edge.common;version=latest,\
-	io.openems.edge.relais.api;version=latest,\
+	io.openems.edge.relays.device.api;version=latest,\
 	io.openems.edge.thermometer.api;version=latest,\
 
 -testpath: \
