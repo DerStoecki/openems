@@ -3,7 +3,7 @@ package io.openems.edge.temperature.sensor;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@ObjectClassDefinition(name = "Consolinno Temperature Sensor", description = "Temperature Sensors for the Consolinno Temperature Module.")
+@ObjectClassDefinition(name = "Temperature-sensor Spi", description = "Temperature-sensor communicating via Spi.")
 @interface Config {
     String service_pid();
 
@@ -13,8 +13,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Alias", description = "Human readable name of this Sensor.")
     String alias() default "";
 
-    @AttributeDefinition(name = "Temperature Board Id", description = "Same Id as CircuitBoard connected to it.")
-    String temperatureBoardId() default "TemperatureBoard0";
+    @AttributeDefinition(name = "Temperature Module Id", description = "Same Id as CircuitBoard connected to it.")
+    String temperatureBoardId() default "TemperatureModule0";
 
     @AttributeDefinition(name = "Dip Switch", description = "What Dip switch is used for this Temperature Sensor (Starting with 0)")
     short spiChannel() default (short) 0;

@@ -5,8 +5,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
-        name = "Consolinno Relais",
-        description = "Relais with a Channel to Open and Close."
+        name = "Relays I2c",
+        description = "Relays with a Channel to Open and Close."
 )
 
 @interface Config {
@@ -19,7 +19,7 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
 
-    @AttributeDefinition(name = "Relays Type", description = "Is the Relays an Opener or closer.",
+    @AttributeDefinition(name = "Relays Type", description = "Is the Relays an opener or closer.",
             options = {
                     @Option(label = "Opener", value = "Opener"),
                     @Option(label = "Closer", value = "Closer")
@@ -27,7 +27,7 @@ import org.osgi.service.metatype.annotations.Option;
     String relaysType() default "Closer";
 
     @AttributeDefinition(name = "Relays-Module Id", description = "Id of the Relays-Module allocated to this Relays-Device.")
-    String relaysBoard_id() default "relayModule0";
+    String relaysBoard_id() default "relaysModule0";
 
     @AttributeDefinition(name = "Position", description = "The position of the Relays. Starting with 0.")
     int position() default 0;

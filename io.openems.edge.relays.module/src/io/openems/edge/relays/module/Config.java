@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
-        name = "Consolinno Board Relays",
+        name = "Consolinno Relays Module",
         description = "Depending on VersionId you can activate up to X Relays on this RelaysModule "
 )
 @interface Config {
@@ -13,7 +13,7 @@ import org.osgi.service.metatype.annotations.Option;
     String service_pid();
 
     @AttributeDefinition(name = "Relay-Module Id", description = "Unique Id of this Relays-Module.")
-    String id() default "relayModule0";
+    String id() default "relaysModule0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of Board")
     String alias() default "";
