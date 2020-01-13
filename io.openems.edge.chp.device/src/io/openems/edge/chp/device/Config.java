@@ -59,6 +59,9 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Position on Module", description = "On what Position is your Chp connected with the Module?")
     int position() default 0;
 
+    @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you what to allocate to this device.")
+    String modbusBridgeId() default "modbus0";
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Chp Device [{id}]";
