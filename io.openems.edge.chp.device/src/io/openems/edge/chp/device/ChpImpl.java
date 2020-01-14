@@ -43,7 +43,7 @@ import java.util.List;
 public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler {
     private Mcp mcp;
     private ChpType chpType;
-    private static int UnitIdCounter = 0;
+    private String accessMode;
     private final ChpErrorWorker chpErrorWorker = new ChpErrorWorker();
     private String[] errorPossibilities = {
             "Lüfter	gestört		",
@@ -147,7 +147,7 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
-        super.activate(context, config.id(), config.alias(), config.enabled(), UnitIdCounter, this.cm, "Modbus", config.modbusBridgeId());
+        super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus", config.modbusBridgeId());
 
         switch (config.chpType()) {
             case "EM_6_15":
@@ -218,14 +218,16 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                         config.percentageRange(), 4096.f, this.getPowerLevelChannel()));
             }
         }
-        UnitIdCounter++;
         this.chpErrorWorker.activate(config.id());
+        this.accessMode = config.accesMode();
     }
 
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        this.mcp.removeTask(super.id());
+        if (this.accessMode.equals("rw")) {
+            this.mcp.removeTask(super.id());
+        }
     }
 
 
@@ -245,7 +247,8 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
     @Override
     protected ModbusProtocol defineModbusProtocol() {
         return new ModbusProtocol(this,
-                new FC3ReadRegistersTask(0x4001, Priority.LOW,
+                new FC3ReadRegistersTask(0x4000, Priority.LOW,
+                        new DummyRegisterElement(0x4000, 0x4000),
                         m(ChpInformationChannel.ChannelId.MODUS, new UnsignedWordElement(0x4001),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.STATUS, new UnsignedWordElement(0x4002),
@@ -278,7 +281,7 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.MAINTENANCE_INTERVAL, new SignedWordElement(0x4010),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
-                        m(ChpInformationChannel.ChannelId.MODULE_LOCK, new SignedWordElement(0x411),
+                        m(ChpInformationChannel.ChannelId.MODULE_LOCK, new SignedWordElement(0x4011),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.WARNING_TIME, new SignedWordElement(0x4012),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
@@ -309,8 +312,8 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                         m(ChpInformationChannel.ChannelId.OIL_PRESSURE, new SignedWordElement(0x401F),
                                 ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
                         m(ChpInformationChannel.ChannelId.LAMBDA_PROBE_VOLTAGE, new SignedWordElement(0x4020),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-                        new DummyRegisterElement(0x4021, 0x4024),
+                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1)),
+                        new FC3ReadRegistersTask(0x4025,Priority.LOW,
                         m(ChpInformationChannel.ChannelId.ROTATION_PER_MIN, new UnsignedWordElement(0x4025),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.TEMPERATURE_CONTROLLER, new SignedWordElement(0x4026),
@@ -344,11 +347,11 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                         m(ChpInformationChannel.ChannelId.ENGINE_PERFORMANCE, new SignedWordElement(0x4034),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.SUPPLY_FREQUENCY, new FloatDoublewordElement(0x4035),
-                                ElementToChannelConverter.DIRECT_1_TO_1),
-                        new DummyRegisterElement(0x4036, 0x4036),
+                                ElementToChannelConverter.DIRECT_1_TO_1)),
+                        new FC3ReadRegistersTask(0x4037, Priority.LOW,
                         m(ChpInformationChannel.ChannelId.GENERATOR_FREQUENCY, new FloatDoublewordElement(0x4037),
-                                ElementToChannelConverter.DIRECT_1_TO_1),
-                        new DummyRegisterElement(0x4039, 0x403A),
+                                ElementToChannelConverter.DIRECT_1_TO_1)),
+                        new FC3ReadRegistersTask(0x403B, Priority.LOW,
                         m(ChpInformationChannel.ChannelId.ACTIVE_POWER_FACTOR, new SignedWordElement(0x403B),
                                 ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
                         m(ChpInformationChannel.ChannelId.RESERVE, new UnsignedDoublewordElement(0x403C),
@@ -373,14 +376,14 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         @Override
         protected void forever() throws Throwable {
 
-            char[] errorOne = String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorTwo = String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorThree = String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorFour = String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorFive = String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorSix = String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorSeven = String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace("", "0").toCharArray();
-            char[] errorEight = String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace("", "0").toCharArray();
+            char[] errorOne = String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorTwo = String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorThree = String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorFour = String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorFive = String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorSix = String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorSeven = String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(" ", "0").toCharArray();
+            char[] errorEight = String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(" ", "0").toCharArray();
 
             List<String> errorSummary = new ArrayList<>();
 
@@ -389,37 +392,38 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
             // multiplierForLimit --> important for 8/16/24/32/40 etc --> correct Channels are read
             // %8 for correct position in char array
             boolean errorFound = false;
-            int errorMax = 128;
+            int errorMax = 80;
+            int errorBitLength = 16;
             for (int i = 0, errorListPosition = 0, multiplierForLimit = 1; i < errorMax; i++) {
-                if (i < 8 && errorOne[i] == '1') {
+                if (i < errorBitLength && errorOne[i] == '1') {
 
-                    errorSummary.add(errorListPosition, errorPossibilities[i % 8]);
+                    errorSummary.add(errorListPosition, errorPossibilities[i % errorBitLength]);
                     errorFound = true;
-                } else if (8 * multiplierForLimit <= i && i < (8 * (multiplierForLimit + 1)) && errorTwo[i % 8] == '1') {
+                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorTwo[i % errorBitLength] == '1') {
                     errorSummary.add(errorListPosition, errorPossibilities[i]);
                     errorFound = true;
-                } else if (8 * multiplierForLimit <= i && i < (8 * (multiplierForLimit + 1)) && errorThree[i % 8] == '1') {
+                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorThree[i % errorBitLength] == '1') {
                     errorSummary.add(errorListPosition, errorPossibilities[i]);
                     errorFound = true;
-                } else if (8 * multiplierForLimit <= i && i < (8 * (multiplierForLimit + 1)) && errorFour[i % 8] == '1') {
+                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorFour[i % errorBitLength] == '1') {
                     errorSummary.add(errorListPosition, errorPossibilities[i]);
                     errorFound = true;
-                } else if (8 * multiplierForLimit <= i && i < (8 * (multiplierForLimit + 1)) && errorFive[i % 8] == '1') {
+                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorFive[i % errorBitLength] == '1') {
                     errorSummary.add(errorListPosition, errorPossibilities[i]);
                     errorFound = true;
-                } else if (8 * multiplierForLimit <= i && i < (8 * (multiplierForLimit + 1)) && errorSix[i % 8] == '1') {
+                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorSix[i % errorBitLength] == '1') {
                     errorSummary.add(errorListPosition, errorPossibilities[i]);
                     errorFound = true;
                 }
-                //                else if (8*j <= i && i<(8*(j+1)) && errorSeven[i % 8] == '1') {
+                //                else if (errorBitLength*j <= i && i<(errorBitLength*(j+1)) && errorSeven[i % errorBitLength] == '1') {
                 //                    errorSummary.add(k, errorPossibilities[i]);
                 //                    errorFound = true;
                 //                }
-                //                else if (8*j <= i && i<(8*(j+1)) && errorEight[i % 8] == '1') {
+                //                else if (errorBitLength*j <= i && i<(errorBitLength*(j+1)) && errorEight[i % errorBitLength] == '1') {
                 //                    errorSummary.add(k, errorPossibilities[i]);
                 //                    errorFound = true;
                 //                }
-                if (i % (8) == 1) {
+                if (i % (errorBitLength) == 1) {
                     multiplierForLimit++;
                 }
                 if (errorFound) {

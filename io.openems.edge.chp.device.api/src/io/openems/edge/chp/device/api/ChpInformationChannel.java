@@ -75,6 +75,22 @@ public interface ChpInformationChannel extends OpenemsComponent {
         }
     }
 
+    default Channel<Integer> getModus() {
+        return this.channel(ChannelId.MODUS);
+    }
+
+    default Channel<Integer> getStatus() {
+        return this.channel(ChannelId.STATUS);
+    }
+
+    default Channel<Integer> getOperatingMoude() {
+        return this.channel(ChannelId.OPERATING_MODE);
+    }
+
+    default Channel<Integer> getSetPointOperationMode() {
+        return this.channel(ChannelId.SET_POINT_OPERATION_MODE);
+    }
+
     default Channel<Integer> getErrorOne() {
         return this.channel(ChannelId.ERROR_BITS_1);
     }
@@ -105,6 +121,154 @@ public interface ChpInformationChannel extends OpenemsComponent {
 
     default Channel<Integer> getErrorEight() {
         return this.channel(ChannelId.ERROR_BITS_8);
+    }
+
+    default Channel<Integer> getOperatingHours() {
+        return this.channel(ChannelId.OPERATING_HOURS);
+    }
+
+    default Channel<Integer> getOperatingMinutes() {
+        return this.channel(ChannelId.OPERATING_MINUTES);
+    }
+
+    default Channel<Integer> getStartCounter() {
+        return this.channel(ChannelId.START_COUNTER);
+    }
+
+    default Channel<Integer> getMaintenanceInterval() {
+        return this.channel(ChannelId.MAINTENANCE_INTERVAL);
+    }
+
+    default Channel<Integer> getModuleLock() {
+        return this.channel(ChannelId.MODULE_LOCK);
+    }
+
+    default Channel<Integer> getWarningTime() {
+        return this.channel(ChannelId.WARNING_TIME);
+    }
+
+    default Channel<Integer> getNextMaintenance() {
+        return this.channel(ChannelId.NEXT_MAINTENANCE);
+    }
+
+    default Channel<Integer> getExhaustA() {
+        return this.channel(ChannelId.EXHAUST_A);
+    }
+
+    default Channel<Integer> getExhaustB() {
+        return this.channel(ChannelId.EXHAUST_B);
+    }
+
+    default Channel<Integer> getExhaustC() {
+        return this.channel(ChannelId.EXHAUST_C);
+    }
+
+    default Channel<Integer> getExhaustD() {
+        return this.channel(ChannelId.EXHAUST_D);
+    }
+
+    default Channel<Integer> getPt100_1() {
+        return this.channel(ChannelId.PT_100_1);
+    }
+
+    default Channel<Integer> getPt100_2() {
+        return this.channel(ChannelId.PT_100_1);
+    }
+
+    default Channel<Integer> getPt100_3() {
+        return this.channel(ChannelId.PT_100_1);
+    }
+
+    default Channel<Integer> getPt100_4() {
+        return this.channel(ChannelId.PT_100_1);
+    }
+
+    default Channel<Integer> getPt100_5() {
+        return this.channel(ChannelId.PT_100_1);
+    }
+
+    default Channel<Integer> getPt100_6() {
+        return this.channel(ChannelId.PT_100_1);
+    }
+
+    default Channel<Integer> getBatteryVoltage() {
+        return this.channel(ChannelId.BATTERY_VOLTAGE);
+    }
+
+    default Channel<Integer> getOilPressure() {
+        return this.channel(ChannelId.OIL_PRESSURE);
+    }
+
+    default Channel<Integer> getLambdaProbeVoltage() {
+        return this.channel(ChannelId.LAMBDA_PROBE_VOLTAGE);
+    }
+
+    default Channel<Integer> getRotationPerMinute() {
+        return this.channel(ChannelId.ROTATION_PER_MIN);
+    }
+
+    default Channel<Integer> getTemperatureController() {
+        return this.channel(ChannelId.TEMPERATURE_CONTROLLER);
+    }
+
+    default Channel<Integer> getTemperatureClearance() {
+        return this.channel(ChannelId.TEMPERATURE_CLEARANCE);
+    }
+
+    default Channel<Integer> getSupplyVoltageL1() {
+        return this.channel(ChannelId.SUPPLY_VOLTAGE_L1);
+    }
+
+    default Channel<Integer> getSupplyVoltageL2() {
+        return this.channel(ChannelId.SUPPLY_VOLTAGE_L2);
+    }
+
+    default Channel<Integer> getSupplyVoltageL3() {
+        return this.channel(ChannelId.SUPPLY_VOLTAGE_L3);
+    }
+
+    default Channel<Integer> getGeneratorElectricityL1() {
+        return this.channel(ChannelId.GENERATOR_ELECTRICITY_L1);
+    }
+
+    default Channel<Integer> getGeneratorElectricityL2() {
+        return this.channel(ChannelId.GENERATOR_ELECTRICITY_L2);
+    }
+
+    default Channel<Integer> getGeneratorElectricityL3() {
+        return this.channel(ChannelId.GENERATOR_ELECTRICITY_L3);
+    }
+
+    default Channel<Integer> getSupplyVoltageTotal() {
+        return this.channel(ChannelId.SUPPLY_VOLTAGE_TOTAL);
+    }
+
+    default Channel<Integer> getGeneratorVoltageTotal() {
+        return this.channel(ChannelId.GENERATOR_VOLTAGE_TOTAL);
+    }
+
+    default Channel<Integer> getGeneratorElectricityTotal() {
+        return this.channel(ChannelId.GENERATOR_ELECTRICITY_TOTAL);
+    }
+
+    default Channel<Integer> getEnginePerformance() {
+        return this.channel(ChannelId.ENGINE_PERFORMANCE);
+    }
+
+    default Channel<Float> getSupplyFrequency() {
+        return this.channel(ChannelId.SUPPLY_FREQUENCY);
+    }
+
+    default Channel<Float> getGeneratorFrequency() {
+        return this.channel(ChannelId.GENERATOR_FREQUENCY);
+    }
+
+    default Channel<Float> getActivePowerFactor() {
+        return this.channel(ChannelId.ACTIVE_POWER_FACTOR);
+    }
+
+    default Channel<Integer> getReserve() {
+        return this.channel(ChannelId.RESERVE);
     }
 
     default Channel<String> getErrorChannel() {
