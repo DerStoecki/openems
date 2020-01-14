@@ -16,7 +16,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * <ul>
          *
          *  <li>Type: Integer
-         *
+         * <p>
          * *</ul>
          */
         MODUS(Doc.of(OpenemsType.INTEGER)),
@@ -27,8 +27,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * 2 Start
          * 3 Running
          * 4 Disturbance
-         *
-         * */
+         */
         STATUS(Doc.of(OpenemsType.INTEGER)),
         /**
          * Operating Mode Type.
@@ -38,20 +37,17 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * 3 --
          * 4 100%
          * 5 Between 0-100%
-         *
-         * */
+         */
         OPERATING_MODE(Doc.of(OpenemsType.INTEGER)),
         /**
          * SetPoint Operation Mode.
          * Format: n (Int 16)
          * Signed Int
-         *
-         * */
+         */
         SET_POINT_OPERATION_MODE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
         /**
          * Errorbits. Length 2 Byte --> Each bit acts as a flag --> Vitobloc Gateway
-         *
-         * */
+         */
         ERROR_BITS_1(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_2(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_3(Doc.of(OpenemsType.INTEGER)),
@@ -64,18 +60,17 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * Operating-Time of the Chp.
          * <li>Type: Integer</li>
          * <li> Unit: Hours</li>
-         * */
+         */
         OPERATING_HOURS(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
         /**
          * Operating Time of Chp in Min.
          * <li>Type: Integer</li>
          * <li> Unit: Minutes</li>
-         *
-         * */
+         */
         OPERATING_MINUTES(Doc.of(OpenemsType.INTEGER).unit(Unit.MINUTE)),
         /**
          * How often was the Chp started.
-         * */
+         */
         START_COUNTER(Doc.of(OpenemsType.INTEGER)),
         /**
          * Intervall of Maintenance in Hours. Signed Int
@@ -86,44 +81,132 @@ public interface ChpInformationChannel extends OpenemsComponent {
         /**
          * Locking the Module.
          * <li>Type: Signed Int</li>
-         * <Unit>: Hour </Unit>
-         * */
+         * <li>Unit: Hour </li>
+         */
         MODULE_LOCK(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
+        /**
+         * Time when a warning should appear
+         * <li>Type: Signed Int</li>
+         * <li>Unit: Hour</li>
+         */
         WARNING_TIME(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
+        /**
+         * Time till the next Maintenance should happen.
+         */
         NEXT_MAINTENANCE(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
+        /**
+         * Exhaustion Values.
+         * <li>Type: Signed Int</li>
+         * <li>Unit: Degree Celsius</li>
+         */
         EXHAUST_A(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         EXHAUST_B(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         EXHAUST_C(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         EXHAUST_D(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
+        /**
+         * TemperatureSensors and their values.
+         * <li>Type: Signed Int</li>
+         * <li> Unit: Degree Celsius</li>
+         */
         PT_100_1(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         PT_100_2(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         PT_100_3(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         PT_100_4(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         PT_100_5(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         PT_100_6(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
+
+        /**
+         * Voltage of the Battery.
+         * <li>Unit: Volt</li>
+         */
         BATTERY_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
+        /**
+         * Pressure of the Oil in the Chp.
+         * <li>Unit: Bar</li>
+         */
         OIL_PRESSURE(Doc.of(OpenemsType.INTEGER).unit(Unit.BAR)),
+        /**
+         * Value of comparison between Oxygen left in the Exhaust with Oxygen of it's Reference.
+         * <li>Unit: Volt</li>
+         */
         LAMBDA_PROBE_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.MILLIVOLT)),
+        /**
+         * Rotations per minute.
+         * <li>Unit: R/min</li>
+         */
         ROTATION_PER_MIN(Doc.of(OpenemsType.INTEGER).unit(Unit.ROTATION_PER_MINUTE)),
-        TEMPERATURE_CONTROLLER(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
-        TEMPERATURE_CLEARANCE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+        /**
+         * Temperature Controller.
+         * <li>Unit: Degree Celsius</li>
+         * <li>Type: Signed Int</li>
+         */
+        TEMPERATURE_CONTROLLER(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
+
+        /**
+         * Temperature Clearance/release.
+         * <li>Unit: Degree Celsius</li>
+         * <li>Type: Signed Int</li>
+         */
+        TEMPERATURE_CLEARANCE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
+        /**
+         * Supply Voltages L1-L3.
+         * <li>Unit: Volt</li>
+         * <li>Type: Signed Int</li>
+         */
         SUPPLY_VOLTAGE_L1(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
         SUPPLY_VOLTAGE_L2(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
         SUPPLY_VOLTAGE_L3(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
+        /**
+         * Generator Voltage L1-L3.
+         * <li>Unit: Volt</li>
+         * <li>Type: Signed Int</li>
+         */
         GENERATOR_VOLTAGE_L1(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
         GENERATOR_VOLTAGE_L2(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
         GENERATOR_VOLTAGE_L3(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
+        /**
+         * Generator Electricity in Ampere.
+         * <li>Unit: Ampere</li>
+         * <li>Type: Signed Int</li>
+         */
         GENERATOR_ELECTRICITY_L1(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE)),
         GENERATOR_ELECTRICITY_L2(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE)),
         GENERATOR_ELECTRICITY_L3(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE)),
+        /**
+         * Total Voltage of Supply.
+         * <li>Unit: Volt</li>
+         * <li>Type: Signed int</li>
+         */
         SUPPLY_VOLTAGE_TOTAL(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
+        /**
+         * Total generator Voltage.
+         * <li>Unit: Volt</li>
+         * <li>Type: Signed Int</li>
+         */
         GENERATOR_VOLTAGE_TOTAL(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
+        /**
+         * Total electricity Usage in Ampere.
+         * <li>Unit: Ampere</li>
+         * <li>Type: Signed INt</li>
+         */
         GENERATOR_ELECTRICITY_TOTAL(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE)),
+
         ENGINE_PERFORMANCE(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT)),
+
         SUPPLY_FREQUENCY(Doc.of(OpenemsType.FLOAT).unit(Unit.HERTZ)),
         GENERATOR_FREQUENCY(Doc.of(OpenemsType.FLOAT).unit(Unit.HERTZ)),
-        ACTIVE_POWER_FACTOR(Doc.of(OpenemsType.FLOAT)),
+        /**
+         * CosPhi of Chp.
+         * <p>
+         * Even if it's send as integer --> calculate with 10^⁻3 (comes with 3 decimal).
+         * </p>
+         */
+        ACTIVE_POWER_FACTOR(Doc.of(OpenemsType.INTEGER)),
         RESERVE(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT_HOURS)),
+        /**
+         * All occuring Errors as String.
+         *
+         * */
         ERROR_CHANNEL(Doc.of(OpenemsType.STRING));
 
 
