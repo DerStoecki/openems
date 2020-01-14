@@ -43,6 +43,13 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String chpType() default "EM_140_207";
 
+    @AttributeDefinition(name =  "Access Type", description = "Do you want to only read Information from the Chp or rw?",
+    options = {
+            @Option(label = "read", value = "r"),
+            @Option(label = "read/write", value = "rw")
+    })
+    String accesMode() default "read";
+
     @AttributeDefinition(name = "ChpModule Id", description = "Id of the ChpModule you previously activated.")
     String chpModuleId() default "ChpModule0";
 
