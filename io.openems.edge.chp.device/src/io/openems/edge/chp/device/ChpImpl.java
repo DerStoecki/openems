@@ -2,6 +2,7 @@ package io.openems.edge.chp.device;
 
 
 import io.openems.common.exceptions.OpenemsError;
+import io.openems.common.utils.StringUtils;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -313,7 +314,7 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                                 ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
                         m(ChpInformationChannel.ChannelId.LAMBDA_PROBE_VOLTAGE, new SignedWordElement(0x4020),
                                 ElementToChannelConverter.SCALE_FACTOR_MINUS_1)),
-                        new FC3ReadRegistersTask(0x4025,Priority.LOW,
+                new FC3ReadRegistersTask(0x4025, Priority.LOW,
                         m(ChpInformationChannel.ChannelId.ROTATION_PER_MIN, new UnsignedWordElement(0x4025),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.TEMPERATURE_CONTROLLER, new SignedWordElement(0x4026),
@@ -348,10 +349,10 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.SUPPLY_FREQUENCY, new FloatDoublewordElement(0x4035),
                                 ElementToChannelConverter.DIRECT_1_TO_1)),
-                        new FC3ReadRegistersTask(0x4037, Priority.LOW,
+                new FC3ReadRegistersTask(0x4037, Priority.LOW,
                         m(ChpInformationChannel.ChannelId.GENERATOR_FREQUENCY, new FloatDoublewordElement(0x4037),
                                 ElementToChannelConverter.DIRECT_1_TO_1)),
-                        new FC3ReadRegistersTask(0x403B, Priority.LOW,
+                new FC3ReadRegistersTask(0x403B, Priority.LOW,
                         m(ChpInformationChannel.ChannelId.ACTIVE_POWER_FACTOR, new SignedWordElement(0x403B),
                                 ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
                         m(ChpInformationChannel.ChannelId.RESERVE, new UnsignedDoublewordElement(0x403C),
@@ -376,64 +377,74 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         @Override
         protected void forever() throws Throwable {
 
-            char[] errorOne = String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorTwo = String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorThree = String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorFour = String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorFive = String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorSix = String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorSeven = String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(" ", "0").toCharArray();
-            char[] errorEight = String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(" ", "0").toCharArray();
-
             List<String> errorSummary = new ArrayList<>();
 
-            //Zuordnen error one 0-15; error2 16-23; error 3 24-31; error4 32-39; error5 40-47 Rest erstmal egal
-            // errorListPosition --> for Actual List of Erroroccurence
-            // multiplierForLimit --> important for 8/16/24/32/40 etc --> correct Channels are read
-            // %8 for correct position in char array
-            boolean errorFound = false;
-            int errorMax = 80;
-            int errorBitLength = 16;
-            for (int i = 0, errorListPosition = 0, multiplierForLimit = 1; i < errorMax; i++) {
-                if (i < errorBitLength && errorOne[i] == '1') {
+            char[] allErrorsAsChar = generateErrorAsCharArray();
 
-                    errorSummary.add(errorListPosition, errorPossibilities[i % errorBitLength]);
-                    errorFound = true;
-                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorTwo[i % errorBitLength] == '1') {
+            int errorMax = 80;
+            //int errorBitLength = 16;
+            for (int i = 0, errorListPosition = 0; i < errorMax; i++) {
+                if (allErrorsAsChar[i] == '1') {
                     errorSummary.add(errorListPosition, errorPossibilities[i]);
-                    errorFound = true;
-                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorThree[i % errorBitLength] == '1') {
-                    errorSummary.add(errorListPosition, errorPossibilities[i]);
-                    errorFound = true;
-                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorFour[i % errorBitLength] == '1') {
-                    errorSummary.add(errorListPosition, errorPossibilities[i]);
-                    errorFound = true;
-                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorFive[i % errorBitLength] == '1') {
-                    errorSummary.add(errorListPosition, errorPossibilities[i]);
-                    errorFound = true;
-                } else if (errorBitLength * multiplierForLimit <= i && i < (errorBitLength * (multiplierForLimit + 1)) && errorSix[i % errorBitLength] == '1') {
-                    errorSummary.add(errorListPosition, errorPossibilities[i]);
-                    errorFound = true;
-                }
-                //                else if (errorBitLength*j <= i && i<(errorBitLength*(j+1)) && errorSeven[i % errorBitLength] == '1') {
-                //                    errorSummary.add(k, errorPossibilities[i]);
-                //                    errorFound = true;
-                //                }
-                //                else if (errorBitLength*j <= i && i<(errorBitLength*(j+1)) && errorEight[i % errorBitLength] == '1') {
-                //                    errorSummary.add(k, errorPossibilities[i]);
-                //                    errorFound = true;
-                //                }
-                if (i % (errorBitLength) == 1) {
-                    multiplierForLimit++;
-                }
-                if (errorFound) {
                     errorListPosition++;
-                    errorFound = false;
                 }
             }
             //All occuring errors in openemsChannel.
-            getErrorChannel().setNextValue(errorSummary.toString());
 
+            if ((errorSummary.size() > 0)) {
+                getErrorChannel().setNextValue(errorSummary.toString());
+            } else {
+                getErrorChannel().setNextValue("No Errors found.");
+            }
+
+        }
+
+        private char[] generateErrorAsCharArray() {
+
+            String errorBitsAsString = "";
+            String dummyString = "0000000000000000";
+            if (getErrorOne().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorTwo().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorThree().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorFour().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorFive().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorSix().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorSeven().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+            if (getErrorEight().getNextValue().isDefined()) {
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0");
+            } else {
+                errorBitsAsString += dummyString;
+            }
+
+            return errorBitsAsString.toCharArray();
         }
 
 

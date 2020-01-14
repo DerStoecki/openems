@@ -8,11 +8,50 @@ import io.openems.edge.common.component.OpenemsComponent;
 
 public interface ChpInformationChannel extends OpenemsComponent {
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-
+        /**
+         * Modul Modus Channel.
+         * 0 Off
+         * 1 Hand
+         * 2 Auto
+         * <ul>
+         *
+         *  <li>Type: Integer
+         *
+         * *</ul>
+         */
         MODUS(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * ModulStatus.
+         * 0 Off
+         * 1 Ready
+         * 2 Start
+         * 3 Running
+         * 4 Disturbance
+         *
+         * */
         STATUS(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Operating Mode Type.
+         * 0 Off
+         * 1 Hand
+         * 2 Grid substitute
+         * 3 --
+         * 4 100%
+         * 5 Between 0-100%
+         *
+         * */
         OPERATING_MODE(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * SetPoint Operation Mode.
+         * Format: n (Int 16)
+         * Signed Int
+         *
+         * */
         SET_POINT_OPERATION_MODE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
+        /**
+         * Errorbits. Length 2 Byte --> Each bit acts as a flag --> Vitobloc Gateway
+         *
+         * */
         ERROR_BITS_1(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_2(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_3(Doc.of(OpenemsType.INTEGER)),
@@ -21,10 +60,34 @@ public interface ChpInformationChannel extends OpenemsComponent {
         ERROR_BITS_6(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_7(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_8(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Operating-Time of the Chp.
+         * <li>Type: Integer</li>
+         * <li> Unit: Hours</li>
+         * */
         OPERATING_HOURS(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
+        /**
+         * Operating Time of Chp in Min.
+         * <li>Type: Integer</li>
+         * <li> Unit: Minutes</li>
+         *
+         * */
         OPERATING_MINUTES(Doc.of(OpenemsType.INTEGER).unit(Unit.MINUTE)),
+        /**
+         * How often was the Chp started.
+         * */
         START_COUNTER(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Intervall of Maintenance in Hours. Signed Int
+         * <li>Type: Integer</li>
+         * <li>Unit: Hour</li>
+         */
         MAINTENANCE_INTERVAL(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
+        /**
+         * Locking the Module.
+         * <li>Type: Signed Int</li>
+         * <Unit>: Hour </Unit>
+         * */
         MODULE_LOCK(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
         WARNING_TIME(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
         NEXT_MAINTENANCE(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
