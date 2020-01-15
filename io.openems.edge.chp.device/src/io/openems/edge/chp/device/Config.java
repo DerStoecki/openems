@@ -43,6 +43,13 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String chpType() default "EM_140_207";
 
+    @AttributeDefinition(name =  "Access Type", description = "Do you want to only read Information from the Chp or rw?",
+    options = {
+            @Option(label = "read", value = "r"),
+            @Option(label = "read/write", value = "rw")
+    })
+    String accesMode() default "r";
+
     @AttributeDefinition(name = "ChpModule Id", description = "Id of the ChpModule you previously activated.")
     String chpModuleId() default "ChpModule0";
 
@@ -58,6 +65,12 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "Position on Module", description = "On what Position is your Chp connected with the Module?")
     int position() default 0;
+
+    @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you what to allocate to this device.")
+    String modbusBridgeId() default "modbus0";
+
+    @AttributeDefinition(name = "ModBus-Unit Id", description = "Integer Unit Id of the Component.")
+            int modbusUnitId() default 0;
 
     boolean enabled() default true;
 

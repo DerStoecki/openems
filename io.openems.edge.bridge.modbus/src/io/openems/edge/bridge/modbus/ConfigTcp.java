@@ -20,6 +20,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	@AttributeDefinition(name = "IP-Address", description = "The IP address of the Modbus/TCP device.")
 	String ip();
 
+	@AttributeDefinition(name = "Port", description = "Port you want to use. Standard is 502.")
+	int port() default 502;
+
 	@AttributeDefinition(name = "Log-Verbosity", description = "The log verbosity.")
 	LogVerbosity logVerbosity() default LogVerbosity.NONE;
 
