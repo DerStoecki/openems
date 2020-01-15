@@ -9,19 +9,19 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface ChpInformationChannel extends OpenemsComponent {
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         /**
-         * Modul Modus Channel.
+         * Module Modus Channel.
          * 0 Off
          * 1 Hand
          * 2 Auto
          * <ul>
          *
          *  <li>Type: Integer
-         * <p>
+         *
          * *</ul>
          */
-        MODUS(Doc.of(OpenemsType.INTEGER)),
+        MODE(Doc.of(OpenemsType.INTEGER)),
         /**
-         * ModulStatus.
+         * ModuleStatus.
          * 0 Off
          * 1 Ready
          * 2 Start
@@ -85,7 +85,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
          */
         MODULE_LOCK(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
         /**
-         * Time when a warning should appear
+         * Time when a warning should appear.
          * <li>Type: Signed Int</li>
          * <li>Unit: Hour</li>
          */
@@ -106,20 +106,20 @@ public interface ChpInformationChannel extends OpenemsComponent {
         /**
          * TemperatureSensors and their values.
          * <li>Type: Signed Int</li>
-         * <li> Unit: Degree Celsius</li>
+         * <li> Unit: Deci-degree Celsius</li>
          */
-        PT_100_1(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
-        PT_100_2(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
-        PT_100_3(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
-        PT_100_4(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
-        PT_100_5(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
-        PT_100_6(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
+        PT_100_1(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+        PT_100_2(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+        PT_100_3(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+        PT_100_4(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+        PT_100_5(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+        PT_100_6(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
 
         /**
          * Voltage of the Battery.
-         * <li>Unit: Volt</li>
+         * <li>Unit: Deci-Volt</li>
          */
-        BATTERY_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT)),
+        BATTERY_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.DECI_VOLT)),
         /**
          * Pressure of the Oil in the Chp.
          * <li>Unit: Bar</li>
@@ -127,9 +127,9 @@ public interface ChpInformationChannel extends OpenemsComponent {
         OIL_PRESSURE(Doc.of(OpenemsType.INTEGER).unit(Unit.BAR)),
         /**
          * Value of comparison between Oxygen left in the Exhaust with Oxygen of it's Reference.
-         * <li>Unit: Volt</li>
+         * <li>Unit: Ten-thousandth - Volt</li>
          */
-        LAMBDA_PROBE_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.MILLIVOLT)),
+        LAMBDA_PROBE_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.TEN_THOUSANDTH_VOLT)),
         /**
          * Rotations per minute.
          * <li>Unit: R/min</li>
@@ -140,7 +140,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * <li>Unit: Degree Celsius</li>
          * <li>Type: Signed Int</li>
          */
-        TEMPERATURE_CONTROLLER(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
+        TEMPERATURE_CONTROLLER(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
 
         /**
          * Temperature Clearance/release.
@@ -198,10 +198,16 @@ public interface ChpInformationChannel extends OpenemsComponent {
         /**
          * CosPhi of Chp.
          * <p>
-         * Even if it's send as integer --> calculate with 10^⁻3 (comes with 3 decimal).
+         *
          * </p>
          */
-        ACTIVE_POWER_FACTOR(Doc.of(OpenemsType.INTEGER)),
+        ACTIVE_POWER_FACTOR(Doc.of(OpenemsType.INTEGER).unit(Unit.MILLI_DEGREE)),
+
+        /**
+         * Reserved by Chp.
+         * <li>Unit: kWh</li>
+         * <li>Type: Integer</li>
+         * */
         RESERVE(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT_HOURS)),
         /**
          * All occuring Errors as String.
@@ -222,7 +228,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
     }
 
     default Channel<Integer> getModus() {
-        return this.channel(ChannelId.MODUS);
+        return this.channel(ChannelId.MODE);
     }
 
     default Channel<Integer> getStatus() {

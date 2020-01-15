@@ -78,10 +78,19 @@ public enum Unit {
     VOLT("V"),
 
     /**
+     * Unit of Voltage[dV].
+     */
+    DECI_VOLT("dV", VOLT, -1),
+    /**
      * Unit of Voltage [mV]
      */
     MILLIVOLT("mV", VOLT, -3),
 
+    /**
+     * Unit of Voltage [tthV].
+     * (Used in Chp when transamitting Voltage).
+     */
+    TEN_THOUSANDTH_VOLT("tthV", VOLT, -4),
     // ##########
     // Current
     // ##########
@@ -233,6 +242,10 @@ public enum Unit {
      */
     BAR("bar"),
 
+    /**
+     * Unit of Pressure [dbar]
+     */
+    DECI_BAR("dbar", BAR, -1),
     // ##########
     // Rotation
     // ##########
@@ -245,7 +258,22 @@ public enum Unit {
      * Unit of Rotation per minute.
      */
 
-    ROTATION_PER_MINUTE("R/min");
+    ROTATION_PER_MINUTE("R/min"),
+
+    // ##########
+    // Angle
+    // ##########
+
+    /**
+     * Unit of Degree [°].
+     *
+     * */
+    DEGREE("°"),
+
+    MILLI_DEGREE("m°", DEGREE, -3);
+
+
+
 
     private final Unit baseUnit;
     private final int scaleFactor;
