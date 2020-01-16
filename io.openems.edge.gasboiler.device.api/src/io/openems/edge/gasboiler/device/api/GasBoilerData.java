@@ -11,20 +11,29 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface GasBoilerData extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+
+        /*
+         * Informations will be got by ModBus.
+         * That's why the Percentage Values got 2 Channels. 1 To Receive and Write the Correct Value and 1 for
+         * human readable und writable values.
+         *
+         * */
+
+
         /**
          * Output 1 represented by Boolean.
          * <li>Type: Boolean</li>
          * 0 = Off
          * 1 = On
          */
-        OUTPUT_AM1_1(Doc.of(OpenemsType.BOOLEAN)),
+        OUTPUT_AM_1_1(Doc.of(OpenemsType.BOOLEAN)),
         /**
          * Output 2 represented by Boolean.
          * <li>Type: Boolean</li>
          * 0 = Off
          * 1 = On
          */
-        OUTPUT_AM1_2(Doc.of(OpenemsType.BOOLEAN)),
+        OUTPUT_AM_1_2(Doc.of(OpenemsType.BOOLEAN)),
         /**
          * Output 20 represented by Boolean.
          * <li>Type: Boolean</li>
@@ -70,8 +79,13 @@ public interface GasBoilerData extends OpenemsComponent {
         SETPOINT_EA_1(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         /**
          * Pumprotationvalue. 0-100% control signal == 0-10V
+         * 1 = 0.5%
          */
-        OUTPUT_SIGNAL_PM_1(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
+        OUTPUT_SIGNAL_PM_1(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Shows the Actual Value in Correct %.
+         */
+        OUTPUT_SIGNAL_PM_1_PERCENT(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)),
         /**
          * GRID_ELECTRICITY_PUMP. Represented by Boolean (On Off)
          */
@@ -80,8 +94,17 @@ public interface GasBoilerData extends OpenemsComponent {
          * Potential free Electrical Contact of the Pump. Represented by Boolean (On Off)
          */
         FLOATING_ELECTRICAL_CONTACT_PM_1(Doc.of(OpenemsType.BOOLEAN)),
+        /**
+         * <p>Volume Flow Set Point of Pump Pm1.
+         * 1 == 0.5%
+         * </p>
+         */
+        VOLUME_FLOW_SET_POINT_PM_1(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Actual Percentage Value of Pump.
+         */
 
-        VOLUME_FLOW_SET_POINT_PM_1(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
+        VOLUME_FLOW_SET_POINT_PM_1_PERCENT(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)),
 
         DISTURBANCE_INPUT_PM_1(Doc.of(OpenemsType.BOOLEAN)),
         /**
@@ -129,8 +152,15 @@ public interface GasBoilerData extends OpenemsComponent {
 
         COMBUSTION_ENGINE_OPERATING_HOURS_TIER_1(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
         COMBUSTION_ENGINE_OPERATING_HOURS_TIER_2(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR)),
-
-        COMBUSTION_ENGINE_EFFICIENCY_ACTUAL_VALUE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
+        /**
+         * Combustion engine Efficiency Actual Value.
+         * 1 == 0.5%
+         */
+        COMBUSTION_ENGINE_EFFICIENCY_ACTUAL_VALUE(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Human readable % Value.
+         */
+        COMBUSTION_ENGINE_EFFICIENCY_ACTUAL_VALUE_PERCENT(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)),
         COMBUSTION_ENGINE_START_COUNTER(Doc.of(OpenemsType.INTEGER)),
         /**
          * Operation Modes.
@@ -188,14 +218,18 @@ public interface GasBoilerData extends OpenemsComponent {
          * 0 = Off
          * 1 = On
          * 255 = Auto
-         * */
+         */
         HEAT_BOILER_PERFORMANCE_SET_POINT_STATUS(Doc.of(OpenemsType.INTEGER)
                 .accessMode(AccessMode.READ_WRITE)),
         /**
-         * Values in %.
-         *
-         * */
-        HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)
+         * Values 1 == 0.5%.
+         */
+        HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE(Doc.of(OpenemsType.INTEGER)
+                .accessMode(AccessMode.READ_WRITE)),
+        /**
+         * For Actual Percentage Value(Easier to read/write.
+         */
+        HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE_PERCENT(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)
                 .accessMode(AccessMode.READ_WRITE)),
         /**
          * Heat Boiler Temperature Set point Value between 0-127.
@@ -208,8 +242,13 @@ public interface GasBoilerData extends OpenemsComponent {
         HEAT_BOILER_TEMPERATURE_ACTUAL(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
         /**
          * Modulation Value between 0-100%.
+         * 1 == 0.5%
          */
-        HEAT_BOILER_MODULATION_VALUE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
+        HEAT_BOILER_MODULATION_VALUE(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Humandreadable and writable % Values.
+         */
+        HEAT_BOILER_MODULATION_VALUE_PERCENT(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)),
         /**
          * Operation mode of warm water.
          * 0: HVAC_AUTO
@@ -224,19 +263,23 @@ public interface GasBoilerData extends OpenemsComponent {
                 .accessMode(AccessMode.READ_WRITE)),
         /**
          * Reads the effective warm water set point temperature in °C.
-         * */
+         */
         WARM_WATER_EFFECTIVE_SET_POINT_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)),
 
         /**
          * Sets the warm water Temperature between 0-90°C.
-         * */
-        WARM_WATER_SET_POINT_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)
+         */
+        FUNCTIONING_WARM_WATER_SET_POINT_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS)
                 .accessMode(AccessMode.READ_WRITE)),
         /**
          * Boiler Set Point Performance.
-         * <li>Unit: % </li>
+         * 1 == 0.5%
          */
-        BOILER_SET_POINT_PERFORMANCE_EFFECTIVE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
+        BOILER_SET_POINT_PERFORMANCE_EFFECTIVE(Doc.of(OpenemsType.INTEGER)),
+        /**
+         * Human readable percentageValue.
+         */
+        BOILER_SET_POINT_PERFORMANCE_EFFECTIVE_PERCENT(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)),
         /**
          * Boiler Set Point temperature 0-127°C.
          * Considers Boiler max temp. Boiler protection and freeze protection.
@@ -297,11 +340,11 @@ public interface GasBoilerData extends OpenemsComponent {
     }
 
     default Channel<Boolean> getOutPutAm1_1() {
-        return this.channel(ChannelId.OUTPUT_AM1_1);
+        return this.channel(ChannelId.OUTPUT_AM_1_1);
     }
 
     default Channel<Boolean> getOutPutAm1_2() {
-        return this.channel(ChannelId.OUTPUT_AM1_2);
+        return this.channel(ChannelId.OUTPUT_AM_1_2);
     }
 
     default Channel<Boolean> getOutPut20() {
@@ -456,65 +499,108 @@ public interface GasBoilerData extends OpenemsComponent {
         return this.channel(ChannelId.HEAT_BOILER_TEMPERATURE_SET_POINT_EFFECTIVE);
     }
 
-    default Channel<Boolean> getHeatBoilerPerformanceStatus(){
+    default Channel<Boolean> getHeatBoilerPerformanceStatus() {
         return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_STATUS);
     }
 
-    default WriteChannel<Integer> getHeatBoilerPerformanceSetPointStatus(){
+    default WriteChannel<Integer> getHeatBoilerPerformanceSetPointStatus() {
         return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_STATUS);
     }
-    default WriteChannel<Integer> getHeatBoilerPerformanceSetPointValue(){
+
+    default WriteChannel<Integer> getHeatBoilerPerformanceSetPointValue() {
         return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE);
     }
-    default WriteChannel<Integer> getHeatBoilerTemperatureSetPoint(){
+
+    default WriteChannel<Integer> getHeatBoilerTemperatureSetPoint() {
         return this.channel(ChannelId.HEAT_BOILER_TEMPERATURE_SET_POINT);
     }
-    default Channel<Integer> getHeatBoilerTemperatureActual(){
+
+    default Channel<Integer> getHeatBoilerTemperatureActual() {
         return this.channel(ChannelId.HEAT_BOILER_TEMPERATURE_ACTUAL);
     }
-    default Channel<Integer> getHeatBoilerModulationValue(){
+
+    default Channel<Integer> getHeatBoilerModulationValue() {
         return this.channel(ChannelId.HEAT_BOILER_MODULATION_VALUE);
     }
-    default WriteChannel<Integer> getWarmWaterOperationMode(){
+
+    default WriteChannel<Integer> getWarmWaterOperationMode() {
         return this.channel(ChannelId.WARM_WATER_OPERATION_MODE);
     }
-    default Channel<Integer> getWarmWaterEffectiveSetPointTemperature(){
+
+    default Channel<Integer> getWarmWaterEffectiveSetPointTemperature() {
         return this.channel(ChannelId.WARM_WATER_EFFECTIVE_SET_POINT_TEMPERATURE);
     }
 
-    default WriteChannel<Integer> getWarmWaterSetPointTemperature(){
-        return this.channel(ChannelId.WARM_WATER_SET_POINT_TEMPERATURE);
+    default WriteChannel<Integer> getWarmWaterSetPointTemperature() {
+        return this.channel(ChannelId.FUNCTIONING_WARM_WATER_SET_POINT_TEMPERATURE);
     }
-    default Channel<Integer> getBoilerSetPointPerformanceEffetive(){
+
+    default Channel<Integer> getBoilerSetPointPerformanceEffetive() {
         return this.channel(ChannelId.BOILER_SET_POINT_PERFORMANCE_EFFECTIVE);
     }
-    default Channel<Integer> getBoilerSetPointTemperatureEffective(){
+
+    default Channel<Integer> getBoilerSetPointTemperatureEffective() {
         return this.channel(ChannelId.BOILER_SET_POINT_TEMPERATURE_EFFECTIVE);
     }
-    default Channel<Integer> getBoilerMaxReachedExhaustTemperature(){
+
+    default Channel<Integer> getBoilerMaxReachedExhaustTemperature() {
         return this.channel(ChannelId.BOILER_MAX_REACHED_EXHAUST_TEMPERATURE);
     }
 
-    default Channel<Boolean> getWarmWaterStorageChargePump(){
+    default Channel<Boolean> getWarmWaterStorageChargePump() {
         return this.channel(ChannelId.WARM_WATER_STORAGE_CHARGE_PUMP);
     }
-    default Channel<Integer> getWarmWaterStorageTemperature_5_A(){
+
+    default Channel<Integer> getWarmWaterStorageTemperature_5_A() {
         return this.channel(ChannelId.WARM_WATER_STORAGE_TEMPERATURE_5_A);
     }
-    default Channel<Integer> getWarmWaterStorageTemperature_5_B(){
+
+    default Channel<Integer> getWarmWaterStorageTemperature_5_B() {
         return this.channel(ChannelId.WARM_WATER_STORAGE_TEMPERATURE_5_B);
     }
-    default Channel<Integer> getWarmWaterPreparation(){
+
+    default Channel<Integer> getWarmWaterPreparation() {
         return this.channel(ChannelId.WARM_WATER_PREPARATION);
     }
-    default WriteChannel<Integer> getWarmWaterTemperatureSetPoint(){
+
+    default WriteChannel<Integer> getWarmWaterTemperatureSetPoint() {
         return this.channel(ChannelId.WARM_WATER_TEMPERATURE_SET_POINT);
     }
-    default Channel<Integer> getWarmWaterTemperatureSetPointEffective(){
+
+    default Channel<Integer> getWarmWaterTemperatureSetPointEffective() {
         return this.channel(ChannelId.WARM_WATER_TEMPERATURE_SET_POINT_EFFECTIVE);
     }
-    default Channel<Integer> getWarmWaterCirculationPump(){
+
+    default Channel<Integer> getWarmWaterCirculationPump() {
         return this.channel(ChannelId.WARM_WATER_CIRCULATION_PUMP);
     }
+
+    /*
+     * Following Channels get the Value of member Channels and returns them as an actual Percentage Value
+     * */
+    default Channel<Float> getOutPutSignalPm1_Percent() {
+        return this.channel(ChannelId.OUTPUT_SIGNAL_PM_1_PERCENT);
+    }
+
+    default Channel<Float> getVolumeFlowSetPointPm1Percent() {
+        return this.channel(ChannelId.VOLUME_FLOW_SET_POINT_PM_1_PERCENT);
+    }
+
+    default Channel<Float> getCombustionEngineEfficiencyActualValuePercent() {
+        return this.channel(ChannelId.COMBUSTION_ENGINE_EFFICIENCY_ACTUAL_VALUE_PERCENT);
+    }
+
+    default WriteChannel<Float> getHeatBoilerPerformanceSetPointValuePercent() {
+        return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE);
+    }
+
+    default Channel<Float> getHeatBoilerModulationValuePercent() {
+        return this.channel(ChannelId.HEAT_BOILER_MODULATION_VALUE_PERCENT);
+    }
+
+    default Channel<Float> getBoilerSetPointPerformanceEffectivePercent() {
+        return this.channel(ChannelId.BOILER_SET_POINT_PERFORMANCE_EFFECTIVE_PERCENT);
+    }
+
 }
 
