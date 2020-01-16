@@ -1,20 +1,20 @@
-package io.openems.edge.gasboiler.device;
+package io.openems.edge.biomassheater;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "GasBoiler Viessmann",
-        description = "A Gasboiler provided by Viessmann, communicating via ModbusTCP."
+        name = "MassHeaterWoodChips Gilles",
+        description = "A Massheater by Gilles, using Woodchips. Communicating via Modbus."
 )
 @interface Config {
 
     String service_pid();
 
-    @AttributeDefinition(name = "GasBoiler-Device ID", description = "Unique Id of the GasBoiler.")
-    String id() default "GasBoiler0";
+    @AttributeDefinition(name = "MassHeater-Device ID", description = "Unique Id of the MassHeater.")
+    String id() default "Massheater0";
 
-    @AttributeDefinition(name = "alias", description = "Human readable name of GasBoiler.")
+    @AttributeDefinition(name = "alias", description = "Human readable name of MassHeater.")
     String alias() default "";
 
     @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you what to allocate to this device.")
@@ -25,7 +25,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     boolean enabled() default true;
 
-
-    String webconsole_configurationFactory_nameHint() default "GasBoiler Device [{id}]";
+    String webconsole_configurationFactory_nameHint() default "MassHeater - Device [{id}]";
 
 }

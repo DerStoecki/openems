@@ -86,6 +86,8 @@
 	bnd.identity;id='io.openems.edge.fenecon.dess',\
 	bnd.identity;id='io.openems.edge.fenecon.mini',\
 	bnd.identity;id='io.openems.edge.fenecon.pro',\
+	bnd.identity;id='io.openems.edge.gasboiler.device',\
+	bnd.identity;id='io.openems.edge.gasbioler.device.api'\
 	bnd.identity;id='io.openems.edge.goodwe.et',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
@@ -212,6 +214,8 @@
 	io.openems.edge.fenecon.dess;version=snapshot,\
 	io.openems.edge.fenecon.mini;version=snapshot,\
 	io.openems.edge.fenecon.pro;version=snapshot,\
+	io.openems.edge.gasboiler.device;version=snapshot,\
+	io.openems.edge.gasboiler.device.api;version=snapshot,\
 	io.openems.edge.goodwe.et;version=snapshot,\
 	io.openems.edge.i2c.mcp.api;version=snapshot,\
 	io.openems.edge.io.kmtronic;version=snapshot,\

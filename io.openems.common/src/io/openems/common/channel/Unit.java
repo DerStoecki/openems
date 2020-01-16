@@ -30,6 +30,14 @@ public enum Unit {
     ON_OFF(""),
 
     // ##########
+    // Perculation
+    // ##########
+    /**
+     * Unit of Perculation[m³/h].
+     * */
+    CUBICMETER_PER_HOUR("m³/h"),
+
+    // ##########
     // Power
     // ##########
 
@@ -237,6 +245,12 @@ public enum Unit {
     // ##########
     // Pressure
     // ##########
+    /**
+     * Unit of Pressure[Pa].
+     *
+     * */
+    PASCAL("Pa"),
+
     /**
      * Unit of Pressure [bar].
      */
