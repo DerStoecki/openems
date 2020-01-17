@@ -12,7 +12,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String service_pid();
 
     @AttributeDefinition(name = "MassHeater-Device ID", description = "Unique Id of the MassHeater.")
-    String id() default "Massheater0";
+    String id() default "WoodChipHeater0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of MassHeater.")
     String alias() default "";

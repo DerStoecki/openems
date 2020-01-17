@@ -591,7 +591,7 @@ public interface GasBoilerData extends OpenemsComponent {
     }
 
     default WriteChannel<Float> getHeatBoilerPerformanceSetPointValuePercent() {
-        return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE);
+        return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE_PERCENT);
     }
 
     default Channel<Float> getHeatBoilerModulationValuePercent() {

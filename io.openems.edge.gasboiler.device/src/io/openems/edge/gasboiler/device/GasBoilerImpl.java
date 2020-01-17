@@ -204,7 +204,7 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
                         m(GasBoilerData.ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_STATUS, new UnsignedWordElement(7))
                         ),
                 new FC6WriteRegisterTask(8,
-                        m(GasBoilerData.ChannelId.WARM_WATER_OPERATION_MODE, new UnsignedWordElement(8))),
+                        m(GasBoilerData.ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE, new UnsignedWordElement(8))),
                 new FC6WriteRegisterTask(9,
                         m(GasBoilerData.ChannelId.WARM_WATER_OPERATION_MODE, new UnsignedWordElement(9))),
                 new FC6WriteRegisterTask(10,

@@ -59,6 +59,7 @@ public class ChpTaskImpl extends AbstractChpTask {
 
         if (powerLevel.getNextWriteValue().isPresent()) {
             float power = powerLevel.getNextWriteValue().get();
+            powerLevel.setNextValue(power);
 
             float singleDigitValue = this.scaling / ((maxValue) * DIGIT_SCALING);
 
