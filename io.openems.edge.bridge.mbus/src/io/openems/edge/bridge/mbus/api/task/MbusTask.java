@@ -31,4 +31,7 @@ public class MbusTask {
 		return this.openemsMbusComponent.getPrimaryAddress();
 	}
 
+	public AbstractOpenemsMbusComponent getOpenemsMbusComponent() {
+		return openemsMbusComponent;
+	}
 }

@@ -21,7 +21,7 @@ Private-Package:  \
 	io.openems.edge.biomassheater.api;version=latest,\
 	io.openems.edge.controller.api;version=latest,\
 	io.openems.edge.thermometer.api;version=latest,\
-	io.openems.edge.heatmeter.api;version=latest,\
+	io.openems.edge.meter.heatmeter.api;version=latest,\
 
 
 -testpath: \

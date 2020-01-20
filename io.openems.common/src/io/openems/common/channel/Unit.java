@@ -30,8 +30,13 @@ public enum Unit {
     ON_OFF(""),
 
     // ##########
-    // Perculation
+    // Perculation Q
     // ##########
+    /**
+     *
+     * Unit of Perculation [m³/s]
+     * */
+    CUBICMETER_PER_SECOND("m³/s"),
     /**
      * Unit of Perculation[m³/h].
      * */

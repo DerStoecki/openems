@@ -8,7 +8,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.gasboiler.device.api.GasBoilerData;
-import io.openems.edge.heatmeter.api.HeatMeterMbus;
+import io.openems.edge.meter.heatmeter.api.HeatMeterMbus;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -196,7 +196,9 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
 
         } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.woodChipTemperatureMin) {
             // TODO SET WOODCHIP ON and calc performance via WMZ and CHP
-            float performanceNeededByWoodChip = (getHeatMeterAverageConsumption() - maxChpWarmPower) * getCorrectBufferValue();
+
+            float performanceNeededByWoodChip = (float) ((heatMeter.getAverageHourConsumption().getNextValue().get() - maxChpWarmPower) * getCorrectBufferValue());
+
             performanceNeededByGasBoiler = performanceNeededByWoodChip - maxWoodChipPower;
             //SET WoodChip Power ---> correct ch?
             float percentValue = performanceNeededByWoodChip / maxWoodChipPower;
