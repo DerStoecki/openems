@@ -156,9 +156,10 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
         int powerValue = Math.round(demand * bufferValue);
         if (powerValue >= maxThermicPerformance) {
             powerValue = maxThermicPerformance;
-            getSlideInPercentageValue().setNextWriteValue(powerValue);
+            getSlideInPercentageValue().setNextWriteValue(100);
         } else {
-            getSlideInPercentageValue().setNextWriteValue((int) Math.ceil(powerValue));
+            int percentageValue = powerValue / maxThermicPerformance;
+            getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / maxThermicPerformance) * 100));
         }
 
         return powerValue;
