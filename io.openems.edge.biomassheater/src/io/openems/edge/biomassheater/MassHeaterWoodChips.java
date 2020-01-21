@@ -153,16 +153,15 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-        int powerValue = Math.round(demand * bufferValue);
+        float powerValue = Math.round(demand * bufferValue);
         if (powerValue >= maxThermicPerformance) {
             powerValue = maxThermicPerformance;
             getSlideInPercentageValue().setNextWriteValue(100);
         } else {
-            int percentageValue = powerValue / maxThermicPerformance;
-            getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / maxThermicPerformance) * 100));
+            getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / (float)maxThermicPerformance) * 100));
         }
 
-        return powerValue;
+        return (int)powerValue;
     }
 
     @Override
