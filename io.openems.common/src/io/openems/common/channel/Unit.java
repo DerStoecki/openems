@@ -171,6 +171,10 @@ public enum Unit {
      */
     VOLT_AMPERE_HOURS("VAh"),
 
+    /**
+     * Unit of Consumption of GasHeater
+     * */
+    CUBIC_METER("m³"),
     // ##########
     // Frequency
     // ##########

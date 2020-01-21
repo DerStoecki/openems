@@ -47,7 +47,7 @@ public class HeatMeterTask extends MbusTask {
                     // occurs when counterFilling%consumptionData.length = consumptionData.length -1
 
                     int minValuePosition;
-                    
+
                     if ((counterFilling % consumptionData.length) == (consumptionData.length - 1)) {
                         minValuePosition = 0;
                     } else {

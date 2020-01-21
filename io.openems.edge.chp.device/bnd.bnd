@@ -22,6 +22,7 @@ Private-Package:  \
 	io.openems.edge.chp.module.api;version=latest,\
 	io.openems.edge.i2c.mcp.api;version=latest,\
 	io.openems.edge.bridge.modbus;version=latest,\
+	io.openems.edge.heater.api;version=latest
 
 
 -testpath: \

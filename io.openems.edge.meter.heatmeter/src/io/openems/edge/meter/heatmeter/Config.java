@@ -12,7 +12,7 @@ import org.osgi.service.metatype.annotations.Option;
 
     String service_pid();
 
-    @AttributeDefinition(name = "GasBoiler-Device ID", description = "Unique Id of the GasBoiler.")
+    @AttributeDefinition(name = "HeatMeter-Device ID", description = "Unique Id of the HeatMeter.")
     String id() default "HeatMeter0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of the heat-meter.")

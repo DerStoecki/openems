@@ -22,6 +22,9 @@ Private-Package:  \
 	io.openems.edge.controller.api;version=latest,\
 	io.openems.edge.thermometer.api;version=latest,\
 	io.openems.edge.meter.heatmeter.api;version=latest,\
+	io.openems.edge.heater.api;version=latest,\
+	io.openems.edge.controller.debug.log;version=latest,\
+	io.openems.edge.controller.debug.detailedlog;version=latest,\
 
 
 -testpath: \

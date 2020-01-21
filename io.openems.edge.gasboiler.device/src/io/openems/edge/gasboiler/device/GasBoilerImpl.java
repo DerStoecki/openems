@@ -1,5 +1,6 @@
 package io.openems.edge.gasboiler.device;
 
+import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
@@ -14,14 +15,20 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.gasboiler.device.api.GasBoiler;
 import io.openems.edge.gasboiler.device.api.GasBoilerData;
+import io.openems.edge.heater.api.Heater;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
+import org.osgi.service.metatype.annotations.Designate;
 
+@Designate(ocd = Config.class, factory = true)
+@Component(name = "GasBoiler",
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        immediate = true)
+public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, GasBoilerData, GasBoiler, Heater {
 
-public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, GasBoilerData, GasBoiler {
+    //in kW
+    private int thermicalOutput = 66;
 
     @Reference
     protected ConfigurationAdmin cm;
@@ -35,6 +42,9 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
     @Activate
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus", config.modbusBridgeId());
+        if (config.maxThermicalOutput() != 0) {
+            this.thermicalOutput = config.maxThermicalOutput();
+        }
     }
 
     @Deactivate
@@ -169,7 +179,7 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(GasBoilerData.ChannelId.BOILER_SET_POINT_TEMPERATURE, new UnsignedWordElement(2),
                                 ElementToChannelConverter.DIRECT_1_TO_1)
-                        ),
+                ),
                 new FC3ReadRegistersTask(5, Priority.HIGH,
                         m(GasBoilerData.ChannelId.HEAT_BOILER_OPERATION_MODE, new UnsignedWordElement(5),
                                 ElementToChannelConverter.DIRECT_1_TO_1)),
@@ -180,7 +190,7 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(GasBoilerData.ChannelId.WARM_WATER_OPERATION_MODE, new UnsignedWordElement(9),
                                 ElementToChannelConverter.DIRECT_1_TO_1)
-                        ),
+                ),
                 new FC3ReadRegistersTask(10, Priority.HIGH,
                         m(GasBoilerData.ChannelId.FUNCTIONING_WARM_WATER_SET_POINT_TEMPERATURE, new UnsignedWordElement(10),
                                 ElementToChannelConverter.DIRECT_1_TO_1)),
@@ -202,7 +212,7 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
                 ),
                 new FC6WriteRegisterTask(7,
                         m(GasBoilerData.ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_STATUS, new UnsignedWordElement(7))
-                        ),
+                ),
                 new FC6WriteRegisterTask(8,
                         m(GasBoilerData.ChannelId.HEAT_BOILER_PERFORMANCE_SET_POINT_VALUE, new UnsignedWordElement(8))),
                 new FC6WriteRegisterTask(9,
@@ -215,6 +225,32 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
                         m(GasBoilerData.ChannelId.BOILER_MAX_REACHED_EXHAUST_TEMPERATURE, new UnsignedWordElement(15))),
                 new FC6WriteRegisterTask(16,
                         m(GasBoilerData.ChannelId.OPERATING_MODE_A1_M1, new UnsignedWordElement(16)))
-                );
+        );
+    }
+
+    @Override
+    public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
+        int providedPower = Math.round(demand * bufferValue);
+        if (providedPower >= thermicalOutput) {
+
+            getHeatBoilerPerformanceSetPointValue().setNextWriteValue(200);
+            return thermicalOutput;
+
+        } else {
+            getHeatBoilerPerformanceSetPointValue().setNextWriteValue(providedPower * 2);
+            return providedPower;
+        }
+
+
+    }
+
+    @Override
+    public int getMaximumThermicalOutput() {
+        return 0;
+    }
+
+    @Override
+    public void setOffline() throws OpenemsError.OpenemsNamedException {
+        getHeatBoilerPerformanceSetPointValue().setNextWriteValue(0);
     }
 }

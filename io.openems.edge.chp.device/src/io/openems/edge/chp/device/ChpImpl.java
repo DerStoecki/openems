@@ -19,6 +19,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.taskmanager.Priority;
+import io.openems.edge.heater.api.Heater;
 import io.openems.edge.i2c.mcp.api.Mcp;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -40,10 +41,12 @@ import java.util.List;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)
-public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler {
+public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler, Heater {
     private Mcp mcp;
     private ChpType chpType;
     private String accessMode;
+    private int thermicalOutput;
+    private int electricalOutput;
     private final ChpErrorWorker chpErrorWorker = new ChpErrorWorker();
     private String[] errorPossibilities = {
             "Lüfter	gestört		",
@@ -220,6 +223,8 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         }
         this.chpErrorWorker.activate(config.id());
         this.accessMode = config.accesMode();
+        this.thermicalOutput = Math.round(this.chpType.getThermalOutput());
+        this.electricalOutput = Math.round(this.chpType.getElectricalOutput());
     }
 
     @Deactivate
@@ -362,6 +367,31 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         new DummyRegisterElement(0x403E, 0x403E)));
 
+    }
+
+    @Override
+    public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
+        int providedPower = Math.round(demand * bufferValue);
+
+        if (providedPower >= thermicalOutput) {
+
+            getPowerLevelChannel().setNextWriteValue(100);
+            return thermicalOutput;
+
+        } else {
+            getPowerLevelChannel().setNextWriteValue(providedPower);
+            return providedPower;
+        }
+    }
+
+    @Override
+    public int getMaximumThermicalOutput() {
+        return thermicalOutput;
+    }
+
+    @Override
+    public void setOffline() throws OpenemsError.OpenemsNamedException {
+        getPowerLevelChannel().setNextWriteValue(0);
     }
 
 

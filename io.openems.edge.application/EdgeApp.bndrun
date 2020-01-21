@@ -22,6 +22,7 @@
 	bnd.identity;id='io.openems.common',\
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
+	bnd.identity;id='io.openems.edge.biomassheater',\
 	bnd.identity;id='io.openems.edge.bridge.i2c',\
 	bnd.identity;id='io.openems.edge.bridge.i2c.api',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
@@ -98,6 +99,8 @@
 	bnd.identity;id='io.openems.edge.meter.bcontrol.em300',\
 	bnd.identity;id='io.openems.edge.meter.carlo.gavazzi.em300',\
 	bnd.identity;id='io.openems.edge.meter.discovergy',\
+	bnd.identity;id='io.openems.edge.meter.gasmeter',\
+	bnd.identity;id='io.openems.edge.meter.heatmeter',\
 	bnd.identity;id='io.openems.edge.meter.janitza.umg96rme',\
 	bnd.identity;id='io.openems.edge.meter.microcare.sdm630',\
 	bnd.identity;id='io.openems.edge.meter.pqplus.umd97',\
@@ -151,6 +154,7 @@
 	io.openems.common;version=snapshot,\
 	io.openems.edge.application;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
+	io.openems.edge.biomassheater;version=snapshot,\
 	io.openems.edge.bridge.i2c;version=snapshot,\
 	io.openems.edge.bridge.mbus;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
@@ -226,6 +230,10 @@
 	io.openems.edge.meter.bcontrol.em300;version=snapshot,\
 	io.openems.edge.meter.carlo.gavazzi.em300;version=snapshot,\
 	io.openems.edge.meter.discovergy;version=snapshot,\
+	io.openems.edge.meter.gasmeter.api;version=snapshot,\
+	io.openems.edge.meter.heatmeter.api;version=snapshot,\
+	io.openems.edge.meter.gasmeter;version=snapshot,\
+	io.openems.edge.meter.heatmeter;version=snapshot,\
 	io.openems.edge.meter.janitza.umg96rme;version=snapshot,\
 	io.openems.edge.meter.microcare.sdm630;version=snapshot,\
 	io.openems.edge.meter.pqplus.umd97;version=snapshot,\

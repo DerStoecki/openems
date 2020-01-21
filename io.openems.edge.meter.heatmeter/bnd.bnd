@@ -1,12 +1,10 @@
-#
-# io.openems.edge.heatmeter PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
+Bundle-Name: OpenEMS Edge Heat Meter
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-	The provider bundle for io.openems.edge.heatmeter. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.heatmeter/api.bnd}
+    This Bundle Implements a Meter, Communicating via Mbus. The Task extends the MBus task, bc of the Average \
+    Powerconsumption per hour.
 
 Export-Package:  \
 

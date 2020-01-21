@@ -11,7 +11,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface BioMassHeater extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-        /*RW Channels_2 Byte_ Address 24576-224584*/
+        /*RW Channels_2 Byte_ Address 24576-24584*/
 
         BOILER_TEMPERATURE_SET_POINT(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)
                 .accessMode(AccessMode.READ_WRITE)),
@@ -89,6 +89,7 @@ public interface BioMassHeater extends OpenemsComponent {
         HELIX_1_ON(Doc.of(OpenemsType.BOOLEAN)),
         HELIX_2_ON(Doc.of(OpenemsType.BOOLEAN)),
         HELIX_3_ON(Doc.of(OpenemsType.BOOLEAN)),
+        CROSS_CONVEYOR(Doc.of(OpenemsType.BOOLEAN)),
         SLIDING_FLOOR_1_ON(Doc.of(OpenemsType.BOOLEAN)),
         SLIDING_FLOOR_2_ON(Doc.of(OpenemsType.BOOLEAN)),
         IGNITION_ON(Doc.of(OpenemsType.BOOLEAN)),
@@ -343,6 +344,10 @@ public interface BioMassHeater extends OpenemsComponent {
 
     default Channel<Boolean> getHelix_3_On() {
         return this.channel(ChannelId.HELIX_3_ON);
+    }
+
+    default Channel<Boolean> getCrossconveyor() {
+        return this.channel(ChannelId.CROSS_CONVEYOR);
     }
 
     default Channel<Boolean> getSlidingFloor_1_On() {

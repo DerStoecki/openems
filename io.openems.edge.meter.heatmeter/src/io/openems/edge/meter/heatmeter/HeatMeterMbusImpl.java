@@ -2,7 +2,7 @@ package io.openems.edge.meter.heatmeter;
 
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.meter.api.MeterType;
+import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.meter.heatmeter.task.HeatMeterTask;
 import io.openems.edge.bridge.mbus.api.BridgeMbus;
 import io.openems.edge.bridge.mbus.api.ChannelRecord;
@@ -14,8 +14,13 @@ import io.openems.edge.meter.heatmeter.api.HeatMeterMbus;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.metatype.annotations.Designate;
 
-
+@Designate(ocd = Config.class, factory = true)
+@Component(name = "HeatMeterMbus",
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        immediate = true)
 public class HeatMeterMbusImpl extends AbstractOpenemsMbusComponent implements OpenemsComponent, HeatMeterMbus {
 
     @Reference

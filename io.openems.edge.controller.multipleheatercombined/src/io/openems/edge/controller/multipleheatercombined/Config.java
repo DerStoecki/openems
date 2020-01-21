@@ -91,13 +91,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 
     @AttributeDefinition(name = "Buffer_Factor_Min_Temperature", description = "The Maximum Puffer Factor for extra Heating (Minimal Threshold).")
-            double minTemperatureBufferValue() default 1.2d;
+            float minTemperatureBufferValue() default 1.2f;
 
     @AttributeDefinition(name = "Buffer_Factor_InBetween", description = "The in Between Puffer Factor for extra Heating (In Between Max and Min Threshold).")
-            double inBetweenBufferValue() default 1.1d;
+            float inBetweenBufferValue() default 1.1f;
 
     @AttributeDefinition(name = "Buffer_Factor_Max", description = "The minimum Puffer Factor, where no extra Heating is considered (Above Max Threshold).")
-            double maxTemperatureBufferValue() default 1.0d;
+            float maxTemperatureBufferValue() default 1.0f;
 
     boolean enabled() default true;
 

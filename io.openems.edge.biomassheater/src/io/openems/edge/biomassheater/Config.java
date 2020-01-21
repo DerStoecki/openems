@@ -2,6 +2,7 @@ package io.openems.edge.biomassheater;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
         name = "MassHeaterWoodChips Gilles",
@@ -17,11 +18,21 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human readable name of MassHeater.")
     String alias() default "";
 
+    @AttributeDefinition(name = "MassHeater Type", description = "Type for identification.",
+            options = {
+                    @Option(label = "Placeholder", value = "Placeholder"),
+                    @Option(label = "Not in List", value = "Not in List")
+            })
+    String massHeaterType() default "Not in List";
+
     @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you what to allocate to this device.")
-    String modbusBridgeId() default "modbus0";
+    String modBusBridgeId() default "modbus0";
+
+    @AttributeDefinition(name = "Maximum thermical output", description = "Max thermical Output if device not in List")
+    int maxThermicalOutput() default 0;
 
     @AttributeDefinition(name = "ModBus-Unit Id", description = "Integer Unit Id of the Component.")
-    int modbusUnitId() default 0;
+    int modBusUnitId() default 0;
 
     boolean enabled() default true;
 

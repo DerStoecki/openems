@@ -1,29 +1,38 @@
 package io.openems.edge.controller.multipleheatercombined;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.biomassheater.api.BioMassHeater;
-import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.gasboiler.device.api.GasBoilerData;
+import io.openems.edge.controller.debug.detailedlog.DebugDetailedLog;
+import io.openems.edge.heater.api.Heater;
 import io.openems.edge.meter.heatmeter.api.HeatMeterMbus;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Designate(ocd = Config.class, factory = true)
+@Component(name = "MultipleHeaterCombined",
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        immediate = true)
 public class MultipleHeaterCombinedController extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
 
+    private final Logger log = LoggerFactory.getLogger(DebugDetailedLog.class);
     @Reference
     protected ComponentManager cpm;
 
 
-    private PowerLevel chp;
-    private BioMassHeater bioMassHeater;
-    private GasBoilerData gasBoiler;
+    private Heater heaterPrimary;
+    private Heater heaterSecondary;
+    private Heater heaterBackup;
     private Thermometer temperatureSensorHeater1Off;
     private Thermometer temperatureSensorHeater1On;
     private Thermometer temperatureSensorHeater2Off;
@@ -32,10 +41,11 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private Thermometer temperatureSensorHeater3On;
 
     private HeatMeterMbus heatMeter;
-
-    private double minTemperatureBufferValue;
-    private double maxTemperatureBufferValue;
-    private double bufferInBetweenFactor;
+    //maximum number value (min Temperature --> Max Buffer)
+    private float minTemperatureBufferValue;
+    //minimum --> max Temperature --> min Buffer
+    private float maxTemperatureBufferValue;
+    private float bufferInBetweenFactor;
     private int bufferMinTemperature;
     private int bufferMaxTemperature;
 
@@ -88,6 +98,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         this.woodChipTemperatureMin = config.woodChip_Temperature_min();
         this.gasBoilerTemperatureMax = config.gasBoiler_Temperature_max();
         this.gasBoilerTemperatureMin = config.gasBoiler_Temperature_min();
+
         this.maxChpWarmPower = config.heater_1_max_performance();
         this.maxWoodChipPower = config.heater_2_max_performance();
         this.maxGasBoilerPower = config.heater_3_max_performance();
@@ -129,19 +140,19 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
 
         switch (concreteType) {
             case "Heater1":
-                if (cpm.getComponent(device) instanceof PowerLevel) {
-                    this.chp = cpm.getComponent(device);
+                if (cpm.getComponent(device) instanceof Heater) {
+                    this.heaterPrimary = cpm.getComponent(device);
                 }
                 break;
             case "Heater2":
-                if (cpm.getComponent(device) instanceof BioMassHeater) {
-                    this.bioMassHeater = cpm.getComponent(device);
+                if (cpm.getComponent(device) instanceof Heater) {
+                    this.heaterSecondary = cpm.getComponent(device);
                 }
 
                 break;
             case "Heater3":
-                if (cpm.getComponent(device) instanceof GasBoilerData) {
-                    this.gasBoiler = cpm.getComponent(device);
+                if (cpm.getComponent(device) instanceof Heater) {
+                    this.heaterBackup = cpm.getComponent(device);
                 }
                 break;
         }
@@ -184,61 +195,61 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
      * */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        float performanceNeededByGasBoiler = 0;
+        //in kW
+        if (heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
+            int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().get();
 
-        if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.chpTemperatureMax) {
-            this.chp.getPowerLevelChannel().setNextWriteValue(0);
-        } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.chpTemperatureMin) {
-            this.chp.getPowerLevelChannel().setNextWriteValue(100);
-        }
-        if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.woodChipTemperatureMax) {
-            //TODO SET OFF!!!
+            if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.chpTemperatureMax) {
+                heaterPrimary.setOffline();
+            } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.chpTemperatureMin) {
+                thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+            }
 
-        } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.woodChipTemperatureMin) {
-            // TODO SET WOODCHIP ON and calc performance via WMZ and CHP
+            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.woodChipTemperatureMax || thermicalPerformanceDemand <= 0) {
+                heaterSecondary.setOffline();
 
-            float performanceNeededByWoodChip = (float) ((heatMeter.getAverageHourConsumption().getNextValue().get() - maxChpWarmPower) * getCorrectBufferValue());
+            } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.woodChipTemperatureMin) {
 
-            performanceNeededByGasBoiler = performanceNeededByWoodChip - maxWoodChipPower;
-            //SET WoodChip Power ---> correct ch?
-            float percentValue = performanceNeededByWoodChip / maxWoodChipPower;
-            this.bioMassHeater.getSlideInPercentageValue().setNextWriteValue((int) percentValue);
-        }
-        if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.gasBoilerTemperatureMax) {
-            this.gasBoiler.getHeatBoilerPerformanceSetPointValue().setNextWriteValue(0);
+                thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+            }
 
-        }
-        if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.gasBoilerTemperatureMin) {
-            float calculatedPower = calculateGasBoilerPower(performanceNeededByGasBoiler);
-            if (calculatedPower > 0) {
-                this.gasBoiler.getHeatBoilerPerformanceSetPointValuePercent().setNextValue(calculatedPower);
-                this.gasBoiler.getHeatBoilerPerformanceSetPointValue().setNextWriteValue((int) (calculatedPower * 2));
+
+            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.gasBoilerTemperatureMax || thermicalPerformanceDemand <= 0) {
+                this.heaterBackup.setOffline();
+
+            }
+            if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.gasBoilerTemperatureMin) {
+                thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+            }
+
+            if (thermicalPerformanceDemand > 0) {
+                logInfo(this.log, "Performance demand that cannot be compensated: " + thermicalPerformanceDemand);
             }
 
         }
 
     }
 
-    private double getCorrectBufferValue() {
-        double averageTemperature = 0;
-        averageTemperature += this.temperatureSensorHeater1On.getTemperature().getNextValue().get();
-        averageTemperature += this.temperatureSensorHeater1Off.getTemperature().getNextValue().get();
-        averageTemperature += this.temperatureSensorHeater2On.getTemperature().getNextValue().get();
-        averageTemperature += this.temperatureSensorHeater2Off.getTemperature().getNextValue().get();
-        averageTemperature += this.temperatureSensorHeater3On.getTemperature().getNextValue().get();
-        averageTemperature += this.temperatureSensorHeater3Off.getTemperature().getNextValue().get();
-        averageTemperature = averageTemperature / 6;
+    private float getCorrectBufferValue() {
+        float averageTemperature = 0;
+        if (temperatureSensorHeater1On.getTemperature().getNextValue().isDefined()) {
+            averageTemperature += this.temperatureSensorHeater1On.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater1Off.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater2On.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater2Off.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater3On.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater3Off.getTemperature().getNextValue().get();
+            averageTemperature = averageTemperature / 6;
 
-        if (averageTemperature >= bufferMaxTemperature) {
-            return maxTemperatureBufferValue;
-        } else if (averageTemperature <= bufferMinTemperature) {
-            return minTemperatureBufferValue;
+            if (averageTemperature >= bufferMaxTemperature) {
+                return maxTemperatureBufferValue;
+            } else if (averageTemperature <= bufferMinTemperature) {
+                return minTemperatureBufferValue;
+            } else {
+                return bufferInBetweenFactor;
+            }
         } else {
-            return bufferInBetweenFactor;
+            return minTemperatureBufferValue;
         }
-    }
-
-    private float calculateGasBoilerPower(float performanceNeeded) {
-        return performanceNeeded / maxGasBoilerPower;
     }
 }
