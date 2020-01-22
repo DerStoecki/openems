@@ -20,7 +20,7 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "MeterType", description = "Identification via Type",
             options = {
-                    @Option(label = "PlaceHolder", value = "Placeholder"),
+                    @Option(label = "Placeholder", value = "Placeholder"),
                     @Option(label = "Placeholder", value = "Placeholder"),
                     @Option(label = "Placeholder", value = "Placeholder"),
             })

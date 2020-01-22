@@ -20,11 +20,11 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "GasBoiler Type", description = "Select used Gasboiler.",
     options = {
-            @Option(label = "Placeholder", value = "Placeholder"),
+            @Option(label = "VITOTRONIC_100", value = "VITOTRONIC_100"),
             @Option(label = "Placeholder2", value = "Placeholder2"),
             @Option(label = "Not in List", value = "Not in List")
     })
-    String gasBoilerType() default "Placeholder";
+    String gasBoilerType() default "VITOTRONIC_100";
 
     @AttributeDefinition(name = "Maximum thermical output", description = "Max thermical Output if device not in List")
     int maxThermicalOutput() default 0;

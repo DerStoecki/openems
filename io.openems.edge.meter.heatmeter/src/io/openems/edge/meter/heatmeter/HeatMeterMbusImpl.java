@@ -29,11 +29,7 @@ public class HeatMeterMbusImpl extends AbstractOpenemsMbusComponent implements O
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     protected BridgeMbus mbus;
 
-    private int powerAddress;
-    private int percolationAddress;
-    private int totalConsumedEnergyAddress;
-    private int flowTempAddress;
-    private int returnTempAddress;
+    HeatMeterType heatMeterType;
 
     public HeatMeterMbusImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -74,28 +70,16 @@ public class HeatMeterMbusImpl extends AbstractOpenemsMbusComponent implements O
     private void allocateAddressViaMeterType(String meterType) {
         switch (meterType) {
             case "Itron-CF51":
-                this.powerAddress = HeatMeterType.ITRON_CF_51.getPowerAddress();
-                this.percolationAddress = HeatMeterType.ITRON_CF_51.getPercolationAddress();
-                this.totalConsumedEnergyAddress = HeatMeterType.ITRON_CF_51.getTotalConsumptionEnergyAddress();
-                this.flowTempAddress = HeatMeterType.ITRON_CF_51.getFlowTempAddress();
-                this.returnTempAddress = HeatMeterType.ITRON_CF_51.getReturnTempAddress();
+                this.heatMeterType = HeatMeterType.ITRON_CF_51;
                 break;
 
             case "Sharky-775":
-                this.powerAddress = HeatMeterType.SHARKY_775.getPowerAddress();
-                this.percolationAddress = HeatMeterType.SHARKY_775.getPercolationAddress();
-                this.totalConsumedEnergyAddress = HeatMeterType.SHARKY_775.getTotalConsumptionEnergyAddress();
-                this.flowTempAddress = HeatMeterType.SHARKY_775.getFlowTempAddress();
-                this.returnTempAddress = HeatMeterType.SHARKY_775.getReturnTempAddress();
+                this.heatMeterType = HeatMeterType.SHARKY_775;
 
                 break;
 
             case "Zelsius CF-CMF":
-                this.powerAddress = HeatMeterType.ZELSIUS_C5_CMF.getPowerAddress();
-                this.percolationAddress = HeatMeterType.ZELSIUS_C5_CMF.getPercolationAddress();
-                this.totalConsumedEnergyAddress = HeatMeterType.ZELSIUS_C5_CMF.getTotalConsumptionEnergyAddress();
-                this.flowTempAddress = HeatMeterType.ZELSIUS_C5_CMF.getFlowTempAddress();
-                this.returnTempAddress = HeatMeterType.ZELSIUS_C5_CMF.getReturnTempAddress();
+                this.heatMeterType = HeatMeterType.ZELSIUS_C5_CMF;
                 break;
 
 
@@ -110,11 +94,11 @@ public class HeatMeterMbusImpl extends AbstractOpenemsMbusComponent implements O
 
     @Override
     protected void addChannelDataRecords() {
-        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.TOTAL_CONSUMED_ENERGY), this.totalConsumedEnergyAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.FLOW_TEMP), this.flowTempAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.RETURN_TEMP), this.returnTempAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.POWER), this.powerAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.PERCOLATION), this.percolationAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.TOTAL_CONSUMED_ENERGY), this.heatMeterType.totalConsumptionEnergyAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.FLOW_TEMP), this.heatMeterType.flowTempAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.RETURN_TEMP), this.heatMeterType.returnTempAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.POWER), this.heatMeterType.powerAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.PERCOLATION), this.heatMeterType.percolationAddress));
         this.channelDataRecordsList.add(new ChannelRecord(channel(ChannelId.MANUFACTURER_ID), ChannelRecord.DataType.Manufacturer));
         this.channelDataRecordsList.add(new ChannelRecord(channel(ChannelId.DEVICE_ID), ChannelRecord.DataType.DeviceId));
     }

@@ -3,61 +3,61 @@ package io.openems.edge.gasboiler.device;
 public enum GasBoilerType {
 
     VITOTRONIC_100(8,9,5,6,
-            0,0,0,0,
-            0, 0,0,0,
-            0, 0,0,
-            0, 0,0,
-            0, 0,0,
-            0, 11,0,
-            0, 0,0,
-            0, 0,0,
-            0, 0,0,
-            0, 0,0,
-            0, 0,0,
-            0, 0,0,
-            8, 1,0,
-            3, 0,4,
-            0, 0,0,
-            0, 0,0,
-            0, 0,0
+            47,7,10,11,
+            12, 34,48,17, 18,
+            49, 19,50,
+            51, 52,53,
+            31,32, 33,4,
+            16, 11,30,
+            16, 37,38,
+            41, 39,40,
+            27, 54,55,
+            56, 57,42,
+            5, 4,1,
+            7, 8,13,
+            8, 1,9,
+            3, 10,4,
+            11, 15,13,
+            28, 29,17,
+            1, 17,14
             );
 
 
 
-    int outPutAM1_1_Address, outPutAm1_2_Address, output20Address, output_29Address,
+    int     outPutAM1_1_Address, outPutAm1_2_Address, output20Address, output_29Address,
             ambientTemperatureAddress, outPutEA1Address, input_EA_1Address, input_EA_2Address, input_EA_3Address,
-            setPoint_EA_1Address, outPutSignalPM1_PercentAddress, gridVoltageBehaviourPM1Address,
-            volumeFlowSetPoPm1Address, disturbanceInputPM1Address, temperatureSensorPM_1_1Address,
+            setPoint_EA_1Address, outPutSignalPM1_Percent, gridVoltageBehaviourPM1Address, floatingElectricalContactPm1Address,
+            volumeFlowSetPointPm1Address, disturbanceInputPM1Address, temperatureSensorPM_1_1Address,
             temperatureSensorPM1_2Address, temperatureSensorPM1_3Address, temperatureSensorPM1_4Address,
-            rewindTemperature_17_A_Address, sensor9address, tributaryPumpAddress, operatingModeA1_M1,
-            boilerSetPoTemperatureAddress, combustionEngineExhaustTemperatureAddress, combustionEngineOnOffAddress,
+            rewindTemperature_17_A_Address,rewindTemperature_17_B_Address, sensor9address, tributaryPumpAddress, operatingModeA1_M1,
+            boilerSetPointTemperatureAddress, combustionEngineExhaustTemperatureAddress, combustionEngineOnOffAddress,
             combustionEngineOperatingHoursTier1Address, combustionEngineOperatingHoursTier2Address,
-            combustionEngineEfficiencyActualValuePercentAddress, combustionEngineStartCounterAddress,
+            combustionEngineEfficiencyActualValueAddress, combustionEngineStartCounterAddress,
             combustionEngineOperatingModeAddress, combustionEngineBoilerTemperatureAddress,
             temperatureSensor_1_PM_1_StatusAddress, temperatureSensor_1_PM_2_StatusAddress,
             temperatureSensor_1_PM_3_StatusAddress, temperatureSensor_1_PM_4_StatusAddress,
             operatingHoursCombustionEngineTier_1_expandedAddress, heatBoilerOperationModeAddress,
             heatBoilerTemperatureSetPointEffectiveAddress, heatBoilerPerformanceStatusAddress,
             heatBoilerPerformanceSetPointStatusAddress, heatBoilerPerformanceSetPointValueAddress,
-            heatBoilerTemperatureSetPoAddress, heatBoilerTemperatureActualAddress,
+            heatBoilerTemperatureSetPointAddress, heatBoilerTemperatureActualAddress,
             heatBoilerModulationValueAddress, warmWaterOperationModeAddress,
-            warmWaterEffectiveSetPointTemperatureAddress, functioningWarmWaterSetPoTemperatureAddress,
+            warmWaterEffectiveSetPointTemperatureAddress, functioningWarmWaterSetPointTemperatureAddress,
             boilerSetPointPerformanceEffectiveAddress, boilerSetPointTemperatureEffectiveAddress,
             boilerMaxReachedExhaustTemperatureAddress, warmWaterStorageChargePumpAddress,
             warmWaterStorageTemperature_5_A_Address, warmWaterStorageTemperature_5_B_Address,
-            warmWaterPreparationAddress, warmWaterTemperatureSetPoAddress,
-            warmWaterSetPoEffectiveAddress, warmWaterCirculationPumpAddress;
+            warmWaterPreparationAddress, warmWaterTemperatureSetPointAddress,
+            warmWaterSetPointEffectiveAddress, warmWaterCirculationPumpAddress;
 
     GasBoilerType(
             int outPutAM1_1_Address, int outPutAm1_2_Address, int output20Address, int output_29Address,
             int ambientTemperatureAddress, int outPutEA1Address, int input_EA_1Address, int input_EA_2Address, int input_EA_3Address,
-            int setPoint_EA_1Address, int outPutSignalPM1_PercentAddress, int gridVoltageBehaviourPM1Address,
+            int setPoint_EA_1Address, int outPutSignalPM1_Percent, int gridVoltageBehaviourPM1Address,int floatingElectricalContactPm1Address,
             int volumeFlowSetPointPm1Address, int disturbanceInputPM1Address, int temperatureSensorPM_1_1Address,
             int temperatureSensorPM1_2Address, int temperatureSensorPM1_3Address, int temperatureSensorPM1_4Address,
-            int rewindTemperature_17_A_Address, int sensor9address, int tributaryPumpAddress, int operatingModeA1_M1,
+            int rewindTemperature_17_A_Address, int rewindTemperature_17_B_Address, int sensor9address, int tributaryPumpAddress, int operatingModeA1_M1,
             int boilerSetPointTemperatureAddress, int combustionEngineExhaustTemperatureAddress, int combustionEngineOnOffAddress,
             int combustionEngineOperatingHoursTier1Address, int combustionEngineOperatingHoursTier2Address,
-            int combustionEngineEfficiencyActualValuePercentAddress, int combustionEngineStartCounterAddress,
+            int combustionEngineEfficiencyActualValueAddress, int combustionEngineStartCounterAddress,
             int combustionEngineOperatingModeAddress, int combustionEngineBoilerTemperatureAddress,
             int temperatureSensor_1_PM_1_StatusAddress, int temperatureSensor_1_PM_2_StatusAddress,
             int temperatureSensor_1_PM_3_StatusAddress, int temperatureSensor_1_PM_4_StatusAddress,
@@ -85,10 +85,11 @@ public enum GasBoilerType {
         this.input_EA_3Address = input_EA_3Address;
 
         this.setPoint_EA_1Address = setPoint_EA_1Address;
-        this.outPutSignalPM1_PercentAddress = outPutSignalPM1_PercentAddress;
+        this.outPutSignalPM1_Percent = outPutSignalPM1_Percent;
         this.gridVoltageBehaviourPM1Address = gridVoltageBehaviourPM1Address;
+        this.floatingElectricalContactPm1Address = floatingElectricalContactPm1Address;
 
-        this.volumeFlowSetPoPm1Address = volumeFlowSetPointPm1Address;
+        this.volumeFlowSetPointPm1Address = volumeFlowSetPointPm1Address;
         this.disturbanceInputPM1Address = disturbanceInputPM1Address;
         this.temperatureSensorPM_1_1Address = temperatureSensorPM_1_1Address;
 
@@ -97,18 +98,19 @@ public enum GasBoilerType {
         this.temperatureSensorPM1_4Address = temperatureSensorPM1_4Address;
 
         this.rewindTemperature_17_A_Address = rewindTemperature_17_A_Address;
+        this.rewindTemperature_17_B_Address = rewindTemperature_17_B_Address;
         this.sensor9address = sensor9address;
         this.tributaryPumpAddress = tributaryPumpAddress;
         this.operatingModeA1_M1 = operatingModeA1_M1;
 
-        this.boilerSetPoTemperatureAddress = boilerSetPointTemperatureAddress;
+        this.boilerSetPointTemperatureAddress = boilerSetPointTemperatureAddress;
         this.combustionEngineExhaustTemperatureAddress = combustionEngineExhaustTemperatureAddress;
         this.combustionEngineOnOffAddress = combustionEngineOnOffAddress;
 
         this.combustionEngineOperatingHoursTier1Address = combustionEngineOperatingHoursTier1Address;
         this.combustionEngineOperatingHoursTier2Address = combustionEngineOperatingHoursTier2Address;
 
-        this.combustionEngineEfficiencyActualValuePercentAddress = combustionEngineEfficiencyActualValuePercentAddress;
+        this.combustionEngineEfficiencyActualValueAddress = combustionEngineEfficiencyActualValueAddress;
         this.combustionEngineStartCounterAddress = combustionEngineStartCounterAddress;
 
         this.combustionEngineOperatingModeAddress = combustionEngineOperatingModeAddress;
@@ -129,14 +131,14 @@ public enum GasBoilerType {
         this.heatBoilerPerformanceSetPointStatusAddress = heatBoilerPerformanceSetPointStatusAddress;
         this.heatBoilerPerformanceSetPointValueAddress = heatBoilerPerformanceSetPointValueAddress;
 
-        this.heatBoilerTemperatureSetPoAddress = heatBoilerTemperatureSetPointAddress;
+        this.heatBoilerTemperatureSetPointAddress = heatBoilerTemperatureSetPointAddress;
         this.heatBoilerTemperatureActualAddress = heatBoilerTemperatureActualAddress;
 
         this.heatBoilerModulationValueAddress = heatBoilerModulationValueAddress;
         this.warmWaterOperationModeAddress = warmWaterOperationModeAddress;
 
         this.warmWaterEffectiveSetPointTemperatureAddress = warmWaterEffectiveSetPointTemperatureAddress;
-        this.functioningWarmWaterSetPoTemperatureAddress = functioningWarmWaterSetPointTemperatureAddress;
+        this.functioningWarmWaterSetPointTemperatureAddress = functioningWarmWaterSetPointTemperatureAddress;
 
         this.boilerSetPointPerformanceEffectiveAddress = boilerSetPointPerformanceEffectiveAddress;
         this.boilerSetPointTemperatureEffectiveAddress = boilerSetPointTemperatureEffectiveAddress;
@@ -148,9 +150,9 @@ public enum GasBoilerType {
         this.warmWaterStorageTemperature_5_B_Address = warmWaterStorageTemperature_5_B_Address;
 
         this.warmWaterPreparationAddress = warmWaterPreparationAddress;
-        this.warmWaterTemperatureSetPoAddress = warmWaterTemperatureSetPointAddress;
+        this.warmWaterTemperatureSetPointAddress = warmWaterTemperatureSetPointAddress;
 
-        this.warmWaterSetPoEffectiveAddress = warmWaterSetPointEffectiveAddress;
+        this.warmWaterSetPointEffectiveAddress = warmWaterSetPointEffectiveAddress;
         this.warmWaterCirculationPumpAddress = warmWaterCirculationPumpAddress;
 
     }
@@ -196,16 +198,20 @@ public enum GasBoilerType {
         return setPoint_EA_1Address;
     }
 
-    public int getOutPutSignalPM1_PercentAddress() {
-        return outPutSignalPM1_PercentAddress;
+    public int getOutPutSignalPM1_Percent() {
+        return outPutSignalPM1_Percent;
     }
 
     public int getGridVoltageBehaviourPM1Address() {
         return gridVoltageBehaviourPM1Address;
     }
 
-    public int getVolumeFlowSetPoPm1Address() {
-        return volumeFlowSetPoPm1Address;
+    public int getFloatingElectricalContactPm1Address() {
+        return floatingElectricalContactPm1Address;
+    }
+
+    public int getVolumeFlowSetPointPm1Address() {
+        return volumeFlowSetPointPm1Address;
     }
 
     public int getDisturbanceInputPM1Address() {
@@ -232,6 +238,10 @@ public enum GasBoilerType {
         return rewindTemperature_17_A_Address;
     }
 
+    public int getRewindTemperature_17_B_Address() {
+        return rewindTemperature_17_B_Address;
+    }
+
     public int getSensor9address() {
         return sensor9address;
     }
@@ -244,8 +254,8 @@ public enum GasBoilerType {
         return operatingModeA1_M1;
     }
 
-    public int getBoilerSetPoTemperatureAddress() {
-        return boilerSetPoTemperatureAddress;
+    public int getBoilerSetPointTemperatureAddress() {
+        return boilerSetPointTemperatureAddress;
     }
 
     public int getCombustionEngineExhaustTemperatureAddress() {
@@ -264,8 +274,8 @@ public enum GasBoilerType {
         return combustionEngineOperatingHoursTier2Address;
     }
 
-    public int getCombustionEngineEfficiencyActualValuePercentAddress() {
-        return combustionEngineEfficiencyActualValuePercentAddress;
+    public int getCombustionEngineEfficiencyActualValueAddress() {
+        return combustionEngineEfficiencyActualValueAddress;
     }
 
     public int getCombustionEngineStartCounterAddress() {
@@ -320,8 +330,8 @@ public enum GasBoilerType {
         return heatBoilerPerformanceSetPointValueAddress;
     }
 
-    public int getHeatBoilerTemperatureSetPoAddress() {
-        return heatBoilerTemperatureSetPoAddress;
+    public int getHeatBoilerTemperatureSetPointAddress() {
+        return heatBoilerTemperatureSetPointAddress;
     }
 
     public int getHeatBoilerTemperatureActualAddress() {
@@ -340,8 +350,8 @@ public enum GasBoilerType {
         return warmWaterEffectiveSetPointTemperatureAddress;
     }
 
-    public int getFunctioningWarmWaterSetPoTemperatureAddress() {
-        return functioningWarmWaterSetPoTemperatureAddress;
+    public int getFunctioningWarmWaterSetPointTemperatureAddress() {
+        return functioningWarmWaterSetPointTemperatureAddress;
     }
 
     public int getBoilerSetPointPerformanceEffectiveAddress() {
@@ -372,12 +382,12 @@ public enum GasBoilerType {
         return warmWaterPreparationAddress;
     }
 
-    public int getWarmWaterTemperatureSetPoAddress() {
-        return warmWaterTemperatureSetPoAddress;
+    public int getWarmWaterTemperatureSetPointAddress() {
+        return warmWaterTemperatureSetPointAddress;
     }
 
-    public int getWarmWaterSetPoEffectiveAddress() {
-        return warmWaterSetPoEffectiveAddress;
+    public int getWarmWaterSetPointEffectiveAddress() {
+        return warmWaterSetPointEffectiveAddress;
     }
 
     public int getWarmWaterCirculationPumpAddress() {
