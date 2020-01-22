@@ -243,7 +243,8 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                 if (chpType != null) {
                     return "Chp: " + this.chpType.getName() + "is at " + this.getPowerLevelChannel().getNextValue().get();
                 } else {
-                    return "Chp is at " + this.getPowerLevelChannel().getNextValue().get();
+                    return "Chp is at " + this.getPowerLevelChannel().getNextValue().get() + "\nErrors in Chp: "
+                            + this.getErrorChannel().getNextValue().toString();
                 }
             }
             return "Percentage Level at 0";
