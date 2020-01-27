@@ -2,7 +2,6 @@ package io.openems.edge.chp.device;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.common.utils.StringUtils;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -20,6 +19,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.taskmanager.Priority;
+import io.openems.edge.heater.api.Heater;
 import io.openems.edge.i2c.mcp.api.Mcp;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -41,10 +41,12 @@ import java.util.List;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)
-public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler {
+public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler, Heater {
     private Mcp mcp;
     private ChpType chpType;
     private String accessMode;
+    private int thermicalOutput;
+    private int electricalOutput;
     private final ChpErrorWorker chpErrorWorker = new ChpErrorWorker();
     private String[] errorPossibilities = {
             "Lüfter	gestört		",
@@ -221,6 +223,8 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         }
         this.chpErrorWorker.activate(config.id());
         this.accessMode = config.accesMode();
+        this.thermicalOutput = Math.round(this.chpType.getThermalOutput());
+        this.electricalOutput = Math.round(this.chpType.getElectricalOutput());
     }
 
     @Deactivate
@@ -234,14 +238,19 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
 
     @Override
     public String debugLog() {
-        if (this.getPowerLevelChannel().getNextValue().get() != null) {
-            if (chpType != null) {
-                return "Chp: " + this.chpType.getName() + "is at " + this.getPowerLevelChannel().getNextValue().get();
-            } else {
-                return "Chp is at " + this.getPowerLevelChannel().getNextValue().get();
+        if (this.accessMode.equals("rw")) {
+            if (this.getPowerLevelChannel().getNextValue().get() != null) {
+                if (chpType != null) {
+                    return "Chp: " + this.chpType.getName() + "is at " + this.getPowerLevelChannel().getNextValue().get();
+                } else {
+                    return "Chp is at " + this.getPowerLevelChannel().getNextValue().get() + "\nErrors in Chp: "
+                            + this.getErrorChannel().getNextValue().toString();
+                }
             }
+            return "Percentage Level at 0";
+        } else {
+            return this.getErrorChannel().getNextValue().get();
         }
-        return "Percentage Level at 0";
     }
 
 
@@ -250,7 +259,7 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         return new ModbusProtocol(this,
                 new FC3ReadRegistersTask(0x4000, Priority.LOW,
                         new DummyRegisterElement(0x4000, 0x4000),
-                        m(ChpInformationChannel.ChannelId.MODUS, new UnsignedWordElement(0x4001),
+                        m(ChpInformationChannel.ChannelId.MODE, new UnsignedWordElement(0x4001),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.STATUS, new UnsignedWordElement(0x4002),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
@@ -289,36 +298,36 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                         m(ChpInformationChannel.ChannelId.NEXT_MAINTENANCE, new UnsignedWordElement(0x4013),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.EXHAUST_A, new SignedWordElement(0x4014),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.EXHAUST_B, new SignedWordElement(0x4015),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.EXHAUST_C, new SignedWordElement(0x4016),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.EXHAUST_D, new SignedWordElement(0x4017),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.PT_100_1, new SignedWordElement(0x4018),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.PT_100_2, new SignedWordElement(0x4019),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.PT_100_3, new SignedWordElement(0x401A),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.PT_100_4, new SignedWordElement(0x401B),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.PT_100_5, new SignedWordElement(0x401C),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.PT_100_6, new SignedWordElement(0x401D),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.BATTERY_VOLTAGE, new SignedWordElement(0x401E),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.OIL_PRESSURE, new SignedWordElement(0x401F),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.LAMBDA_PROBE_VOLTAGE, new SignedWordElement(0x4020),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1)),
+                                ElementToChannelConverter.DIRECT_1_TO_1)),
                 new FC3ReadRegistersTask(0x4025, Priority.LOW,
                         m(ChpInformationChannel.ChannelId.ROTATION_PER_MIN, new UnsignedWordElement(0x4025),
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.TEMPERATURE_CONTROLLER, new SignedWordElement(0x4026),
-                                ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+                                ElementToChannelConverter.DIRECT_1_TO_1),
                         m(ChpInformationChannel.ChannelId.TEMPERATURE_CLEARANCE, new SignedWordElement(0x4027),
                                 ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
                         m(ChpInformationChannel.ChannelId.SUPPLY_VOLTAGE_L1, new SignedWordElement(0x4028),
@@ -359,6 +368,31 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                                 ElementToChannelConverter.DIRECT_1_TO_1),
                         new DummyRegisterElement(0x403E, 0x403E)));
 
+    }
+
+    @Override
+    public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
+        int providedPower = Math.round(demand * bufferValue);
+
+        if (providedPower >= thermicalOutput) {
+
+            getPowerLevelChannel().setNextWriteValue(100);
+            return thermicalOutput;
+
+        } else {
+            getPowerLevelChannel().setNextWriteValue(providedPower);
+            return providedPower;
+        }
+    }
+
+    @Override
+    public int getMaximumThermicalOutput() {
+        return thermicalOutput;
+    }
+
+    @Override
+    public void setOffline() throws OpenemsError.OpenemsNamedException {
+        getPowerLevelChannel().setNextWriteValue(0);
     }
 
 

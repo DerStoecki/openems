@@ -172,6 +172,8 @@ public interface SymmetricMeter extends OpenemsComponent {
 		CURRENT(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.MILLIAMPERE)); //
 
+
+
 		private final Doc doc;
 
 		private ChannelId(Doc doc) {

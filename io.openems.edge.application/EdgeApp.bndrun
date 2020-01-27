@@ -22,6 +22,9 @@
 	bnd.identity;id='io.openems.common',\
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
+	bnd.identity;id='io.openems.edge.biomassheater',\
+	bnd.identity;id='io.openems.edge.biomassheater.api’,\
+	bnd.identity;id='io.openems.edge.bridge.gpio',\
 	bnd.identity;id='io.openems.edge.bridge.i2c',\
 	bnd.identity;id='io.openems.edge.bridge.i2c.api',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
@@ -86,7 +89,12 @@
 	bnd.identity;id='io.openems.edge.fenecon.dess',\
 	bnd.identity;id='io.openems.edge.fenecon.mini',\
 	bnd.identity;id='io.openems.edge.fenecon.pro',\
+	bnd.identity;id='io.openems.edge.gasboiler.device',\
+	bnd.identity;id='io.openems.edge.gasbioler.device.api'\
 	bnd.identity;id='io.openems.edge.goodwe.et',\
+	bnd.identity;id='io.openems.edge.gpio.device',\
+	bnd.identity;id='io.openems.edge.gpio.device.api',\
+	bnd.identity;id='io.openems.edge.heater.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\
@@ -96,6 +104,8 @@
 	bnd.identity;id='io.openems.edge.meter.bcontrol.em300',\
 	bnd.identity;id='io.openems.edge.meter.carlo.gavazzi.em300',\
 	bnd.identity;id='io.openems.edge.meter.discovergy',\
+	bnd.identity;id='io.openems.edge.meter.gasmeter',\
+	bnd.identity;id='io.openems.edge.meter.heatmeter',\
 	bnd.identity;id='io.openems.edge.meter.janitza.umg96rme',\
 	bnd.identity;id='io.openems.edge.meter.microcare.sdm630',\
 	bnd.identity;id='io.openems.edge.meter.pqplus.umd97',\
@@ -149,6 +159,9 @@
 	io.openems.common;version=snapshot,\
 	io.openems.edge.application;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
+	io.openems.edge.biomassheater;version=snapshot,\
+	io.openems.edge.biomassheater.api;version=snapshot,\
+	io.openems.edge.bridge.gpio;version=snapshot,\
 	io.openems.edge.bridge.i2c;version=snapshot,\
 	io.openems.edge.bridge.mbus;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
@@ -212,7 +225,12 @@
 	io.openems.edge.fenecon.dess;version=snapshot,\
 	io.openems.edge.fenecon.mini;version=snapshot,\
 	io.openems.edge.fenecon.pro;version=snapshot,\
+	io.openems.edge.gasboiler.device;version=snapshot,\
+	io.openems.edge.gasboiler.device.api;version=snapshot,\
 	io.openems.edge.goodwe.et;version=snapshot,\
+	io.openems.edge.gpio.device;version=snapshot,\
+	io.openems.edge.gpio.device.api;version=snapshot,\
+	io.openems.edge.heater.api;version=snapshot,\
 	io.openems.edge.i2c.mcp.api;version=snapshot,\
 	io.openems.edge.io.kmtronic;version=snapshot,\
 	io.openems.edge.io.wago;version=snapshot,\
@@ -222,6 +240,10 @@
 	io.openems.edge.meter.bcontrol.em300;version=snapshot,\
 	io.openems.edge.meter.carlo.gavazzi.em300;version=snapshot,\
 	io.openems.edge.meter.discovergy;version=snapshot,\
+	io.openems.edge.meter.gasmeter.api;version=snapshot,\
+	io.openems.edge.meter.heatmeter.api;version=snapshot,\
+	io.openems.edge.meter.gasmeter;version=snapshot,\
+	io.openems.edge.meter.heatmeter;version=snapshot,\
 	io.openems.edge.meter.janitza.umg96rme;version=snapshot,\
 	io.openems.edge.meter.microcare.sdm630;version=snapshot,\
 	io.openems.edge.meter.pqplus.umd97;version=snapshot,\

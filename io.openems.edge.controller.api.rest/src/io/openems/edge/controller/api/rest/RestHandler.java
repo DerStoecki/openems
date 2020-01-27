@@ -228,6 +228,7 @@ public class RestHandler extends AbstractHandler {
 		// writable
 		j.addProperty("writable", //
 				channel instanceof WriteChannel<?> ? true : false //
+
 		);
 
 		return this.sendOkResponse(baseRequest, response, j);

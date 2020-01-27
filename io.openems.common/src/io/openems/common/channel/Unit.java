@@ -30,6 +30,19 @@ public enum Unit {
     ON_OFF(""),
 
     // ##########
+    // Perculation Q
+    // ##########
+    /**
+     *
+     * Unit of Perculation [m³/s]
+     * */
+    CUBICMETER_PER_SECOND("m³/s"),
+    /**
+     * Unit of Perculation[m³/h].
+     * */
+    CUBICMETER_PER_HOUR("m³/h"),
+
+    // ##########
     // Power
     // ##########
 
@@ -158,6 +171,10 @@ public enum Unit {
      */
     VOLT_AMPERE_HOURS("VAh"),
 
+    /**
+     * Unit of Consumption of GasHeater
+     * */
+    CUBIC_METER("m³"),
     // ##########
     // Frequency
     // ##########
@@ -237,6 +254,12 @@ public enum Unit {
     // ##########
     // Pressure
     // ##########
+    /**
+     * Unit of Pressure[Pa].
+     *
+     * */
+    PASCAL("Pa"),
+
     /**
      * Unit of Pressure [bar].
      */
