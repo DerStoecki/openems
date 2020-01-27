@@ -23,6 +23,7 @@
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
 	bnd.identity;id='io.openems.edge.biomassheater',\
+	bnd.identity;id='io.openems.edge.biomassheater.api’,\
 	bnd.identity;id='io.openems.edge.bridge.gpio',\
 	bnd.identity;id='io.openems.edge.bridge.i2c',\
 	bnd.identity;id='io.openems.edge.bridge.i2c.api',\
@@ -93,6 +94,7 @@
 	bnd.identity;id='io.openems.edge.goodwe.et',\
 	bnd.identity;id='io.openems.edge.gpio.device',\
 	bnd.identity;id='io.openems.edge.gpio.device.api',\
+	bnd.identity;id='io.openems.edge.heater.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\
@@ -158,6 +160,7 @@
 	io.openems.edge.application;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
 	io.openems.edge.biomassheater;version=snapshot,\
+	io.openems.edge.biomassheater.api;version=snapshot,\
 	io.openems.edge.bridge.gpio;version=snapshot,\
 	io.openems.edge.bridge.i2c;version=snapshot,\
 	io.openems.edge.bridge.mbus;version=snapshot,\
@@ -227,6 +230,7 @@
 	io.openems.edge.goodwe.et;version=snapshot,\
 	io.openems.edge.gpio.device;version=snapshot,\
 	io.openems.edge.gpio.device.api;version=snapshot,\
+	io.openems.edge.heater.api;version=snapshot,\
 	io.openems.edge.i2c.mcp.api;version=snapshot,\
 	io.openems.edge.io.kmtronic;version=snapshot,\
 	io.openems.edge.io.wago;version=snapshot,\

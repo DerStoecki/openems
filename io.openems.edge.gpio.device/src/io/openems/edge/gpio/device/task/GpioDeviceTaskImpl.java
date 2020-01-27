@@ -15,12 +15,6 @@ public class GpioDeviceTaskImpl extends AbstractGpioBridgeTask implements GpioBr
         this.gpioChannel = gpioChannel;
     }
 
-
-    @Override
-    public int getGpioPosition() {
-        return this.gpioPinPosition;
-    }
-
     @Override
     public int getRequest() {
 

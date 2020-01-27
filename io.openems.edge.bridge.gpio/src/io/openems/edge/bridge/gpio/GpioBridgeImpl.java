@@ -1,9 +1,5 @@
 package io.openems.edge.bridge.gpio;
 
-
-import com.pi4j.io.gpio.*;
-import com.pi4j.io.gpio.event.GpioPinListenerAnalog;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.wiringpi.Gpio;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.gpio.api.GpioBridge;
@@ -43,6 +39,8 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         if (config.enabled()) {
+            //needed to read Gpio Input data
+            Gpio.wiringPiSetupGpio();
             this.worker.activate(super.id());
         }
     }
@@ -54,16 +52,28 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.worker.deactivate();
     }
 
+
+    /**
+     * Adds a gpio task to the Map and enables input for gpio.
+     * @param id Id of the Gpio Device
+     * @param task the created GpioBridgeTask by the GpioDevice
+     *
+     *             Gpio.pinMode --> Declares that the allocated Pin is an Input
+     *
+     * */
     @Override
     public void addGpioTask(String id, GpioBridgeTask task) {
-
         this.tasks.put(id, task);
+        Gpio.pinMode(task.getRequest(), Gpio.INPUT);
+
     }
+
 
     @Override
     public void removeGpioTask(String id) {
         this.tasks.remove(id);
     }
+
 
     @Override
     public Map<String, GpioBridgeTask> getTasks() {
@@ -81,48 +91,31 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             super.deactivate();
         }
 
+
+        /**
+         * Get's the input data as 0 or 1 and sets the respond as true or false
+         * to the GpioDevice Channel.
+         * Note!
+         * Raspberry Pi from Consolinno : Logic is swapped due to relinking etc.
+         * that's why gpio >=1 --> no error/ offline
+         * gpio == 0 error/online
+         *
+         * */
         @Override
         protected void forever() throws Throwable {
-            GpioController gpio = GpioFactory.getInstance();
 
             tasks.values().forEach(task -> {
-                //
-                //  GpioPinDigitalInput input = gpio.provisionDigitalInputPin(getPinProvider(task.getRequest()));
-                //   input.addListener((GpioPinListenerDigital) event -> {
-                //       //consolinno intern it is swapped --> if true --> signal is there --> no signal send by device
-                //       if (event.getState().isHigh()) {
-                //           task.setResponse(false);
-                //       } else {
-                //           task.setResponse(true);
-                //       }
-                //   });
-                //simple solution maybe?
-                Gpio.pinMode(task.getRequest(), Gpio.INPUT);
-                if (Gpio.digitalRead(task.getRequest()) > 1) {
+
+                if (Gpio.digitalRead(task.getRequest()) >= 1) {
                     task.setResponse(false);
                 } else {
                     task.setResponse(true);
                 }
 
-
             });
         }
     }
 
-//    private Pin getPinProvider(int request) {
-//
-//        switch (request) {
-//            case 1:
-//                return RaspiPin.GPIO_04;
-//            case 2:
-//                return RaspiPin.GPIO_17;
-//            case 3:
-//                return RaspiPin.GPIO_27;
-//
-//
-//        }
-//        return null;
-//    }
 
 
     @Override
