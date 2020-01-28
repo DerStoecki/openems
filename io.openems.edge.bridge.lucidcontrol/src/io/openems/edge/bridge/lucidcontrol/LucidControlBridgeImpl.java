@@ -16,94 +16,170 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+
+import java.io.InputStreamReader;
+
 import java.util.Map;
+
 import java.util.concurrent.ConcurrentHashMap;
 
+
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "GpioBridge",
-		immediate = true,
-		configurationPolicy = ConfigurationPolicy.REQUIRE,
-		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
+@Component(name = "LucidControlBridge",
+        immediate = true,
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
 public class LucidControlBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler, LucidControlBridge {
 
 
-	//String Key : Module Id, String Value  = Address
-	private Map<String, String> addressMap = new ConcurrentHashMap<>();
-	//String Key: Module Id; Integer Value : Voltage of Module
-	private Map<String, Integer> voltageMap = new ConcurrentHashMap<>();
+    //String Key : Module Id, String Value  = Address
+    private Map<String, String> pathMap = new ConcurrentHashMap<>();
+    //String Key: Module Id; Integer Value : Voltage of Module
+    private Map<String, String> voltageMap = new ConcurrentHashMap<>();
 
-	private Map<String, LucidControlBridgeTask> tasks = new ConcurrentHashMap<>();
+    private Map<String, LucidControlBridgeTask> tasks = new ConcurrentHashMap<>();
 
-	private LucidControlWorker worker = new LucidControlWorker();
+    private LucidControlWorker worker = new LucidControlWorker();
 
-	public LucidControlBridgeImpl() {
-		super(OpenemsComponent.ChannelId.values());
-	}
+    private String lucidIoPath;
 
-
-	@Activate
-	public void activate(ComponentContext context, Config config) {
-		super.activate(context, config.id(), config.alias(), config.enabled());
-		if (config.enabled()) {
-			this.worker.activate(super.id());
-		}
-	}
+    public LucidControlBridgeImpl() {
+        super(OpenemsComponent.ChannelId.values());
+    }
 
 
-	@Deactivate
-	public void deactivate() {
-		super.deactivate();
-		this.worker.deactivate();
-	}
-
-	@Override
-	public void addAddress(String id, String path) {
-			this.addressMap.put(id, path);
-	}
-
-	@Override
-	public void addVoltage(String id, int voltage) {
-		this.voltageMap.put(id, voltage);
-	}
-
-	@Override
-	public void removeModule(String id) {
-
-		//this.tasks.forEach(
-				//TODO get each tasks module id and remove etc.
-		//		 );
-
-	}
-
-	@Override
-	public void removeTask(String id) {
-
-	}
-
-	private class LucidControlWorker extends AbstractCycleWorker {
-		@Override
-		public void activate(String id) {
-			super.activate(id);
-		}
-
-		@Override
-		public void deactivate() {
-			super.deactivate();
-		}
-
-		@Override
-		protected void forever() throws Throwable {
-			//TODO DO SOMETHING --> Read data from file of task and setResponse
-		}
+    @Activate
+    public void activate(ComponentContext context, Config config) {
+        super.activate(context, config.id(), config.alias(), config.enabled());
+        this.lucidIoPath = config.lucidIoPath();
+        if (config.enabled()) {
+            this.worker.activate(super.id());
+        }
+    }
 
 
-	}
+    @Deactivate
+    public void deactivate() {
+        super.deactivate();
+        this.worker.deactivate();
+    }
 
-	@Override
-	public void handleEvent(Event event) {
-		if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
-			this.worker.triggerNextRun();
-		}
-	}
+    @Override
+    public void addPath(String id, String path) {
+        this.pathMap.put(id, path);
+    }
+
+    @Override
+    public void addVoltage(String id, String voltage) {
+        this.voltageMap.put(id, voltage);
+    }
+
+    @Override
+    public void removeModule(String id) {
+        this.tasks.values().removeIf(task -> task.getModuleId().equals(id));
+        this.voltageMap.remove(id);
+        this.pathMap.remove(id);
+    }
+
+    @Override
+    public void removeTask(String id) {
+        this.tasks.remove(id);
+    }
+
+    @Override
+    public void addLucidControlTask(String id, LucidControlBridgeTask lucid) {
+        this.tasks.put(id, lucid);
+    }
+
+    @Override
+    public String getPath(String moduleId) {
+        return this.pathMap.get(moduleId);
+    }
+
+    @Override
+    public String getVoltage(String moduleId) {
+        return this.voltageMap.get(moduleId);
+    }
+
+    private class LucidControlWorker extends AbstractCycleWorker {
+        @Override
+        public void activate(String id) {
+            super.activate(id);
+        }
+
+        @Override
+        public void deactivate() {
+            super.deactivate();
+        }
+
+        @Override
+        protected void forever() throws Throwable {
+            tasks.values().forEach(task -> {
+
+                String[] command = {"bash", "-c", "sudo " + lucidIoPath + " -d" + task.getPath() + " -tV -c" + task.getPinPos() + " -r"};
+                try {
+                    String value = execCmd(command);
+                    if (value.contains(":")) {
+                        if (value.contains("\t") && value.contains("\n")) {
+                            value = value.replace("\t", "");
+                            value = value.replace("\n", "");
+                        }
+                        String[] parts = value.split(":");
+                        value = parts[1];
+                    }
+                    task.setResponse(Double.parseDouble(value));
+
+
+                    //task.setResponse(Double.parseDouble(execCmd(command)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+            });
+        }
+
+
+    }
+
+    private static String execCmd(String[] params) throws java.io.IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command(params);
+        try {
+
+            Process process = processBuilder.start();
+
+            StringBuilder output = new StringBuilder();
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+
+            String line;
+
+            while (true) {
+                line = reader.readLine();
+                if (line != null) {
+                    output.append(line).append("\n");
+                    break;
+                }
+            }
+            return output.toString();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+        return "Didn't Work";
+    }
+
+
+    @Override
+    public void handleEvent(Event event) {
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
+            this.worker.triggerNextRun();
+        }
+    }
 
 }

@@ -27,6 +27,7 @@
 	bnd.identity;id='io.openems.edge.bridge.gpio',\
 	bnd.identity;id='io.openems.edge.bridge.i2c',\
 	bnd.identity;id='io.openems.edge.bridge.i2c.api',\
+	bnd.identity;id='io.openems.edge.bridge.lucidcontrol',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
 	bnd.identity;id='io.openems.edge.bridge.onewire',\
@@ -98,6 +99,10 @@
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\
+	bnd.identity;id='io.openems.edge.lucidcontrol.device',\
+	bnd.identity;id='io.openems.edge.lucidcontrol.device.api',\
+	bnd.identity;id='io.openems.edge.lucidcontrol.module',\
+	bnd.identity;id='io.openems.edge.lucidcontrol.module.api',\
 	bnd.identity;id='io.openems.edge.kostal.piko',\
 	bnd.identity;id='io.openems.edge.meter.abb',\
 	bnd.identity;id='io.openems.edge.meter.artemes.am2',\
@@ -163,6 +168,7 @@
 	io.openems.edge.biomassheater.api;version=snapshot,\
 	io.openems.edge.bridge.gpio;version=snapshot,\
 	io.openems.edge.bridge.i2c;version=snapshot,\
+	io.openems.edge.bridge.lucidcontrol;version=snapshot,\
 	io.openems.edge.bridge.mbus;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
 	io.openems.edge.bridge.onewire;version=snapshot,\
@@ -231,6 +237,10 @@
 	io.openems.edge.gpio.device;version=snapshot,\
 	io.openems.edge.gpio.device.api;version=snapshot,\
 	io.openems.edge.heater.api;version=snapshot,\
+	io.openems.edge.lucidcontrol.device;version=snapshot,\
+	io.openems.edge.lucidcontrol.device.api;version=snapshot,\
+	io.openems.edge.lucidcontrol.module;version=snapshot,\
+	io.openems.edge.lucidcontrol.module.api;version=snapshot,\
 	io.openems.edge.i2c.mcp.api;version=snapshot,\
 	io.openems.edge.io.kmtronic;version=snapshot,\
 	io.openems.edge.io.wago;version=snapshot,\

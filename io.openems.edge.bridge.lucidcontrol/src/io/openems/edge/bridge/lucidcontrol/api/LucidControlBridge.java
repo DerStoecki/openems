@@ -1,17 +1,22 @@
 package io.openems.edge.bridge.lucidcontrol.api;
 
+import io.openems.edge.bridge.lucidcontrol.task.LucidControlBridgeTask;
+
 public interface LucidControlBridge {
 
-    void addAddress(String id, String path);
+    void addPath(String id, String path);
 
-    void addVoltage(String id, int voltage);
+    void addVoltage(String id, String voltage);
 
     void removeModule(String id);
 
     void removeTask(String id);
 
-    String getDeviceId();
+    void addLucidControlTask(String id, LucidControlBridgeTask lucid);
 
-    String getModuleId();
+    String getPath(String moduleId);
+
+    String getVoltage(String moduleId);
+
 
 }

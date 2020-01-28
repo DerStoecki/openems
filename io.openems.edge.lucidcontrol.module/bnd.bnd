@@ -4,12 +4,8 @@
 
 Bundle-Version:					1.0.0.${tstamp}
 Bundle-Description: \
-	The provider bundle for io.openems.edge.lucidcontrol.module. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.lucidcontrol.module/api.bnd}
+	This bundle implements the LucidControl module
 
-Export-Package:  \
-	io.openems.edge.lucidcontrol.module.api;-provide=true
 
 Private-Package:  \
 	io.openems.edge.lucidcontrol.module
@@ -17,7 +13,11 @@ Private-Package:  \
 -includeresource: {readme.md}
 
 -buildpath:  \
-	osgi.enroute.base.api;version=2.1
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.lucidcontrol.module.api;version=latest,\
+	io.openems.edge.bridge.lucidcontrol;version=latest
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \
