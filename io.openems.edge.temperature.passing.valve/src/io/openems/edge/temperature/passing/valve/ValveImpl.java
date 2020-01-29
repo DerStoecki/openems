@@ -24,10 +24,12 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     private double secondsPerPercentage;
     private boolean percentageWasSet = false;
     private long timeStampValve;
-    private static int EXTRA_BUFFER_TIME = 2 * 1000;
 
     @Reference
     ComponentManager cpm;
+
+  //  @Reference
+
 
     public ValveImpl() {
         super(OpenemsComponent.ChannelId.values(), PassingChannel.ChannelId.values());
@@ -72,7 +74,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         if (!this.getIsBusy().getNextValue().get()) {
             controlRelays(false, "Open");
             controlRelays(true, "Closed");
-            this.getIsBusy().setNextValue(true);
+//            this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
     }
@@ -85,7 +87,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         if (!this.getIsBusy().getNextValue().get()) {
             controlRelays(false, "Closed");
             controlRelays(true, "Open");
-            this.getIsBusy().setNextValue(true);
+//            this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
     }
@@ -118,9 +120,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
                     }
                     break;
             }
-            if (!activate) {
-                this.getIsBusy().setNextValue(false);
-            }
+//            if (!activate) {
+//                this.getIsBusy().setNextValue(false);
+//            }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
@@ -134,8 +136,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public boolean readyToChange() {
         if (percentageWasSet) {
             if ((System.currentTimeMillis() - timeStampValve)
-                    >= ((this.getTimeNeeded().getNextValue().get() * 1000) + EXTRA_BUFFER_TIME)) {
+                    >= ((this.getTimeNeeded().getNextValue().get() * 1000))) {
                 percentageWasSet = false;
+                this.getIsBusy().setNextValue(false);
                 return true;
             }
         }
@@ -185,6 +188,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
                 valveOpen();
             }
             percentageWasSet = true;
+            this.getIsBusy().setNextValue(true);
             return true;
         }
     }
