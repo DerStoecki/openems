@@ -5,8 +5,15 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.lucidcontrol.device.api.LucidControlDevice;
 import io.openems.edge.lucidcontrol.device.task.LucidControlReadTask;
+
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.metatype.annotations.Designate;
 
 
@@ -17,8 +24,6 @@ public class LucidControlDeviceImpl extends AbstractOpenemsComponent implements 
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     LucidControlBridge lucidControlBridge;
-
-    int pinPos;
 
 
     public LucidControlDeviceImpl() {
@@ -36,8 +41,6 @@ public class LucidControlDeviceImpl extends AbstractOpenemsComponent implements 
                         lucidControlBridge.getPath(config.moduleId()),
                         lucidControlBridge.getVoltage(config.moduleId()),config.pinPos(),
                         this.getPressure()));
-        this.pinPos = config.pinPos();
-
     }
 
     @Deactivate

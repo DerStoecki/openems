@@ -15,7 +15,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String id() default "LucidBridge";
 
     @AttributeDefinition(name = "Path to LucidIoControl", description = "Complete Path to LucidIoControl")
-    String lucidIoPath() default "/home/felix/bin/64Bit/LucidIoCtrl";
+    String lucidIoPath() default "/home/name/bin/64Bit/LucidIoCtrl";
 
     @AttributeDefinition(name = "Alias", description = "Human readable Name.")
     String alias() default "";

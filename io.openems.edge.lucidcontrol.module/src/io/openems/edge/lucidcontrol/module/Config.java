@@ -25,9 +25,7 @@ import org.osgi.service.metatype.annotations.Option;
             @Option(label = "10V", value = "10V"),
             @Option(label = "24V", value = "24V"),
             @Option(label = "+-5V", value = "+-5V"),
-            @Option(label = "+-10V", value = "+-10V"),
-            @Option(label = "ISO", value = "ISO")
-
+            @Option(label = "+-10V", value = "+-10V")
     })
             String voltage() default "5V";
 

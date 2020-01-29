@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
         name = "LucidControl Device",
-        description = "LucidControl Device, connected wit hthe LucidControl Module."
+        description = "LucidControl Device, connected with the LucidControl Module."
 )
 @interface Config {
 
@@ -22,7 +22,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Position", description = "Position of Device (0-3)")
     int pinPos() default 0;
+
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "LucidControlModule[{id}]";
+    String webconsole_configurationFactory_nameHint() default "LucidControlDevice[{id}]";
 }

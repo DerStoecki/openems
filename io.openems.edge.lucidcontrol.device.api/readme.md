@@ -1,6 +1,7 @@
 # io.openems.edge.lucidcontrol.device.api Provider
 
-${Bundle-Description}
+##Description
+The Nature for the LucidControlDevice, containing the Channel Pressure in bar.
 
 ## Example
 

@@ -1,8 +1,7 @@
-#
-# io.openems.edge.lucidcontrol.module.api PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
+Bundle-Name: OpenEMS Edge LucidControl Module Api
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
 	The provider bundle provides Api of the LucidControl Module, if needed
 
