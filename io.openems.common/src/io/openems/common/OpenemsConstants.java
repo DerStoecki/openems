@@ -33,7 +33,7 @@ public class OpenemsConstants {
 	 * The additional version string
 	 */
 	// public final static String VERSION_STRING = "";
-	public final static String VERSION_STRING = "dev.0.184+20200128T173420Z";
+	public final static String VERSION_STRING = "dev.0.185+20200129T101434Z";
 
 	/**
 	 * The complete version as a SemanticVersion.
