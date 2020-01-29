@@ -12,17 +12,21 @@ public class LucidControlReadTask extends AbstractLucidControlBridgeTask impleme
     private int pinPos;
     private double lastBarValue = 0;
     //will be changed, just a placeholder atm
-    private double maxBar = 10;
+    private double maxPressure;
+    //max Voltage is needed later depending on module and device; atm we just need 10V
     private int maxVoltage;
 
-    public LucidControlReadTask(String moduleId, String deviceId, String path, String voltage, int pinPos, Channel<Double> barChannel) {
+
+    public LucidControlReadTask(String moduleId, String deviceId, String path, String voltage, int pinPos,
+                                double maxPressure, Channel<Double> barChannel) {
         super(moduleId, deviceId);
 
         this.barChannel = barChannel;
         this.path = path;
         this.voltage = voltage;
         this.pinPos = pinPos;
-        allocateMaxVoltage();
+        //allocateMaxVoltage();
+        this.maxPressure = maxPressure;
     }
 
     private void allocateMaxVoltage() {
@@ -49,7 +53,7 @@ public class LucidControlReadTask extends AbstractLucidControlBridgeTask impleme
     @Override
     public void setResponse(double voltageRead) {
 
-        this.barChannel.setNextValue((voltageRead * maxBar) / maxVoltage);
+        this.barChannel.setNextValue((voltageRead * maxPressure) / 10);
 
     }
 
