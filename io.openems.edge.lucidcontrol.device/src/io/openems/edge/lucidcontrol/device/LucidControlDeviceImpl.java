@@ -39,7 +39,7 @@ public class LucidControlDeviceImpl extends AbstractOpenemsComponent implements 
         lucidControlBridge.addLucidControlTask(config.id(),
                 new LucidControlReadTask(config.moduleId(), config.id(),
                         lucidControlBridge.getPath(config.moduleId()),
-                        lucidControlBridge.getVoltage(config.moduleId()),config.pinPos(),
+                        lucidControlBridge.getVoltage(config.moduleId()),config.pinPos(), config.maxPressure(),
                         this.getPressure()));
     }
 

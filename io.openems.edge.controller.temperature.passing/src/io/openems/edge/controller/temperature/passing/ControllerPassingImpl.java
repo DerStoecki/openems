@@ -35,6 +35,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private Thermometer secondaryRewind;
     private Valve valve;
     private Pump pump;
+    private boolean pumpActive = false;
 
     private boolean isOpen = false;
     private boolean isClosed = true;
@@ -137,15 +138,17 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             return;
                         }
                     }
-                    if (primaryForwardReadyToHeat()) {
+                    if (primaryForwardReadyToHeat() && !pumpActive) {
 
                         timeSetHeating = false;
 
                         pump.changeByPercentage(100);
+                        pumpActive = true;
 
 
                         if (tooHot()) {
                             pump.changeByPercentage(-100);
+                            pumpActive = false;
                             this.noError().setNextValue(false);
                             throw new NoHeatNeededException("Heat is not needed;"
                                     + "Shutting down pump and Valves");
@@ -187,6 +190,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     if (!valve.getIsBusy().getNextValue().get()) {
                         if (valve.changeByPercentage(-100)) {
                             pump.changeByPercentage(-100);
+                            pumpActive = false;
                             isOpen = false;
                         }
                     } else if (valve.readyToChange()) {

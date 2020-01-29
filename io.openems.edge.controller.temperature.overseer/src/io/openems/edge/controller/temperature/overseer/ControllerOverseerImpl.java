@@ -90,8 +90,8 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
     private boolean heatingReached() {
         if (passing.getMinTemperature().getNextWriteValue().isPresent()) {
-            return this.temperatureSensor.getTemperature().value().get() + tolerance
-                    >= passing.getMinTemperature().getNextWriteValue().get();
+            return this.temperatureSensor.getTemperature().getNextValue().get() - tolerance
+                    > passing.getMinTemperature().getNextWriteValue().get();
         } else {
             //if next Write value is not present; return true; so everything will be shut down; just in case
             return true;
