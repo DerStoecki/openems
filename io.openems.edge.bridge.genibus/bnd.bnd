@@ -1,0 +1,44 @@
+#
+# io.openems.edge.bridge.genibus PROVIDER BUNDLE
+#
+
+Bundle-Version:					1.0.0.${tstamp}
+Bundle-Description: \
+	The provider bundle for io.openems.edge.bridge.genibus. \
+	\
+	${warning;Please update this Bundle-Description in io.openems.edge.bridge.genibus/api.bnd}
+
+Export-Package:  \
+	io.openems.edge.bridge.genibus.api,\
+	io.openems.edge.bridge.genibus.protocol,\
+
+
+Private-Package:  \
+	io.openems.edge.bridge.genibus
+
+-includeresource: {readme.md},\
+	@crc-1.0.2.jar,\
+	@jrxtx-1.0.1.jar
+
+Import-Package: \
+	!com.github.snksoft.crc.*,\
+	!org.openmuc.jrxtx.*,\
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
+	com.github.snksoft:crc,\
+    com.fazecast.jSerialComm;version=2.5.3,\
+    org.apache.felix.scr,\
+    org.osgi.compendium,\
+    osgi.annotation,\
+    org.openmuc.jrxtx;version=1.0,\
+
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+-runrequires: \
+	bnd.identity;version='2.5.3';id='com.fazecast.jSerialComm',\
+	bnd.identity;version='1.0.1';id='org.openmuc.jrxtx'
