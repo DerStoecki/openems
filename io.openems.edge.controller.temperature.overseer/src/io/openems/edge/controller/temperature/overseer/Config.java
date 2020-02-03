@@ -21,10 +21,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String allocated_Passing_Controller() default "ControllerPassing0";
 
     @AttributeDefinition(name = "Temperature", description = "The Temperature you want to reach (T in dC--> 1°C = 10).")
-    int min_Temperature() default 700;
+    int min_Temperature() default 750;
 
     @AttributeDefinition(name = "Temperature Range", description = "The tolerated Temperature Range in dC.")
-    int tolerated_Temperature_Range () default 50;
+    int tolerated_Temperature_Range () default 60;
 
     @AttributeDefinition(name = "Temperature Sensor", description = "The Temperature Sensor which is allocated with this Controller.")
             String allocated_Temperature_Sensor() default "TemperatureSensor4";

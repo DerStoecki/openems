@@ -157,8 +157,8 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
         }
         if (this.isPwm) {
             double currentPowerLevel;
-            this.getLastPowerLevel().setNextValue(this.getPowerLevel().getNextValue().get());
             currentPowerLevel = this.getPowerLevel().getNextValue().get();
+            this.getLastPowerLevel().setNextValue(currentPowerLevel);
             currentPowerLevel += percentage;
             currentPowerLevel = currentPowerLevel > 100 ? 100
                     : currentPowerLevel < 0 ? 0 : currentPowerLevel;
