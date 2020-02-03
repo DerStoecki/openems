@@ -4,7 +4,7 @@ import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
-import io.openems.edge.manager.valve.api.ManagerV;
+import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -21,11 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Consolinno Manager Valve",
+@Component(name = "ConsolinnoManagerValve",
 		immediate = true,
 		configurationPolicy = ConfigurationPolicy.REQUIRE,
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
-public class ManagerValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler, ManagerV {
+public class ManagerValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler, ManagerValve {
 
 	private Map<String, Valve> valves = new ConcurrentHashMap<>();
 	private ManagerValveWorker worker = new ManagerValveWorker();
@@ -71,6 +71,7 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
 
 		@Override
 		protected void forever() throws Throwable {
+			//just set off so position is fix
 			valves.values().forEach(valve -> {
 				if (valve.readyToChange()) {
 					valve.controlRelays(false, "Closed");

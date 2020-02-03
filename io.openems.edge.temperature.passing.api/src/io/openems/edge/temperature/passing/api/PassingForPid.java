@@ -5,4 +5,5 @@ public interface PassingForPid extends PassingChannel {
     boolean readyToChange();
 
     boolean changeByPercentage(double percentage);
+
 }

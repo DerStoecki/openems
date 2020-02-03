@@ -18,7 +18,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String alias() default "";
 
     @AttributeDefinition(name = "Allocated Passing Device", description = "Unique Name of the allocated Device.")
-    String allocated_Passing_Controller() default "Valve0";
+    String allocatedPassingDevice() default "Valve0";
 
     @AttributeDefinition(name = "Proportional Gain", description = "The proportional gain value for PID.")
     double proportionalGain () default 2.0;
@@ -30,10 +30,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     double derivativeGain () default 0.1;
 
     @AttributeDefinition(name = "Temperature", description = "The Temperature you want to reach (T in dC--> 1°C = 10).")
-    int setPoint_Temperature() default 700;
+    int setPoint_Temperature() default 750;
 
     @AttributeDefinition(name = "TemperatureSensor", description = "The Temperaturesensor allocated to this controller")
     String temperatureSensorId() default "TemperatureSensor4";
+
+    @AttributeDefinition(name = "Interval", description = "Interval the PID should be calculating a Value (t in seconds).")
+            double intervalTime() default 2.2d;
 
     boolean enabled() default true;
 

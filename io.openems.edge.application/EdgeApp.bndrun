@@ -60,6 +60,7 @@
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
+	bnd.identity;id='io.openems.edge.controller.pid.passing,\
 	bnd.identity;id='io.openems.edge.controller.pvinverter.fixpowerlimit',\
 	bnd.identity;id='io.openems.edge.controller.selltogridlimit',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.balancing',\
@@ -104,6 +105,8 @@
 	bnd.identity;id='io.openems.edge.lucidcontrol.module',\
 	bnd.identity;id='io.openems.edge.lucidcontrol.module.api',\
 	bnd.identity;id='io.openems.edge.kostal.piko',\
+	bnd.idnetity;id='io.openems.edge.manager.valve',\
+	bnd.idnetity;id='io.openems.edge.manager.valve.api',\
 	bnd.identity;id='io.openems.edge.meter.abb',\
 	bnd.identity;id='io.openems.edge.meter.artemes.am2',\
 	bnd.identity;id='io.openems.edge.meter.bcontrol.em300',\
@@ -201,6 +204,7 @@
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
+	io.openems.edge.controller.pid.passing;version=snapshot,\
 	io.openems.edge.controller.pvinverter.fixpowerlimit;version=snapshot,\
 	io.openems.edge.controller.selltogridlimit;version=snapshot,\
 	io.openems.edge.controller.symmetric.balancing;version=snapshot,\
@@ -245,6 +249,8 @@
 	io.openems.edge.io.kmtronic;version=snapshot,\
 	io.openems.edge.io.wago;version=snapshot,\
 	io.openems.edge.kostal.piko;version=snapshot,\
+	io.openems.edge.manager.valve;version=snapshot,\
+	io.openems.edge.manager.valve.api;version=snapshot,\
 	io.openems.edge.meter.abb;version=snapshot,\
 	io.openems.edge.meter.artemes.am2;version=snapshot,\
 	io.openems.edge.meter.bcontrol.em300;version=snapshot,\
