@@ -1,11 +1,15 @@
 package io.openems.edge.bridge.genibus.api;
 
-import io.openems.edge.bridge.genibus.protocol.Telegram;
+
 
 public interface GenibusTask {
-     Telegram getRequestTelegram();
-     Handler getHandler();
 
-     boolean getRequest();
-     void setResponse(Telegram telegram);
+    void setResponse(double data);
+
+    int getAddress();
+
+    boolean isWriteable();
+
+    int getHeader();
+
 }

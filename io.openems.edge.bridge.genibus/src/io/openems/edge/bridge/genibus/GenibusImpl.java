@@ -1,8 +1,14 @@
 package io.openems.edge.bridge.genibus;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import io.openems.edge.bridge.genibus.api.*;
+import io.openems.edge.bridge.genibus.protocol.ApplicationProgramDataUnit;
+import io.openems.edge.bridge.genibus.protocol.Telegram;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -16,11 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.worker.AbstractCycleWorker;
-import io.openems.edge.bridge.genibus.api.Bridge;
-import io.openems.edge.bridge.genibus.api.Device;
-import io.openems.edge.bridge.genibus.api.Handler;
-import io.openems.edge.bridge.genibus.api.GenibusTask;
-import io.openems.edge.bridge.genibus.api.TaskDataRequest;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -33,35 +34,45 @@ import io.openems.edge.common.event.EdgeEventConstants;
                 EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE, //
                 EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE //
         })
-public class GenibusImpl extends AbstractOpenemsComponent implements Bridge, OpenemsComponent, EventHandler {
+public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChannel, OpenemsComponent, EventHandler, Genibus {
 
-    private final Map<String, GenibusTask> tasks = new HashMap<>();
-    private final Map<Byte, Device> deviceList = new HashMap<>();
 
     private final Logger log = LoggerFactory.getLogger(GenibusImpl.class);
 
     private final Worker worker = new Worker();
 
-    Config config;
+    private String portName;
 
     private Handler handler = new Handler();
 
+    private Map<String, Integer> devices = new HashMap<>();
+    private Map<String, Map<Integer, List<GenibusTask>>> tasks = new ConcurrentHashMap<>();
+    private Map<Integer, Double> response = new ConcurrentHashMap<>();
+
+    //TODO response
+
     public GenibusImpl() {
         super(OpenemsComponent.ChannelId.values(),
-                Bridge.ChannelId.values());
+                GenibusChannel.ChannelId.values());
     }
 
     @Activate
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         this.worker.activate(config.id());
-
-        this.config = config;
-
         handler.start(config.portName());
-        log.debug("Component started");
+        //default
 
-        activateConnectionRequestTask();
+
+        applyDefaultApduHeaderOperation();
+    }
+
+    private void applyDefaultApduHeaderOperation() {
+        getApduCommands().setNextValue(2);
+        getApduConfigurationParameters().setNextValue(0);
+        getApduMeasuredData().setNextValue(0);
+        getApduReferenceValues().setNextValue(0);
+        getAsciiStrings().setNextValue(0);
     }
 
     @Deactivate
@@ -88,20 +99,77 @@ public class GenibusImpl extends AbstractOpenemsComponent implements Bridge, Ope
 
             if (!handler.checkStatus()) {
                 //try to reconnect
-                handler.start(config.portName());
+                handler.start(portName);
                 return;
             }
+            tasks.keySet().forEach(task -> {
+                Telegram telegram = new Telegram();
+                telegram.setStartDelimiterDataRequest();
 
-            for (GenibusTask task : tasks.values()) {
-                task.getRequest();
-            }
+                //get the Address via Id
+                telegram.setDestinationAddress(devices.get(task));
+                telegram.setSourceAddress(0x01);
+                ApplicationProgramDataUnit apduMeasuredData = new ApplicationProgramDataUnit();
+                apduMeasuredData.setHeadClassMeasuredData();
+                apduMeasuredData.setHeadOSACK(getApduMeasuredData().getNextValue().get());
+
+                ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
+                apduCommands.setHeadClassCommands();
+                apduCommands.setHeadOSACK(getApduCommands().getNextValue().get());
+
+                ApplicationProgramDataUnit apduConfigurationParameters = new ApplicationProgramDataUnit();
+                apduConfigurationParameters.setHeadClassConfigurationParameters();
+                apduConfigurationParameters.setHeadOSACK(getApduConfigurationParameters().getNextValue().get());
+
+                ApplicationProgramDataUnit apduReferenceValues = new ApplicationProgramDataUnit();
+                apduReferenceValues.setHeadClassReferenceValues();
+                apduReferenceValues.setHeadOSACK(getApduReferenceValues().getNextValue().get());
+
+                ApplicationProgramDataUnit apduAsciiStrings = new ApplicationProgramDataUnit();
+                apduAsciiStrings.setHeadClassASCIIStrings();
+                apduAsciiStrings.setHeadOSACK(getAsciiStrings().getNextValue().get());
+
+                tasks.values().forEach(value -> value.keySet().forEach(key -> {
+                    switch (key) {
+                        case 2:
+                            addData(apduMeasuredData, value.get(key), telegram);
+                            break;
+                        case 3:
+                            addData(apduCommands, value.get(key), telegram);
+                            break;
+                        case 4:
+                            addData(apduConfigurationParameters, value.get(key), telegram);
+                            break;
+                        case 5:
+                            addData(apduReferenceValues, value.get(key), telegram);
+                            break;
+                        case 7:
+                            addData(apduAsciiStrings, value.get(key), telegram);
+                            break;
+                    }
+
+                }));
+
+
+
+            });
 
         }
     }
 
-    public Map<Byte, Device> getDeviceList() {
-        return deviceList;
+    private void addData(ApplicationProgramDataUnit apdu, List<GenibusTask> genibusTasks, Telegram telegram) {
+        genibusTasks.forEach(value -> {
+            apdu.putDataField(value.getAddress());
+        });
+        telegram.getProtocolDataUnit().putAPDU(apdu);
+
+        handleTelegram(telegram, apdu.getHead());
     }
+
+    private void handleTelegram(Telegram telegram, short head) {
+
+    }
+
 
     @Override
     public void handleEvent(Event event) {
@@ -112,26 +180,49 @@ public class GenibusImpl extends AbstractOpenemsComponent implements Bridge, Ope
         }
     }
 
-    public void addTask(String sourceId, GenibusTask task) {
-        this.tasks.put(sourceId, task);
+    public void addTask(String deviceId, int listPosition, GenibusTask task) {
+        if (this.tasks.containsKey(deviceId)) {
+            this.tasks.values().forEach(headerTaskMap -> {
+                if (headerTaskMap.containsKey(task.getHeader())) {
+                    headerTaskMap.get(task.getHeader()).add(task);
+                } else {
+                    List<GenibusTask> genibusList = new ArrayList<>();
+                    genibusList.add(task);
+                    headerTaskMap.put(task.getHeader(), genibusList);
+                }
+
+            });
+        } else {
+            List<GenibusTask> list = new ArrayList<>();
+            list.add(listPosition, task);
+            Map<Integer, List<GenibusTask>> map = new HashMap<>();
+            map.put(task.getHeader(), list);
+            this.tasks.put(deviceId, map);
+        }
     }
 
     public void removeTask(String sourceId) {
         this.tasks.remove(sourceId);
+        this.devices.remove(sourceId);
     }
 
-    protected void activateConnectionRequestTask() {
-        // Live / repeated
-//    	tasks.put("ConnectionRequestTask", new TaskConnectionRequest(handler, deviceList));
-//    	tasks.put("DataRequest", new TaskDataRequest(handler, new Device(0x20)));
-        // Test
-//		log.info("Send Connection Request at start for device list");
-//		Task connectionRequestTask = new TaskConnectionRequest(handler, deviceList);
-//		connectionRequestTask.getRequest();
-        GenibusTask dataTask = new TaskDataRequest(handler, new Device(0x20));
-        dataTask.getRequest();
-
+    @Override
+    public void addDevice(String id, int address) {
+        this.devices.put(id, address);
     }
+
+    //    protected void activateConnectionRequestTask() {
+    //        // Live / repeated
+    //        //    	tasks.put("ConnectionRequestTask", new TaskConnectionRequest(handler, deviceList));
+    //        //    	tasks.put("DataRequest", new TaskDataRequest(handler, new Device(0x20)));
+    //        // Test
+    //        //		log.info("Send Connection Request at start for device list");
+    //        //		Task connectionRequestTask = new TaskConnectionRequest(handler, deviceList);
+    //        //		connectionRequestTask.getRequest();
+    //        GenibusTask dataTask = new TaskDataRequest(handler, new Device(0x20));
+    //        dataTask.getRequest();
+    //
+    //    }
 
 
 }

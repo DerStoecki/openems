@@ -9,10 +9,7 @@ import io.openems.edge.heatpump.device.api.HeatPump;
 import io.openems.edge.heatpump.task.HeatPumpTask;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 
 
@@ -20,8 +17,16 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "io.openems.edge.heatpump")
 public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsComponent, HeatPump {
 
+
+    @Reference(policy = ReferencePolicy.STATIC,
+            policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    Genibus genibus;
+
     @Reference
     ComponentManager cpm;
+
+    private HeatPumpType heatPumpType;
+
 
     public HeatPumpImpl() {
         super(OpenemsComponent.ChannelId.values(), HeatPump.ChannelId.values());
@@ -31,20 +36,51 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
     @Activate
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
+
+        allocateHeatPumpType(config.pumpType());
+        genibus.addDevice(super.id(), config.heatPumpAddress());
         try {
-            if (cpm.getComponent(config.genibusId()) instanceof Genibus) {
-                Genibus genibus = cpm.getComponent(config.genibusId());
-                genibus.addTask(super.id(), new HeatPumpTask());
-            } else {
-                throw new ConfigurationException("Genibus with id" + config.genibusId() + "not a Genibus", "GenibusId was wrong");
-            }
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+            this.getPressure().setNextWriteValue(config.pumpStartPressure());
+            this.getMaxPressure().setNextWriteValue(config.maxPressure());
+            this.getMinPressure().setNextWriteValue(config.minPressure());
+            //to read from rest client etc
+            //this.getPressure().setNextValue(config.pumpStartPressure());
+            //this.getMaxPressure().setNextValue(config.maxPressure());
+            //this.getMinPressure().setNextValue(config.minPressure());
+        } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
+        createTasks();
+
+
+    }
+
+    private void allocateHeatPumpType(String pumpType) {
+        switch (pumpType) {
+            case "MAGNA3":
+                this.heatPumpType = HeatPumpType.MAGNA_3;
+                break;
+        }
+    }
+
+    private void createTasks() {
+        //for unique id of stuff
+        int idCounter = 0;
+
+        //TODO For each Channel create task and add to Bridge.
+
+        //TODO Address from PumpType ---> e.g. MAGNA_3 ;
+        //TODO Header number from pumpType --> MAGNA_3;
+        this.genibus.addTask(super.id(), idCounter, new HeatPumpTask(0x20, 2, getPressure(), true));
+        //idCounter++;
+
+
     }
 
     @Deactivate
     public void deactivate() {
+        genibus.removeTask(super.id());
+        super.deactivate();
     }
 
 }

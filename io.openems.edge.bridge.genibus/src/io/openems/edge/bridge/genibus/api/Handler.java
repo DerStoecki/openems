@@ -21,6 +21,7 @@ public class Handler {
     protected String portName;
     protected long timeout;
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    Telegram telegram;
 
     OutputStream os;
     InputStream is;
@@ -128,33 +129,32 @@ public class Handler {
      * @return .
      */
 
-    public boolean writeTelegram(long timeout, GenibusTask task) {
+    public Telegram writeTelegram(long timeout, Telegram task) {
 
         /*
          * Send data and save return handling task
          */
         try {
             // Send Reqeust
-            Telegram requestTelegram = task.getRequestTelegram();
-            byte[] bytes = requestTelegram.getBytes();
+
+            byte[] bytes = task.getBytes();
             os.write(bytes);
             // Debug output data hex values
             System.out.println("Bytes send: " + bytesToHex(bytes));
 
             // Save return function/Task
-            handleResponse(task);
+            return handleResponse(task);
 
-            return true;
         } catch (Exception e) {
             System.out.println("Error while sending data: " + e.getMessage());
         }
-        return false;
+        return null;
     }
 
-    public void handleResponse(GenibusTask task) {
+    private Telegram handleResponse(Telegram task) {
         try {
             long startTime = System.currentTimeMillis();
-            while (false || (System.currentTimeMillis() - startTime) < 500) {
+            while ((System.currentTimeMillis() - startTime) < 500) {
                 byte[] readBuffer = new byte[1024];
                 int numRead = is.available();
                 if (numRead <= 0) {
@@ -170,14 +170,17 @@ public class Handler {
                 if (packageOK(receivedData)) {
                     System.out.println("CRC Check ok.");
                     // if all done create telegram
-                    Telegram telegram = Telegram.parseEventStream(receivedData);
-                    task.setResponse(telegram);
+                   telegram = Telegram.parseEventStream(receivedData);
+                    //task.setResponse(telegram);
+
                 }
                 break;
             }
+            return telegram;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private static String bytesToHex(byte[] hashInBytes) {

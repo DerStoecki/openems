@@ -17,11 +17,20 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
     boolean enabled() default true;
 
-    @AttributeDefinition(name = "GenibusId", description = "Unique Id of the Genibus.")
-    String genibusId() default "Genibus0";
+    @AttributeDefinition(name = "PumpAddress", description = "Address of the Pump.")
+    int heatPumpAddress() default 0x20;
 
     @AttributeDefinition(name = "PumpType", description = "Denotation of the Pump.")
     String pumpType() default "Magna3";
+
+    @AttributeDefinition(name = "Initial Pressure", description = "Initial Pressure value of the pump.")
+    double pumpStartPressure() default 5;
+
+    @AttributeDefinition(name = "min Pressure", description = "Initial min Pressure allowed for the pump.")
+    double minPressure() default 1;
+
+    @AttributeDefinition(name = "max Pressure", description = "Initial max Pressure allowed for the pump.")
+    double maxPressure() default 6.5;
 
     String webconsole_configurationFactory_nameHint()default"HeatPump [{id}]";
 }

@@ -9,21 +9,16 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @interface Config {
 
     @AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component")
-    String id()
+    String id() default "genibus0";
 
-            default "genibus0";
+    @AttributeDefinition(name = "Alias", description = "Human-readable name of this Component; defaults to Component-ID")
+    String alias() default "";
 
-    @AttributeDefinition(name = "Alias", description = "Human-readable name of this Component; defaults to Component-ID") String alias()
+    @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
+    boolean enabled() default true;
 
-            default "";
+    @AttributeDefinition(name = "Port-Name", description = "The name of the serial port - e.g. '/dev/ttyUSB0'")
+    String portName() default "/dev/ttyUSB0";
 
-    @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?") boolean enabled()
-
-            default true;
-
-    @AttributeDefinition(name = "Port-Name", description = "The name of the serial port - e.g. '/dev/ttyUSB0'") String portName()
-
-            default "/dev/ttyUSB0";
-
-    String webconsole_configurationFactory_nameHint()default"Bridge GeniBus [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Bridge GeniBus [{id}]";
 }

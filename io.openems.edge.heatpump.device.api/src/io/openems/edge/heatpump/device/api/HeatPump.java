@@ -12,7 +12,11 @@ public interface HeatPump extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR));
+        PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
+
+        MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
+
+        MIN_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR));
 
 
         private final Doc doc;
@@ -32,6 +36,13 @@ public interface HeatPump extends OpenemsComponent {
         return this.channel(ChannelId.PRESSURE);
     }
 
+    default WriteChannel<Double> getMaxPressure() {
+        return this.channel(ChannelId.MAX_PRESSURE);
+    }
+
+    default WriteChannel<Double> getMinPressure() {
+        return this.channel(ChannelId.MIN_PRESSURE);
+    }
 }
 
 
