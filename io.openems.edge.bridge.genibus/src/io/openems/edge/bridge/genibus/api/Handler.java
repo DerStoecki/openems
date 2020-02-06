@@ -21,7 +21,6 @@ public class Handler {
     protected String portName;
     protected long timeout;
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    Telegram telegram;
 
     OutputStream os;
     InputStream is;
@@ -161,7 +160,6 @@ public class Handler {
                     continue;
                 }
                 is.read(readBuffer, 0, numRead);
-
                 ByteArrayOutputStream bytesRelevant = new ByteArrayOutputStream();
                 bytesRelevant.write(readBuffer, 0, numRead);
                 byte[] receivedData = bytesRelevant.toByteArray();
@@ -170,13 +168,13 @@ public class Handler {
                 if (packageOK(receivedData)) {
                     System.out.println("CRC Check ok.");
                     // if all done create telegram
-                   telegram = Telegram.parseEventStream(receivedData);
+                    task = Telegram.parseEventStream(receivedData);
                     //task.setResponse(telegram);
 
                 }
                 break;
             }
-            return telegram;
+            return task;
         } catch (Exception e) {
             e.printStackTrace();
         }

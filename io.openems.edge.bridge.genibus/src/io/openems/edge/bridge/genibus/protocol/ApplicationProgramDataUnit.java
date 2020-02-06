@@ -11,7 +11,7 @@ public class ApplicationProgramDataUnit {
     // 0...63 Byte
     ByteArrayOutputStream apduDataFields = new ByteArrayOutputStream();
 
-    public short getHead() {
+    public int getHead() {
         return apduHead;
     }
 

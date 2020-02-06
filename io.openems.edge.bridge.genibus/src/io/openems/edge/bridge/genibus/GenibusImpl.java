@@ -1,10 +1,8 @@
 package io.openems.edge.bridge.genibus;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openems.edge.bridge.genibus.api.*;
 import io.openems.edge.bridge.genibus.protocol.ApplicationProgramDataUnit;
@@ -48,6 +46,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     private Map<String, Integer> devices = new HashMap<>();
     private Map<String, Map<Integer, List<GenibusTask>>> tasks = new ConcurrentHashMap<>();
     private Map<Integer, Double> response = new ConcurrentHashMap<>();
+    private int lastInformationPoint = 0;
 
     //TODO response
 
@@ -102,24 +101,42 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 handler.start(portName);
                 return;
             }
-            tasks.keySet().forEach(task -> {
+            tasks.keySet().forEach(pumpDevice -> {
                 Telegram telegram = new Telegram();
                 telegram.setStartDelimiterDataRequest();
 
                 //get the Address via Id
-                telegram.setDestinationAddress(devices.get(task));
+                telegram.setDestinationAddress(devices.get(pumpDevice));
                 telegram.setSourceAddress(0x01);
+
+                ApplicationProgramDataUnit apduMeasuredDataInfo = new ApplicationProgramDataUnit();
+                apduMeasuredDataInfo.setHeadClassMeasuredData();
+                apduMeasuredDataInfo.setHeadOSACK(3);
+
                 ApplicationProgramDataUnit apduMeasuredData = new ApplicationProgramDataUnit();
                 apduMeasuredData.setHeadClassMeasuredData();
                 apduMeasuredData.setHeadOSACK(getApduMeasuredData().getNextValue().get());
 
+
+                ApplicationProgramDataUnit apduCommandsInfo = new ApplicationProgramDataUnit();
+                apduCommandsInfo.setHeadClassCommands();
+                apduCommandsInfo.setHeadOSACK(3);
+
                 ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
                 apduCommands.setHeadClassCommands();
-                apduCommands.setHeadOSACK(getApduCommands().getNextValue().get());
+                apduCommands.setHeadOSACK(getApduMeasuredData().getNextValue().get());
+
+                ApplicationProgramDataUnit apduConfigurationParametersInfo = new ApplicationProgramDataUnit();
+                apduConfigurationParametersInfo.setHeadClassConfigurationParameters();
+                apduConfigurationParametersInfo.setHeadOSACK(3);
 
                 ApplicationProgramDataUnit apduConfigurationParameters = new ApplicationProgramDataUnit();
                 apduConfigurationParameters.setHeadClassConfigurationParameters();
                 apduConfigurationParameters.setHeadOSACK(getApduConfigurationParameters().getNextValue().get());
+
+                ApplicationProgramDataUnit apduReferenceValuesInfo = new ApplicationProgramDataUnit();
+                apduReferenceValuesInfo.setHeadClassReferenceValues();
+                apduReferenceValuesInfo.setHeadOSACK(3);
 
                 ApplicationProgramDataUnit apduReferenceValues = new ApplicationProgramDataUnit();
                 apduReferenceValues.setHeadClassReferenceValues();
@@ -129,18 +146,23 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 apduAsciiStrings.setHeadClassASCIIStrings();
                 apduAsciiStrings.setHeadOSACK(getAsciiStrings().getNextValue().get());
 
+
                 tasks.values().forEach(value -> value.keySet().forEach(key -> {
                     switch (key) {
                         case 2:
+                            addData(apduMeasuredDataInfo, value.get(key), telegram);
                             addData(apduMeasuredData, value.get(key), telegram);
                             break;
                         case 3:
+                            addData(apduCommandsInfo, value.get(key), telegram);
                             addData(apduCommands, value.get(key), telegram);
                             break;
                         case 4:
+                            addData(apduConfigurationParametersInfo, value.get(key), telegram);
                             addData(apduConfigurationParameters, value.get(key), telegram);
                             break;
                         case 5:
+                            addData(apduReferenceValuesInfo, value.get(key), telegram);
                             addData(apduReferenceValues, value.get(key), telegram);
                             break;
                         case 7:
@@ -149,8 +171,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                     }
 
                 }));
-
-
+                handleTelegram(pumpDevice, telegram);
+                lastInformationPoint = 0;
 
             });
 
@@ -158,16 +180,136 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     }
 
     private void addData(ApplicationProgramDataUnit apdu, List<GenibusTask> genibusTasks, Telegram telegram) {
+        /*
+         * TODO if apdu AOSACK is 2 --> getRequest return byte if return is null --> no add --> was added False
+         *  TODO --> bool wasAdded
+         * */
         genibusTasks.forEach(value -> {
             apdu.putDataField(value.getAddress());
         });
         telegram.getProtocolDataUnit().putAPDU(apdu);
 
-        handleTelegram(telegram, apdu.getHead());
     }
 
-    private void handleTelegram(Telegram telegram, short head) {
+    private void handleTelegram(String pumpDevice, Telegram telegram) {
 
+        List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
+        List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(200, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
+        AtomicInteger listCounter = new AtomicInteger();
+        responseApdu.forEach(apdu -> {
+            byte[] data = apdu.getBytes();
+            //for the GenibusTask list --> index
+            int taskCounter = 0;
+            // always on [0]
+            int headClass = data[0];
+            // on correct position get the header.
+            int osAck = requestApdu.get(listCounter.get()).getHeadOSACKShifted();
+            for (int byteCounter = 2; byteCounter < data.length; ) {
+                /* TODO responseApdu.get(listCounter).getHeadOSACKShifted();
+                 */
+                if (osAck == 3) {
+
+
+                    //vi bit 4
+                    int vi = (data[byteCounter] & 0x10);
+                    //bo bit 5
+                    int bo = (data[byteCounter] & 0x20);
+                    int sif = (data[byteCounter] & 0x03);
+                    //only 1 byte of data
+                    if (sif == 0 || sif == 1) {
+                        tasks.get(pumpDevice).get(headClass).get(taskCounter).setOneByteInformation(vi, bo, sif);
+
+                        //only 4byte data
+                    } else {
+                        tasks.get(pumpDevice).get(headClass).get(taskCounter).setFourByteInformation(vi, bo, sif,
+                                data[byteCounter + 1], data[byteCounter + 2], data[byteCounter + 3]);
+                        //bc of 4 byte data additional 3 byte incr.
+                        byteCounter += 3;
+
+                    }
+                } else if (osAck == 2) {
+                    //check if info data was available to calculate the response stuff
+                    if (tasks.get(pumpDevice).get(headClass).get(taskCounter).wasAdded()) {
+                        tasks.get(pumpDevice).get(headClass).get(taskCounter).setResponse(data[byteCounter]);
+                    }
+
+                } else {
+                    //TODO Check if its only 1 byte --> later
+                    tasks.get(pumpDevice).get(headClass).get(taskCounter).setResponse(data[byteCounter]);
+                }
+                taskCounter++;
+                byteCounter++;
+            }
+            listCounter.getAndIncrement();
+        });
+
+
+//        List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
+//        List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(200, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
+//
+//        requestApdu.forEach(apdu -> {
+//            byte[] data = apdu.getBytes();
+//            byte[] responseData = responseApdu.get(0).getBytes();
+//            switch (data[0]) {
+//
+//
+//                case 2: //Measured Data
+//                    if (data[1] == 3) {
+//                        handleInformation(data, responseData, pumpDevice, 2);
+//
+//                    } else {
+//                        data = apdu.getBytes();
+//                    }
+//                case 3: //Commands
+//                    if (data[1] == 3) {
+//                        handleInformation(data, responseData, pumpDevice, 3);
+//                    }
+//                case 4: //Config param
+//                case 5: //ReferenceValue
+//                case 7: // ascii
+//
+//
+//            }
+//
+//        });
+
+
+    }
+
+    private void handleInformation(byte[] data, byte[] responseApdu, String pumpDevice, int header) {
+        //shift 6 to get only 4 possible actions
+        int responseApduCounter = 0;
+        byte[] responseData;
+        int meaning;
+        List<GenibusTask> informationHandleList = this.tasks.get(pumpDevice).get(header);
+        for (int regularCounter = 0; regularCounter < data.length; regularCounter++) {
+            //TODO shift operation.
+            meaning = responseApdu[responseApduCounter];
+            switch (meaning) {
+
+                case 0:
+                case 1:
+                    responseData = new byte[1];
+                    responseData[0] = responseApdu[++responseApduCounter];
+                    informationHandleList.get(regularCounter).setInformationData(responseData);
+                    responseApduCounter++;
+                    break;
+
+
+                case 2:
+                    responseData = new byte[4];
+                    for (int responsePosition = 0; responsePosition < responseData.length; responsePosition++) {
+                        responseData[responsePosition] = responseApdu[++responseApduCounter];
+                    }
+                    break;
+
+                default:
+                case 3:
+                    responseData = new byte[4];
+                    break;
+            }
+            informationHandleList.get(regularCounter).setInformationData(responseData, meaning);
+        }
     }
 
 
