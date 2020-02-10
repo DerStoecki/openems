@@ -1,34 +1,33 @@
 package io.openems.edge.heatpump.task;
 
-import io.openems.common.exceptions.OpenemsError;
-import io.openems.common.types.OpenemsType;
 import io.openems.edge.bridge.genibus.api.GenibusTask;
 import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.WriteChannel;
 
-public class HeatPumpTask implements GenibusTask {
+
+public abstract class HeatPumpTask implements GenibusTask {
 
     private int address;
     private Channel<?> channel;
-    private boolean isWriteable;
     private int headerNumber;
+    //Scale information Factor
+    int sif;
+    //Value interpretation
+    //
+    boolean vi;
+    //Byte Order 0 = HighOrder 1 = Low Order
+    //
+    boolean bo;
+    int unitIndex;
+    int scaleFactorHighOrder;
+    int scaleFactorLowOrder;
+    int zeroScaleFactor;
+    int rangeScaleFactor;
+    boolean informationAvailable;
+    boolean wasAdded;
 
-    public HeatPumpTask(int address, int headerNumber,WriteChannel<?> channel, boolean isWriteable) {
+    public HeatPumpTask(int address, int headerNumber) {
         this.address = address;
-        this.isWriteable = isWriteable;
-        this.channel = channel;
         this.headerNumber = headerNumber;
-    }
-
-    @Override
-    public void setResponse(double data) {
-        //        if (isWriteable) {
-        //            try {
-        //            } catch (OpenemsError.OpenemsNamedException e) {
-        //                e.printStackTrace();
-        //            }
-        //        }
-        this.channel.setNextValue(data);
 
     }
 
@@ -38,14 +37,39 @@ public class HeatPumpTask implements GenibusTask {
     }
 
     @Override
-    public boolean isWriteable() {
-        return isWriteable;
-    }
-
-    @Override
     public int getHeader() {
         return headerNumber;
     }
 
+    @Override
+    public void setOneByteInformation(int vi, int bo, int sif) {
+        this.vi = vi != 0;
+        this.bo = bo != 0;
+        this.sif = sif;
+        this.informationAvailable = true;
+    }
+
+    @Override
+    public void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow) {
+        setOneByteInformation(vi, bo, sif);
+        this.unitIndex = unitIndex;
+        if (sif == 3) {
+            this.scaleFactorHighOrder = scaleFactorZeroOrHigh;
+            this.scaleFactorLowOrder = scaleFactorRangeOrLow;
+        } else {
+            this.zeroScaleFactor = scaleFactorZeroOrHigh;
+            this.rangeScaleFactor = scaleFactorRangeOrLow;
+        }
+    }
+
+    @Override
+    public boolean wasAdded() {
+        return wasAdded;
+    }
+
+    @Override
+    public boolean InformationDataAvailable() {
+        return informationAvailable;
+    }
 
 }

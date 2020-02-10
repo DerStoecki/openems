@@ -6,8 +6,8 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.heatpump.device.api.HeatPump;
-import io.openems.edge.heatpump.task.HeatPumpTask;
-import org.osgi.service.cm.ConfigurationException;
+import io.openems.edge.heatpump.task.HeatPumpReadTask;
+import io.openems.edge.heatpump.task.HeatPumpWriteTask;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
@@ -37,20 +37,16 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        allocateHeatPumpType(config.pumpType());
         genibus.addDevice(super.id(), config.heatPumpAddress());
         try {
-            this.getPressure().setNextWriteValue(config.pumpStartPressure());
-            this.getMaxPressure().setNextWriteValue(config.maxPressure());
-            this.getMinPressure().setNextWriteValue(config.minPressure());
-            //to read from rest client etc
-            //this.getPressure().setNextValue(config.pumpStartPressure());
-            //this.getMaxPressure().setNextValue(config.maxPressure());
-            //this.getMinPressure().setNextValue(config.minPressure());
+            this.setPressureDelta().setNextWriteValue(config.pumpStartPressure());
+            this.setMaxPressure().setNextWriteValue(config.maxPressure());
+            this.setMinPressure().setNextWriteValue(config.minPressure());
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
-        createTasks();
+        allocateHeatPumpType(config.pumpType());
+
 
 
     }
@@ -59,27 +55,77 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
         switch (pumpType) {
             case "MAGNA3":
                 this.heatPumpType = HeatPumpType.MAGNA_3;
+                createMagna3Tasks();
                 break;
         }
     }
 
-    private void createTasks() {
-        //for unique id of stuff
-        int idCounter = 0;
+    private void createMagna3Tasks() {
+        //foreach Channel create Task
+        //read Task
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gethDiff(),
+                this.heatPumpType.gethDiffHeadClass(), getDiffPressureHead()));
 
-        //TODO For each Channel create task and add to Bridge.
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gettE(),
+                this.heatPumpType.gettEheadClass(), getElectronicsTemperature()));
 
-        //TODO Address from PumpType ---> e.g. MAGNA_3 ;
-        //TODO Header number from pumpType --> MAGNA_3;
-        this.genibus.addTask(super.id(), idCounter, new HeatPumpTask(0x20, 2, getPressure(), true));
-        //idCounter++;
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getiMo(),
+                this.heatPumpType.getImoHeadClass(), getCurrentMotor()));
 
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getPlo(),
+                this.heatPumpType.getPloHeadClass(), getPowerConsumption()));
 
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getH(),
+                this.heatPumpType.gethHeadClass(), getCurrentPressure()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getQ(),
+                this.heatPumpType.getqHeadClass(), getCurrentPumpFlow()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gettW(),
+                this.heatPumpType.gettWHeadClass(), getPumpedWaterMediumTemperature()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getControlMode(),
+                this.heatPumpType.getControlModeHeadClass(), getActualControlMode()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getAlarmCodePump(),
+                this.heatPumpType.getAlarmCodePumpHeadClass(), getAlarmCodePump()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnCode(),
+                this.heatPumpType.getWarnCodeHeadClass(), getWarnCode()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getAlarmCode(),
+                this.heatPumpType.getAlarmCodeHeadClass(), getAlarmCode()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits1(),
+                this.heatPumpType.getWarnBits1HeadClass(), getWarnBits_1()));
+
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits2(),
+                this.heatPumpType.getWarnBits2HeadClass(), getWarnBits_2()));
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits3(),
+                this.heatPumpType.getWarnBits3HeadClass(), getWarnBits_3()));
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits4(),
+                this.heatPumpType.getWarnBits4HeadClass(), getWarnBits_4()));
+
+        //write Task
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxHi(),
+                this.heatPumpType.getqMaxHiHeadClass(), setPumpFlowHi()));
+
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxLo(),
+                this.heatPumpType.getqMaxLowClass(), setPumpFlowLo()));
+
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getDeltaH(),
+                this.heatPumpType.getDeltaHheadClass(), setPressureDelta()));
+
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxHi(),
+                this.heatPumpType.gethMaxHiHeadClass(), setMaxPressure()));
+
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxLo(),
+                this.heatPumpType.gethMaxLoHeadClass(), setMinPressure()));
     }
 
     @Deactivate
     public void deactivate() {
-        genibus.removeTask(super.id());
+        genibus.removeDevice(super.id());
         super.deactivate();
     }
 

@@ -42,13 +42,12 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     private String portName;
 
     private Handler handler = new Handler();
-
+    //PumpDevice and their Address
     private Map<String, Integer> devices = new HashMap<>();
+    //PumpDevice and their Genibustasks
     private Map<String, Map<Integer, List<GenibusTask>>> tasks = new ConcurrentHashMap<>();
-    private Map<Integer, Double> response = new ConcurrentHashMap<>();
-    private int lastInformationPoint = 0;
 
-    //TODO response
+
 
     public GenibusImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -93,6 +92,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             super.deactivate();
         }
 
+
+        //foreach pumpDevice --> For each Data class --> Add to Request Protocol for Apdu --> set Response
         @Override
         protected void forever() {
 
@@ -172,8 +173,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
                 }));
                 handleTelegram(pumpDevice, telegram);
-                lastInformationPoint = 0;
-
             });
 
         }
@@ -184,17 +183,30 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
          * TODO if apdu AOSACK is 2 --> getRequest return byte if return is null --> no add --> was added False
          *  TODO --> bool wasAdded
          * */
+
+
         genibusTasks.forEach(value -> {
-            apdu.putDataField(value.getAddress());
+            //InformationAvailable --> Information data is available so the task can calc the byte data as a response
+            if (apdu.getHeadOSACKShifted() == 2 && value.InformationDataAvailable()) {
+                byte valueRequest = value.getRequest();
+                if (valueRequest >= 0) {
+                    apdu.putDataField(value.getAddress());
+                    apdu.putDataField(valueRequest);
+                }
+            } else if (apdu.getHeadOSACKShifted() == 3 && !value.InformationDataAvailable()) {
+                apdu.putDataField(value.getAddress());
+            } else {
+                apdu.putDataField(value.getAddress());
+            }
         });
         telegram.getProtocolDataUnit().putAPDU(apdu);
 
     }
 
     private void handleTelegram(String pumpDevice, Telegram telegram) {
-
+        //check OSACK --> infomration, request, data
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
-        List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(200, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
+        List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(400, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
         AtomicInteger listCounter = new AtomicInteger();
         responseApdu.forEach(apdu -> {
             byte[] data = apdu.getBytes();
@@ -205,11 +217,10 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             // on correct position get the header.
             int osAck = requestApdu.get(listCounter.get()).getHeadOSACKShifted();
             for (int byteCounter = 2; byteCounter < data.length; ) {
-                /* TODO responseApdu.get(listCounter).getHeadOSACKShifted();
+                /* TODO responseApdu.get(listCounter).getHeadOSACKShifted(); for further information
                  */
-                if (osAck == 3) {
-
-
+                //if info is already available current task is wrong
+                if (osAck == 3 && !tasks.get(pumpDevice).get(headClass).get(taskCounter).InformationDataAvailable()) {
                     //vi bit 4
                     int vi = (data[byteCounter] & 0x10);
                     //bo bit 5
@@ -218,98 +229,25 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                     //only 1 byte of data
                     if (sif == 0 || sif == 1) {
                         tasks.get(pumpDevice).get(headClass).get(taskCounter).setOneByteInformation(vi, bo, sif);
-
+                        byteCounter++;
                         //only 4byte data
                     } else {
                         tasks.get(pumpDevice).get(headClass).get(taskCounter).setFourByteInformation(vi, bo, sif,
                                 data[byteCounter + 1], data[byteCounter + 2], data[byteCounter + 3]);
                         //bc of 4 byte data additional 3 byte incr.
-                        byteCounter += 3;
-
+                        byteCounter += 4;
                     }
-                } else if (osAck == 2) {
-                    //check if info data was available to calculate the response stuff
-                    if (tasks.get(pumpDevice).get(headClass).get(taskCounter).wasAdded()) {
-                        tasks.get(pumpDevice).get(headClass).get(taskCounter).setResponse(data[byteCounter]);
-                    }
-
-                } else {
-                    //TODO Check if its only 1 byte --> later
+                } else if (osAck != 2) {
+                    //TODO Check if its only 1 byte data --> later
                     tasks.get(pumpDevice).get(headClass).get(taskCounter).setResponse(data[byteCounter]);
+                    byteCounter++;
                 }
                 taskCounter++;
-                byteCounter++;
+
             }
             listCounter.getAndIncrement();
         });
 
-
-//        List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
-//        List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(200, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
-//
-//        requestApdu.forEach(apdu -> {
-//            byte[] data = apdu.getBytes();
-//            byte[] responseData = responseApdu.get(0).getBytes();
-//            switch (data[0]) {
-//
-//
-//                case 2: //Measured Data
-//                    if (data[1] == 3) {
-//                        handleInformation(data, responseData, pumpDevice, 2);
-//
-//                    } else {
-//                        data = apdu.getBytes();
-//                    }
-//                case 3: //Commands
-//                    if (data[1] == 3) {
-//                        handleInformation(data, responseData, pumpDevice, 3);
-//                    }
-//                case 4: //Config param
-//                case 5: //ReferenceValue
-//                case 7: // ascii
-//
-//
-//            }
-//
-//        });
-
-
-    }
-
-    private void handleInformation(byte[] data, byte[] responseApdu, String pumpDevice, int header) {
-        //shift 6 to get only 4 possible actions
-        int responseApduCounter = 0;
-        byte[] responseData;
-        int meaning;
-        List<GenibusTask> informationHandleList = this.tasks.get(pumpDevice).get(header);
-        for (int regularCounter = 0; regularCounter < data.length; regularCounter++) {
-            //TODO shift operation.
-            meaning = responseApdu[responseApduCounter];
-            switch (meaning) {
-
-                case 0:
-                case 1:
-                    responseData = new byte[1];
-                    responseData[0] = responseApdu[++responseApduCounter];
-                    informationHandleList.get(regularCounter).setInformationData(responseData);
-                    responseApduCounter++;
-                    break;
-
-
-                case 2:
-                    responseData = new byte[4];
-                    for (int responsePosition = 0; responsePosition < responseData.length; responsePosition++) {
-                        responseData[responsePosition] = responseApdu[++responseApduCounter];
-                    }
-                    break;
-
-                default:
-                case 3:
-                    responseData = new byte[4];
-                    break;
-            }
-            informationHandleList.get(regularCounter).setInformationData(responseData, meaning);
-        }
     }
 
 
@@ -322,7 +260,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         }
     }
 
-    public void addTask(String deviceId, int listPosition, GenibusTask task) {
+    public void addTask(String deviceId, GenibusTask task) {
         if (this.tasks.containsKey(deviceId)) {
             this.tasks.values().forEach(headerTaskMap -> {
                 if (headerTaskMap.containsKey(task.getHeader())) {
@@ -336,7 +274,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             });
         } else {
             List<GenibusTask> list = new ArrayList<>();
-            list.add(listPosition, task);
+            list.add(task);
             Map<Integer, List<GenibusTask>> map = new HashMap<>();
             map.put(task.getHeader(), list);
             this.tasks.put(deviceId, map);
@@ -345,7 +283,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
     public void removeTask(String sourceId) {
         this.tasks.remove(sourceId);
-        this.devices.remove(sourceId);
     }
 
     @Override
@@ -353,18 +290,10 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         this.devices.put(id, address);
     }
 
-    //    protected void activateConnectionRequestTask() {
-    //        // Live / repeated
-    //        //    	tasks.put("ConnectionRequestTask", new TaskConnectionRequest(handler, deviceList));
-    //        //    	tasks.put("DataRequest", new TaskDataRequest(handler, new Device(0x20)));
-    //        // Test
-    //        //		log.info("Send Connection Request at start for device list");
-    //        //		Task connectionRequestTask = new TaskConnectionRequest(handler, deviceList);
-    //        //		connectionRequestTask.getRequest();
-    //        GenibusTask dataTask = new TaskDataRequest(handler, new Device(0x20));
-    //        dataTask.getRequest();
-    //
-    //    }
-
+    @Override
+    public void removeDevice(String id) {
+        this.tasks.remove(id);
+        this.devices.remove(id);
+    }
 
 }

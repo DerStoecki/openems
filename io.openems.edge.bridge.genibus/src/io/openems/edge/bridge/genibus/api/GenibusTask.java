@@ -10,17 +10,14 @@ public interface GenibusTask {
 
     int getAddress();
 
-    boolean isWriteable();
 
     int getHeader();
 
-    void setInformationData(byte data);
-
-    void setInformationData(byte[] data, int meaning);
-
     void setOneByteInformation(int vi, int bo, int sif);
 
-    void setFourByteInformation(int vi, int bo, int sif, byte datum, byte datum1, byte datum2);
+    void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow);
 
     boolean wasAdded();
+
+    boolean InformationDataAvailable();
 }
