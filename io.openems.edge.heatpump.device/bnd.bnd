@@ -1,18 +1,14 @@
-#
-# io.openems.edge.heatpump PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
+Bundle-Name: OpenEMS Edge HeatPump Device
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-	The provider bundle for io.openems.edge.heatpump. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.heatpump/api.bnd}
-
+	This bundle provides the Heatpump with it's types and tasks.
 
 
 Private-Package:  \
-	io.openems.edge.heatpump,\
-	io.openems.edge.heatpump.task,\
+	io.openems.edge.heatpump.device,\
+	io.openems.edge.heatpump.device.task,\
 
 -includeresource: {readme.md}
 

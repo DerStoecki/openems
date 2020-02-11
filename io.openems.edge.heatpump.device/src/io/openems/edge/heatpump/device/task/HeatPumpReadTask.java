@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump.task;
+package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.common.channel.Channel;
 

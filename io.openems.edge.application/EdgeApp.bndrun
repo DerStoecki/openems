@@ -25,6 +25,7 @@
 	bnd.identity;id='io.openems.edge.biomassheater',\
 	bnd.identity;id='io.openems.edge.biomassheater.api’,\
 	bnd.identity;id='io.openems.edge.bridge.gpio',\
+	bnd.identity;id='io.openems.edge.bridge.genibus',\
 	bnd.identity;id='io.openems.edge.bridge.i2c',\
 	bnd.identity;id='io.openems.edge.bridge.i2c.api',\
 	bnd.identity;id='io.openems.edge.bridge.lucidcontrol',\
@@ -97,6 +98,8 @@
 	bnd.identity;id='io.openems.edge.gpio.device',\
 	bnd.identity;id='io.openems.edge.gpio.device.api',\
 	bnd.identity;id='io.openems.edge.heater.api',\
+	bnd.identity;id='io.openems.edge.heatpump.device',\
+	bnd.identity;id='io.openems.edge.heatpump.device.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\
@@ -169,6 +172,7 @@
 	io.openems.edge.battery.soltaro;version=snapshot,\
 	io.openems.edge.biomassheater;version=snapshot,\
 	io.openems.edge.biomassheater.api;version=snapshot,\
+	io.openems.edge.bridge.genibus;version=snapshot,\
 	io.openems.edge.bridge.gpio;version=snapshot,\
 	io.openems.edge.bridge.i2c;version=snapshot,\
 	io.openems.edge.bridge.lucidcontrol;version=snapshot,\
@@ -241,6 +245,8 @@
 	io.openems.edge.gpio.device;version=snapshot,\
 	io.openems.edge.gpio.device.api;version=snapshot,\
 	io.openems.edge.heater.api;version=snapshot,\
+	io.openems.edge.heatpump.device;version=snapshot,\
+	io.openems.edge.heatpump.device.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.device;version=snapshot,\
 	io.openems.edge.lucidcontrol.device.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.module;version=snapshot,\
@@ -323,5 +329,4 @@
 	rrd4j;version='[3.5.0,3.5.1)',\
 	com.sun.jna;version='[5.5.0,5.5.1)',\
 	org.openmuc.jmbus;version='[3.2.1,3.2.2)',\
-	com.fazecast.jSerialComm;version='[2.5.3,3.0.0)',\
-    io.openems.edge.bridge.genibus;version=snapshot,\
+	com.fazecast.jSerialComm;version='[2.5.1,3.0.0)',\

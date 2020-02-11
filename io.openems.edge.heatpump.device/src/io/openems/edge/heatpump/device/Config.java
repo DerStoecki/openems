@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump;
+package io.openems.edge.heatpump.device;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;

@@ -48,7 +48,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     private Map<String, Map<Integer, List<GenibusTask>>> tasks = new ConcurrentHashMap<>();
 
 
-
     public GenibusImpl() {
         super(OpenemsComponent.ChannelId.values(),
                 GenibusChannel.ChannelId.values());
@@ -66,6 +65,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     }
 
     private void applyDefaultApduHeaderOperation() {
+        //default: apduCommands is set and rest ist get
         getApduCommands().setNextValue(2);
         getApduConfigurationParameters().setNextValue(0);
         getApduMeasuredData().setNextValue(0);
@@ -118,7 +118,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 apduMeasuredData.setHeadClassMeasuredData();
                 apduMeasuredData.setHeadOSACK(getApduMeasuredData().getNextValue().get());
 
-
                 ApplicationProgramDataUnit apduCommandsInfo = new ApplicationProgramDataUnit();
                 apduCommandsInfo.setHeadClassCommands();
                 apduCommandsInfo.setHeadOSACK(3);
@@ -170,7 +169,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                             addData(apduAsciiStrings, value.get(key), telegram);
                             break;
                     }
-
                 }));
                 handleTelegram(pumpDevice, telegram);
             });
@@ -179,11 +177,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     }
 
     private void addData(ApplicationProgramDataUnit apdu, List<GenibusTask> genibusTasks, Telegram telegram) {
-        /*
-         * TODO if apdu AOSACK is 2 --> getRequest return byte if return is null --> no add --> was added False
-         *  TODO --> bool wasAdded
-         * */
-
 
         genibusTasks.forEach(value -> {
             //InformationAvailable --> Information data is available so the task can calc the byte data as a response
@@ -199,7 +192,10 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 apdu.putDataField(value.getAddress());
             }
         });
-        telegram.getProtocolDataUnit().putAPDU(apdu);
+        //at least 1 info was added
+        if (apdu.getBytes().length >= 3) {
+            telegram.getProtocolDataUnit().putAPDU(apdu);
+        }
 
     }
 

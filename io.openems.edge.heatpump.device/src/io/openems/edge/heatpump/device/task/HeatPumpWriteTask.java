@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump.task;
+package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.common.channel.WriteChannel;
 
@@ -26,13 +26,10 @@ public class HeatPumpWriteTask extends HeatPumpTask {
                 case 1:
                     break;
 
-
                 case 2:
                     break;
-
                 case 3:
                     break;
-
                 case 0:
                 default:
             }

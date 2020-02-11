@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump;
+package io.openems.edge.heatpump.device;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.bridge.genibus.api.Genibus;
@@ -6,8 +6,8 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.heatpump.device.api.HeatPump;
-import io.openems.edge.heatpump.task.HeatPumpReadTask;
-import io.openems.edge.heatpump.task.HeatPumpWriteTask;
+import io.openems.edge.heatpump.device.task.HeatPumpReadTask;
+import io.openems.edge.heatpump.device.task.HeatPumpWriteTask;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;

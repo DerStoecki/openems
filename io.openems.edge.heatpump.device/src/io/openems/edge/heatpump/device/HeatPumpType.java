@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump;
+package io.openems.edge.heatpump.device;
 
 public enum HeatPumpType {
     MAGNA_3(23, 2, 2, 28, 30, 2, 34, 2, 37,

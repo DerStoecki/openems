@@ -1,12 +1,10 @@
-#
-# io.openems.edge.bridge.genibus PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
+Bundle-Name: OpenEMS Edge Bridge Genibus
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-	The provider bundle for io.openems.edge.bridge.genibus. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.bridge.genibus/api.bnd}
+	This Bundle Provides all protocols and api classes, needed to communicate via genibus.
+
 
 Export-Package:  \
 	io.openems.edge.bridge.genibus.api,\
@@ -29,7 +27,6 @@ Import-Package: \
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
 	com.github.snksoft:crc,\
-    com.fazecast.jSerialComm;version=2.5.3,\
     org.apache.felix.scr,\
     org.osgi.compendium,\
     osgi.annotation,\
