@@ -31,8 +31,8 @@ public interface HeatPump extends OpenemsComponent {
         WARN_BITS_4(Doc.of(OpenemsType.STRING)),
 
         //config params
-        SET_PUMP_FLOW_HI(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT)),
-        SET_PUMP_FLOW_LO(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT)),
+        SET_PUMP_FLOW_HI(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
+        SET_PUMP_FLOW_LO(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
 
         SET_PRESSURE_DELTA(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
         SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),

@@ -53,7 +53,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
     private void allocateHeatPumpType(String pumpType) {
         switch (pumpType) {
-            case "MAGNA3":
+            case "Magna3":
                 this.heatPumpType = HeatPumpType.MAGNA_3;
                 createMagna3Tasks();
                 break;
