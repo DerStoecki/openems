@@ -7,6 +7,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.heatpump.device.api.HeatPump;
 import io.openems.edge.heatpump.device.task.HeatPumpReadTask;
+import io.openems.edge.heatpump.device.task.HeatPumpWarnBitsTask;
 import io.openems.edge.heatpump.device.task.HeatPumpWriteTask;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
@@ -14,7 +15,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "io.openems.edge.heatpump")
+@Component(name = "HeatPump")
 public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsComponent, HeatPump {
 
 
@@ -48,7 +49,6 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
         allocateHeatPumpType(config.pumpType());
 
 
-
     }
 
     private void allocateHeatPumpType(String pumpType) {
@@ -64,47 +64,50 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
         //foreach Channel create Task
         //read Task
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gethDiff(),
-                this.heatPumpType.gethDiffHeadClass(), getDiffPressureHead()));
+                this.heatPumpType.gethDiffHeadClass(), getDiffPressureHead(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gettE(),
-                this.heatPumpType.gettEheadClass(), getElectronicsTemperature()));
+                this.heatPumpType.gettEheadClass(), getElectronicsTemperature(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getiMo(),
-                this.heatPumpType.getImoHeadClass(), getCurrentMotor()));
+                this.heatPumpType.getImoHeadClass(), getCurrentMotor(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getPlo(),
-                this.heatPumpType.getPloHeadClass(), getPowerConsumption()));
+                this.heatPumpType.getPloHeadClass(), getPowerConsumption(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getH(),
-                this.heatPumpType.gethHeadClass(), getCurrentPressure()));
+                this.heatPumpType.gethHeadClass(), getCurrentPressure(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getQ(),
-                this.heatPumpType.getqHeadClass(), getCurrentPumpFlow()));
+                this.heatPumpType.getqHeadClass(), getCurrentPumpFlow(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gettW(),
-                this.heatPumpType.gettWHeadClass(), getPumpedWaterMediumTemperature()));
+                this.heatPumpType.gettWHeadClass(), getPumpedWaterMediumTemperature(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getControlMode(),
-                this.heatPumpType.getControlModeHeadClass(), getActualControlMode()));
+                this.heatPumpType.getControlModeHeadClass(), getActualControlMode(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getAlarmCodePump(),
-                this.heatPumpType.getAlarmCodePumpHeadClass(), getAlarmCodePump()));
+                this.heatPumpType.getAlarmCodePumpHeadClass(), getAlarmCodePump(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnCode(),
-                this.heatPumpType.getWarnCodeHeadClass(), getWarnCode()));
+                this.heatPumpType.getWarnCodeHeadClass(), getWarnCode(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getAlarmCode(),
-                this.heatPumpType.getAlarmCodeHeadClass(), getAlarmCode()));
+                this.heatPumpType.getAlarmCodeHeadClass(), getAlarmCode(), "Standard"));
+        //warnBits
+        this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits1(),
+                this.heatPumpType.getWarnBits1HeadClass(), getWarnBits_1(), "Magna3"));
 
-        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits1(),
-                this.heatPumpType.getWarnBits1HeadClass(), getWarnBits_1()));
+        this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits2(),
+                this.heatPumpType.getWarnBits2HeadClass(), getWarnBits_2(), "Magna3"));
 
-        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits2(),
-                this.heatPumpType.getWarnBits2HeadClass(), getWarnBits_2()));
-        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits3(),
-                this.heatPumpType.getWarnBits3HeadClass(), getWarnBits_3()));
-        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getWarnBits4(),
-                this.heatPumpType.getWarnBits4HeadClass(), getWarnBits_4()));
+        this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits3(),
+                this.heatPumpType.getWarnBits3HeadClass(), getWarnBits_3(), "Magna3"));
+
+        this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits4(),
+                this.heatPumpType.getWarnBits4HeadClass(), getWarnBits_4(), "Magna3"));
+
 
         //write Task
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxHi(),

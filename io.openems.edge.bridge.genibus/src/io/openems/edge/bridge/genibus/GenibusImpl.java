@@ -204,6 +204,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
         List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(400, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
         AtomicInteger listCounter = new AtomicInteger();
+        listCounter.set(0);
         responseApdu.forEach(apdu -> {
             byte[] data = apdu.getBytes();
             //for the GenibusTask list --> index

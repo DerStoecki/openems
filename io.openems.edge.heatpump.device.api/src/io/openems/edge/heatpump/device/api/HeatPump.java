@@ -14,7 +14,7 @@ public interface HeatPump extends OpenemsComponent {
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         //Get Measured Data
 
-        DIFFERENTIAL_PRESSURE_HEAD(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR)),
+        DIFFERENTIAL_PRESSURE_HEAD(Doc.of(OpenemsType.DOUBLE)),
         ELECTRONICS_TEMPERATURE(Doc.of(OpenemsType.DOUBLE).unit(Unit.DEZIDEGREE_CELSIUS)),
         CURRENT_MOTOR(Doc.of(OpenemsType.DOUBLE)),
         POWER_CONSUMPTION(Doc.of(OpenemsType.DOUBLE).unit(Unit.WATT)),
@@ -25,18 +25,18 @@ public interface HeatPump extends OpenemsComponent {
         ALARM_CODE_PUMP(Doc.of(OpenemsType.DOUBLE)),
         WARN_CODE(Doc.of(OpenemsType.DOUBLE)),
         ALARM_CODE(Doc.of(OpenemsType.DOUBLE)),
-        WARN_BITS_1(Doc.of(OpenemsType.DOUBLE)),
-        WARN_BITS_2(Doc.of(OpenemsType.DOUBLE)),
-        WARN_BITS_3(Doc.of(OpenemsType.DOUBLE)),
-        WARN_BITS_4(Doc.of(OpenemsType.DOUBLE)),
+        WARN_BITS_1(Doc.of(OpenemsType.STRING)),
+        WARN_BITS_2(Doc.of(OpenemsType.STRING)),
+        WARN_BITS_3(Doc.of(OpenemsType.STRING)),
+        WARN_BITS_4(Doc.of(OpenemsType.STRING)),
 
         //config params
-        SET_PUMP_FLOW_HI(Doc.of(OpenemsType.DOUBLE).unit(Unit.CUBICMETER_PER_HOUR)),
-        SET_PUMP_FLOW_LO(Doc.of(OpenemsType.DOUBLE).unit(Unit.CUBICMETER_PER_HOUR)),
+        SET_PUMP_FLOW_HI(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT)),
+        SET_PUMP_FLOW_LO(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT)),
 
-        SET_PRESSURE_DELTA(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
-        SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
-        SET_MIN_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR));
+        SET_PRESSURE_DELTA(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
+        SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
+        SET_MIN_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT));
 
 
         private final Doc doc;
@@ -97,19 +97,19 @@ public interface HeatPump extends OpenemsComponent {
         return this.channel(ChannelId.ALARM_CODE);
     }
 
-    default Channel<Double> getWarnBits_1() {
+    default Channel<String> getWarnBits_1() {
         return this.channel(ChannelId.WARN_BITS_1);
     }
 
-    default Channel<Double> getWarnBits_2() {
+    default Channel<String> getWarnBits_2() {
         return this.channel(ChannelId.WARN_BITS_2);
     }
 
-    default Channel<Double> getWarnBits_3() {
+    default Channel<String> getWarnBits_3() {
         return this.channel(ChannelId.WARN_BITS_3);
     }
 
-    default Channel<Double> getWarnBits_4() {
+    default Channel<String> getWarnBits_4() {
         return this.channel(ChannelId.WARN_BITS_4);
     }
 

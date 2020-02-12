@@ -17,7 +17,7 @@ public abstract class HeatPumpTask implements GenibusTask {
     //Byte Order 0 = HighOrder 1 = Low Order
     //
     boolean bo;
-    int unitIndex;
+    int unitIndex = -66;
     int scaleFactorHighOrder;
     int scaleFactorLowOrder;
     int zeroScaleFactor;

@@ -16,21 +16,22 @@ Private-Package:  \
 
 -includeresource: {readme.md},\
 	@crc-1.0.2.jar,\
-	@jrxtx-1.0.1.jar
+	@jrxtx-1.0.1.jar,\
+
 
 Import-Package: \
 	!com.github.snksoft.crc.*,\
 	!org.openmuc.jrxtx.*,\
-
+    *
 -buildpath:  \
 	osgi.enroute.base.api;version=2.1,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	com.github.snksoft:crc,\
+	com.github.snksoft:crc;version=1.0.2,\
     org.apache.felix.scr,\
     org.osgi.compendium,\
     osgi.annotation,\
-    org.openmuc.jrxtx;version=1.0,\
+    org.openmuc.jrxtx;version=1.0.1,\
 
 
 -testpath: \
