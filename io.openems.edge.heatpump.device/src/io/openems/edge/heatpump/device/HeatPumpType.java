@@ -1,7 +1,7 @@
 package io.openems.edge.heatpump.device;
 
 public enum HeatPumpType {
-    MAGNA_3(23, 2, 2, 28, 30, 2, 34, 2, 37,
+    MAGNA_3(23, 2, 28, 2, 30, 2, 34, 2, 37,
             2, 39, 2, 58, 2, 112, 2,
             154, 2, 156, 2, 158,
             2, 159, 2, 160, 2, 161,
