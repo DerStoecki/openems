@@ -12,8 +12,10 @@ import org.openmuc.jrxtx.Parity;
 import org.openmuc.jrxtx.SerialPort;
 import org.openmuc.jrxtx.SerialPortBuilder;
 import org.openmuc.jrxtx.StopBits;
+import gnu.io.*;
 
 import io.openems.edge.bridge.genibus.protocol.Telegram;
+
 
 public class Handler {
 
@@ -27,18 +29,14 @@ public class Handler {
 
     private final Logger log = LoggerFactory.getLogger(Handler.class);
 
-    public void start(String portName) {
+    public void start(String portName) throws Exception {
         this.portName = portName;
 
-        try {
-            SerialPort serialPort = SerialPortBuilder.newBuilder(portName).setBaudRate(9600)
-                    .setDataBits(DataBits.DATABITS_8).setParity(Parity.NONE).setStopBits(StopBits.STOPBITS_1).build();
-            os = serialPort.getOutputStream();
-            is = serialPort.getInputStream();
-
-        } catch (Exception e) {
-            log.info("Error openening Port: " + e.getMessage());
-        }
+        SerialPort serialPort = SerialPortBuilder.newBuilder(portName).setBaudRate(9600)
+                .setDataBits(DataBits.DATABITS_8).setParity(Parity.NONE).setStopBits(StopBits.STOPBITS_1).build();
+        //System.setProperty("gnu.io.rxtx.SerialPorts", portName);
+        is = serialPort.getInputStream();
+        os = serialPort.getOutputStream();
     }
 
     public boolean checkStatus() {
@@ -153,12 +151,20 @@ public class Handler {
     private Telegram handleResponse(Telegram task) {
         try {
             long startTime = System.currentTimeMillis();
-            while ((System.currentTimeMillis() - startTime) < 500) {
+            while ((System.currentTimeMillis() - startTime) < 5000) {
                 byte[] readBuffer = new byte[1024];
                 int numRead = is.available();
                 if (numRead <= 0) {
                     continue;
                 }
+//                int len = -1;
+//                try {
+//                    while ((len = this.is.read(readBuffer)) > -1) {
+//                        System.out.print(new String(readBuffer, 0, len));
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
                 is.read(readBuffer, 0, numRead);
                 ByteArrayOutputStream bytesRelevant = new ByteArrayOutputStream();
                 bytesRelevant.write(readBuffer, 0, numRead);
@@ -169,12 +175,13 @@ public class Handler {
                     System.out.println("CRC Check ok.");
                     // if all done create telegram
                     task = Telegram.parseEventStream(receivedData);
+                    return task;
                     //task.setResponse(telegram);
 
                 }
                 break;
             }
-            return task;
+
         } catch (Exception e) {
             e.printStackTrace();
         }

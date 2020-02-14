@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.genibus.api.*;
 import io.openems.edge.bridge.genibus.protocol.ApplicationProgramDataUnit;
 import io.openems.edge.bridge.genibus.protocol.Telegram;
@@ -55,14 +56,21 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsException {
         super.activate(context, config.id(), config.alias(), config.enabled());
+        applyDefaultApduHeaderOperation();
+        try {
+            handler.start(config.portName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new OpenemsException("Busy Port!");
+        }
         this.worker.activate(config.id());
-        handler.start(config.portName());
+
         //default
 
 
-        applyDefaultApduHeaderOperation();
+
     }
 
     private void applyDefaultApduHeaderOperation() {
@@ -100,13 +108,18 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
             if (!handler.checkStatus()) {
                 //try to reconnect
-                handler.start(portName);
+                try {
+                    handler.start(portName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return;
+                }
                 return;
             }
             getTasks().keySet().forEach(pumpDevice -> {
+
                 Telegram telegram = new Telegram();
                 telegram.setStartDelimiterDataRequest();
-
                 //get the Address via Id
                 telegram.setDestinationAddress(devices.get(pumpDevice));
                 telegram.setSourceAddress(0x01);
@@ -172,6 +185,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                             break;
                     }
                 });
+
                 handleTelegram(pumpDevice, telegram);
             });
 
@@ -207,7 +221,12 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     private void handleTelegram(String pumpDevice, Telegram telegram) {
         //check OSACK --> infomration, request, data
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
-        List<ApplicationProgramDataUnit> responseApdu = handler.writeTelegram(400, telegram).getProtocolDataUnit().getApplicationProgramDataUnitList();
+        Telegram responseTelegram = handler.writeTelegram(400, telegram);
+        if(responseTelegram == null){
+            return;
+        }
+        List<ApplicationProgramDataUnit> responseApdu = responseTelegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
+
         AtomicInteger listCounter = new AtomicInteger();
         listCounter.set(0);
         responseApdu.forEach(apdu -> {
@@ -216,10 +235,15 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             int taskCounter = 0;
             // always on [0]
             int headClass = data[0];
+            if ((data[1] & 63) != data.length - 2) {
+                System.out.println("data length is" + (data.length - 2) + " but expected: " + (data[1] & 63));
+            }
 
 
             // on correct position get the header.
             int osAck = requestApdu.get(listCounter.get()).getHeadOSACKforRequest();
+
+
             for (int byteCounter = 2; byteCounter < data.length; ) {
                 /* TODO responseApdu.get(listCounter).getHeadOSACKShifted(); for further information
                  */
@@ -230,6 +254,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                     int vi = (data[byteCounter] & 0x10);
                     //bo bit 5
                     int bo = (data[byteCounter] & 0x20);
+                    //sif on bit 0 and 1
                     int sif = (data[byteCounter] & 0x03);
                     //only 1 byte of data
                     if (sif == 0 || sif == 1) {
@@ -248,7 +273,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                     byteCounter++;
                 }
                 taskCounter++;
-
+                //if osAck == 2 --> nothing in reply (except ack)
             }
             listCounter.getAndIncrement();
         });
