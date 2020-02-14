@@ -70,7 +70,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         //default
 
 
-
     }
 
     private void applyDefaultApduHeaderOperation() {
@@ -204,8 +203,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                     apdu.putDataField(valueRequest);
                 }
                 //INFORMATION DATA
-            } else if (apdu.getHeadOSACKforRequest() == 3 && !value.InformationDataAvailable()) {
-                apdu.putDataField(value.getAddress());
+            } else if (apdu.getHeadOSACKforRequest() == 3 && value.InformationDataAvailable()) {
+                //do nothing
                 //EVERYTHING ELSE
             } else {
                 apdu.putDataField(value.getAddress());
@@ -222,7 +221,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         //check OSACK --> infomration, request, data
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
         Telegram responseTelegram = handler.writeTelegram(400, telegram);
-        if(responseTelegram == null){
+        if (responseTelegram == null) {
             return;
         }
         List<ApplicationProgramDataUnit> responseApdu = responseTelegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
@@ -267,12 +266,15 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                         //bc of 4 byte data additional 3 byte incr.
                         byteCounter += 4;
                     }
-                } else if (osAck != 2) {
+                } else if (osAck != 2 && osAck != 3) {
                     //TODO Check if its only 1 byte data --> later.
                     geniTask.setResponse(data[byteCounter]);
                     byteCounter++;
                 }
                 taskCounter++;
+                if (tasks.get(pumpDevice).get(headClass).size() < taskCounter) {
+                    break;
+                }
                 //if osAck == 2 --> nothing in reply (except ack)
             }
             listCounter.getAndIncrement();

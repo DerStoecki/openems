@@ -52,7 +52,7 @@ public abstract class HeatPumpTask implements GenibusTask {
     @Override
     public void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow) {
         setOneByteInformation(vi, bo, sif);
-        this.unitIndex = unitIndex & 254;
+        this.unitIndex = unitIndex & 127;
         if (sif == 3) {
             this.scaleFactorHighOrder = Byte.toUnsignedInt(scaleFactorZeroOrHigh);
             this.scaleFactorLowOrder = Byte.toUnsignedInt(scaleFactorRangeOrLow);
