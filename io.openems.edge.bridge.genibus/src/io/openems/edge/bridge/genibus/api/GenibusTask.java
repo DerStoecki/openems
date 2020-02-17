@@ -8,7 +8,7 @@ public interface GenibusTask {
 
     void setResponse(byte data);
 
-    int getAddress();
+    byte getAddress();
 
 
     int getHeader();

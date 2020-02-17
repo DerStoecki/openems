@@ -14,10 +14,9 @@ public class HeatPumpCommandsTask extends HeatPumpTask {
     @Override
     public byte getRequest() {
         if (this.channel.getNextWriteValue().isPresent()) {
+            //for REST
+            this.channel.setNextValue(this.channel.getNextWriteValue().get());
             if (this.channel.getNextWriteValue().get()) {
-                //for REST
-                this.channel.setNextValue(this.channel.getNextWriteValue().get());
-
                 return 1;
             }
         }

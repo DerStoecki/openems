@@ -6,7 +6,7 @@ import io.openems.edge.common.channel.Channel;
 
 public abstract class HeatPumpTask implements GenibusTask {
 
-    private int address;
+    private byte address;
     private int headerNumber;
     //Scale information Factor
     int sif;
@@ -25,13 +25,13 @@ public abstract class HeatPumpTask implements GenibusTask {
     boolean wasAdded;
 
     public HeatPumpTask(int address, int headerNumber) {
-        this.address = address;
+        this.address = (byte)address;
         this.headerNumber = headerNumber;
 
     }
 
     @Override
-    public int getAddress() {
+    public byte getAddress() {
         return address;
     }
 
