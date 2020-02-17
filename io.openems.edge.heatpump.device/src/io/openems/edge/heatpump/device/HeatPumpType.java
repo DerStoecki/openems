@@ -1,13 +1,14 @@
 package io.openems.edge.heatpump.device;
 
 public enum HeatPumpType {
-    MAGNA_3(23, 2, 28, 2, 30, 2, 34, 2, 37,
+    MAGNA_3(0x23, 2, 28, 2, 30, 2, 34, 2, 37,
             2, 39, 2, 58, 2, 112, 2,
             154, 2, 156, 2, 158,
             2, 159, 2, 160, 2, 161,
             2, 162, 2, 105, 4, 106,
             4, 101, 4, 103, 4, 104,
-            4);
+            4, 7, 3, 6, 3, 5, 3,
+            25, 3, 26, 3, 22, 3);
 
     //read Measured Data
     //diff pressure head
@@ -67,16 +68,31 @@ public enum HeatPumpType {
     private int hMaxHiHeadClass;
     private int hMaxLo;
     private int hMaxLoHeadClass;
+    //Commands
+    private int remote;
+    private int remoteHeadClass;
+    private int start;
+    private int startHeadClass;
+    private int stop;
+    private int stopHeadClass;
+    private int minMotorCurve;
+    private int minMotorCurveHeadClass;
+    private int maxMotorCurve;
+    private int maxMotorCurveHeadClass;
+    private int constFrequency;
+    private int constFrequencyHeadClass;
 
 
     HeatPumpType(int hDiff, int hDiffHeadClass, int tE, int tEheadClass, int iMo, int imoHeadClass, int plo,
                  int ploHeadClass, int h, int hHeadClass, int q, int qHeadClass, int tW, int tWHeadClass,
-                 int controlMode, int controlModeHeadClass, int alarmCodePump, int alarmCodePumpHeadClass,
-                 int warnCode, int warnCodeHeadClass, int alarmCode, int alarmCodeHeadClass, int warnBits1,
-                 int warnBits1HeadClass, int warnBits2, int warnBits2HeadClass, int warnBits3, int warnBits3HeadClass,
-                 int warnBits4, int warnBits4HeadClass, int qMaxHi, int qMaxHiHeadClass, int qMaxLo,
-                 int qMaxLowClass, int deltaH, int deltaHheadClass, int hMaxHi, int hMaxHiHeadClass,
-                 int hMaxLo, int hMaxLoHeadClass) {
+                 int controlMode, int controlModeHeadClass, int alarmCodePump,
+                 int alarmCodePumpHeadClass, int warnCode, int warnCodeHeadClass, int alarmCode, int alarmCodeHeadClass,
+                 int warnBits1, int warnBits1HeadClass, int warnBits2, int warnBits2HeadClass, int warnBits3,
+                 int warnBits3HeadClass, int warnBits4, int warnBits4HeadClass, int qMaxHi, int qMaxHiHeadClass,
+                 int qMaxLo, int qMaxLowClass, int deltaH, int deltaHheadClass, int hMaxHi, int hMaxHiHeadClass,
+                 int hMaxLo, int hMaxLoHeadClass, int remote, int remoteHeadClass, int start, int startHeadClass,
+                 int stop, int stopHeadClass, int minMotorCurve, int minMotorCurveHeadClass,
+                 int maxMotorCurve, int maxMotorCurveHeadClass, int constFrequency, int constFrequencyHeadClass) {
         this.hDiff = hDiff;
         this.hDiffHeadClass = hDiffHeadClass;
         this.tE = tE;
@@ -112,13 +128,24 @@ public enum HeatPumpType {
         this.qMaxLo = qMaxLo;
         this.qMaxLowClass = qMaxLowClass;
         this.deltaH = deltaH;
-        this.hMaxHi = hMaxHi;
-        this.hMaxLo = hMaxLo;
         this.deltaHheadClass = deltaHheadClass;
+        this.hMaxHi = hMaxHi;
         this.hMaxHiHeadClass = hMaxHiHeadClass;
+        this.hMaxLo = hMaxLo;
         this.hMaxLoHeadClass = hMaxLoHeadClass;
+        this.remote = remote;
+        this.remoteHeadClass = remoteHeadClass;
+        this.start = start;
+        this.startHeadClass = startHeadClass;
+        this.stop = stop;
+        this.stopHeadClass = stopHeadClass;
+        this.minMotorCurve = minMotorCurve;
+        this.minMotorCurveHeadClass = minMotorCurveHeadClass;
+        this.maxMotorCurve = maxMotorCurve;
+        this.maxMotorCurveHeadClass = maxMotorCurveHeadClass;
+        this.constFrequency = constFrequency;
+        this.constFrequencyHeadClass = constFrequencyHeadClass;
     }
-
 
     public int gethDiff() {
         return hDiff;
@@ -279,5 +306,56 @@ public enum HeatPumpType {
 
     public int gethMaxLoHeadClass() {
         return hMaxLoHeadClass;
+    }
+
+    //commands
+
+
+    public int getRemote() {
+        return remote;
+    }
+
+    public int getRemoteHeadClass() {
+        return remoteHeadClass;
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public int getStartHeadClass() {
+        return startHeadClass;
+    }
+
+    public int getStop() {
+        return stop;
+    }
+
+    public int getStopHeadClass() {
+        return stopHeadClass;
+    }
+
+    public int getMinMotorCurve() {
+        return minMotorCurve;
+    }
+
+    public int getMinMotorCurveHeadClass() {
+        return minMotorCurveHeadClass;
+    }
+
+    public int getMaxMotorCurve() {
+        return maxMotorCurve;
+    }
+
+    public int getMaxMotorCurveHeadClass() {
+        return maxMotorCurveHeadClass;
+    }
+
+    public int getConstFrequency() {
+        return constFrequency;
+    }
+
+    public int getConstFrequencyHeadClass() {
+        return constFrequencyHeadClass;
     }
 }

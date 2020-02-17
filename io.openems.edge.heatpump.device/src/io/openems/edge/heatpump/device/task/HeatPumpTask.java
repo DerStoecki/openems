@@ -7,7 +7,6 @@ import io.openems.edge.common.channel.Channel;
 public abstract class HeatPumpTask implements GenibusTask {
 
     private int address;
-    private Channel<?> channel;
     private int headerNumber;
     //Scale information Factor
     int sif;

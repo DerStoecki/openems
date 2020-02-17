@@ -1,8 +1,8 @@
 package io.openems.edge.heatpump.device.api;
 
-
-import io.openems.common.channel.AccessMode;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.openems.common.channel.Unit;
+import io.openems.common.channel.AccessMode;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
@@ -36,8 +36,15 @@ public interface HeatPump extends OpenemsComponent {
 
         SET_PRESSURE_DELTA(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
         SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
-        SET_MIN_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT));
+        SET_MIN_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
 
+        //commands
+        START(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        STOP(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        REMOTE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        MIN_MOTOR_CURVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        MAX_MOTOR_CURVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        CONST_FREQUENCY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
 
         private final Doc doc;
 
@@ -132,6 +139,32 @@ public interface HeatPump extends OpenemsComponent {
     default WriteChannel<Double> setMinPressure() {
         return this.channel(ChannelId.SET_MIN_PRESSURE);
     }
+
+    //command Channel
+    default WriteChannel<Boolean> setRemote() {
+        return this.channel(ChannelId.REMOTE);
+    }
+
+    default WriteChannel<Boolean> setStart() {
+        return this.channel(ChannelId.START);
+    }
+
+    default WriteChannel<Boolean> setStop() {
+        return this.channel(ChannelId.STOP);
+    }
+
+    default WriteChannel<Boolean> setMinMotorCurve() {
+        return this.channel(ChannelId.MIN_MOTOR_CURVE);
+    }
+
+    default WriteChannel<Boolean> setMaxMotorCurve() {
+        return this.channel(ChannelId.MAX_MOTOR_CURVE);
+    }
+
+    default WriteChannel<Boolean> setConstFrequency() {
+        return this.channel(ChannelId.CONST_FREQUENCY);
+    }
+
 }
 
 

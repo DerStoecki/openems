@@ -74,7 +74,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
     private void applyDefaultApduHeaderOperation() {
         //default: apduCommands is set and rest ist get
-        getApduCommands().setNextValue(2);
         getApduConfigurationParameters().setNextValue(0);
         getApduMeasuredData().setNextValue(0);
         getApduReferenceValues().setNextValue(0);
@@ -125,23 +124,19 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
                 ApplicationProgramDataUnit apduMeasuredDataInfo = new ApplicationProgramDataUnit();
                 apduMeasuredDataInfo.setHeadClassMeasuredData();
-                apduMeasuredDataInfo.setHeadOSACK(3);
+                apduMeasuredDataInfo.setOSInfo();
 
                 ApplicationProgramDataUnit apduMeasuredData = new ApplicationProgramDataUnit();
                 apduMeasuredData.setHeadClassMeasuredData();
                 apduMeasuredData.setHeadOSACK(getApduMeasuredData().getNextValue().get());
 
-                ApplicationProgramDataUnit apduCommandsInfo = new ApplicationProgramDataUnit();
-                apduCommandsInfo.setHeadClassCommands();
-                apduCommandsInfo.setHeadOSACK(3);
-
                 ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
                 apduCommands.setHeadClassCommands();
-                apduCommands.setHeadOSACK(getApduMeasuredData().getNextValue().get());
+                apduCommands.setOSSet();
 
                 ApplicationProgramDataUnit apduConfigurationParametersInfo = new ApplicationProgramDataUnit();
                 apduConfigurationParametersInfo.setHeadClassConfigurationParameters();
-                apduConfigurationParametersInfo.setHeadOSACK(3);
+                apduConfigurationParametersInfo.setOSInfo();
 
                 ApplicationProgramDataUnit apduConfigurationParameters = new ApplicationProgramDataUnit();
                 apduConfigurationParameters.setHeadClassConfigurationParameters();
@@ -161,14 +156,12 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
                 getTasks().get(pumpDevice).forEach((key, value) -> {
 
-//                getTasks().get(pumpDevice).keySet().forEach(value -> {
                     switch (key) {
                         case 2:
                             addData(apduMeasuredDataInfo, value, telegram);
                             addData(apduMeasuredData, value, telegram);
                             break;
                         case 3:
-                            addData(apduCommandsInfo, value, telegram);
                             addData(apduCommands, value, telegram);
                             break;
                         case 4:
@@ -194,18 +187,25 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     private void addData(ApplicationProgramDataUnit apdu, List<GenibusTask> genibusTasks, Telegram telegram) {
 
         genibusTasks.forEach(value -> {
+            //--->commands
+            if (apdu.getHeadClass() == 3) {
+                if (value.getRequest() != 0) {
+                    apdu.putDataField(value.getAddress());
+                }
+            }
             //WRITE TASK
             //InformationAvailable --> Information data is available so the task can calc the byte data as a response
-            if (apdu.getHeadOSACKforRequest() == 2 && value.InformationDataAvailable()) {
-                byte valueRequest = value.getRequest();
-                if (valueRequest >= 0) {
-                    apdu.putDataField(value.getAddress());
-                    apdu.putDataField(valueRequest);
+            else if (apdu.getHeadOSACKforRequest() == 2) {
+                if (value.InformationDataAvailable()) {
+                    byte valueRequest = value.getRequest();
+                    if (valueRequest >= 0) {
+                        apdu.putDataField(value.getAddress());
+                        apdu.putDataField(valueRequest);
+                    }
+                    //INFORMATION DATA
                 }
-                //INFORMATION DATA
-            } else if (apdu.getHeadOSACKforRequest() == 3 && value.InformationDataAvailable()) {
-                //do nothing
-                //EVERYTHING ELSE
+                // either no information request OR info request w.o. information data  available
+                // } else if (apdu.getHeadOSACKforRequest() != 3 || !value.InformationDataAvailable()) {
             } else {
                 apdu.putDataField(value.getAddress());
             }
@@ -234,21 +234,16 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             int taskCounter = 0;
             // always on [0]
             int headClass = data[0];
-            if ((data[1] & 63) != data.length - 2) {
-                System.out.println("data length is" + (data.length - 2) + " but expected: " + (data[1] & 63));
-            }
-
-
             // on correct position get the header.
             int osAck = requestApdu.get(listCounter.get()).getHeadOSACKforRequest();
-
-
             for (int byteCounter = 2; byteCounter < data.length; ) {
                 /* TODO responseApdu.get(listCounter).getHeadOSACKShifted(); for further information
                  */
                 GenibusTask geniTask = tasks.get(pumpDevice).get(headClass).get(taskCounter);
                 //if info is already available current task is wrong
-                if (osAck == 3 && !geniTask.InformationDataAvailable()) {
+                if (osAck == 3) {
+                    //if geniTask information available --> this data field is not for this task.
+                    //if (!geniTask.InformationDataAvailable()) {
                     //vi bit 4
                     int vi = (data[byteCounter] & 0x10);
                     //bo bit 5
@@ -261,12 +256,17 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                         byteCounter++;
                         //only 4byte data
                     } else {
+                        if (byteCounter >= data.length - 3) {
+                            System.out.println("Incorrect Data Length to SIF-->prevented Out of Bounce Exception");
+                            break;
+                        }
                         geniTask.setFourByteInformation(vi, bo, sif,
                                 data[byteCounter + 1], data[byteCounter + 2], data[byteCounter + 3]);
                         //bc of 4 byte data additional 3 byte incr.
                         byteCounter += 4;
                     }
-                } else if (osAck != 2 && osAck != 3) {
+                    //}
+                } else if (osAck != 2) {
                     //TODO Check if its only 1 byte data --> later.
                     geniTask.setResponse(data[byteCounter]);
                     byteCounter++;
@@ -275,7 +275,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 if (tasks.get(pumpDevice).get(headClass).size() < taskCounter) {
                     break;
                 }
-                //if osAck == 2 --> nothing in reply (except ack)
             }
             listCounter.getAndIncrement();
         });
@@ -302,25 +301,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 taskForNewHead.add(task);
                 this.tasks.get(deviceId).put(task.getHeader(), taskForNewHead);
             }
-
-            //this.tasks.get(deviceId).forEach(key ->{
-            //    key.equals(task.getHeader()){
-            //        this.tasks.get(deviceId).get(key).add(task);
-            //    }
-            //
-            //
-            //});
-
-            //this.tasks.values().forEach(headerTaskMap -> {
-            //    if (headerTaskMap.containsKey(task.getHeader())) {
-            //        headerTaskMap.get(task.getHeader()).add(task);
-            //    } else {
-            //        List<GenibusTask> genibusList = new ArrayList<>();
-            //        genibusList.add(task);
-            //        headerTaskMap.put(task.getHeader(), genibusList);
-            //    }
-            //
-            //});
         } else {
             List<GenibusTask> list = new ArrayList<>();
             list.add(task);

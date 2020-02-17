@@ -157,14 +157,6 @@ public class Handler {
                 if (numRead <= 0) {
                     continue;
                 }
-//                int len = -1;
-//                try {
-//                    while ((len = this.is.read(readBuffer)) > -1) {
-//                        System.out.print(new String(readBuffer, 0, len));
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
                 is.read(readBuffer, 0, numRead);
                 ByteArrayOutputStream bytesRelevant = new ByteArrayOutputStream();
                 bytesRelevant.write(readBuffer, 0, numRead);

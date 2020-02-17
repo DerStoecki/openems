@@ -6,6 +6,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.heatpump.device.api.HeatPump;
+import io.openems.edge.heatpump.device.task.HeatPumpCommandsTask;
 import io.openems.edge.heatpump.device.task.HeatPumpReadTask;
 import io.openems.edge.heatpump.device.task.HeatPumpWarnBitsTask;
 import io.openems.edge.heatpump.device.task.HeatPumpWriteTask;
@@ -43,9 +44,18 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
             this.setPressureDelta().setNextWriteValue(config.pumpStartPressure());
             this.setMaxPressure().setNextWriteValue(config.maxPressure());
             this.setMinPressure().setNextWriteValue(config.minPressure());
+            //commands
+            this.setRemote().setNextWriteValue(true);
+            this.setStart().setNextWriteValue(true);
+            this.setStop().setNextWriteValue(false);
+            this.setMinMotorCurve().setNextWriteValue(true);
+            this.setMaxMotorCurve().setNextWriteValue(false);
+            this.setConstFrequency().setNextWriteValue(true);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
+
+
         allocateHeatPumpType(config.pumpType());
 
 
@@ -62,6 +72,21 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
     private void createMagna3Tasks() {
         //foreach Channel create Task
+
+        //commands
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getRemote(),
+                this.heatPumpType.getRemoteHeadClass(), setRemote()));
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getStart(),
+                this.heatPumpType.getStartHeadClass(), this.setStart()));
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getStop(),
+                this.heatPumpType.getStopHeadClass(), this.setStop()));
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getMinMotorCurve(),
+                this.heatPumpType.getMinMotorCurveHeadClass(), setMinMotorCurve()));
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getMaxMotorCurve(),
+                this.heatPumpType.getMaxMotorCurveHeadClass(), setMaxMotorCurve()));
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getConstFrequency(),
+                this.heatPumpType.getConstFrequencyHeadClass(), setConstFrequency()));
+
         //read Task
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gethDiff(),
                 this.heatPumpType.gethDiffHeadClass(), getDiffPressureHead(), "Standard"));
@@ -109,7 +134,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
                 this.heatPumpType.getWarnBits4HeadClass(), getWarnBits_4(), "Magna3"));
 
 
-        //write Task
+        //write Task --> headClass 4 --> Config Param
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxHi(),
                 this.heatPumpType.getqMaxHiHeadClass(), setPumpFlowHi()));
 
@@ -124,6 +149,8 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxLo(),
                 this.heatPumpType.gethMaxLoHeadClass(), setMinPressure()));
+
+
     }
 
     @Deactivate
