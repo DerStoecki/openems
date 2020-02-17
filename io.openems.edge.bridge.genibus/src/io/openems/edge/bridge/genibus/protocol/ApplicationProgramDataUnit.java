@@ -75,7 +75,7 @@ public class ApplicationProgramDataUnit {
     }
 
     public byte getHeadOSACKShifted() {
-        return (byte) (apduHeadOSACK >> 6);
+        return (byte) (apduHeadOSACK << 6);
     }
 
     /**

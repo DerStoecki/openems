@@ -114,6 +114,20 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 }
                 return;
             }
+            // Telegram telegram = new Telegram();
+            // telegram.setStartDelimiterDataRequest();
+            // //get the Address via Id
+            // telegram.setDestinationAddress(-25);
+            // telegram.setSourceAddress(0x01);
+            // ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
+            // apduCommands.setHeadClassCommands();
+            // apduCommands.setOSSet();
+            // apduCommands.putDataField(0x07); //Activate remote control
+            // apduCommands.putDataField(0x05); //Start pump
+            // apduCommands.putDataField(0x22); //CONST_FREQ
+            // telegram.getProtocolDataUnit().putAPDU(apduCommands);
+            // handler.writeTelegram(200, telegram);
+
             getTasks().keySet().forEach(pumpDevice -> {
 
                 Telegram telegram = new Telegram();
@@ -133,7 +147,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
                 apduCommands.setHeadClassCommands();
                 apduCommands.setOSSet();
-
                 ApplicationProgramDataUnit apduConfigurationParametersInfo = new ApplicationProgramDataUnit();
                 apduConfigurationParametersInfo.setHeadClassConfigurationParameters();
                 apduConfigurationParametersInfo.setOSInfo();

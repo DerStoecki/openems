@@ -151,7 +151,7 @@ public class Handler {
     private Telegram handleResponse(Telegram task) {
         try {
             long startTime = System.currentTimeMillis();
-            while ((System.currentTimeMillis() - startTime) < 5000) {
+            while ((System.currentTimeMillis() - startTime) < 500) {
                 byte[] readBuffer = new byte[1024];
                 int numRead = is.available();
                 if (numRead <= 0) {
