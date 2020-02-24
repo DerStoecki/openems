@@ -6,7 +6,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.heatpump.device.api.HeatPump;
-import io.openems.edge.heatpump.device.tempapi.HeatPumpType;
+import io.openems.edge.heatpump.device.api.HeatPumpType;
 import io.openems.edge.heatpump.device.task.HeatPumpCommandsTask;
 import io.openems.edge.heatpump.device.task.HeatPumpReadTask;
 import io.openems.edge.heatpump.device.task.HeatPumpWarnBitsTask;

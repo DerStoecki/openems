@@ -196,14 +196,12 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             //WRITE TASK
             //InformationAvailable --> Information data is available so the task can calc the byte data as a response
             else if (apdu.getHeadOSACKforRequest() == 2) {
-                if (value.InformationDataAvailable()) {
-                    byte valueRequest = value.getRequest();
-                    if (valueRequest >= 0) {
+                    int valueRequest = value.getRequest();
+                    if (valueRequest > -256) {
                         apdu.putDataField(value.getAddress());
-                        apdu.putDataField(valueRequest);
+                        apdu.putDataField((byte)valueRequest);
                     }
                     //INFORMATION DATA
-                }
                 // either no information request OR info request w.o. information data  available
                 // } else if (apdu.getHeadOSACKforRequest() != 3 || !value.InformationDataAvailable()) {
             } else {

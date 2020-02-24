@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump.device.tempapi;
+package io.openems.edge.heatpump.device.api;
 
 
 import io.openems.edge.common.channel.WriteChannel;

@@ -29,5 +29,5 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Wanted Pressure in %", description = "Pressure Level in % (depending on Min and Max Range")
             double rRem() default 50.5;
 
-    String webconsole_configurationFactory_nameHint() default "HeatPump [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Controller Heat Pump [{id}]";
 }

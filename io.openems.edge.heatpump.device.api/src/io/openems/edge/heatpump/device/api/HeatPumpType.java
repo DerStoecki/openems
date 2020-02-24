@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump.device.tempapi;
+package io.openems.edge.heatpump.device.api;
 
 
 public enum HeatPumpType {
@@ -12,7 +12,7 @@ public enum HeatPumpType {
             25, 3, 26, 3, 22,
             3, 24, 3, 83,
             4, 84, 4, 76, 2,
-            77, 2, 5, 1);
+            77, 2, 1, 5);
 
     //////read Measured Data////////
     //diff pressure head

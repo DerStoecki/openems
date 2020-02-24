@@ -15,7 +15,7 @@ public class HeatPumpReadTask extends AbstractHeatPumpTask {
     }
 
     @Override
-    public byte getRequest() {
+    public int getRequest() {
         return -1;
     }
 

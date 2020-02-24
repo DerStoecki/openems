@@ -1,7 +1,7 @@
 package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.bridge.genibus.api.GenibusTask;
-import io.openems.edge.heatpump.device.tempapi.UnitTable;
+import io.openems.edge.heatpump.device.api.UnitTable;
 
 
 public abstract class AbstractHeatPumpTask implements GenibusTask {

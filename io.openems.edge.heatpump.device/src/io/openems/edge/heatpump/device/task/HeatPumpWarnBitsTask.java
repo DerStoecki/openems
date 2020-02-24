@@ -1,7 +1,7 @@
 package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.common.channel.Channel;
-import io.openems.edge.heatpump.device.tempapi.WarnBits;
+import io.openems.edge.heatpump.device.api.WarnBits;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public class HeatPumpWarnBitsTask extends AbstractHeatPumpTask {
     }
 
     @Override
-    public byte getRequest() {
+    public int getRequest() {
         return -1;
     }
 

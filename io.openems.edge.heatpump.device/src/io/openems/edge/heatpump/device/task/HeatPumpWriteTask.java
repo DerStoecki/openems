@@ -1,8 +1,8 @@
 package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.common.channel.WriteChannel;
-import io.openems.edge.heatpump.device.tempapi.UnitTable;
-import io.openems.edge.heatpump.device.tempapi.HeatPumpTask;
+import io.openems.edge.heatpump.device.api.UnitTable;
+import io.openems.edge.heatpump.device.api.HeatPumpTask;
 
 public class HeatPumpWriteTask extends AbstractHeatPumpTask implements HeatPumpTask {
 
@@ -15,8 +15,8 @@ public class HeatPumpWriteTask extends AbstractHeatPumpTask implements HeatPumpT
     }
 
     @Override
-    public byte getRequest() {
-        byte request = -1;
+    public int getRequest() {
+        int request = -256;
         if (super.informationAvailable && this.channel.getNextWriteValue().isPresent()) {
             //NOTE! The Correct Calculated Digit will be calc by a Controller!
             double dataOfChannel = this.channel.getNextWriteValue().get();

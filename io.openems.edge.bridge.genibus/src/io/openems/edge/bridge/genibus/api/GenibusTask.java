@@ -4,7 +4,7 @@ package io.openems.edge.bridge.genibus.api;
 public interface GenibusTask {
 
 
-    byte getRequest();
+    int getRequest();
 
     void setResponse(byte data);
 

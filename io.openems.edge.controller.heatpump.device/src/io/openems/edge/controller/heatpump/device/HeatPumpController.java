@@ -16,12 +16,16 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "HeatPumpController")
+@Component(name = "ControllerHeatPump")
 public class HeatPumpController extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
+
+    @Reference(policy = ReferencePolicy.STATIC,
+            policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    GenibusChannel genibus;
+
 
     @Reference
     ComponentManager cpm;
-
 
     private double hRefMin;
     private double hRefMax;
@@ -29,23 +33,19 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
     private double rRem;
     private double range = 254;
 
-    private WriteChannel<Double> hRefMinChannel;
-    private WriteChannel<Double> hRefMaxChannel;
-    private WriteChannel<Double> refRemChannel;
+    HeatPump heatpump;
 
     public HeatPumpController() {
-        super(Controller.ChannelId.values(), OpenemsComponent.ChannelId.values());
+        super(OpenemsComponent.ChannelId.values(),
+                Controller.ChannelId.values());
     }
 
     @Activate
-    void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
             if (cpm.getComponent(config.heatPumpId()) instanceof HeatPump) {
-                HeatPump heatPump = cpm.getComponent(config.heatPumpId());
-                this.hRefMinChannel = heatPump.setConstRefMinH();
-                this.hRefMaxChannel = heatPump.setConstRefMaxH();
-                this.refRemChannel = heatPump.setRefRem();
+                this.heatpump = cpm.getComponent(config.heatPumpId());
             } else {
                 throw new ConfigurationException("HeatPump not correct instance, check Id!", "Incorrect Id in Config");
             }
@@ -71,13 +71,19 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
             System.out.println("Attention RefMax < HRef Min! Cannot Execute Controller Logic");
 
         } else {
-            this.hRefMinChannel.setNextWriteValue(this.hRefMin);
-            this.hRefMaxChannel.setNextWriteValue(this.hRefMax);
-            double result =  (range * rRem / 100);
-            this.refRemChannel.setNextWriteValue(result);
+            this.heatpump.setConstRefMinH().setNextWriteValue(this.hRefMin);
+            this.heatpump.setConstRefMaxH().setNextWriteValue(this.hRefMax);
+            double result = (range * rRem / 100);
+            this.heatpump.setRefRem().setNextWriteValue(Math.floor(result));
+            //for REST
+            this.heatpump.setRefRem().setNextValue(Math.floor(result));
         }
-
-
+        if (this.genibus.getApduConfigurationParameters().getNextValue().get() != 2) {
+            this.genibus.getApduConfigurationParameters().setNextValue(2);
+        }
+        if (this.genibus.getApduReferenceValues().getNextValue().get() != 2) {
+            this.genibus.getApduReferenceValues().setNextValue(2);
+        }
 
     }
 }

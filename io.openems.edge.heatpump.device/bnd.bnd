@@ -7,7 +7,6 @@ Bundle-Description: \
 
 
 Export-Package: \
-    io.openems.edge.heatpump.device.tempapi,\
 
 Private-Package:  \
 	io.openems.edge.heatpump.device,\
