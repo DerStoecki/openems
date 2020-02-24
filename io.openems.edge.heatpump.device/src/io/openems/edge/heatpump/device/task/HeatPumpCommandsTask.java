@@ -2,12 +2,12 @@ package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.common.channel.WriteChannel;
 
-public class HeatPumpCommandsTask extends HeatPumpTask {
+public class HeatPumpCommandsTask extends AbstractHeatPumpTask {
 
     private WriteChannel<Boolean> channel;
 
     public HeatPumpCommandsTask(int address, int headerNumber, WriteChannel<Boolean> channel) {
-        super(address, headerNumber);
+        super(address, headerNumber, "");
         this.channel = channel;
     }
 

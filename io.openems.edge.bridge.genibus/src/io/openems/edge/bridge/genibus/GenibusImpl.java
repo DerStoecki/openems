@@ -9,6 +9,7 @@ import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.genibus.api.*;
 import io.openems.edge.bridge.genibus.protocol.ApplicationProgramDataUnit;
 import io.openems.edge.bridge.genibus.protocol.Telegram;
+import io.openems.edge.common.channel.Channel;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -73,10 +74,9 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     }
 
     private void applyDefaultApduHeaderOperation() {
-        //default: apduCommands is set and rest ist get
-        getApduConfigurationParameters().setNextValue(0);
+        getApduConfigurationParameters().setNextValue(2);
         getApduMeasuredData().setNextValue(0);
-        getApduReferenceValues().setNextValue(0);
+        getApduReferenceValues().setNextValue(2);
         getAsciiStrings().setNextValue(0);
     }
 
@@ -114,19 +114,6 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 }
                 return;
             }
-            // Telegram telegram = new Telegram();
-            // telegram.setStartDelimiterDataRequest();
-            // //get the Address via Id
-            // telegram.setDestinationAddress(-25);
-            // telegram.setSourceAddress(0x01);
-            // ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
-            // apduCommands.setHeadClassCommands();
-            // apduCommands.setOSSet();
-            // apduCommands.putDataField(0x07); //Activate remote control
-            // apduCommands.putDataField(0x05); //Start pump
-            // apduCommands.putDataField(0x22); //CONST_FREQ
-            // telegram.getProtocolDataUnit().putAPDU(apduCommands);
-            // handler.writeTelegram(200, telegram);
 
             getTasks().keySet().forEach(pumpDevice -> {
 
@@ -338,7 +325,12 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         this.devices.remove(id);
     }
 
-    Map<String, Map<Integer, List<GenibusTask>>> getTasks() {
+    @Override
+    public Channel<Integer> getConfigurationParameterChannel() {
+        return getApduConfigurationParameters();
+    }
+
+    private Map<String, Map<Integer, List<GenibusTask>>> getTasks() {
         return tasks;
     }
 }

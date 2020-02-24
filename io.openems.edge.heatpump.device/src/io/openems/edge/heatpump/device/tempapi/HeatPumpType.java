@@ -1,4 +1,5 @@
-package io.openems.edge.heatpump.device;
+package io.openems.edge.heatpump.device.tempapi;
+
 
 public enum HeatPumpType {
     MAGNA_3(23, 2, 28, 2, 30, 2, 34, 2, 37,
@@ -8,9 +9,12 @@ public enum HeatPumpType {
             2, 162, 2, 105, 4, 106,
             4, 101, 4, 103, 4, 104,
             4, 7, 3, 6, 3, 5, 3,
-            25, 3, 26, 3, 22, 3);
+            25, 3, 26, 3, 22,
+            3, 24, 3, 83,
+            4, 84, 4, 76, 2,
+            77, 2, 5, 1);
 
-    //read Measured Data
+    //////read Measured Data////////
     //diff pressure head
     private int hDiff;
     private int hDiffHeadClass;
@@ -55,12 +59,19 @@ public enum HeatPumpType {
     private int warnBits4;
     private int warnBits4HeadClass;
 
-    //Write
+
+    //reference setting range
+    private int rMin;
+    private int rMinHeadClass;
+    private int rMax;
+    private int rMaxHeadClass;
+    ///////Write/////////////
     //Pump flow Config Params
     private int qMaxHi;
     private int qMaxHiHeadClass;
     private int qMaxLo;
     private int qMaxLowClass;
+
     //pressure Config Params
     private int deltaH;
     private int deltaHheadClass;
@@ -68,6 +79,8 @@ public enum HeatPumpType {
     private int hMaxHiHeadClass;
     private int hMaxLo;
     private int hMaxLoHeadClass;
+
+
     //Commands
     private int remote;
     private int remoteHeadClass;
@@ -81,6 +94,17 @@ public enum HeatPumpType {
     private int maxMotorCurveHeadClass;
     private int constFrequency;
     private int constFrequencyHeadClass;
+    private int constPressure;
+    private int constPressureHeadClass;
+    private int hConstRefMin;
+    private int hConstRefMinHeadClass;
+    private int hConstRefMax;
+    private int hConstRefMaxHeadClass;
+
+
+    //Reference Value
+    private int refRem;
+    private int refRemHeadClass;
 
 
     HeatPumpType(int hDiff, int hDiffHeadClass, int tE, int tEheadClass, int iMo, int imoHeadClass, int plo,
@@ -92,7 +116,10 @@ public enum HeatPumpType {
                  int qMaxLo, int qMaxLowClass, int deltaH, int deltaHheadClass, int hMaxHi, int hMaxHiHeadClass,
                  int hMaxLo, int hMaxLoHeadClass, int remote, int remoteHeadClass, int start, int startHeadClass,
                  int stop, int stopHeadClass, int minMotorCurve, int minMotorCurveHeadClass,
-                 int maxMotorCurve, int maxMotorCurveHeadClass, int constFrequency, int constFrequencyHeadClass) {
+                 int maxMotorCurve, int maxMotorCurveHeadClass, int constFrequency, int constFrequencyHeadClass,
+                 int constPressure, int constPressureHeadClass, int hConstRefMin, int hConstRefMinHeadClass,
+                 int hConstRefMax, int hConstRefMaxHeadClass, int rMin, int rMinHeadClass, int rMax, int rMaxHeadClass,
+                 int refRem, int refRemHeadClass) {
         this.hDiff = hDiff;
         this.hDiffHeadClass = hDiffHeadClass;
         this.tE = tE;
@@ -145,6 +172,18 @@ public enum HeatPumpType {
         this.maxMotorCurveHeadClass = maxMotorCurveHeadClass;
         this.constFrequency = constFrequency;
         this.constFrequencyHeadClass = constFrequencyHeadClass;
+        this.constPressure = constPressure;
+        this.constPressureHeadClass = constPressureHeadClass;
+        this.hConstRefMin = hConstRefMin;
+        this.hConstRefMinHeadClass = hConstRefMinHeadClass;
+        this.hConstRefMax = hConstRefMax;
+        this.hConstRefMaxHeadClass = hConstRefMaxHeadClass;
+        this.rMin = rMin;
+        this.rMinHeadClass = rMinHeadClass;
+        this.rMax = rMax;
+        this.rMaxHeadClass = rMaxHeadClass;
+        this.refRem = refRem;
+        this.refRemHeadClass = refRemHeadClass;
     }
 
     public int gethDiff() {
@@ -267,6 +306,23 @@ public enum HeatPumpType {
         return warnBits4HeadClass;
     }
 
+
+    public int getrMin() {
+        return rMin;
+    }
+
+    public int getrMinHeadClass() {
+        return rMinHeadClass;
+    }
+
+    public int getrMax() {
+        return rMax;
+    }
+
+    public int getrMaxHeadClass() {
+        return rMaxHeadClass;
+    }
+
     public int getqMaxHi() {
         return qMaxHi;
     }
@@ -357,5 +413,37 @@ public enum HeatPumpType {
 
     public int getConstFrequencyHeadClass() {
         return constFrequencyHeadClass;
+    }
+
+    public int getConstPressure() {
+        return constPressure;
+    }
+
+    public int getConstPressureHeadClass() {
+        return constPressureHeadClass;
+    }
+
+    public int gethConstRefMin() {
+        return hConstRefMin;
+    }
+
+    public int gethConstRefMinHeadClass() {
+        return hConstRefMinHeadClass;
+    }
+
+    public int gethConstRefMax() {
+        return hConstRefMax;
+    }
+
+    public int gethConstRefMaxHeadClass() {
+        return hConstRefMaxHeadClass;
+    }
+
+    public int getRefRem() {
+        return refRem;
+    }
+
+    public int getRefRemHeadClass() {
+        return refRemHeadClass;
     }
 }

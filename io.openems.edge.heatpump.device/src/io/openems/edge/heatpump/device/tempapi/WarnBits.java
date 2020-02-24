@@ -1,4 +1,4 @@
-package io.openems.edge.heatpump.device;
+package io.openems.edge.heatpump.device.tempapi;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,19 +1,18 @@
 package io.openems.edge.heatpump.device.task;
 
 import io.openems.edge.common.channel.Channel;
-import io.openems.edge.heatpump.device.WarnBits;
+import io.openems.edge.heatpump.device.tempapi.WarnBits;
 
-import java.util.Arrays;
 import java.util.List;
 
-public class HeatPumpWarnBitsTask extends HeatPumpTask {
+public class HeatPumpWarnBitsTask extends AbstractHeatPumpTask {
 
 
     private Channel<String> channel;
     private WarnBits warnBits;
 
     public HeatPumpWarnBitsTask(int address, int headerNumber, Channel<String> channel, String type) {
-        super(address, headerNumber);
+        super(address, headerNumber, "");
         this.channel = channel;
         switch (type) {
             case "Magna3":

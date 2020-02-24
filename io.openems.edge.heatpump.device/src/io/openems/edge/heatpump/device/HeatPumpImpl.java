@@ -6,6 +6,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.heatpump.device.api.HeatPump;
+import io.openems.edge.heatpump.device.tempapi.HeatPumpType;
 import io.openems.edge.heatpump.device.task.HeatPumpCommandsTask;
 import io.openems.edge.heatpump.device.task.HeatPumpReadTask;
 import io.openems.edge.heatpump.device.task.HeatPumpWarnBitsTask;
@@ -41,9 +42,6 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         genibus.addDevice(super.id(), config.heatPumpAddress());
         try {
-            this.setPressureDelta().setNextWriteValue(config.pumpStartPressure());
-            this.setMaxPressure().setNextWriteValue(config.maxPressure());
-            this.setMinPressure().setNextWriteValue(config.minPressure());
             //commands
             this.setRemote().setNextWriteValue(true);
             this.setStart().setNextWriteValue(true);
@@ -51,6 +49,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
             this.setMinMotorCurve().setNextWriteValue(false);
             this.setMaxMotorCurve().setNextWriteValue(false);
             this.setConstFrequency().setNextWriteValue(false);
+            this.setConstPressure().setNextWriteValue(true);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
@@ -86,6 +85,9 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
                 this.heatPumpType.getMaxMotorCurveHeadClass(), setMaxMotorCurve()));
         this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getConstFrequency(),
                 this.heatPumpType.getConstFrequencyHeadClass(), setConstFrequency()));
+
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getConstPressure(),
+                this.heatPumpType.getConstPressureHeadClass(), setConstPressure()));
 
         //read Task
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gethDiff(),
@@ -132,24 +134,37 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits4(),
                 this.heatPumpType.getWarnBits4HeadClass(), getWarnBits_4(), "Magna3"));
-
+        //reference Values
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getrMin(),
+                this.heatPumpType.getrMinHeadClass(), getRmin(), "Standard"));
+        this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getrMax(),
+                this.heatPumpType.getrMaxHeadClass(), getRmax(), "Standard"));
 
         //write Task --> headClass 4 --> Config Param
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxHi(),
-                this.heatPumpType.getqMaxHiHeadClass(), setPumpFlowHi()));
+                this.heatPumpType.getqMaxHiHeadClass(), setPumpFlowHi(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxLo(),
-                this.heatPumpType.getqMaxLowClass(), setPumpFlowLo()));
+                this.heatPumpType.getqMaxLowClass(), setPumpFlowLo(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getDeltaH(),
-                this.heatPumpType.getDeltaHheadClass(), setPressureDelta()));
+                this.heatPumpType.getDeltaHheadClass(), setPressureDelta(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxHi(),
-                this.heatPumpType.gethMaxHiHeadClass(), setMaxPressure()));
+                this.heatPumpType.gethMaxHiHeadClass(), setMaxPressure(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxLo(),
-                this.heatPumpType.gethMaxLoHeadClass(), setMinPressure()));
+                this.heatPumpType.gethMaxLoHeadClass(), setMinPressure(), "Standard"));
 
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethConstRefMax(),
+                this.heatPumpType.gethConstRefMaxHeadClass(), setConstRefMaxH(), "Standard"));
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethConstRefMin(),
+                this.heatPumpType.gethConstRefMinHeadClass(), setConstRefMinH(), "Standard"));
+
+        //write Task --> head Class 5 --> Reference Values
+
+        this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getRefRem(),
+                this.heatPumpType.getRefRemHeadClass(), setRefRem(), "Standard"));
 
     }
 

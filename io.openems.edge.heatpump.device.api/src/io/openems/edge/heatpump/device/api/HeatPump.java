@@ -1,6 +1,5 @@
 package io.openems.edge.heatpump.device.api;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.openems.common.channel.Unit;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.types.OpenemsType;
@@ -30,6 +29,10 @@ public interface HeatPump extends OpenemsComponent {
         WARN_BITS_3(Doc.of(OpenemsType.STRING)),
         WARN_BITS_4(Doc.of(OpenemsType.STRING)),
 
+        //reference Values
+        R_MIN(Doc.of(OpenemsType.DOUBLE)),
+        R_MAX(Doc.of(OpenemsType.DOUBLE)),
+
         //config params
         SET_PUMP_FLOW_HI(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
         SET_PUMP_FLOW_LO(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
@@ -38,14 +41,20 @@ public interface HeatPump extends OpenemsComponent {
         SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
         SET_MIN_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
 
+        H_CONST_REF_MIN(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        H_CONST_REF_MAX(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+
         //commands
         START(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         STOP(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         REMOTE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         MIN_MOTOR_CURVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         MAX_MOTOR_CURVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
-        CONST_FREQUENCY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
+        CONST_FREQUENCY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        CONST_PRESSURE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
 
+        //
+        REF_REM(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE));
         private final Doc doc;
 
         private ChannelId(Doc doc) {
@@ -120,6 +129,16 @@ public interface HeatPump extends OpenemsComponent {
         return this.channel(ChannelId.WARN_BITS_4);
     }
 
+    default Channel<Double> getRmin() {
+        return this.channel(ChannelId.R_MIN);
+    }
+
+    default Channel<Double> getRmax() {
+        return this.channel(ChannelId.R_MAX);
+    }
+
+    //Write Tasks
+
     default WriteChannel<Double> setPumpFlowHi() {
         return this.channel(ChannelId.SET_PUMP_FLOW_HI);
     }
@@ -138,6 +157,14 @@ public interface HeatPump extends OpenemsComponent {
 
     default WriteChannel<Double> setMinPressure() {
         return this.channel(ChannelId.SET_MIN_PRESSURE);
+    }
+
+    default WriteChannel<Double> setConstRefMinH() {
+        return this.channel(ChannelId.H_CONST_REF_MIN);
+    }
+
+    default WriteChannel<Double> setConstRefMaxH() {
+        return this.channel(ChannelId.H_CONST_REF_MAX);
     }
 
     //command Channel
@@ -163,6 +190,15 @@ public interface HeatPump extends OpenemsComponent {
 
     default WriteChannel<Boolean> setConstFrequency() {
         return this.channel(ChannelId.CONST_FREQUENCY);
+    }
+
+    default WriteChannel<Boolean> setConstPressure() {
+        return this.channel(ChannelId.CONST_PRESSURE);
+    }
+    //reference Value
+
+    default WriteChannel<Double> setRefRem() {
+        return this.channel(ChannelId.REF_REM);
     }
 
 }
