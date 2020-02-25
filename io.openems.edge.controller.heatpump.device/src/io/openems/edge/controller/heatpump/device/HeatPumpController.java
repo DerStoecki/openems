@@ -74,7 +74,7 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
             this.heatpump.setConstRefMinH().setNextWriteValue(this.hRefMin);
             this.heatpump.setConstRefMaxH().setNextWriteValue(this.hRefMax);
             double result = (range * rRem / 100);
-            this.heatpump.setRefRem().setNextWriteValue(Math.floor(result));
+           this.heatpump.setRefRem().setNextWriteValue(Math.floor(result));
             //for REST
             this.heatpump.setRefRem().setNextValue(Math.floor(result));
         }

@@ -169,7 +169,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                             addData(apduConfigurationParameters, value, telegram);
                             break;
                         case 5:
-                            addData(apduReferenceValuesInfo, value, telegram);
+                            //addData(apduReferenceValuesInfo, value, telegram);
                             addData(apduReferenceValues, value, telegram);
                             break;
                         case 7:
