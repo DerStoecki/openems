@@ -155,7 +155,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 apduAsciiStrings.setHeadOSACK(getAsciiStrings().getNextValue().get());
 
                 getTasks().get(pumpDevice).forEach((key, value) -> {
-
+                    //ATTENTION! ATM only 6 Apdu frames are possible to read --> current implementation --> case 2, 3, 4
+                    //and 5 are only needed.
                     switch (key) {
                         case 2:
                             addData(apduMeasuredDataInfo, value, telegram);

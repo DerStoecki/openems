@@ -2,6 +2,7 @@ package io.openems.edge.controller.heatpump.device;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(//
         name = "Controller Heat Pump", //
@@ -27,7 +28,21 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     double hRefMax() default 127;
 
     @AttributeDefinition(name = "Wanted Pressure in %", description = "Pressure Level in % (depending on Min and Max Range")
-            double rRem() default 50.5;
+    double rRem() default 50.5;
+
+    @AttributeDefinition(name = "Command Settings", description = "If you wish you can add additional Commands which will be handled"
+            + "Remote needs to selected of not using AutoAdapt.",
+            options = {
+                    @Option(label = "Remote", value = "Remote"),
+                    @Option(label = "Start", value = "Start"),
+                    @Option(label = "Stop", value = "Stop"),
+                    @Option(label = "MinMotorCurve", value = "MinMotorCurve"),
+                    @Option(label = "MaxMotorCurve", value = "MaxMotorCurve"),
+                    @Option(label = "ConstFrequency", value = "ConstFrequency"),
+                    @Option(label = "ConstPressure", value = "ConstPressure"),
+                    @Option(label = "AutoAdapt", value = "AutoAdapt")
+            })
+    String[] commands() default {"Remote", "Start", "ConstFrequency"};
 
     String webconsole_configurationFactory_nameHint() default "Controller Heat Pump [{id}]";
 }

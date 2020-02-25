@@ -14,6 +14,8 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.util.Arrays;
+
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "ControllerHeatPump")
@@ -33,7 +35,16 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
     private double rRem;
     private double range = 254;
 
-    HeatPump heatpump;
+    private HeatPump heatpump;
+
+    private boolean start;
+    private boolean stop;
+    private boolean remote;
+    private boolean minMotorCurve;
+    private boolean maxMotorCurve;
+    private boolean constFrequency;
+    private boolean constPressure;
+    private boolean autoAdapt;
 
     public HeatPumpController() {
         super(OpenemsComponent.ChannelId.values(),
@@ -56,6 +67,35 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
         this.hRefMin = config.hRefMin();
         this.rRem = config.rRem();
 
+        String[] commands = config.commands();
+        Arrays.stream(commands).forEach(string -> {
+            switch (string) {
+                case "Remote":
+                    this.remote = true;
+                    break;
+                case "Start":
+                    this.start = true;
+                    break;
+                case "Stop":
+                    this.stop = true;
+                    break;
+                case "MinMotorCurve":
+                    this.minMotorCurve = true;
+                    break;
+                case "MaxMotorCurve":
+                    this.maxMotorCurve = true;
+                    break;
+                case "ConstFrequency":
+                    this.constFrequency = true;
+                    break;
+                case "ConstPressure":
+                    this.constPressure = true;
+                    break;
+                case "AutoAdapt":
+                    this.autoAdapt = true;
+                    break;
+            }
+        });
     }
 
     @Deactivate
@@ -66,16 +106,30 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
+        if (this.remote) {
+            this.autoAdapt = false;
+        }
+        this.heatpump.setAutoAdapt().setNextWriteValue(this.autoAdapt);
+        this.heatpump.setStart().setNextWriteValue(this.start);
+        this.heatpump.setStop().setNextWriteValue(this.stop);
+        this.heatpump.setMaxMotorCurve().setNextWriteValue(this.maxMotorCurve);
+        this.heatpump.setMinMotorCurve().setNextWriteValue(this.minMotorCurve);
+        this.heatpump.setConstFrequency().setNextWriteValue(this.constFrequency);
+        this.heatpump.setConstPressure().setNextWriteValue(this.constPressure);
+        this.heatpump.setRemote().setNextWriteValue(this.remote);
+
 
         if (hRefMax < hRefMin) {
-            System.out.println("Attention RefMax < HRef Min! Cannot Execute Controller Logic");
+            System.out.println("Attention RefMax < HRef Min! Cannot Execute Controller main logic");
 
         } else {
+            //setNextValue is for reading from REST Client
             this.heatpump.setConstRefMinH().setNextWriteValue(this.hRefMin);
+            this.heatpump.setConstRefMinH().setNextValue(this.hRefMin);
             this.heatpump.setConstRefMaxH().setNextWriteValue(this.hRefMax);
+            this.heatpump.setConstRefMaxH().setNextValue(this.hRefMax);
             double result = (range * rRem / 100);
-           this.heatpump.setRefRem().setNextWriteValue(Math.floor(result));
-            //for REST
+            this.heatpump.setRefRem().setNextWriteValue(Math.floor(result));
             this.heatpump.setRefRem().setNextValue(Math.floor(result));
         }
         if (this.genibus.getApduConfigurationParameters().getNextValue().get() != 2) {

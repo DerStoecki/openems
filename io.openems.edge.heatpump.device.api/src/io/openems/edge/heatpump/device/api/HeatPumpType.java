@@ -12,7 +12,7 @@ public enum HeatPumpType {
             25, 3, 26, 3, 22,
             3, 24, 3, 83,
             4, 84, 4, 76, 2,
-            77, 2, 1, 5);
+            77, 2, 1, 5, 52, 3);
 
     //////read Measured Data////////
     //diff pressure head
@@ -100,6 +100,8 @@ public enum HeatPumpType {
     private int hConstRefMinHeadClass;
     private int hConstRefMax;
     private int hConstRefMaxHeadClass;
+    private int autoAdapt;
+    private int autoAdaptHeadClass;
 
 
     //Reference Value
@@ -119,7 +121,7 @@ public enum HeatPumpType {
                  int maxMotorCurve, int maxMotorCurveHeadClass, int constFrequency, int constFrequencyHeadClass,
                  int constPressure, int constPressureHeadClass, int hConstRefMin, int hConstRefMinHeadClass,
                  int hConstRefMax, int hConstRefMaxHeadClass, int rMin, int rMinHeadClass, int rMax, int rMaxHeadClass,
-                 int refRem, int refRemHeadClass) {
+                 int refRem, int refRemHeadClass, int autoAdapt, int autoAdaptHeadClass) {
         this.hDiff = hDiff;
         this.hDiffHeadClass = hDiffHeadClass;
         this.tE = tE;
@@ -184,6 +186,8 @@ public enum HeatPumpType {
         this.rMaxHeadClass = rMaxHeadClass;
         this.refRem = refRem;
         this.refRemHeadClass = refRemHeadClass;
+        this.autoAdapt = autoAdapt;
+        this.autoAdaptHeadClass = autoAdaptHeadClass;
     }
 
     public int gethDiff() {
@@ -364,8 +368,8 @@ public enum HeatPumpType {
         return hMaxLoHeadClass;
     }
 
-    //commands
 
+    //commands
 
     public int getRemote() {
         return remote;
@@ -423,6 +427,14 @@ public enum HeatPumpType {
         return constPressureHeadClass;
     }
 
+    public int getAutoAdapt() {
+        return autoAdapt;
+    }
+
+    public int getAutoAdaptHeadClass() {
+        return autoAdaptHeadClass;
+    }
+
     public int gethConstRefMin() {
         return hConstRefMin;
     }
@@ -438,6 +450,7 @@ public enum HeatPumpType {
     public int gethConstRefMaxHeadClass() {
         return hConstRefMaxHeadClass;
     }
+
 
     public int getRefRem() {
         return refRem;

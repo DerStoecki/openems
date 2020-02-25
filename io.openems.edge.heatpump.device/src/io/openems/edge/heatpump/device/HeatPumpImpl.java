@@ -50,6 +50,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
             this.setMaxMotorCurve().setNextWriteValue(false);
             this.setConstFrequency().setNextWriteValue(true);
             this.setConstPressure().setNextWriteValue(false);
+            this.setAutoAdapt().setNextWriteValue(false);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
@@ -72,7 +73,8 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
     private void createMagna3Tasks() {
         //foreach Channel create Task
 
-        //commands
+        ///////////////COMMANDS/////////////////
+
         this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getRemote(),
                 this.heatPumpType.getRemoteHeadClass(), setRemote()));
         this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getStart(),
@@ -88,8 +90,10 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getConstPressure(),
                 this.heatPumpType.getConstPressureHeadClass(), setConstPressure()));
+        this.genibus.addTask(super.id(), new HeatPumpCommandsTask(this.heatPumpType.getAutoAdapt(),
+                this.heatPumpType.getAutoAdaptHeadClass(), setAutoAdapt()));
 
-        //read Task
+        ///////////////READ TASK/////////////////
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.gethDiff(),
                 this.heatPumpType.gethDiffHeadClass(), getDiffPressureHead(), "Standard"));
 
@@ -122,7 +126,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getAlarmCode(),
                 this.heatPumpType.getAlarmCodeHeadClass(), getAlarmCode(), "Standard"));
-        //warnBits
+        ///////////////WARN BITS/////////////////
         this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits1(),
                 this.heatPumpType.getWarnBits1HeadClass(), getWarnBits_1(), "Magna3"));
 
@@ -134,13 +138,14 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         this.genibus.addTask(super.id(), new HeatPumpWarnBitsTask(this.heatPumpType.getWarnBits4(),
                 this.heatPumpType.getWarnBits4HeadClass(), getWarnBits_4(), "Magna3"));
-        //reference Values
+        ///////////////REFERENCE VALUES/////////////////
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getrMin(),
                 this.heatPumpType.getrMinHeadClass(), getRmin(), "Standard"));
         this.genibus.addTask(super.id(), new HeatPumpReadTask(this.heatPumpType.getrMax(),
                 this.heatPumpType.getrMaxHeadClass(), getRmax(), "Standard"));
 
-        //write Task --> headClass 4 --> Config Param
+        ///////////////WRITE TASK/////////////////
+        ///////////////CONFIG PARAMS/////////////////
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getqMaxHi(),
                 this.heatPumpType.getqMaxHiHeadClass(), setPumpFlowHi(), "Standard"));
 
@@ -161,7 +166,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethConstRefMin(),
                 this.heatPumpType.gethConstRefMinHeadClass(), setConstRefMinH(), "Standard"));
 
-        //write Task --> head Class 5 --> Reference Values
+        ///////////////REFERENCE VALUES/////////////////
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.getRefRem(),
                 this.heatPumpType.getRefRemHeadClass(), setRefRem(), "Standard"));

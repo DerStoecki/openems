@@ -52,6 +52,7 @@ public interface HeatPump extends OpenemsComponent {
         MAX_MOTOR_CURVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         CONST_FREQUENCY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         CONST_PRESSURE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        AUTO_ADAPT(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
 
         //
         REF_REM(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE));
@@ -178,6 +179,10 @@ public interface HeatPump extends OpenemsComponent {
 
     default WriteChannel<Boolean> setStop() {
         return this.channel(ChannelId.STOP);
+    }
+
+    default WriteChannel<Boolean> setAutoAdapt() {
+        return this.channel(ChannelId.AUTO_ADAPT);
     }
 
     default WriteChannel<Boolean> setMinMotorCurve() {
