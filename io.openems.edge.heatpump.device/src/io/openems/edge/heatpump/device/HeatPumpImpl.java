@@ -48,8 +48,8 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
             this.setStop().setNextWriteValue(false);
             this.setMinMotorCurve().setNextWriteValue(false);
             this.setMaxMotorCurve().setNextWriteValue(false);
-            this.setConstFrequency().setNextWriteValue(false);
-            this.setConstPressure().setNextWriteValue(true);
+            this.setConstFrequency().setNextWriteValue(true);
+            this.setConstPressure().setNextWriteValue(false);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }

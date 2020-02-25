@@ -196,12 +196,12 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             //WRITE TASK
             //InformationAvailable --> Information data is available so the task can calc the byte data as a response
             else if (apdu.getHeadOSACKforRequest() == 2) {
-                    int valueRequest = value.getRequest();
-                    if (valueRequest > -256) {
-                        apdu.putDataField(value.getAddress());
-                        apdu.putDataField((byte)valueRequest);
-                    }
-                    //INFORMATION DATA
+                int valueRequest = value.getRequest();
+                if (valueRequest > -256) {
+                    apdu.putDataField(value.getAddress());
+                    apdu.putDataField((byte) valueRequest);
+                }
+                //INFORMATION DATA
                 // either no information request OR info request w.o. information data  available
                 // } else if (apdu.getHeadOSACKforRequest() != 3 || !value.InformationDataAvailable()) {
             } else {
@@ -233,48 +233,54 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
             // always on [0]
             int headClass = data[0];
             // on correct position get the header.
+
             int osAck = requestApdu.get(listCounter.get()).getHeadOSACKforRequest();
-            for (int byteCounter = 2; byteCounter < data.length; ) {
-                /* TODO responseApdu.get(listCounter).getHeadOSACKShifted(); for further information
-                 */
-                GenibusTask geniTask = tasks.get(pumpDevice).get(headClass).get(taskCounter);
-                //if info is already available current task is wrong
-                if (osAck == 3) {
-                    //if geniTask information available --> this data field is not for this task.
-                    //if (!geniTask.InformationDataAvailable()) {
-                    //vi bit 4
-                    int vi = (data[byteCounter] & 0x10);
-                    //bo bit 5
-                    int bo = (data[byteCounter] & 0x20);
-                    //sif on bit 0 and 1
-                    int sif = (data[byteCounter] & 0x03);
-                    //only 1 byte of data
-                    if (sif == 0 || sif == 1) {
-                        geniTask.setOneByteInformation(vi, bo, sif);
-                        byteCounter++;
-                        //only 4byte data
-                    } else {
-                        if (byteCounter >= data.length - 3) {
-                            System.out.println("Incorrect Data Length to SIF-->prevented Out of Bounce Exception");
-                            break;
+            if (osAck == 2) {
+                listCounter.getAndIncrement();
+
+            } else {
+                for (int byteCounter = 2; byteCounter < data.length; ) {
+                    /* TODO responseApdu.get(listCounter).getHeadOSACKShifted(); for further information
+                     */
+                    GenibusTask geniTask = tasks.get(pumpDevice).get(headClass).get(taskCounter);
+                    //if info is already available current task is wrong
+                    if (osAck == 3) {
+                        //if geniTask information available --> this data field is not for this task.
+                        //if (!geniTask.InformationDataAvailable()) {
+                        //vi bit 4
+                        int vi = (data[byteCounter] & 0x10);
+                        //bo bit 5
+                        int bo = (data[byteCounter] & 0x20);
+                        //sif on bit 0 and 1
+                        int sif = (data[byteCounter] & 0x03);
+                        //only 1 byte of data
+                        if (sif == 0 || sif == 1) {
+                            geniTask.setOneByteInformation(vi, bo, sif);
+                            byteCounter++;
+                            //only 4byte data
+                        } else {
+                            if (byteCounter >= data.length - 3) {
+                                System.out.println("Incorrect Data Length to SIF-->prevented Out of Bounce Exception");
+                                break;
+                            }
+                            geniTask.setFourByteInformation(vi, bo, sif,
+                                    data[byteCounter + 1], data[byteCounter + 2], data[byteCounter + 3]);
+                            //bc of 4 byte data additional 3 byte incr.
+                            byteCounter += 4;
                         }
-                        geniTask.setFourByteInformation(vi, bo, sif,
-                                data[byteCounter + 1], data[byteCounter + 2], data[byteCounter + 3]);
-                        //bc of 4 byte data additional 3 byte incr.
-                        byteCounter += 4;
+                        //}
+                    } else {
+                        //TODO Check if its only 1 byte data --> later.
+                        geniTask.setResponse(data[byteCounter]);
+                        byteCounter++;
                     }
-                    //}
-                } else if (osAck != 2) {
-                    //TODO Check if its only 1 byte data --> later.
-                    geniTask.setResponse(data[byteCounter]);
-                    byteCounter++;
+                    taskCounter++;
+                    if (tasks.get(pumpDevice).get(headClass).size() < taskCounter) {
+                        break;
+                    }
                 }
-                taskCounter++;
-                if (tasks.get(pumpDevice).get(headClass).size() < taskCounter) {
-                    break;
-                }
+                listCounter.getAndIncrement();
             }
-            listCounter.getAndIncrement();
         });
 
     }
