@@ -21,14 +21,17 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "HeatPumpId", description = "Unique Id of the Pump.")
     String heatPumpId() default "HeatPump0";
 
-    @AttributeDefinition(name = "MinRange", description = "MinReference Value of Min Pressure (0-253).")
-    double hRefMin() default 5;
+     @AttributeDefinition(name = "Maximum system pressure", description = "Maximum System Pressure in bar")
+    double maxPressure() default 16;
 
-    @AttributeDefinition(name = "MaxRange", description = "MaxReference Value of Max Pressure (1-254).")
-    double hRefMax() default 127;
+    @AttributeDefinition(name = "MinRange", description = "MinReference Value of Min Pressure in bar.")
+    double hRefMin() default 0.1;
 
-    @AttributeDefinition(name = "Wanted Pressure in %", description = "Pressure Level in % (depending on Min and Max Range")
-    double rRem() default 50.5;
+    @AttributeDefinition(name = "MaxRange", description = "MaxReference Value of Max Pressure in bar")
+    double hRefMax() default 5;
+
+    @AttributeDefinition(name = "Wanted Pressure in bar", description = "Pressure Level in bar (depending on Min and Max Range")
+    double rRem() default 10.5;
 
     @AttributeDefinition(name = "Command Settings", description = "If you wish you can add additional Commands which will be handled"
             + "Remote needs to selected of not using AutoAdapt.",

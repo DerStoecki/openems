@@ -1,5 +1,6 @@
 package io.openems.edge.heatpump.device.task;
 
+import io.openems.common.channel.Unit;
 import io.openems.edge.common.channel.Channel;
 
 public class HeatPumpReadTask extends AbstractHeatPumpTask {
@@ -79,6 +80,16 @@ public class HeatPumpReadTask extends AbstractHeatPumpTask {
                 case "kPa":
                     //1bar = 100kPa
                     return tempValue * 0.01;
+
+                case "m/10000":
+                case "m/100":
+                case "m/10":
+                case "m":
+                case "m*10":
+                    if (this.channel.channelDoc().getUnit().equals(Unit.BAR)) {
+                        return tempValue / 10;
+                    }
+                    return tempValue;
             }
         }
 

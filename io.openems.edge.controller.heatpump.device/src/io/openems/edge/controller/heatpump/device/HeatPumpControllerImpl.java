@@ -1,13 +1,12 @@
 package io.openems.edge.controller.heatpump.device;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bridge.genibus.api.Genibus;
 import io.openems.edge.bridge.genibus.api.GenibusChannel;
-import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.heatpump.device.api.HeatPumpController;
 import io.openems.edge.heatpump.device.api.HeatPump;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -19,7 +18,7 @@ import java.util.Arrays;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "ControllerHeatPump")
-public class HeatPumpController extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
+public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent, HeatPumpController {
 
     @Reference(policy = ReferencePolicy.STATIC,
             policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
@@ -34,6 +33,7 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
 
     private double rRem;
     private double range = 254;
+    private double maxPressure;
 
     private HeatPump heatpump;
 
@@ -46,9 +46,10 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
     private boolean constPressure;
     private boolean autoAdapt;
 
-    public HeatPumpController() {
+    public HeatPumpControllerImpl() {
         super(OpenemsComponent.ChannelId.values(),
-                Controller.ChannelId.values());
+                Controller.ChannelId.values(),
+                HeatPumpController.ChannelId.values());
     }
 
     @Activate
@@ -63,10 +64,14 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
         }
-        this.hRefMax = config.hRefMax();
-        this.hRefMin = config.hRefMin();
-        this.rRem = config.rRem();
-
+        getMaxPressure().setNextValue(config.maxPressure());
+        try {
+            setHrefMin().setNextWriteValue(config.hRefMin());
+            setHrefMax().setNextWriteValue(config.hRefMax());
+            setRrem().setNextWriteValue(config.rRem());
+        } catch (OpenemsError.OpenemsNamedException e) {
+            e.printStackTrace();
+        }
         String[] commands = config.commands();
         Arrays.stream(commands).forEach(string -> {
             switch (string) {
@@ -118,26 +123,41 @@ public class HeatPumpController extends AbstractOpenemsComponent implements Cont
         this.heatpump.setConstPressure().setNextWriteValue(this.constPressure);
         this.heatpump.setRemote().setNextWriteValue(this.remote);
 
+        if (setHrefMin().getNextWriteValue().isPresent() && setHrefMax().getNextWriteValue().isPresent()
+                && setRrem().getNextWriteValue().isPresent()) {
+            if (setHrefMax().getNextWriteValue().get() < setHrefMin().getNextWriteValue().get()) {
+                System.out.println("Attention RefMax < HRef Min! Cannot Execute Controller main logic");
 
-        if (hRefMax < hRefMin) {
-            System.out.println("Attention RefMax < HRef Min! Cannot Execute Controller main logic");
+            } else {
+                double byteValueHmin = Math.round(calculateByteValue(setHrefMin().getNextWriteValue().get()));
+                double byteValueHmax = Math.round(calculateByteValue(setHrefMax().getNextWriteValue().get()));
+                double refRemValue = Math.round(calculateRefRem(setRrem().getNextWriteValue().get()));
+                this.heatpump.setConstRefMinH().setNextWriteValue(byteValueHmin > 254 ? 254 : byteValueHmin);
+                this.heatpump.setConstRefMaxH().setNextWriteValue(byteValueHmax > 254 ? 254 : byteValueHmax);
+                this.heatpump.setRefRem().setNextWriteValue(refRemValue > 254 ? 254 : refRemValue);
+            }
+        }
+//        if (this.genibus.getApduConfigurationParameters().getNextValue().get() != 2) {
+//            this.genibus.getApduConfigurationParameters().setNextValue(2);
+//        } else {
+//            //TEST if config param is correct-->get value
+//            this.genibus.getApduConfigurationParameters().setNextValue(0);
+//        }
+//        if (this.genibus.getApduReferenceValues().getNextValue().get() != 2) {
+//            this.genibus.getApduReferenceValues().setNextValue(2);
+//        }
 
+    }
+
+    private Double calculateRefRem(Double refValue) {
+        if (setHrefMax().getNextWriteValue().isPresent()) {
+            return ((refValue) * range) / setHrefMax().getNextWriteValue().get();
         } else {
-            //setNextValue is for reading from REST Client
-            this.heatpump.setConstRefMinH().setNextWriteValue(this.hRefMin);
-            this.heatpump.setConstRefMinH().setNextValue(this.hRefMin);
-            this.heatpump.setConstRefMaxH().setNextWriteValue(this.hRefMax);
-            this.heatpump.setConstRefMaxH().setNextValue(this.hRefMax);
-            double result = (range * rRem / 100);
-            this.heatpump.setRefRem().setNextWriteValue(Math.floor(result));
-            this.heatpump.setRefRem().setNextValue(Math.floor(result));
+            return 0.d;
         }
-        if (this.genibus.getApduConfigurationParameters().getNextValue().get() != 2) {
-            this.genibus.getApduConfigurationParameters().setNextValue(2);
-        }
-        if (this.genibus.getApduReferenceValues().getNextValue().get() != 2) {
-            this.genibus.getApduReferenceValues().setNextValue(2);
-        }
+    }
 
+    private double calculateByteValue(Double refValue) {
+        return ((refValue * range) / this.getMaxPressure().getNextValue().get());
     }
 }

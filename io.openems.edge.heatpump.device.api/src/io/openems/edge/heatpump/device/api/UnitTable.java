@@ -15,7 +15,8 @@ public enum UnitTable {
                     //powerActive
                     7, 8, 9, 44, 45,
                     //pressure
-                    51,27,28,29,61,55,60
+                    51,27,28,29,61,55,60,
+                    91,83,24,25,26
             },
             new String[]{
                     //temperature
@@ -23,7 +24,8 @@ public enum UnitTable {
                     //powerActive
                     "Watt", "Watt*10", "Watt*100", "kW", "kW*10",
                     //pressure
-                    "bar/1000", "bar/100", "bar/10", "bar", "kPa", "psi", "psi*10"
+                    "bar/1000", "bar/100", "bar/10", "bar", "kPa", "psi", "psi*10",
+                    "m/10000", "m/100", "m/10", "m", "m*10"
             });
 
     private Map<Integer, String> informationData = new HashMap<>();

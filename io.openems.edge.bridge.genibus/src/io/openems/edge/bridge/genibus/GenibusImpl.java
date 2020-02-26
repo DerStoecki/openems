@@ -1,6 +1,5 @@
 package io.openems.edge.bridge.genibus;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -193,10 +192,10 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 if (value.getRequest() != 0) {
                     apdu.putDataField(value.getAddress());
                 }
-            }
-            //WRITE TASK
-            //InformationAvailable --> Information data is available so the task can calc the byte data as a response
-            else if (apdu.getHeadOSACKforRequest() == 2) {
+                //WRITE TASK
+                //InformationAvailable --> Information data is available so the task can calc the byte data as a response
+            } else if (apdu.getHeadOSACKforRequest() == 2) {
+
                 int valueRequest = value.getRequest();
                 if (valueRequest > -256) {
                     apdu.putDataField(value.getAddress());
