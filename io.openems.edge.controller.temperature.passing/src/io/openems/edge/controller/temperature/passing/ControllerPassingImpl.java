@@ -35,6 +35,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private Thermometer secondaryRewind;
     private Valve valve;
     private Pump pump;
+    private boolean pumpActive = false;
 
     private boolean isOpen = false;
     private boolean isClosed = true;
@@ -124,12 +125,12 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     && this.getOnOff_PassingController().getNextWriteValue().get()) {
                 try {
                     if (!isOpen) {
-                        if (!valve.getIsBusy().getNextValue().get()) {
+                        if (isClosed && valve.readyToChange()) {
                             if (valve.changeByPercentage(100)) {
                                 isClosed = false;
                                 return;
                             }
-                        } else if (valve.readyToChange()) {
+                        } else if (!isClosed && valve.readyToChange()) {
                             valve.controlRelays(false, "Open");
                             isOpen = true;
                             timeSetHeating = false;
@@ -137,20 +138,20 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             return;
                         }
                     }
-                    if (primaryForwardReadyToHeat()) {
+                    if (primaryForwardReadyToHeat() && !pumpActive) {
 
                         timeSetHeating = false;
 
-                        pump.changeByPercentage(100);
+                        pump.changeByPercentage(50);
+                        pumpActive = true;
 
-
-                        if (tooHot()) {
-                            pump.changeByPercentage(-100);
-                            this.noError().setNextValue(false);
-                            throw new NoHeatNeededException("Heat is not needed;"
-                                    + "Shutting down pump and Valves");
-                        }
-
+                    }
+                    if (tooHot()) {
+                        pump.changeByPercentage(-100);
+                        pumpActive = false;
+                        this.noError().setNextValue(false);
+                        throw new NoHeatNeededException("Heat is not needed;"
+                                + "Shutting down pump and Valves");
                     } else { //Check if there's something wrong with Valve or Heat to low
                         if (isOpen && !timeSetHeating) {
                             timeStampHeating = System.currentTimeMillis();
@@ -187,6 +188,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     if (!valve.getIsBusy().getNextValue().get()) {
                         if (valve.changeByPercentage(-100)) {
                             pump.changeByPercentage(-100);
+                            pumpActive = false;
                             isOpen = false;
                         }
                     } else if (valve.readyToChange()) {
@@ -224,6 +226,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      * @param exactType only important for the TemperatureSensor, to validate it's task.
      * @throws OpenemsError.OpenemsNamedException coming from the componentManager. if the getComponent method
      *                                            throws an error.
+     * @throws ConfigurationException if the configured component is not the correct instanceof.
      */
     private void allocate_Component(String id, String type, String exactType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         switch (type) {
@@ -269,6 +272,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     /**
      * Checks if it's getting too hot (should never occur bc of the overseer controller but you never know).
      * Can only occur if the minTemperature is reached by the secondary forward.
+     *
      * @return true if the secondary rewind is as hot as the secondary forward --> no heat loss --> no heat needed.
      */
     private boolean tooHot() {

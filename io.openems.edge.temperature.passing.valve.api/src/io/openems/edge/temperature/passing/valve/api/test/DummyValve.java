@@ -28,6 +28,7 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
         this.secondsPerPercentage = valveTimeInSeconds / 100.d;
         this.getLastPowerLevel().setNextValue(0);
         this.getPowerLevel().setNextValue(0);
+        this.getTimeNeeded().setNextValue(0);
     }
 
 
@@ -54,14 +55,15 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
 
     @Override
     public boolean readyToChange() {
-        if (percentageWasSet) {
-            if ((System.currentTimeMillis() - timeStampValve)
-                    >= ((this.getTimeNeeded().getNextValue().get() * 1000))) {
-                percentageWasSet = false;
-                return true;
-            }
-        }
-        return false;
+//        if (percentageWasSet) {
+//            if ((System.currentTimeMillis() - timeStampValve)
+//                    >= ((this.getTimeNeeded().getNextValue().get() * 1000))) {
+//                percentageWasSet = false;
+//                return true;
+//            }
+//        }
+//        return false;
+        return System.currentTimeMillis() - timeStampValve >= (this.getTimeNeeded().getNextValue().get() * 1000);
     }
 
     @Override
@@ -100,24 +102,24 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
 
     @Override
     public void controlRelays(boolean activate, String whichRelays) {
-            switch (whichRelays) {
-                case "Open":
-                    if (this.opens.isCloser().getNextValue().get()) {
-                        System.out.println(activate);
-                    } else {
-                        System.out.println(!activate);
-                    }
-                    break;
-                case "Closed":
-                    if (this.closing.isCloser().getNextValue().get()) {
-                        System.out.println(activate);
-                    } else {
-                        System.out.println(!activate);
-                    }
-                    break;
-            }
-            if (!activate) {
-                this.getIsBusy().setNextValue(false);
-            }
+        switch (whichRelays) {
+            case "Open":
+                if (this.opens.isCloser().getNextValue().get()) {
+                    System.out.println(activate);
+                } else {
+                    System.out.println(!activate);
+                }
+                break;
+            case "Closed":
+                if (this.closing.isCloser().getNextValue().get()) {
+                    System.out.println(activate);
+                } else {
+                    System.out.println(!activate);
+                }
+                break;
+        }
+        if (!activate) {
+            this.getIsBusy().setNextValue(false);
+        }
     }
 }

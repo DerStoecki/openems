@@ -63,7 +63,7 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
                 power = 100 - power;
             }
             digitValue = (int) (power * singleDigitValue * SCALING);
-            return (int) (power * singleDigitValue * SCALING);
+            return digitValue;
         } else {
             return digitValue;
         }

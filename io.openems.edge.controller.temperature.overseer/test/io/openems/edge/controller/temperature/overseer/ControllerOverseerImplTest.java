@@ -156,12 +156,12 @@ public class ControllerOverseerImplTest {
                     .next(
                             new TestCase()
                                     .input(passingOnOff, true)
-                                    .input(passingMinTemp, 400)
+                                    .input(passingMinTemp, 320)
                                     .input(passingNoError, true)
                                     .input(relaysOnOff, false)
                                     .input(relaysIsCloser, true)
                                     .input(thermometer, 400)
-                                    .output(passingOnOff, false)
+                                    .output(passingOnOff, true)
                     );
             controllerTest.run();
             overseer.deactivate();

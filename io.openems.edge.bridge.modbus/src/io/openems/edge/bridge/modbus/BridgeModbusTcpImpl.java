@@ -30,101 +30,111 @@ import io.openems.edge.common.event.EdgeEventConstants;
  */
 @Designate(ocd = ConfigTcp.class, factory = true)
 @Component(name = "Bridge.Modbus.Tcp", //
-		immediate = true, //
-		configurationPolicy = ConfigurationPolicy.REQUIRE, //
-		property = { //
-				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE, //
-				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE //
-		})
+        immediate = true, //
+        configurationPolicy = ConfigurationPolicy.REQUIRE, //
+        property = { //
+                EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE, //
+                EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE //
+        })
 public class BridgeModbusTcpImpl extends AbstractModbusBridge
-		implements BridgeModbus, BridgeModbusTcp, OpenemsComponent, EventHandler {
+        implements BridgeModbus, BridgeModbusTcp, OpenemsComponent, EventHandler {
 
-	// private final Logger log =
-	// LoggerFactory.getLogger(BridgeModbusTcpImpl.class);
+    // private final Logger log =
+    // LoggerFactory.getLogger(BridgeModbusTcpImpl.class);
 
-	/**
-	 * The configured IP address.
-	 */
-	private InetAddress ipAddress = null;
+    /**
+     * The configured IP address.
+     */
+    private InetAddress ipAddress = null;
+	private int port;
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-		;
-		private final Doc doc;
+        ;
+        private final Doc doc;
 
-		private ChannelId(Doc doc) {
-			this.doc = doc;
-		}
+        private ChannelId(Doc doc) {
+            this.doc = doc;
+        }
 
-		@Override
-		public Doc doc() {
-			return this.doc;
-		}
-	}
+        @Override
+        public Doc doc() {
+            return this.doc;
+        }
+    }
 
-	public BridgeModbusTcpImpl() {
-		super(//
-				OpenemsComponent.ChannelId.values(), //
-				BridgeModbus.ChannelId.values(), //
-				ChannelId.values() //
-		);
-	}
+    public BridgeModbusTcpImpl() {
+        super(//
+                OpenemsComponent.ChannelId.values(), //
+                BridgeModbus.ChannelId.values(), //
+                ChannelId.values() //
+        );
+    }
 
-	@Activate
-	protected void activate(ComponentContext context, ConfigTcp config) throws UnknownHostException {
-		super.activate(context, config.id(), config.alias(), config.enabled(), config.logVerbosity(),
-				config.invalidateElementsAfterReadErrors());
-		this.setIpAddress(InetAddress.getByName(config.ip()));
-	}
+    @Activate
+    protected void activate(ComponentContext context, ConfigTcp config) throws UnknownHostException {
+        super.activate(context, config.id(), config.alias(), config.enabled(), config.logVerbosity(),
+                config.invalidateElementsAfterReadErrors());
+        this.setIpAddress(InetAddress.getByName(config.ip()));
+        this.setPort(config.port());
+    }
 
-	@Deactivate
-	protected void deactivate() {
-		super.deactivate();
-	}
+    @Deactivate
+    protected void deactivate() {
+        super.deactivate();
+    }
 
-	@Override
-	public void closeModbusConnection() {
-		if (this._connection != null) {
-			this._connection.close();
-			this._connection = null;
-		}
-	}
+    @Override
+    public void closeModbusConnection() {
+        if (this._connection != null) {
+            this._connection.close();
+            this._connection = null;
+        }
+    }
 
-	@Override
-	public ModbusTransaction getNewModbusTransaction() throws OpenemsException {
-		TCPMasterConnection connection = this.getModbusConnection();
-		ModbusTCPTransaction transaction = new ModbusTCPTransaction(connection);
-		transaction.setRetries(AbstractModbusBridge.DEFAULT_RETRIES);
-		return transaction;
-	}
+    @Override
+    public ModbusTransaction getNewModbusTransaction() throws OpenemsException {
+        TCPMasterConnection connection = this.getModbusConnection();
+        ModbusTCPTransaction transaction = new ModbusTCPTransaction(connection);
+        transaction.setRetries(AbstractModbusBridge.DEFAULT_RETRIES);
+        return transaction;
+    }
 
-	private TCPMasterConnection _connection = null;
+    private TCPMasterConnection _connection = null;
 
-	private synchronized TCPMasterConnection getModbusConnection() throws OpenemsException {
-		if (this._connection == null) {
-			/*
-			 * create new connection
-			 */
-			TCPMasterConnection connection = new TCPMasterConnection(this.getIpAddress());
-			connection.setPort(Modbus.DEFAULT_PORT);
-			this._connection = connection;
-		}
-		if (!this._connection.isConnected()) {
-			try {
-				this._connection.connect();
-			} catch (Exception e) {
-				throw new OpenemsException(
-						"Connection to [" + this.getIpAddress().getHostAddress() + "] failed: " + e.getMessage());
-			}
-			this._connection.getModbusTransport().setTimeout(AbstractModbusBridge.DEFAULT_TIMEOUT);
-		}
-		return this._connection;
-	}
+    private synchronized TCPMasterConnection getModbusConnection() throws OpenemsException {
+        if (this._connection == null) {
+            /*
+             * create new connection
+             */
+            TCPMasterConnection connection = new TCPMasterConnection(this.getIpAddress());
+            connection.setPort(this.getPort());
+            this._connection = connection;
+        }
+        if (!this._connection.isConnected()) {
+            try {
+                this._connection.connect();
+            } catch (Exception e) {
+                throw new OpenemsException(
+                        "Connection to [" + this.getIpAddress().getHostAddress() + "] failed: " + e.getMessage());
+            }
+            this._connection.getModbusTransport().setTimeout(AbstractModbusBridge.DEFAULT_TIMEOUT);
+        }
+        return this._connection;
+    }
 
-	public InetAddress getIpAddress() {
-		return ipAddress;
+    public InetAddress getIpAddress() {
+        return ipAddress;
+    }
+
+	public int getPort() {
+		return port;
 	}
 
 	public void setIpAddress(InetAddress ipAddress) {
-		this.ipAddress = ipAddress;
-	}
+        this.ipAddress = ipAddress;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 }

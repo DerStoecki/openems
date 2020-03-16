@@ -1,0 +1,30 @@
+Bundle-Name: OpenEMS Edge Controller Pid Passingstation
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+
+Bundle-Description: \
+	This bundle provides the logic to control PID Devices --> e.g. Passingstation valve and pump
+Export-Package:  \
+	io.openems.edge.controller.pid.passing.api;-provide=true
+
+Private-Package:  \
+	io.openems.edge.controller.pid.passing
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.thermometer.api;version=latest,\
+	io.openems.edge.temperature.passing.valve.api;version=latest,\
+	io.openems.edge.temperature.passing.pump.api;version=latest,\
+	io.openems.edge.temperature.passing.api;version=latest,\
+	io.openems.edge.controller.api;version=latest,\
+
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+
