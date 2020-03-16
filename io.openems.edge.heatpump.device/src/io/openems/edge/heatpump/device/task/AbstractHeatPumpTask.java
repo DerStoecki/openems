@@ -49,6 +49,14 @@ public abstract class AbstractHeatPumpTask implements GenibusTask {
         return headerNumber;
     }
 
+    /**
+     * gets the Information of One byte from the Genibus bridge (from handleResponse() method).
+     *
+     * @param vi  Value information if set range is 255 else 254. Comes from 5th bit
+     * @param bo  Byte order information 0 is high order 1 is low order byte. 4th bit
+     * @param sif Scale information Format 0 = not available 1= bitwise interpreted value.
+     */
+
     @Override
     public void setOneByteInformation(int vi, int bo, int sif) {
         this.vi = vi != 0;
@@ -62,6 +70,19 @@ public abstract class AbstractHeatPumpTask implements GenibusTask {
         }
     }
 
+    /**
+     * get the Information written in 4 byte from the genibus bridge (handleResponse() method).
+     *
+     * @param vi                    see OneByteInformation.
+     * @param bo                    see OneByteInformation.
+     * @param sif                   see OneByteInformation.
+     * @param unitIndex             index Number for the Unit of the task.
+     * @param scaleFactorRangeOrLow range scale factor or low order byte.
+     * @param scaleFactorZeroOrHigh either Zero scale factor or factor for high order byte
+     *
+     *                              <p> Unit calc depends on the unitString ---> unitCalc needed for default Channel Unit.
+     *                              </p>
+     */
     @Override
     public void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow) {
         setOneByteInformation(vi, bo, sif);
@@ -119,14 +140,14 @@ public abstract class AbstractHeatPumpTask implements GenibusTask {
 
     }
 
-    @Override
-    public boolean wasAdded() {
-        return wasAdded;
-    }
+    //    @Override
+    //    public boolean wasAdded() {
+    //        return wasAdded;
+    //    }
 
-    @Override
-    public boolean InformationDataAvailable() {
-        return informationAvailable;
-    }
+    //    @Override
+    //    public boolean InformationDataAvailable() {
+    //        return informationAvailable;
+    //    }
 
 }

@@ -17,7 +17,7 @@ public interface GenibusTask {
 
     void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow);
 
-    boolean wasAdded();
+    //boolean wasAdded();
 
-    boolean InformationDataAvailable();
+    // boolean InformationDataAvailable();
 }
