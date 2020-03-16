@@ -42,7 +42,7 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
 
         genibus.addDevice(super.id(), config.heatPumpAddress());
         try {
-            //commands
+            //default commands, can be changed via REST
             this.setRemote().setNextWriteValue(true);
             this.setStart().setNextWriteValue(true);
             this.setStop().setNextWriteValue(false);
@@ -69,6 +69,20 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
                 break;
         }
     }
+
+    /**
+     * Creates all Tasks needed for the Magna 3. They'll be added to the GeniBusBridge Tasks.
+     * <p>
+     * Commands: can either be set or get Information (not recommended).
+     * Commands can be set via boolean.
+     * Read Tasks == Measured Data.
+     * Measured Data: Get Data or Information. Further Information to Channels in Class: HeatPump.
+     * Write Task:
+     * Config Params and Reference Values: Get Data, Set, Information.
+     *
+     *
+     * </p>
+     */
 
     private void createMagna3Tasks() {
         //foreach Channel create Task
@@ -156,10 +170,10 @@ public class HeatPumpImpl extends AbstractOpenemsComponent implements OpenemsCom
                 this.heatPumpType.getDeltaHheadClass(), setPressureDelta(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxHi(),
-                this.heatPumpType.gethMaxHiHeadClass(), setMaxPressure(), "Standard"));
+                this.heatPumpType.gethMaxHiHeadClass(), setMaxPressureHi(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethMaxLo(),
-                this.heatPumpType.gethMaxLoHeadClass(), setMinPressure(), "Standard"));
+                this.heatPumpType.gethMaxLoHeadClass(), setMaxPressureLo(), "Standard"));
 
         this.genibus.addTask(super.id(), new HeatPumpWriteTask(this.heatPumpType.gethConstRefMax(),
                 this.heatPumpType.gethConstRefMaxHeadClass(), setConstRefMaxH(), "Standard"));
