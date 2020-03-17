@@ -100,6 +100,15 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
 
         //foreach pumpDevice --> For each Data class --> Add to Request Protocol for Apdu --> set Response
+
+        /**
+         * for each pump Device registered in the task list.
+         * Create a Telegram. this will be filled with apdu.
+         * Depending on the added tasks, they will be put together. Information Values will be gathered
+         * as well as values.
+         * APDUs for each case will be created and put to the telegram if information/tasks are available.
+         * Disclaimer: ATM only 6 APDU Frames are possible to read
+         */
         @Override
         protected void forever() {
 
@@ -133,6 +142,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                 ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
                 apduCommands.setHeadClassCommands();
                 apduCommands.setOSSet();
+
                 ApplicationProgramDataUnit apduConfigurationParametersInfo = new ApplicationProgramDataUnit();
                 apduConfigurationParametersInfo.setHeadClassConfigurationParameters();
                 apduConfigurationParametersInfo.setOSInfo();
@@ -184,6 +194,14 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         }
     }
 
+    /**
+     * Adds the Data of the specific genibustasks, sorted by the HeadClass to the APDU and then to the Telegram.
+     *
+     * @param apdu         Given ApplicationProgramDataUnit by the run task.
+     * @param genibusTasks genibusTasks of the heatpump.Only a part is given for specific APDU Frame.
+     *                     Identified via HeatPump Id and HeadClass.
+     * @param telegram     Telegram created beforehand, gets the filled apdu frame.
+     */
     private void addData(ApplicationProgramDataUnit apdu, List<GenibusTask> genibusTasks, Telegram telegram) {
 
         genibusTasks.forEach(value -> {
@@ -215,6 +233,22 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
     }
 
+    /**
+     * <p>Handles the telegram. created by the forever() method.
+     *
+     * @param pumpDevice Unique Id of the pump Device.
+     * @param telegram   telegram created beforehand.
+     *                   </p>
+     *
+     *                   <p>The request apdu is needed to compare the head of the apdu frame. Since the response does
+     *                   not carry any identification.
+     *                   The Way the Request Telegram is send, the information/data will be returned.
+     *                   Every Head needs a certain treatment, so every head needs to be checked of the request Apdu.
+     *                   if you have a look at the if(osAck == 2) there are 2 possible cases causing, that the information
+     *                   data length is either 1 or 4 byte long. depending on that, the task method
+     *                   setOneByteInformation or setFourByteInformation is called.
+     *                   </p>
+     */
     private void handleTelegram(String pumpDevice, Telegram telegram) {
         //check OSACK --> infomration, request, data
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
@@ -295,6 +329,14 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         }
     }
 
+    /**
+     * Adds Genibustask to the tasks map. First Key is the Device id and second key is the Headclass of the task.
+     * If either the device id is not in map or the headclass, the key will be put with new Map containing headclass and
+     * a new List of Genibustasks.
+     *
+     * @param deviceId Unique Id of the Heatpump. Comes from config.
+     * @param task     Task created by the Heatpump.
+     */
     public void addTask(String deviceId, GenibusTask task) {
         if (this.tasks.containsKey(deviceId)) {
             if (this.tasks.get(deviceId).keySet().stream().anyMatch(header -> header.equals(task.getHeader()))) {
@@ -318,6 +360,11 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         this.tasks.remove(sourceId);
     }
 
+    /**
+     * Adds a device in map devices, for address resolution.
+     * @param id Unique id of HeatPump.
+     * @param address address of HeatPump.
+     */
     @Override
     public void addDevice(String id, int address) {
         this.devices.put(id, address);

@@ -6,6 +6,14 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public enum UnitTable {
+
+
+    /**
+     * The Standard Unit Table for Grundfos heating pumps.
+     * Beneath is a list of the Standard unit tables supporting only temperature, active power and pressure values.
+     * The Number is written in the information Data of each HeatPump Task.
+     * Needed by the task for calculating the correct value to the Channel.
+     * */
     //only pressure,temperature watt and rotations/time atm.
     //temperature, Watt, bar
     Standard_Unit_Table(

@@ -2,6 +2,11 @@ package io.openems.edge.heatpump.device.api;
 
 
 public enum HeatPumpType {
+
+    /**
+     * HeatPump types. containing their headclass and their id nr for the Heatpump.
+     * Below is listet the Magna3 with some ids and headclasses. Only supporting current HeatPump Channels.
+     * */
     MAGNA_3(23, 2, 28, 2, 30, 2, 34, 2, 37,
             2, 39, 2, 58, 2, 112, 2,
             154, 2, 156, 2, 158,
