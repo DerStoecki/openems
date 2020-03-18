@@ -42,7 +42,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private boolean isClosed = true;
 
     private boolean timeSetHeating = false;
-    //hello
+
 
     //for Tpv> minTemp + toleranceTemp
     private static int TOLERANCE_TEMPERATURE = 20;
