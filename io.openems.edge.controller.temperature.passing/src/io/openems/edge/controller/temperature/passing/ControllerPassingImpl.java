@@ -9,6 +9,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
@@ -41,7 +42,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private boolean isClosed = true;
 
     private boolean timeSetHeating = false;
-
+    //hello
 
     //for Tpv> minTemp + toleranceTemp
     private static int TOLERANCE_TEMPERATURE = 20;
@@ -86,7 +87,6 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
             throw e;
-
         }
         defaultOptions();
     }
@@ -118,6 +118,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
+
         if (this.getMinTemperature().getNextWriteValue().isPresent()
                 && this.getOnOff_PassingController().getNextWriteValue().isPresent()) {
             this.getMinTemperature().setNextValue(this.getMinTemperature().getNextWriteValue().get());

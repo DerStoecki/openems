@@ -18,7 +18,7 @@ Private-Package:  \
 	io.openems.edge.pwm.module.api;version=latest,\
 	io.openems.edge.bridge.i2c;version=latest,\
 	io.openems.edge.pwm.device.api;version=latest,\
-	pi4j-core,\
+	pi4j-core;version=latest,\
 
 
 -testpath: \

@@ -19,7 +19,7 @@ Export-Package:  \
 	io.openems.common;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.edge.spi.mcp.api;version=latest,\
-	pi4j-core,\
+	pi4j-core;version=latest,\
 
 
 -testpath: \
