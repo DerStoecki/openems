@@ -72,7 +72,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         this.noError().setNextValue(true);
         this.isOpen = false;
         this.isClosed = true;
-        //if user doesn't know ; default == 5 min
+        //if user doesn't know and heating time is 0; default heating time will be set to 5 min in ms
         if (config.heating_Time() == 0) {
             this.timeToHeatUp = 5 * 1000 * 60;
         }
