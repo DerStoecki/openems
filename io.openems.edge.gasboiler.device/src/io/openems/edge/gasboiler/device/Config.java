@@ -26,7 +26,7 @@ import org.osgi.service.metatype.annotations.Option;
     })
     String gasBoilerType() default "VITOTRONIC_100";
 
-    @AttributeDefinition(name = "Maximum thermical output", description = "Max thermical Output if device not in List")
+    @AttributeDefinition(name = "Maximum thermical output", description = "Max thermical Output.")
     int maxThermicalOutput() default 0;
 
     @AttributeDefinition(name = "alias", description = "Human readable name of GasBoiler.")

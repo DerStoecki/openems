@@ -27,11 +27,8 @@ public class GasMeterMbusImpl extends AbstractOpenemsMbusComponent implements Op
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     protected BridgeMbus mbus;
 
-    private int powerAddress;
-    private int percolationAddress;
-    private int totalConsumedEnergyAddress;
-    private int flowTempAddress;
-    private int returnTempAddress;
+
+    private GasMeterType gasMeterType;
 
     public GasMeterMbusImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -72,30 +69,8 @@ public class GasMeterMbusImpl extends AbstractOpenemsMbusComponent implements Op
     private void allocateAddressViaMeterType(String meterType) {
         switch (meterType) {
             case "Placeholder":
-                this.powerAddress = GasMeterType.PLACEHOLDER.getPowerAddress();
-                this.percolationAddress = GasMeterType.PLACEHOLDER.getPercolationAddress();
-                this.totalConsumedEnergyAddress = GasMeterType.PLACEHOLDER.getTotalConsumptionEnergyAddress();
-                this.flowTempAddress = GasMeterType.PLACEHOLDER.getFlowTempAddress();
-                this.returnTempAddress = GasMeterType.PLACEHOLDER.getReturnTempAddress();
+                this.gasMeterType = GasMeterType.PLACEHOLDER;
                 break;
-
-            // case "Placeholder1":
-            //     this.powerAddress = GasMeterType.PLACEHOLDER.getPowerAddress();
-            //     this.percolationAddress = GasMeterType.PLACEHOLDER.getPercolationAddress();
-            //     this.totalConsumedEnergyAddress = GasMeterType.PLACEHOLDER.getTotalConsumptionEnergyAddress();
-            //     this.flowTempAddress = GasMeterType.PLACEHOLDER.getFlowTempAddress();
-            //     this.returnTempAddress = GasMeterType.PLACEHOLDER.getReturnTempAddress();
-            //
-            //     break;
-            //
-            // case "Placeholder2":
-            //     this.powerAddress = GasMeterType.PLACEHOLDER.getPowerAddress();
-            //     this.percolationAddress = GasMeterType.PLACEHOLDER.getPercolationAddress();
-            //     this.totalConsumedEnergyAddress = GasMeterType.PLACEHOLDER.getTotalConsumptionEnergyAddress();
-            //     this.flowTempAddress = GasMeterType.PLACEHOLDER.getFlowTempAddress();
-            //     this.returnTempAddress = GasMeterType.PLACEHOLDER.getReturnTempAddress();
-            //     break;
-
 
         }
     }
@@ -108,11 +83,11 @@ public class GasMeterMbusImpl extends AbstractOpenemsMbusComponent implements Op
 
     @Override
     protected void addChannelDataRecords() {
-        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.TOTAL_CONSUMED_ENERGY), this.totalConsumedEnergyAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.FLOW_TEMP), this.flowTempAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.RETURN_TEMP), this.returnTempAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.POWER), this.powerAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.PERCOLATION), this.percolationAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.TOTAL_CONSUMED_ENERGY), this.gasMeterType.getTotalConsumptionEnergyAddress()));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.FLOW_TEMP), this.gasMeterType.getFlowTempAddress()));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.RETURN_TEMP), this.gasMeterType.getReturnTempAddress()));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.POWER), this.gasMeterType.getPowerAddress()));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(GasMeter.ChannelId.PERCOLATION), this.gasMeterType.getPercolationAddress()));
         this.channelDataRecordsList.add(new ChannelRecord(channel(ChannelId.MANUFACTURER_ID), ChannelRecord.DataType.Manufacturer));
         this.channelDataRecordsList.add(new ChannelRecord(channel(ChannelId.DEVICE_ID), ChannelRecord.DataType.DeviceId));
     }

@@ -270,5 +270,6 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
     @Override
     public void setOffline() throws OpenemsError.OpenemsNamedException {
         getHeatBoilerPerformanceSetPointValue().setNextWriteValue(0);
+        getHeatBoilerPerformanceSetPointValuePercent().setNextValue(0);
     }
 }
