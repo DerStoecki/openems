@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
         name = "Controller Consolinno FallbackActivate",
-        description = "This Controller activates the fallback heater if needed.."
+        description = "This Controller activates the fallback heater if needed."
 )
 @interface Config {
 
@@ -17,8 +17,14 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human readable name of Controller.")
     String alias() default "FallbackActivate";
 
+    @AttributeDefinition(name = "Minimum temperature", description = "The minimum temperature.")
+    int min_temp() default 40;
+
     @AttributeDefinition(name = "Temperature Sensor Id", description = "The TemperatureSensor Id used to measure the Temperature.")
-    String primary_Temp_Sensor() default "TemperatureSensor0";
+    String temp_Sensor() default "TemperatureSensor0";
+
+    @AttributeDefinition(name =  "Relay Id", description = "The Relay Id used to activate the fallback heater.")
+    String relay_id() default "Relay0";
 
     boolean enabled() default true;
 

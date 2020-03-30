@@ -75,6 +75,7 @@
 	bnd.identity;id='io.openems.edge.controller.symmetric.peakshaving',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.randompower',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.reactivepowervoltagecharacteristic',\
+	bnd.identity;id='io.openems.edge.controller.temperature.fallbackactivate',\
 	bnd.identity;id='io.openems.edge.controller.temperature.overseer',\
 	bnd.identity;id='io.openems.edge.controller.temperature.passing',\
 	bnd.identity;id='io.openems.edge.controller.temperature.passing.api',\
@@ -224,6 +225,7 @@
 	io.openems.edge.controller.symmetric.peakshaving;version=snapshot,\
 	io.openems.edge.controller.symmetric.randompower;version=snapshot,\
 	io.openems.edge.controller.symmetric.reactivepowervoltagecharacteristic;version=snapshot,\
+	io.openems.edge.controller.temperature.fallbackactivate;version=snapshot,\
 	io.openems.edge.controller.temperature.passing;version=snapshot,\
 	io.openems.edge.controller.temperature.passing.api;version=snapshot,\
 	io.openems.edge.controller.temperature.overseer;version=snapshot,\
