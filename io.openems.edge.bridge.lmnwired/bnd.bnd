@@ -1,0 +1,24 @@
+Bundle-Name: OpenEMS LMN Wired Bridge
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+	The provider bundle for  io.openems.edge.bridge.lmnwired. \
+	\
+	${warning;Please update this Bundle-Description in  io.openems.edge.bridge.lmnwired/api.bnd}
+
+Export-Package:  \
+	io.openems.edge.bridge.lmnwired.api;-provide=true
+
+Private-Package:  \
+	io.openems.edge.bridge.lmnwired
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+

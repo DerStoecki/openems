@@ -9,6 +9,7 @@ Bundle-Description: \
 Private-Package:  \
 	io.openems.edge.chp.device,\
 	io.openems.edge.chp.device.task,\
+	io.openems.edge.chp.device.simpleDac,\
 
 -includeresource: {readme.md}
 

@@ -5,8 +5,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
-        name = "Consolinno Chp Module",
-        description = "This Component communicates with the Chp Devices and the I2C-Bridge."
+        name = "Consolinno DAC Module",
+        description = "This Component communicates with the Chp/DAC Devices and the I2C-Bridge."
 )
 
 @interface Config {
