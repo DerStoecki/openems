@@ -9,12 +9,11 @@ public interface GpioDevice extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         /**
-         * Temperature.
+         * OnOff.
          *
          * <ul>
-         * <li>Interface: Thermometer
-         * <li>Type: Integer
-         * <li>Unit: degree celsius
+         * <li>Interface: GpioDevice
+         * <li>Type: Boolean
          * </ul>
          */
         ON_OFF(Doc.of(OpenemsType.BOOLEAN));

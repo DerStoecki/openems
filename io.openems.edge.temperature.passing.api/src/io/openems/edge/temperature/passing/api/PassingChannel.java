@@ -5,6 +5,7 @@ import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PassingChannel extends OpenemsComponent {
@@ -76,7 +77,7 @@ public interface PassingChannel extends OpenemsComponent {
      * @return the Channel
      */
 
-    default Channel<Double> getPowerLevel() {
+    default WriteChannel<Double> getPowerLevel() {
         return this.channel(ChannelId.POWER_LEVEL);
     }
 
