@@ -241,7 +241,9 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         if (this.accessMode.equals("rw")) {
             if (this.getPowerLevelChannel().getNextValue().get() != null) {
                 if (chpType != null) {
-                    return "Chp: " + this.chpType.getName() + "is at " + this.getPowerLevelChannel().getNextValue().get();
+                    return "Chp: " + this.chpType.getName() + "is at " + this.getPowerLevelChannel().getNextValue().get()
+                            + "\nErrors in Chp: "
+                            + this.getErrorChannel().getNextValue().toString();
                 } else {
                     return "Chp is at " + this.getPowerLevelChannel().getNextValue().get() + "\nErrors in Chp: "
                             + this.getErrorChannel().getNextValue().toString();
@@ -473,7 +475,7 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                 errorBitsAsString += dummyString;
             }
             if (getErrorEight().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0");
+                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(" ", "0");
             } else {
                 errorBitsAsString += dummyString;
             }
