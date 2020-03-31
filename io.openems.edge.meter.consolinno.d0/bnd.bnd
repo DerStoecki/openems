@@ -1,23 +1,28 @@
-#
-# io.openems.edge.meter.consolinno.d0 PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
+Bundle-Name: OpenEMS LMN Wired Bridge
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
 	The provider bundle for io.openems.edge.meter.consolinno.d0. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.meter.consolinno.d0/api.bnd}
 
-Export-Package:  \
-	io.openems.edge.meter.consolinno.d0.api;-provide=true
-
-Private-Package:  \
+Export-Package: \
+	io.openems.edge.meter.api,\
+	io.openems.edge.meter.asymmetric.api,\
+	io.openems.edge.meter.symmetric.api,\
 	io.openems.edge.meter.consolinno.d0
+
+
+
 
 -includeresource: {readme.md}
 
 -buildpath:  \
-	osgi.enroute.base.api;version=2.1
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.edge.meter.api;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.bridge.lmnwired;version=latest,\
+
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \

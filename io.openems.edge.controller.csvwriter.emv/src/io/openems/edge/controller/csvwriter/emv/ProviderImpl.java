@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.lmnwired;
+package io.openems.edge.controller.csvwriter.emv;
 
 import java.util.Map;
 
@@ -10,7 +10,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate( ocd=ProviderImpl.Config.class, factory=true)
-@Component(name=" io.openems.edge.bridge.lmnwired")
+@Component(name="io.openems.edge.controller.csvwriter.emv")
 public class ProviderImpl /* implements SomeApi */ {
 
 	@ObjectClassDefinition
