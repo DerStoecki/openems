@@ -1,0 +1,30 @@
+Bundle-Name: OpenEMS Meter D0
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+	The provider bundle for io.openems.edge.meter.consolinno.d0. \
+
+Export-Package: \
+	io.openems.edge.meter.api,\
+	io.openems.edge.meter.asymmetric.api,\
+	io.openems.edge.meter.symmetric.api,\
+	io.openems.edge.meter.consolinno.d0
+
+
+
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.edge.meter.api;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.bridge.lmnwired;version=latest,\
+
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+

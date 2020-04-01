@@ -62,6 +62,12 @@ public enum Unit {
     KILOWATT("kW", WATT, 3),
 
     /**
+     * Unit of Energy[Ws]
+     */
+    WATT_SECONDS("Ws"),
+
+
+    /**
      * Unit of Reactive Power [var]
      */
     VOLT_AMPERE_REACTIVE("var"),
