@@ -19,6 +19,9 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
     boolean enabled() default true;
 
+    @AttributeDefinition(name = "Path", description = "Path to write the CSV File")
+    String path () default "/home/sshconsolinno/DataLog/";
+
     @AttributeDefinition(name = "TemperatureSensorId", description = "Select TemperatureSensors",
             options = {
                     @Option(label = "TemperatureSensor0", value = "TemperatureSensor0"),

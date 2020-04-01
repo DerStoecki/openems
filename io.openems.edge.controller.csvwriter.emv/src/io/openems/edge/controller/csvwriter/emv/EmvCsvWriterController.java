@@ -68,6 +68,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         if (timeInterval <= 0) {
             this.timeInterval = 1000;
         }
+        this.path = config.path();
         //create /home/sshconsolinno/DataLog if not exist
         createCSVPath();
         //initialize FileName --> Calendar year month and day
