@@ -24,7 +24,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String temp_Sensor() default "TemperatureSensor0";
 
     @AttributeDefinition(name =  "Relay Id", description = "The Relay Id used to activate the fallback heater.")
-    String relay_id() default "Relay0";
+    String relay_id() default "Relays0";
 
     boolean enabled() default true;
 
