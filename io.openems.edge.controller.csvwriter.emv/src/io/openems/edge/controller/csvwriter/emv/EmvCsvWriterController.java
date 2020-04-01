@@ -196,19 +196,19 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
                 try {
                     String s = thermometer.id() + "/" + thermometer.getTemperature().channelId().id();
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
 
                 }
             });
+
+
             //Relays
             this.relaysList.forEach(relay -> {
                 try {
                     String s = relay.id() + "/" + relay.getRelaysChannel().channelId().id();
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -216,12 +216,11 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             });
             //DAC
 
-            this.relaysList.forEach(dac -> {
+            this.dacList.forEach(dac -> {
 
                 try {
-                    String s = dac.id() + "/" + dac.getRelaysChannel().channelId().id();
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    String s = dac.id() + "/" + dac.getPowerLevelChannel().channelId().id();
+                    csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -231,8 +230,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             this.pwmDeviceList.forEach(pwm -> {
                 String s = pwm.id() + "/" + pwm.getPwmPowerLevelChannel().channelId().id();
                 try {
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -243,14 +241,11 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             this.meterList.forEach(meter -> {
                 try {
                     String s = meter.id() + "/" + meter.getActiveProductionEnergy().channelId().id();
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    csvWriterAppendLineForHead(s);
                     s = meter.id() + "/" + meter.getActiveConsumptionEnergy().channelId().id();
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    csvWriterAppendLineForHead(s);
                     s = meter.id() + "/" + meter.getActivePower().channelId().id();
-                    csvWriter.append(s);
-                    csvWriter.append(",");
+                    csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -261,6 +256,11 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void csvWriterAppendLineForHead(String s) throws IOException {
+        csvWriter.append(s);
+        csvWriter.append(",");
     }
 
     /**
@@ -291,7 +291,12 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         csvWriter = new FileWriter(this.path + this.fileName);
     }
-
+    /**
+     * if a new Day approaches --> csv.Writer will be flushed and closed: new file will be created etc
+     *
+     * in either case the data will be written to the file if configured Time has passed
+     *
+     * */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
@@ -300,6 +305,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             try {
                 csvWriter.flush();
                 csvWriter.close();
+                initializeFileName();
                 initizalizeCsvWriter();
                 initializeCsvHead();
 
@@ -311,7 +317,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             // Do Stuff
 
             try {
-                //Write Current Time
+                this.csvWriter = new FileWriter(path + fileName, true);
+                //Write Current Time; File Writer maybe broken?
                 Calendar calendar = Calendar.getInstance();
                 String time = calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + ":" + calendar.get(Calendar.SECOND);
                 this.csvWriter.append(time);
@@ -323,6 +330,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 writePwmData();
                 writeMeterData();
                 csvWriter.append("\n");
+                csvWriter.flush();
                 this.timeStamp = System.currentTimeMillis();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -341,22 +349,22 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             try {
                 //Prod, Consump, ActivePower
                 if (meter.getActiveProductionEnergy().getNextValue().isDefined()) {
-                    csvString = meter.getActiveProductionEnergy().getNextValue().get().toString()
-                            + meter.getActiveProductionEnergy().channelDoc().getUnit().toString();
+                    csvString = meter.getActiveProductionEnergy().getNextValue().get().toString() + " "
+                            + meter.getActiveProductionEnergy().channelDoc().getUnit().getSymbol();
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
                 csvString = "-";
                 if (meter.getActiveConsumptionEnergy().getNextValue().isDefined()) {
-                    csvString = meter.getActiveConsumptionEnergy().getNextValue().get().toString()
-                            + meter.getActiveConsumptionEnergy().channelDoc().getUnit().toString();
+                    csvString = meter.getActiveConsumptionEnergy().getNextValue().get().toString() + " "
+                            + meter.getActiveConsumptionEnergy().channelDoc().getUnit().getSymbol();
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
                 csvString = ",";
                 if (meter.getActivePower().getNextValue().isDefined()) {
-                    csvString = meter.getActivePower().getNextValue().get().toString()
-                            + meter.getActivePower().channelDoc().getUnit().toString();
+                    csvString = meter.getActivePower().getNextValue().get().toString() + " "
+                            + meter.getActivePower().channelDoc().getUnit().getSymbol();
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
@@ -375,7 +383,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         this.pwmDeviceList.forEach(pwm -> {
             String csvString = "-";
             if (pwm.getPwmPowerLevelChannel().getNextWriteValue().isPresent()) {
-                csvString = pwm.getPwmPowerLevelChannel().getNextWriteValue().get().toString()
+                csvString = pwm.getPwmPowerLevelChannel().getNextWriteValue().get().toString() + " "
                         + pwm.getPwmPowerLevelChannel().channelDoc().getUnit();
             }
             try {
@@ -392,8 +400,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         this.dacList.forEach(dac -> {
             String csvString = "-";
             if (dac.getPowerLevelChannel().getNextWriteValue().isPresent()) {
-                csvString = dac.getPowerLevelChannel().getNextWriteValue().get().toString()
-                        + dac.getPowerLevelChannel().channelDoc().getUnit().toString();
+                csvString = dac.getPowerLevelChannel().getNextWriteValue().get().toString() + " "
+                        + dac.getPowerLevelChannel().channelDoc().getUnit().getSymbol();
             }
             try {
                 csvWriter.append(csvString);
@@ -411,8 +419,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         this.relaysList.forEach(relay -> {
 
             String csvString = "-";
-            if (relay.getRelaysChannel().getNextWriteValue().isPresent()) {
-                if (relay.getRelaysChannel().getNextWriteValue().get()) {
+            if (relay.getRelaysChannel().getNextValue().isDefined()) {
+                if (relay.getRelaysChannel().getNextValue().get()) {
                     csvString = "ON";
                 } else {
                     csvString = "OFF";
@@ -435,9 +443,10 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private void writeTemperatureData() {
         this.thermometerList.forEach(thermometer -> {
             String csvString = "-";
-            if (thermometer.getTemperature().getNextValue().isDefined()) {
+            //default value is 1128 --> no temperature sensor available
+            if (thermometer.getTemperature().getNextValue().isDefined() && (thermometer.getTemperature().getNextValue().get()!=1128)) {
                 csvString = thermometer.getTemperature().getNextValue().get().toString()
-                        + thermometer.getTemperature().channelDoc().getUnit().toString();
+                        + thermometer.getTemperature().channelDoc().getUnit().getSymbol();
             }
 
             try {
@@ -453,7 +462,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
     @Deactivate
     public void deactivate() {
-        try {
+        try{
             csvWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
