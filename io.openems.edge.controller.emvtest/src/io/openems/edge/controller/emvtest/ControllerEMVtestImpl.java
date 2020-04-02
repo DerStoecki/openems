@@ -77,7 +77,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
         //print log just for debugging, can be turned off
         for (int index = 0; index < config.relaysDeviceList().length; index++) {
-            this.logInfo(this.log, "Relay array entry " + index + ": " + config.relaysDeviceList()[index]);
+           // this.logInfo(this.log, "Relay array entry " + index + ": " + config.relaysDeviceList()[index]);
         }
 
         relayArray = new ActuatorRelaysChannel[config.relaysDeviceList().length];        //array is filled with entries in allocate_Component method
@@ -95,7 +95,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
         //print log just for debugging, can be turned off
         for (int index = 0; index < config.DacDeviceList().length; index++) {
-            this.logInfo(this.log, "DAC array entry " + index + ": " + config.DacDeviceList()[index]);
+         //   this.logInfo(this.log, "DAC array entry " + index + ": " + config.DacDeviceList()[index]);
         }
 
         dacArray = new PowerLevel[config.DacDeviceList().length];        //array is filled with entries in allocate_Component method
@@ -117,7 +117,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
         //print log just for debugging, can be turned off
         for (int index = 0; index < config.PwmDeviceList().length; index++) {
-            this.logInfo(this.log, "PWM array entry " + index + ": " + config.PwmDeviceList()[index]);
+         //   this.logInfo(this.log, "PWM array entry " + index + ": " + config.PwmDeviceList()[index]);
         }
 
         pwmArray = new PwmPowerLevelChannel[config.PwmDeviceList().length];        //array is filled with entries in allocate_Component method
@@ -167,7 +167,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
             if (!cycleRelaysState && System.currentTimeMillis() - timestampRelaysCycling >= relaysCycleBreakTime) {        //execute if no relay is on and break time has passed
                 controlRelay(true, relayArray[cycleRelaysCount]);
                 cycleRelaysState = true;
-                this.logInfo(this.log, "Switched on " + relayArray[cycleRelaysCount]);
+               // this.logInfo(this.log, "Switched on " + relayArray[cycleRelaysCount]);
 
                 timestampRelaysCycling = System.currentTimeMillis();
             }
@@ -176,7 +176,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
                 controlRelay(false, relayArray[cycleRelaysCount]);
                 cycleRelaysState = false;
                 cycleRelaysCount = (cycleRelaysCount + 1) % relayArray.length;
-                this.logInfo(this.log, "Switched off " + relayArray[(cycleRelaysCount - 1 + relayArray.length) % relayArray.length] + ". Next relay to switch on is " + relayArray[cycleRelaysCount]);
+                //this.logInfo(this.log, "Switched off " + relayArray[(cycleRelaysCount - 1 + relayArray.length) % relayArray.length] + ". Next relay to switch on is " + relayArray[cycleRelaysCount]);
 
                 timestampRelaysCycling = System.currentTimeMillis();
             }
@@ -198,7 +198,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
                 }
 
                 controlDac(dacCurrentPower, dacArray[dacRampCount]);
-                this.logInfo(this.log, "Set power for " + dacArray[dacRampCount] + " to " + dacCurrentPower + "%, currently ramping up.");
+                //this.logInfo(this.log, "Set power for " + dacArray[dacRampCount] + " to " + dacCurrentPower + "%, currently ramping up.");
 
                 timestampDacRamping = System.currentTimeMillis();
             }
@@ -211,11 +211,11 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
                 }
 
                 controlDac(dacCurrentPower, dacArray[dacRampCount]);
-                this.logInfo(this.log, "Set power for " + dacArray[dacRampCount] + " to " + dacCurrentPower + "%, currently ramping down.");
+                //this.logInfo(this.log, "Set power for " + dacArray[dacRampCount] + " to " + dacCurrentPower + "%, currently ramping down.");
 
                 if (dacCurrentPower == 0) {
                     dacRampCount = (dacRampCount + 1) % dacArray.length;    //change to next dac
-                    this.logInfo(this.log, "Done ramping " + dacArray[(dacRampCount - 1 + dacArray.length) % dacArray.length] + ". Next is " + dacArray[dacRampCount]);
+                  //  this.logInfo(this.log, "Done ramping " + dacArray[(dacRampCount - 1 + dacArray.length) % dacArray.length] + ". Next is " + dacArray[dacRampCount]);
                 }
 
                 timestampDacRamping = System.currentTimeMillis();
@@ -238,7 +238,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
                 }
 
                 controlPwm(pwmCurrentPower, pwmArray[pwmRampCount]);
-                this.logInfo(this.log, "Set power for " + pwmArray[pwmRampCount] + " to " + pwmCurrentPower + "%, currently ramping up.");
+                //this.logInfo(this.log, "Set power for " + pwmArray[pwmRampCount] + " to " + pwmCurrentPower + "%, currently ramping up.");
 
                 timestampPwmRamping = System.currentTimeMillis();
             }
@@ -251,11 +251,11 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
                 }
 
                 controlPwm(pwmCurrentPower, pwmArray[pwmRampCount]);
-                this.logInfo(this.log, "Set power for " + pwmArray[pwmRampCount] + " to " + pwmCurrentPower + "%, currently ramping down.");
+                //this.logInfo(this.log, "Set power for " + pwmArray[pwmRampCount] + " to " + pwmCurrentPower + "%, currently ramping down.");
 
                 if (pwmCurrentPower == 0) {
                     pwmRampCount = (pwmRampCount + 1) % pwmArray.length;    //change to next pwm
-                    this.logInfo(this.log, "Done ramping " + pwmArray[(pwmRampCount - 1 + pwmArray.length) % pwmArray.length] + ". Next is " + pwmArray[pwmRampCount]);
+                   // this.logInfo(this.log, "Done ramping " + pwmArray[(pwmRampCount - 1 + pwmArray.length) % pwmArray.length] + ". Next is " + pwmArray[pwmRampCount]);
                 }
 
                 timestampPwmRamping = System.currentTimeMillis();

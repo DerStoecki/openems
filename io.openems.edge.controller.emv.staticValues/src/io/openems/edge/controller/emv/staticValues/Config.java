@@ -69,7 +69,7 @@ import org.osgi.service.metatype.annotations.Option;
             float [] pwmValues() default {25,100,75,40,80,50,100,10};
 
 
-    String webconsole_configurationFactory_nameHint() default "Controller Emv Csv Writer [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Controller Emv Static Values [{id}]";
 
     String service_pid();
 }
