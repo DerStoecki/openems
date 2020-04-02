@@ -18,7 +18,7 @@ public interface Thermometer extends OpenemsComponent {
          * <ul>
          * <li>Interface: Thermometer
          * <li>Type: Integer
-         * <li>Unit: degree celsius
+         * <li>Unit: dezidegree celsius
          * </ul>
          */
         TEMPERATURE(Doc.of(OpenemsType.INTEGER) //
