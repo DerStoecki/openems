@@ -6,6 +6,8 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.filter.PidFilter;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.api.PassingForPid;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.thermometer.api.Thermometer;
@@ -27,6 +29,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
     private PassingForPid passingForPid;
     private Thermometer thermometer;
+    private ControllerPassingChannel passing;
     private boolean isPump;
     private PidFilter pidFilter;
     private int setPointTemperature;
@@ -42,6 +45,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponent(config.temperatureSensorId());
         allocateComponent(config.allocatedPassingDevice());
+        allocateComponent(config.passingControllerId());
         this.pidFilter = new PidFilter(config.proportionalGain(), config.integralGain(), config.derivativeGain());
         pidFilter.setLimits(-200, 200);
         this.setPointTemperature = config.setPoint_Temperature();
@@ -57,8 +61,10 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
                 this.passingForPid = cpm.getComponent(Device);
             } else if (cpm.getComponent(Device) instanceof Thermometer) {
                 this.thermometer = cpm.getComponent(Device);
+            } else if (cpm.getComponent(Device) instanceof ControllerPassingChannel) {
+                this.passing = cpm.getComponent(Device);
             } else {
-                throw new ConfigurationException("The configured Component is neither Valve, Pump or TemperatureSensor! Please Check "
+                throw new ConfigurationException("The configured Component is neither Valve, Pump, PassingController nor TemperatureSensor! Please Check "
                         + Device, "Configured Component is incorrect!");
             }
 
@@ -75,19 +81,22 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc() && this.passingForPid.getPowerLevel().getNextValue().isDefined()) {
-            this.timestamp = System.currentTimeMillis();
-            double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setPointTemperature);
-            // is percentage value fix if so substract from current powerlevel?
-            output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
-            if (this.isPump) {
-                output *= -1;
-            }
-            if (this.passingForPid.readyToChange()) {
-                this.passingForPid.changeByPercentage(output / 10);
-            }
+        if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
+            if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc() && this.passingForPid.getPowerLevel().getNextValue().isDefined()) {
+                this.timestamp = System.currentTimeMillis();
+                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setPointTemperature);
+                // is percentage value fix if so substract from current powerlevel?
+                output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
+                if (this.isPump) {
+                    output *= -1;
+                }
+                if (this.passingForPid.readyToChange()) {
+                    this.passingForPid.changeByPercentage(output / 10);
+                }
+
+            }
         }
     }
 

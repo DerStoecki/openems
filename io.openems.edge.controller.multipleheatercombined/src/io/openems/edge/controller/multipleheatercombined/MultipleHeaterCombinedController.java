@@ -49,12 +49,12 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private int bufferMinTemperature;
     private int bufferMaxTemperature;
 
-    private int chpTemperatureMax;
-    private int chpTemperatureMin;
-    private int woodChipTemperatureMax;
-    private int woodChipTemperatureMin;
-    private int gasBoilerTemperatureMax;
-    private int gasBoilerTemperatureMin;
+    private int heaterPrimaryMax;
+    private int heaterPrimaryMin;
+    private int heaterSecondaryMax;
+    private int heaterSecondaryMin;
+    private int heaterBackupMax;
+    private int heaterBackupMin;
     private int maxGasBoilerPower;
     private int maxWoodChipPower;
     private int maxChpWarmPower;
@@ -92,12 +92,12 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         this.bufferMinTemperature = config.minTemperatureForBuffer();
         this.bufferMaxTemperature = config.maxTemperatureForBuffer();
 
-        this.chpTemperatureMax = config.chp_Temperature_max();
-        this.chpTemperatureMin = config.chp_Temperature_min();
-        this.woodChipTemperatureMax = config.woodChip_Temperature_max();
-        this.woodChipTemperatureMin = config.woodChip_Temperature_min();
-        this.gasBoilerTemperatureMax = config.gasBoiler_Temperature_max();
-        this.gasBoilerTemperatureMin = config.gasBoiler_Temperature_min();
+        this.heaterPrimaryMax = config.chp_Temperature_max();
+        this.heaterPrimaryMin = config.chp_Temperature_min();
+        this.heaterSecondaryMax = config.woodChip_Temperature_max();
+        this.heaterSecondaryMin = config.woodChip_Temperature_min();
+        this.heaterBackupMax = config.gasBoiler_Temperature_max();
+        this.heaterBackupMin = config.gasBoiler_Temperature_min();
 
         this.maxChpWarmPower = config.heater_1_max_performance();
         this.maxWoodChipPower = config.heater_2_max_performance();
@@ -199,26 +199,26 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         if (heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
             int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().get();
 
-            if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.chpTemperatureMax) {
+            if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.heaterPrimaryMax) {
                 heaterPrimary.setOffline();
-            } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.chpTemperatureMin) {
+            } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.heaterPrimaryMin) {
                 thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
             }
 
-            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.woodChipTemperatureMax || thermicalPerformanceDemand <= 0) {
+            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || thermicalPerformanceDemand <= 0) {
                 heaterSecondary.setOffline();
 
-            } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.woodChipTemperatureMin) {
+            } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.heaterSecondaryMin) {
 
                 thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
             }
 
 
-            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.gasBoilerTemperatureMax || thermicalPerformanceDemand <= 0) {
+            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || thermicalPerformanceDemand <= 0) {
                 this.heaterBackup.setOffline();
 
             }
-            if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.gasBoilerTemperatureMin) {
+            if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.heaterBackupMin) {
                 thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
             }
 
