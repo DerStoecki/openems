@@ -21,9 +21,7 @@ import org.osgi.service.metatype.annotations.Designate;
         immediate = true)
 public class DacDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, PowerLevel {
     private Mcp mcp;
-    private String accessMode;
-    private int thermicalOutput;
-    private int electricalOutput;
+
     @Reference
     protected ComponentManager cpm;
 

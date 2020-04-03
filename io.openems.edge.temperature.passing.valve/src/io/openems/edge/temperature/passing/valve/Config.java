@@ -20,10 +20,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String alias() default "";
 
     @AttributeDefinition(name = "Closing Relays", description = "What Relays is responsible for closing the Valve.")
-    String closing_Relais() default "Relays0";
+    String closing_Relays() default "Relays0";
 
     @AttributeDefinition(name = "Opening Relays", description = "What Relays is responsible for closing the Valve.")
-    String opening_Relais() default "Relays1";
+    String opening_Relays() default "Relays1";
 
     @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds).")
     int valve_Time() default 30;

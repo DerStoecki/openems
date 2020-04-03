@@ -292,12 +292,12 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         csvWriter = new FileWriter(this.path + this.fileName);
     }
+
     /**
      * if a new Day approaches --> csv.Writer will be flushed and closed: new file will be created etc
-     *
+     * <p>
      * in either case the data will be written to the file if configured Time has passed
-     *
-     * */
+     */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
@@ -445,7 +445,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         this.thermometerList.forEach(thermometer -> {
             String csvString = "-";
             //default value is 1128 --> no temperature sensor available
-            if (thermometer.getTemperature().getNextValue().isDefined() && (thermometer.getTemperature().getNextValue().get()!=1128)) {
+            if (thermometer.getTemperature().getNextValue().isDefined() && (thermometer.getTemperature().getNextValue().get() != 1128)) {
                 csvString = thermometer.getTemperature().getNextValue().get().toString()
                         + thermometer.getTemperature().channelDoc().getUnit().getSymbol();
             }
@@ -463,7 +463,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
     @Deactivate
     public void deactivate() {
-        try{
+        try {
             csvWriter.close();
         } catch (IOException e) {
             e.printStackTrace();

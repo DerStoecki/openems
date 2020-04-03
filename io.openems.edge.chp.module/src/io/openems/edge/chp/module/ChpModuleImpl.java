@@ -117,7 +117,7 @@ public class ChpModuleImpl extends AbstractOpenemsComponent implements OpenemsCo
         this.id = config.id();
         this.address = config.address();
         allocateBus(config.bus());
-
+        //Further Versions will come in Future and with that more/different Mcps.
         switch (config.version()) {
             case "1":
                 try {
