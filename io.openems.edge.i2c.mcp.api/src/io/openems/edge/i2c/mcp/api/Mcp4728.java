@@ -9,7 +9,7 @@ import io.openems.edge.i2c.mcp.api.task.McpTask;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+//USED BY CHP MODULE
 public class Mcp4728 extends Mcp implements McpChannelRegister {
     private String parentCircuitBoard;
     private final int length = 4;

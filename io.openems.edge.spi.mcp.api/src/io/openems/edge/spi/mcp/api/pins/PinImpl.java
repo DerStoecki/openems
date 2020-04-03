@@ -9,6 +9,11 @@ public class PinImpl implements Pin {
     private boolean isUsed = false;
     private String usedBy;
 
+    /**
+     * Allocates Pinaddress and its Position.
+     * @param position position of Pin.
+     * @param value PinValue; comes from Mcp.
+     * */
     public PinImpl(long value, int position) {
         this.value = value;
         this.position = position;

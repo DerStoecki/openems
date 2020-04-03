@@ -23,7 +23,7 @@ public interface PwmPowerLevelChannel extends OpenemsComponent {
         POWER_LEVEL(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)); //
         private final Doc doc;
 
-        private ChannelId(Doc doc) {
+        ChannelId(Doc doc) {
             this.doc = doc;
         }
 

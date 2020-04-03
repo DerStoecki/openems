@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+//USED BY RELAYSMODULE
 public class Mcp23008 extends Mcp implements McpChannelRegister {
 
     private String parentCircuitBoard;
@@ -56,6 +56,14 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
         }
     }
 
+    /**
+     * <p>
+     * Gets all RelaysTasks; gets their next write value and writes them in the"SetPosition" --> shifters.
+     * Explained at the SetPosition Method.
+     * After every Task is handled. The Byte data gets all data from the shifters (is true or false).
+     * This data will be written in the device at the 0x09 address.
+     * </p>
+     */
     @Override
     public void shift() {
         for (RelaysTask task : tasks.values()) {
@@ -81,6 +89,11 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
         }
     }
 
+    /**
+     * Gets a position and default status for deactivation method.
+     * @param position position of the task.
+     * @param activate is default position true or false (Opener is closed; Closer is open)
+     */
     @Override
     public void addToDefault(int position, boolean activate) {
         this.valuesPerDefault.put(position, activate);
@@ -96,6 +109,9 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
         return parentCircuitBoard;
     }
 
+    /**
+     * Resets the values to default (setPosition for shifters); and then shifts them.
+     * */
     @Override
     public void deactivate() {
         for (Map.Entry<Integer, Boolean> entry : getValuesPerDefault().entrySet()) {

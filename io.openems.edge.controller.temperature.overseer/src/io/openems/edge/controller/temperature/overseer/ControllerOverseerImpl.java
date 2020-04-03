@@ -74,6 +74,11 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
         }
     }
 
+
+    /**
+     * Activates and Deactivates the PassingController, depending if the Temperature setPoint is reached or not.
+     */
+
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
@@ -88,6 +93,11 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
         }
     }
 
+    /**
+     * Checks if the MinTemperature is reached. (comparing with own TemperatureSensor)
+     *
+     * @return a boolean depending if heat is reached or not.
+     */
     private boolean heatingReached() {
         if (passing.getMinTemperature().getNextWriteValue().isPresent()) {
             return this.temperatureSensor.getTemperature().getNextValue().get() - tolerance

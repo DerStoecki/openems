@@ -11,11 +11,55 @@ public interface HeatMeterMbus extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-
+        /**
+         * Power.
+         *
+         * <ul>
+         * <li>Interface: HeatMeterMbus
+         * <li>Type: Integer
+         * <li>Unit: Kilowatt
+         * </ul>
+         */
         POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT)),
+        /**
+         * Percolation.
+         *
+         * <ul>
+         * <li>Interface: HeatMeterMbus
+         * <li>Type: Integer
+         * <li>Unit: m³/s CubicmeterPerSecond
+         * </ul>
+         */
         PERCOLATION(Doc.of(OpenemsType.INTEGER).unit(Unit.CUBICMETER_PER_SECOND)),
+        /**
+         * Total Consumed Energy.
+         *
+         * <ul>
+         * <li>Interface: HeatMeterMbus
+         * <li>Type: Integer
+         * <li>Unit: WattHours
+         * </ul>
+         */
         TOTAL_CONSUMED_ENERGY(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT_HOURS)),
+        /**
+         * FlowTemp.
+         *
+         * <ul>
+         * <li>Interface: HeatMeterMbus
+         * <li>Type: Float
+         * <li>Unit: DegreeCelsius
+         * </ul>
+         */
         FLOW_TEMP(Doc.of(OpenemsType.FLOAT).unit(Unit.DEGREE_CELSIUS)),
+        /**
+         * Return Temp.
+         *
+         * <ul>
+         * <li>Interface: HeatMeterMbus
+         * <li>Type: Float
+         * <li>Unit: DegreeCelsius
+         * </ul>
+         */
         RETURN_TEMP(Doc.of(OpenemsType.FLOAT).unit(Unit.DEGREE_CELSIUS)),
 
         AVERAGE_CONSUMPTION_PER_HOUR(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT));
