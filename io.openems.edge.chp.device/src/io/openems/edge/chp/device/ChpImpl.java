@@ -410,6 +410,16 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
             super.deactivate();
         }
 
+
+        /**
+         * <pr>Due to possible ErrorLogs etc; a foreverMethod is needed or an AbstractCycleWorker to be concrete.
+         * <p>
+         * The Errors will be logged depending on the ErrorBits. All Errors possible are in the errorPossibilities array.
+         * <p>
+         * When all Errors are written in the errorSummary; the ErrorChannels will be Listed in the ErrorChannel.
+         * </p>
+         */
+
         @Override
         protected void forever() throws Throwable {
 
@@ -435,6 +445,19 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
 
         }
 
+
+        /**
+         * <p>
+         * Gets all Errors of the ErrorBitChannels and writes them in a charArray.
+         * <p>
+         * Usually called by the forever() Method.
+         * <p>
+         * The 16 bit String is necessary to localize the correct Error etc.
+         * If Value is not Defined; the DummyString will be written.
+         *
+         * @return the errorBitArray.
+         * </p>
+         */
         private char[] generateErrorAsCharArray() {
 
             String errorBitsAsString = "";

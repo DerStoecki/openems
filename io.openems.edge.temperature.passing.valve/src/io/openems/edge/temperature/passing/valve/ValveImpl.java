@@ -20,7 +20,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     private ActuatorRelaysChannel closing;
     private ActuatorRelaysChannel opens;
     private double secondsPerPercentage;
-    private boolean percentageWasSet = false;
     private long timeStampValve;
 
     @Reference
@@ -39,11 +38,11 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
-            if (cpm.getComponent(config.closing_Relais()) instanceof ActuatorRelaysChannel) {
-                closing = cpm.getComponent(config.closing_Relais());
+            if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
+                closing = cpm.getComponent(config.closing_Relays());
             }
-            if (cpm.getComponent(config.opening_Relais()) instanceof ActuatorRelaysChannel) {
-                opens = cpm.getComponent(config.opening_Relais());
+            if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
+                opens = cpm.getComponent(config.opening_Relays());
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -138,7 +137,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
         if ((System.currentTimeMillis() - timeStampValve)
                 >= ((this.getTimeNeeded().getNextValue().get() * 1000))) {
-            percentageWasSet = false;
             this.getIsBusy().setNextValue(false);
             return true;
         }
@@ -192,7 +190,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             } else {
                 valveOpen();
             }
-            percentageWasSet = true;
             this.getIsBusy().setNextValue(true);
             return true;
         }

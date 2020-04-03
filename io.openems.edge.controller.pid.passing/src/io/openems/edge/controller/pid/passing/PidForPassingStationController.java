@@ -6,6 +6,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.filter.PidFilter;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.pid.passing.api.PidForPassingNature;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.api.PassingForPid;
@@ -22,7 +23,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "PidPassingStationController")
-public class PidForPassingStationController extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
+public class PidForPassingStationController extends AbstractOpenemsComponent implements OpenemsComponent, Controller, PidForPassingNature {
 
     @Reference
     ComponentManager cpm;
@@ -32,12 +33,12 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     private ControllerPassingChannel passing;
     private boolean isPump;
     private PidFilter pidFilter;
-    private int setPointTemperature;
+
     private double intervalTime = 2000;
     private double timestamp = 0;
 
     public PidForPassingStationController() {
-        super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
+        super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values(), PidForPassingNature.ChannelId.values());
     }
 
     @Activate
@@ -48,10 +49,24 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         allocateComponent(config.passingControllerId());
         this.pidFilter = new PidFilter(config.proportionalGain(), config.integralGain(), config.derivativeGain());
         pidFilter.setLimits(-200, 200);
-        this.setPointTemperature = config.setPoint_Temperature();
+        try {
+            this.setMinTemperature().setNextWriteValue(config.setPoint_Temperature());
+            //for REST / JSON
+            this.setMinTemperature().setNextValue(config.setPoint_Temperature());
+        } catch (OpenemsError.OpenemsNamedException e) {
+            e.printStackTrace();
+        }
         this.intervalTime = config.intervalTime() > 0 ? config.intervalTime() * 1000 : 2000;
     }
 
+    /**
+     * <p>Allocate the Component.</p>
+     *
+     * @param Device String from Config; needs to be an instance of PassingForPid/Thermometer/ControllerPassingChannel.
+     *               <p>
+     *               Allocate the Component --> Access to Channels
+     *               </p>
+     */
     private void allocateComponent(String Device) {
         try {
             if (cpm.getComponent(Device) instanceof PassingForPid) {
@@ -78,14 +93,32 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         super.deactivate();
     }
 
-
+    /**
+     * Controls a pump or valve via PID.
+     *
+     * <p>
+     * Only activates/runs if PassingController is active!
+     * if the Temperature from the temperatureSensor ist defined and the controller is ready to calc,
+     * PID value is calculated by setPointTemperature; usually from config. And the measured Temperature.
+     * This output is saved and the currentPowerLevel of the passingForPid substracts it's value from the output.
+     * if the passingForPid is a pump; the value will be inverted --> slower pump --> water will be heated up faster
+     * And vice versa.
+     * the output is divided by 10 bc the return value is in %*10 (or at least thats what i think due to testing the
+     * return values are sometimes 200 etc).
+     *
+     * </p>
+     */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
+
         if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
-            if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc() && this.passingForPid.getPowerLevel().getNextValue().isDefined()) {
+            if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
+                if (this.setMinTemperature().getNextWriteValue().isPresent()) {
+                    this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
+                }
                 this.timestamp = System.currentTimeMillis();
-                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setPointTemperature);
+                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
                 // is percentage value fix if so substract from current powerlevel?
                 output -= this.passingForPid.getPowerLevel().getNextValue().get();
 

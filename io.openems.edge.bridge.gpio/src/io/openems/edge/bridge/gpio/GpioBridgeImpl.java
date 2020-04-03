@@ -63,7 +63,7 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
      * */
     @Override
     public void addGpioTask(String id, GpioBridgeTask task) {
-        this.tasks.put(id, task);
+        getTasks().put(id, task);
         Gpio.pinMode(task.getRequest(), Gpio.INPUT);
 
     }
@@ -104,7 +104,7 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         @Override
         protected void forever() throws Throwable {
 
-            tasks.values().forEach(task -> {
+            getTasks().values().forEach(task -> {
 
                 if (Gpio.digitalRead(task.getRequest()) >= 1) {
                     task.setResponse(false);
