@@ -66,6 +66,7 @@ public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements 
         }
         getMaxPressure().setNextValue(config.maxPressure());
         try {
+            //was in documentation of Grundfos...Reference Values to set min and max
             setHrefMin().setNextWriteValue(config.hRefMin());
             setHrefMax().setNextWriteValue(config.hRefMax());
             setRrem().setNextWriteValue(config.rRem());
@@ -108,7 +109,9 @@ public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements 
         super.deactivate();
     }
 
-
+    /**
+     * Gets the Commands usually from config; or REST/JSON Request and writes ReferenceValues in channels.
+     */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (this.remote) {
@@ -137,15 +140,15 @@ public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements 
                 this.heatpump.setRefRem().setNextWriteValue(refRemValue > 254 ? 254 : refRemValue);
             }
         }
-//        if (this.genibus.getApduConfigurationParameters().getNextValue().get() != 2) {
-//            this.genibus.getApduConfigurationParameters().setNextValue(2);
-//        } else {
-//            //TEST if config param is correct-->get value
-//            this.genibus.getApduConfigurationParameters().setNextValue(0);
-//        }
-//        if (this.genibus.getApduReferenceValues().getNextValue().get() != 2) {
-//            this.genibus.getApduReferenceValues().setNextValue(2);
-//        }
+        // if (this.genibus.getApduConfigurationParameters().getNextValue().get() != 2) {
+        //     this.genibus.getApduConfigurationParameters().setNextValue(2);
+        // } else {
+        //     //TEST if config param is correct-->get value
+        //     this.genibus.getApduConfigurationParameters().setNextValue(0);
+        // }
+        // if (this.genibus.getApduReferenceValues().getNextValue().get() != 2) {
+        //     this.genibus.getApduReferenceValues().setNextValue(2);
+        // }
 
     }
 

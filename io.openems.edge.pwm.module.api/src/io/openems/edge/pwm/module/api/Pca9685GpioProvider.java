@@ -1,12 +1,14 @@
 package io.openems.edge.pwm.module.api;
-/*..
+/*
+ * so...
  * This Class is somewhat copied of the official pi4j GpioProvider,
  * got problems with it (Devices won't activate in Osgi bc of it)
- * Thats why I'm using same/edited functions etc of those classes.
+ * That's why I'm using same/edited functions etc of those classes.
  *
  * Credit still goes to the awesome Pi4j Team. So please check them out and support them :)
  * Thank you!*
- * */
+ *
+ */
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -132,7 +134,7 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
     }
 
     /**
-     * Setting the pwm-sginal to a continuous low-flank.
+     * Setting the pwm-signal to a continuous low-flank.
      *
      * @param pinPos location of the pwm device.
      */
@@ -176,7 +178,7 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
         }
     }
 
-    //following methods are used from :
+    //following stuff is copy pasted from :
     //https://github.com/Pi4J/pi4j/tree/master/pi4j-gpio-extension/src/main/java/com/pi4j/gpio/extension/pca
     private void validateFrequency(BigDecimal frequency) {
         if (frequency.compareTo(MIN_FREQUENCY) == -1 || frequency.compareTo(MAX_FREQUENCY) == 1) {

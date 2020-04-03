@@ -38,6 +38,17 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
         this.informationType = config.informationType();
     }
 
+    /**
+     * Sets The correctPinPosition.
+     *
+     * @param pinPosition usually from config. Sets the Pin position.
+     *
+     *                    <p>The Pin Position on the Leaflet base module is set. first input remapped the 4thGpio
+     *                    2nd input the 17th Gpio
+     *                    and 3rd input to 27th gpio</p>
+     * @return the gpio position as an int.
+     */
+
     private int setCorrectGpioPosition(String pinPosition) {
         switch (pinPosition) {
             case "1":

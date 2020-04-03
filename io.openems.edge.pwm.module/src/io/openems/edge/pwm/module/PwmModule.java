@@ -59,7 +59,11 @@ public class PwmModule extends AbstractOpenemsComponent implements OpenemsCompon
         super.deactivate();
     }
 
-
+    /**
+     * Depending on Module Version a GpioProvides is created. ATM only one version available; more to come in future.
+     *
+     * @param config config from Osgi. Method use the version and pwm_address.
+     */
     private void allocateGpioProvider(Config config) {
         try {
             //more to come with further versions

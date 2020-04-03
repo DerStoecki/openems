@@ -55,7 +55,7 @@ public class MeterConsolinnoD0 extends AbstractOpenEmsLMNWiredComponent
         super(OpenemsComponent.ChannelId.values(), //
                 SymmetricMeter.ChannelId.values(),//
                 AsymmetricMeter.ChannelId.values());
-
+        //Keys are fix for the Meter
         obisChannelMapping.put("1-0:1.8.0*255", SymmetricMeter.ChannelId.POSITIVE_ACTIVE_ENERGY_TOTAL);
         obisChannelMapping.put("1-0:1.8.1*255", SymmetricMeter.ChannelId.POSITIVE_ACTIVE_ENERGY_TARIF_ONE);
         obisChannelMapping.put("1-0:1.8.2*255", SymmetricMeter.ChannelId.POSITIVE_ACTIVE_ENERGY_TARIF_TWO);

@@ -51,7 +51,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
                 mcp.setPosition(config.position(), !this.isCloser().getNextValue().get());
                 // Value if it's deactivated Opener will be opened and Closer will be opened
                 mcp.addToDefault(config.position(), !this.isCloser().getNextValue().get());
-                // if closer should be off and Closer on uncomment the following code:
+                // if closer should be off(Normally Open) and Opener on (Normally Closed) uncomment the following code:
                 // mcp.setPosition(config.position(), 0);
                 // mcp.addToDefault(config.position(), 0);
 
