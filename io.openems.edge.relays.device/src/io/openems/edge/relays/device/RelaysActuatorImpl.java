@@ -48,12 +48,12 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
                 Mcp mcp = relaysModule.getMcp();
                 allocatedMcp = mcp;
                 // Relays is always "off" on activation in OSGi --> Means closer and opener will be off
-                mcp.setPosition(config.position(), !this.isCloser().getNextValue().get());
+                //mcp.setPosition(config.position(), !this.isCloser().getNextValue().get());
                 // Value if it's deactivated Opener will be opened and Closer will be opened
-                mcp.addToDefault(config.position(), !this.isCloser().getNextValue().get());
+                //mcp.addToDefault(config.position(), !this.isCloser().getNextValue().get());
                 // if closer should be off(Normally Open) and Opener on (Normally Closed) uncomment the following code:
-                // mcp.setPosition(config.position(), 0);
-                // mcp.addToDefault(config.position(), 0);
+                 mcp.setPosition(config.position(), false);
+                 mcp.addToDefault(config.position(), false);
 
 
                 mcp.shift();

@@ -149,7 +149,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                         break;
                     case "Dac":
                         if (cpm.getComponent(string) instanceof PowerLevel) {
-                            this.relaysList.add(counter.intValue(), cpm.getComponent(string));
+                            this.dacList.add(counter.intValue(), cpm.getComponent(string));
                         } else {
                             throw new ConfigurationException("Could not allocate Component: Dac " + string,
                                     "Config error; Check your Config --> Dac");
@@ -318,6 +318,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             // Do Stuff
 
             try {
+                this.timeStamp = System.currentTimeMillis() - 100;
                 this.csvWriter = new FileWriter(path + fileName, true);
                 //Write Current Time; File Writer maybe broken?
                 Calendar calendar = Calendar.getInstance();
@@ -332,7 +333,6 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 writeMeterData();
                 csvWriter.append("\n");
                 csvWriter.flush();
-                this.timeStamp = System.currentTimeMillis();
             } catch (IOException e) {
                 e.printStackTrace();
             }
