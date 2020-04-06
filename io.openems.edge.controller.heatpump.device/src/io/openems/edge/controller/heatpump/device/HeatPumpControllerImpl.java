@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "ControllerHeatPump")
+@Component(name = "Controller.HeatPump")
 public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent, HeatPumpController {
 
     @Reference(policy = ReferencePolicy.STATIC,

@@ -19,7 +19,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "RelaysDevice",
+@Component(name = "Device.Relays",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class RelaysActuatorImpl extends AbstractOpenemsComponent implements ActuatorRelaysChannel, OpenemsComponent {

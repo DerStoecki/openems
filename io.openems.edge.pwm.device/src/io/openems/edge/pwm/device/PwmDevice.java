@@ -20,7 +20,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "PwmDevice",
+@Component(name = "Device.Pwm",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class PwmDevice extends AbstractOpenemsComponent implements OpenemsComponent, PwmPowerLevelChannel {

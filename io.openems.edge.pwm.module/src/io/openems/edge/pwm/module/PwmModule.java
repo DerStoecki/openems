@@ -25,7 +25,7 @@ import io.openems.edge.pwm.module.api.AbstractPcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "PwmModule",
+@Component(name = "Module.Pwm",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class PwmModule extends AbstractOpenemsComponent implements OpenemsComponent {

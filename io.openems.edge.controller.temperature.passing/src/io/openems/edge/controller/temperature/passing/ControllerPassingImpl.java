@@ -23,7 +23,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Temperature.Controller.Passing")
+@Component(name = "Controller.Passing.Main")
 public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller {
 
     @Reference
@@ -76,18 +76,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             this.timeToHeatUp = 5 * 1000 * 60;
         }
         this.timeToHeatUp = config.heating_Time() * 1000;
-        try {
+
             allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
             allocate_Component(config.primary_Rewind_Sensor(), "Thermometer", "PR");
             allocate_Component(config.secundary_Forward_Sensor(), "Thermometer", "SF");
             allocate_Component(config.secundary_Rewind_Sensor(), "Thermometer", "SR");
             allocate_Component(config.valve_id(), "Valve", "Valve");
             allocate_Component(config.pump_id(), "Pump", "Pump");
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            e.printStackTrace();
-            throw e;
 
-        }
         defaultOptions();
     }
 

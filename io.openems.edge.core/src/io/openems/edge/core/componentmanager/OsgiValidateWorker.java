@@ -37,7 +37,7 @@ public class OsgiValidateWorker extends AbstractWorker {
 	private final static int INITIAL_CYCLE_TIME = 5_000; // in ms
 	private final static int REGULAR_CYCLE_TIME = 60_000; // in ms
 
-	private final static int RESTART_PERIOD = 10; // in minutes
+	private final static int RESTART_PERIOD = 2; // in minutes
 	private final static int FIRST_RESTART_PERIOD = RESTART_PERIOD - 1; // in minutes
 	private final static int ANNOUNCE_FAULT_AFTER = 5; // in minutes
 

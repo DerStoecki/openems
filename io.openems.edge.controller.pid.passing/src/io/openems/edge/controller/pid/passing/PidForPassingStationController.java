@@ -22,7 +22,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "PidPassingStationController")
+@Component(name = "Controller.Passing.Pid")
 public class PidForPassingStationController extends AbstractOpenemsComponent implements OpenemsComponent, Controller, PidForPassingNature {
 
     @Reference

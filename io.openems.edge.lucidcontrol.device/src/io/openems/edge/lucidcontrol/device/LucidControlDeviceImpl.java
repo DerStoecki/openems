@@ -19,7 +19,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "LucidControlDevice")
+@Component(name = "Device.LucidControl")
 public class LucidControlDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, LucidControlDevice {
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
