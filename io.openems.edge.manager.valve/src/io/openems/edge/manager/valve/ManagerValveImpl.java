@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "ConsolinnoManagerValve",
+@Component(name = "Consolinno.Manager.Valve",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)

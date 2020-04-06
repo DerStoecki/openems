@@ -34,7 +34,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponents(config.pump_Type(), config.pump_Relays(), config.pump_Pwm());
         this.getIsBusy().setNextValue(false);
@@ -54,7 +54,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
      *                    The relays and or pump will be off (just in case).
      *                    </p>
      */
-    private void allocateComponents(String pump_type, String pump_relays, String pump_pwm) {
+    private void allocateComponents(String pump_type, String pump_relays, String pump_pwm) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         switch (pump_type) {
             case "Relays":
                 isRelays = true;
@@ -69,7 +69,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
                 isPwm = true;
                 break;
         }
-        try {
+
             if (isRelays) {
                 if (cpm.getComponent(pump_relays) instanceof ActuatorRelaysChannel) {
                     this.relays = cpm.getComponent(pump_relays);
@@ -87,10 +87,9 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
                     throw new ConfigurationException(pump_pwm, "Allocated Pwm, not a (configured) pwm-device.");
                 }
             }
-        } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
+
         }
-    }
+
 
     /**
      * Deactivates the pump.

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "TemperatureSensor", immediate = true,
+@Component(name = "Device.Temperature.Sensor", immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 
 public class TemperatureSensorImpl extends AbstractOpenemsComponent implements OpenemsComponent, Thermometer {

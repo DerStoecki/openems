@@ -29,7 +29,7 @@ import io.openems.edge.pwm.module.api.PcaGpioProvider;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "I2CBridge",
+@Component(name = "Bridge.I2c",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE)

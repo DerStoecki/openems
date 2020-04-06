@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "TemperatureControllerOverseer")
+@Component(name = "Controller.Passing.Overseer")
 public class ControllerOverseerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
     protected ControllerPassingChannel passing;
@@ -59,31 +59,36 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     }
 
     private void allocateComponents(String controller, String[] temperatureSensor) throws OpenemsError.OpenemsNamedException, ConfigurationException {
-        try {
-            if (cpm.getComponent(controller) instanceof ControllerPassingChannel) {
-                passing = cpm.getComponent(controller);
+        if (cpm.getComponent(controller) instanceof ControllerPassingChannel) {
+            passing = cpm.getComponent(controller);
 
-            } else {
-                throw new ConfigurationException(controller,
-                        "Allocated Passing Controller not a Passing Controller; Check if Name is correct and try again");
+        } else {
+            throw new ConfigurationException(controller,
+                    "Allocated Passing Controller not a Passing Controller; Check if Name is correct and try again");
+        }
+        ConfigurationException[] exConfig = {null};
+        OpenemsError.OpenemsNamedException[] exNamed = {null};
+        Arrays.stream(temperatureSensor).forEach(thermometer -> {
+            try {
+
+                if (cpm.getComponent(thermometer) instanceof Thermometer) {
+                    this.temperatureSensor.add(cpm.getComponent(thermometer));
+                } else {
+                    throw new ConfigurationException(thermometer,
+                            "Allocated Temperature Sensor is not Correct; Check Name and try again.");
+                }
+            } catch (OpenemsError.OpenemsNamedException e) {
+                exNamed[0] = e;
+            } catch (ConfigurationException e) {
+                exConfig[0] = e;
             }
 
-            Arrays.stream(temperatureSensor).forEach(thermometer -> {
-                try {
-                    if (cpm.getComponent(thermometer) instanceof Thermometer) {
-                        this.temperatureSensor.add(cpm.getComponent(thermometer));
-                    } else {
-                        throw new ConfigurationException(thermometer,
-                                "Allocated Temperature Sensor is not Correct; Check Name and try again.");
-                    }
-                } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-                    e.printStackTrace();
-                }
-
-            });
-        } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-            throw e;
+        });
+        if (exConfig[0] != null) {
+            throw exConfig[0];
+        }
+        if(exNamed[0] != null){
+            throw exNamed[0];
         }
     }
 
