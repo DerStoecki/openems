@@ -27,7 +27,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     int tolerated_Temperature_Range () default 60;
 
     @AttributeDefinition(name = "Temperature Sensor", description = "The Temperature Sensor which is allocated with this Controller.")
-            String allocated_Temperature_Sensor() default "TemperatureSensor4";
+            String [] allocated_Temperature_Sensor() default {"TemperatureSensor4"};
 
     boolean enabled() default true;
 

@@ -16,13 +16,18 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "TemperatureControllerOverseer")
 public class ControllerOverseerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
     protected ControllerPassingChannel passing;
-    protected Thermometer temperatureSensor;
+    protected List<Thermometer> temperatureSensor = new ArrayList<>();
     private int tolerance;
 
     public ControllerOverseerImpl() {
@@ -53,7 +58,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
         }
     }
 
-    private void allocateComponents(String controller, String temperatureSensor) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+    private void allocateComponents(String controller, String[] temperatureSensor) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         try {
             if (cpm.getComponent(controller) instanceof ControllerPassingChannel) {
                 passing = cpm.getComponent(controller);
@@ -62,12 +67,20 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
                 throw new ConfigurationException(controller,
                         "Allocated Passing Controller not a Passing Controller; Check if Name is correct and try again");
             }
-            if (cpm.getComponent(temperatureSensor) instanceof Thermometer) {
-                this.temperatureSensor = cpm.getComponent(temperatureSensor);
-            } else {
-                throw new ConfigurationException(temperatureSensor,
-                        "Allocated Temperature Sensor is not Correct; Check Name and try again.");
-            }
+
+            Arrays.stream(temperatureSensor).forEach(thermometer -> {
+                try {
+                    if (cpm.getComponent(thermometer) instanceof Thermometer) {
+                        this.temperatureSensor.add(cpm.getComponent(thermometer));
+                    } else {
+                        throw new ConfigurationException(thermometer,
+                                "Allocated Temperature Sensor is not Correct; Check Name and try again.");
+                    }
+                } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+                    e.printStackTrace();
+                }
+
+            });
         } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
             throw e;
@@ -100,11 +113,10 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
      */
     private boolean heatingReached() {
         if (passing.getMinTemperature().getNextWriteValue().isPresent()) {
-            return this.temperatureSensor.getTemperature().getNextValue().get() - tolerance
-                    > passing.getMinTemperature().getNextWriteValue().get();
-        } else {
-            //if next Write value is not present; return true; so everything will be shut down; just in case
-            return true;
+            return this.temperatureSensor.stream().noneMatch(
+                    thermometer -> thermometer.getTemperature().getNextValue().get() <= passing.getMinTemperature().getNextWriteValue().get());
+
         }
+        return true;
     }
 }
