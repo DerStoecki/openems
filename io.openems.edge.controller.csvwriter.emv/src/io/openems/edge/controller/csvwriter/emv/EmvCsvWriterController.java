@@ -89,7 +89,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
+        //month starts with 0;
+        int month = calendar.get(Calendar.MONTH) + 1;
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         this.fileName = "test" + year + month + day + ".csv";
         this.dateDay = day;
@@ -122,8 +123,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      *
      * @param deviceList is the DeviceList configured by the User.
      * @param identifier is needed for switch case and shows if devices have the correct nature.
-     * @exception ConfigurationException if allocated component exists but it's wrong instance.
-     * @exception io.openems.common.exceptions.OpenemsError.OpenemsNamedException if component doesn't exist.
+     * @throws ConfigurationException                                          if allocated component exists but it's wrong instance.
+     * @throws io.openems.common.exceptions.OpenemsError.OpenemsNamedException if component doesn't exist.
      */
     private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
 

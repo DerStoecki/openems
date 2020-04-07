@@ -11,16 +11,13 @@ import org.osgi.service.metatype.annotations.Option;
 @interface Config {
 
     @AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component.")
-    String id() default "csvWriter0";
+    String id() default "csvStaticComponent0";
 
     @AttributeDefinition(name = "Alias", description = "Human-readable name of this Component; defaults to Component-ID")
     String alias() default "";
 
     @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
     boolean enabled() default true;
-
-
-    String[] temperaturSensorList();
 
     @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices",
             options = {
@@ -37,7 +34,7 @@ import org.osgi.service.metatype.annotations.Option;
     String[] relaysDeviceList();
 
     @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changes ")
-    boolean [] relaysValues() default {true,true,false,false,true,false,true,false};
+    int [] relaysValues() default {1,1,0,0,1,0,1,0};
 
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
