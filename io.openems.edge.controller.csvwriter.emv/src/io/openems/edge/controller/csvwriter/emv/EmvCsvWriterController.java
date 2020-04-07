@@ -57,7 +57,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, IOException {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, IOException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponents(config.temperaturSensorList(), "Thermometer");
         allocateComponents(config.relaysDeviceList(), "Relays");
@@ -89,7 +89,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
+        //month starts with 0;
+        int month = calendar.get(Calendar.MONTH) + 1;
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         this.fileName = "test" + year + month + day + ".csv";
         this.dateDay = day;
@@ -122,11 +123,16 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      *
      * @param deviceList is the DeviceList configured by the User.
      * @param identifier is needed for switch case and shows if devices have the correct nature.
+     * @throws ConfigurationException                                          if allocated component exists but it's wrong instance.
+     * @throws io.openems.common.exceptions.OpenemsError.OpenemsNamedException if component doesn't exist.
      */
-    private void allocateComponents(String[] deviceList, String identifier) {
+    private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
 
         AtomicInteger counter = new AtomicInteger();
         counter.set(0);
+        OpenemsError.OpenemsNamedException[] openemsNamedExceptions = {null};
+        ConfigurationException[] configurationExceptions = {null};
+
         Arrays.stream(deviceList).forEach(string -> {
             try {
                 switch (identifier) {
@@ -175,10 +181,18 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
                 }
                 counter.getAndIncrement();
-            } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-                e.printStackTrace();
+            } catch (ConfigurationException e) {
+                configurationExceptions[0] = e;
+            } catch (OpenemsError.OpenemsNamedException e) {
+                openemsNamedExceptions[0] = e;
             }
         });
+        if (configurationExceptions[0] != null) {
+            throw configurationExceptions[0];
+        }
+        if (openemsNamedExceptions[0] != null) {
+            throw openemsNamedExceptions[0];
+        }
     }
 
     /**

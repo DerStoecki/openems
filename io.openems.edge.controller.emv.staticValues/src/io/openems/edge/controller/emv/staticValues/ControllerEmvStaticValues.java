@@ -42,14 +42,28 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponents(config.relaysDeviceList(), "Relays");
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
-        this.relaysValues = config.relaysValues();
+        allocateRelaysValues(config.relaysValues());
         this.dacValues = config.dacValues();
         this.pwmValues = config.pwmValues();
+    }
+
+    /**
+     * Due to problems with a boolean array; a new function with int array needed to be implemented.
+     *
+     * @param relaysValues  usually from config ; 1 == ACTIVATE; 0 == DEACTIVATE
+     */
+    private void allocateRelaysValues(int[] relaysValues) {
+        boolean[] tempsave = new boolean[relaysValues.length];
+        AtomicInteger counter = new AtomicInteger(0);
+        Arrays.stream(relaysValues).forEach(value -> {
+            tempsave[counter.getAndIncrement()] = value == 1;
+        });
+        this.relaysValues = tempsave;
     }
 
 
@@ -58,11 +72,15 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
      *
      * @param deviceList is the DeviceList configured by the User.
      * @param identifier is needed for switch case and shows if devices have the correct nature.
+     * @throws ConfigurationException                                          if the Component exists but is the wrong instance
+     * @throws OpenemsError.OpenemsNamedException if the component isn't loaded yet.
      */
-    private void allocateComponents(String[] deviceList, String identifier) {
+    private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
 
         AtomicInteger counter = new AtomicInteger();
         counter.set(0);
+        OpenemsError.OpenemsNamedException[] openemsNamedExceptions = {null};
+        ConfigurationException[] configurationExceptions = {null};
         Arrays.stream(deviceList).forEach(string -> {
             try {
                 switch (identifier) {
@@ -77,7 +95,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                         break;
                     case "Dac":
                         if (cpm.getComponent(string) instanceof PowerLevel) {
-                            this.relaysList.add(counter.intValue(), cpm.getComponent(string));
+                            this.dacList.add(counter.intValue(), cpm.getComponent(string));
                         } else {
                             throw new ConfigurationException("Could not allocate Component: Dac " + string,
                                     "Config error; Check your Config --> Dac");
@@ -94,10 +112,18 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
                 }
                 counter.getAndIncrement();
-            } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-                e.printStackTrace();
+            } catch (ConfigurationException e) {
+                configurationExceptions[0] = e;
+            } catch (OpenemsError.OpenemsNamedException e) {
+                openemsNamedExceptions[0] = e;
             }
         });
+        if (configurationExceptions[0] != null) {
+            throw configurationExceptions[0];
+        }
+        if (openemsNamedExceptions[0] != null) {
+            throw openemsNamedExceptions[0];
+        }
     }
 
 
@@ -122,8 +148,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         counter.set(0);
         this.relaysList.forEach(relay -> {
             try {
-                relay.getRelaysChannel().setNextWriteValue(relaysValues[counter.intValue()]);
-                counter.getAndIncrement();
+                relay.getRelaysChannel().setNextWriteValue(relaysValues[counter.getAndIncrement()]);
             } catch (OpenemsError.OpenemsNamedException e) {
                 e.printStackTrace();
             }
@@ -132,7 +157,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         counter.set(0);
         this.dacList.forEach(dac -> {
             try {
-                dac.getPowerLevelChannel().setNextWriteValue(calculateAmperetoPercent(dacValues[counter.intValue()]));
+                dac.getPowerLevelChannel().setNextWriteValue(calculateAmpereToPercent(dacValues[counter.getAndIncrement()]));
             } catch (OpenemsError.OpenemsNamedException e) {
                 e.printStackTrace();
             }
@@ -142,14 +167,14 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
         this.pwmList.forEach(pwm -> {
             try {
-                pwm.getPwmPowerLevelChannel().setNextWriteValue(pwmValues[counter.intValue()]);
+                pwm.getPwmPowerLevelChannel().setNextWriteValue(pwmValues[counter.getAndIncrement()]);
             } catch (OpenemsError.OpenemsNamedException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    private Integer calculateAmperetoPercent(double dacValue) {
+    private Integer calculateAmpereToPercent(double dacValue) {
         return (int) (dacValue * 100 / 20.d);
     }
 
