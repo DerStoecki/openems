@@ -169,7 +169,7 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
      * This channel loads a warmup program from the specified file path. Will only execute when controller is paused.
      * Does NOT reset the runtime, so call the GoToMinuteWarmupProgram() with 0 before play to start the program from
      * the beginning.
-     * The channel will default back to "empty" after the file was loaded.
+     * The channel will return "done" if the file was successfully loaded or "failed" if not.
      *
      * @return the Channel
      */

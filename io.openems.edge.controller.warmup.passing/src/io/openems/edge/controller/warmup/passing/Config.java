@@ -17,17 +17,26 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human readable name of Controller.")
     String alias() default "WarmupPassing";
 
-    @AttributeDefinition(name = "Starting temperature, default entry.", description = "The starting temperature of the heating run, in °C. Only considered when no config file is found and one needs to be created.")
-    int startTemp() default 20;
+    @AttributeDefinition(name = "Auto Resume", description = "Automatically resumes the last running heating program if the controller was shut down while that program was still running (paused counts as running). Specifically, auto resume triggers when an \"elapsed time\">0 is loaded from the config file. Turning this option off will set \"elapsed time\"=0 when the controller loads.")
+    boolean auto_resume() default true;
 
-    @AttributeDefinition(name = "Temperature increase per step, default entry.", description = "The increase in temperature per heating step, in °C. Only considered when no config file is found and one needs to be created.")
-    int tempIncrease() default 5;
+    @AttributeDefinition(name = "Override Last Program", description = "The controller saves and loads the heating program of the previous run by default. This option overrides that and uses the following parameters instead. NOTE: \"elapsed time\" is not reset.")
+    boolean override_program() default false;
 
-    @AttributeDefinition(name = "Number of steps, default entry.", description = "The number of temperature steps, minimum 1. Only considered when no config file is found and one needs to be created.")
-    int stepNumber() default 5;
+    @AttributeDefinition(name = "Starting temperature", description = "The starting temperature of the heating run, in °C. Only used if override is enabled or there is no config file.")
+    int start_temp() default 20;
 
-    @AttributeDefinition(name = "Steps length, default entry.", description = "The duration of each temperature step, in minutes. Only considered when no config file is found and one needs to be created.")
-    int stepLength() default 1;
+    @AttributeDefinition(name = "Temperature increase per step", description = "The increase in temperature per heating step, in °C. Only used if override is enabled or there is no config file.")
+    int temp_increase() default 5;
+
+    @AttributeDefinition(name = "Number of steps", description = "The number of temperature steps, minimum 1. Only used if override is enabled or there is no config file.")
+    int step_number() default 5;
+
+    @AttributeDefinition(name = "Steps length", description = "The duration of each temperature step, in minutes. Only used if override is enabled or there is no config file.")
+    int step_length() default 1;
+
+    @AttributeDefinition(name = "Start on activation", description = "Immediately starts the heating program when the controller is loaded. Turning this off does NOT disable auto resume.")
+    boolean start_on_activation() default false;
 
     boolean enabled() default true;
 
