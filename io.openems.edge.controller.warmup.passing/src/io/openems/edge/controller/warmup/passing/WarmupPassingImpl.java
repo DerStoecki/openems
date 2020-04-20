@@ -139,7 +139,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 		} catch (JsonParseException js){
 			this.noError().setNextValue(false);
 			this.logInfo(this.log, "Error, couldn't translate contents of " + storage + ". Incompatible JSON format or file may be corrupted, please replace/delete and try again. If you delete the file, the controller will create an appropriate file with standard parameters.");
-			throw js;
+			this.logInfo(this.log, js.toString());
 		}
 
 		try{
@@ -238,8 +238,9 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 			} catch (JsonParseException js){
                 nofileloaderror = false;
 				this.logInfo(this.log, "Error, couldn't translate contents of " + filetoload + ". Incompatible JSON format or file may be corrupted.");
-				throw js;
+				this.logInfo(this.log, js.toString());
 			}
+
 		} else {
             nofileloaderror = false;
 			this.logInfo(this.log, "Error, found no such file: " + filepath);
