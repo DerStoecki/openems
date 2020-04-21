@@ -67,7 +67,8 @@
 	bnd.identity;id='io.openems.edge.controller.heatpump.device.api',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
-	bnd.identity;id='io.openems.edge.controller.pid.passing,\
+	bnd.identity;id='io.openems.edge.controller.passing.controlcenter',\
+	bnd.identity;id='io.openems.edge.controller.pid.passing',\
 	bnd.identity;id='io.openems.edge.controller.pvinverter.fixpowerlimit',\
 	bnd.identity;id='io.openems.edge.controller.selltogridlimit',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.balancing',\
@@ -224,6 +225,7 @@
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
+	io.openems.edge.controller.passing.controlcenter;version=snapshot,\
 	io.openems.edge.controller.pid.passing;version=snapshot,\
 	io.openems.edge.controller.pvinverter.fixpowerlimit;version=snapshot,\
 	io.openems.edge.controller.selltogridlimit;version=snapshot,\
