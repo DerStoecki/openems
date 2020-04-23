@@ -26,8 +26,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Run Warmup Program", description = "Run the program loaded in the Warmup Controller.")
     boolean run_warmup_program() default false;
 
-    @AttributeDefinition(name = "Allocated Other Controller", description = "Unique Name of another Controller, allocated with this Control Center.")
-    String allocated_Other_Controller() default "ControllerOther0";
+    @AttributeDefinition(name = "Allocated Heating Curve Regulator", description = "Unique name of the automatic regulator that adjusts heating depending on outside temperature.")
+    String allocated_Heating_Curve_Regulator() default "HeatingCurveRegulator0";
 
     boolean enabled() default true;
 

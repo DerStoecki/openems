@@ -5,6 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.passing.heatingcurveregulator.api.HeatingCurveRegulatorChannel;
 import io.openems.edge.controller.pid.passing.api.PidForPassingNature;
 import io.openems.edge.controller.warmup.passing.api.ControllerWarmupChannel;
 import org.osgi.service.cm.ConfigurationException;
@@ -26,7 +27,7 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
 	private PidForPassingNature pidControllerChannel;
 	private ControllerWarmupChannel warmupControllerChannel;
-//	private OtherController otherControllerChannel;
+	private HeatingCurveRegulatorChannel heatingCurveRegulatorChannel;
 	private int temperatureDezidegree;
 
 	public PassingControlCenterImpl() {
@@ -53,14 +54,12 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 				throw new ConfigurationException(config.allocated_Warmup_Controller(),
 						"Allocated Warmup Controller not a WarmupPassing Controller; Check if Name is correct and try again.");
 			}
-			/*
-			if (cpm.getComponent(config.allocated_Other_Controller()) instanceof ---othercontrollerchannel---) {
-				this.otherControllerChannel = cpm.getComponent(config.allocated_Other_Controller());
+			if (cpm.getComponent(config.allocated_Heating_Curve_Regulator()) instanceof HeatingCurveRegulatorChannel) {
+				this.heatingCurveRegulatorChannel = cpm.getComponent(config.allocated_Heating_Curve_Regulator());
 			} else {
 				throw new ConfigurationException(config.allocated_Warmup_Controller(),
-						"Allocated Other Controller not a Other Controller; Check if Name is correct and try again.");
+						"Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
 			}
-			*/
 		} catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
 			e.printStackTrace();
 			throw e;
@@ -77,15 +76,22 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
-		if (warmupControllerChannel.noError().getNextValue().isDefined() && warmupControllerChannel.getWarmupTemperature().getNextValue().isDefined()){
+		if (warmupControllerChannel.noError().getNextValue().isDefined() &&
+				warmupControllerChannel.getWarmupTemperature().getNextValue().isDefined()){
 			if (!warmupControllerChannel.noError().getNextValue().get()){
 				temperatureDezidegree = warmupControllerChannel.getWarmupTemperature().getNextValue().get();
 			}
 		}
-
-		if(!warmupControllerChannel.playPauseWarmupController().getNextWriteValue().isPresent() || !warmupControllerChannel.playPauseWarmupController().getNextWriteValue().get()){	//No value or paused
-			//Code from other controller goes here
-			//temperatureDezidegree = set by other controller
+		//If Warmup Controller has no value or paused/deactivated, get value from Heating Curve Regulator.
+		if (!warmupControllerChannel.playPauseWarmupController().getNextWriteValue().isPresent() ||
+				!warmupControllerChannel.playPauseWarmupController().getNextWriteValue().get()){
+			if (heatingCurveRegulatorChannel.getHeatingTemperature().getNextValue().isDefined() &&
+					heatingCurveRegulatorChannel.noError().getNextValue().get()){
+				temperatureDezidegree = heatingCurveRegulatorChannel.getHeatingTemperature().getNextValue().get();
+			} else {
+				//Fallback, if both controllers give error
+				temperatureDezidegree = 200;
+			}
 		}
 
 		pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureDezidegree);
