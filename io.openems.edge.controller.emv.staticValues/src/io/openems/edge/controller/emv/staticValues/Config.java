@@ -29,12 +29,36 @@ import org.osgi.service.metatype.annotations.Option;
                     @Option(label = "Relays5", value = "Relays5"),
                     @Option(label = "Relays6", value = "Relays6"),
                     @Option(label = "Relays7", value = "Relays7"),
+                    @Option(label = "Relays8", value = "Relays8"),
+                    @Option(label = "Relays9", value = "Relays9"),
+                    @Option(label = "Relays10", value = "Relays10"),
+                    @Option(label = "Relays11", value = "Relays11"),
+                    @Option(label = "Relays12", value = "Relays12"),
+                    @Option(label = "Relays13", value = "Relays13"),
+                    @Option(label = "Relays14", value = "Relays14"),
+                    @Option(label = "Relays15", value = "Relays15"),
+                    @Option(label = "Relays16", value = "Relays16"),
+                    @Option(label = "Relays17", value = "Relays17"),
+                    @Option(label = "Relays18", value = "Relays18"),
+                    @Option(label = "Relays19", value = "Relays19"),
+                    @Option(label = "Relays20", value = "Relays20"),
+                    @Option(label = "Relays21", value = "Relays21"),
+                    @Option(label = "Relays22", value = "Relays22"),
+                    @Option(label = "Relays23", value = "Relays23"),
+                    @Option(label = "Relays24", value = "Relays24"),
+                    @Option(label = "Relays25", value = "Relays25"),
+                    @Option(label = "Relays26", value = "Relays26"),
+                    @Option(label = "Relays27", value = "Relays27"),
+                    @Option(label = "Relays28", value = "Relays28"),
+                    @Option(label = "Relays29", value = "Relays29"),
+                    @Option(label = "Relays30", value = "Relays30"),
+                    @Option(label = "Relays31", value = "Relays31"),
 
             })
     String[] relaysDeviceList();
 
-    @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changes ")
-    int [] relaysValues() default {1,1,0,0,1,0,1,0};
+    @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changed via 1 and 0 ")
+    String relaysValues() default "1100101011001010";
 
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {

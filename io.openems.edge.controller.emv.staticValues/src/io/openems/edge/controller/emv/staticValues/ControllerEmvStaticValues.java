@@ -16,6 +16,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ControllerEmvStaticValues extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
     @Reference
     ComponentManager cpm;
+
+    private final Logger log = LoggerFactory.getLogger(ControllerEmvStaticValues.class);
 
     private List<ActuatorRelaysChannel> relaysList = new ArrayList<>();
     private List<PowerLevel> dacList = new ArrayList<>();
@@ -55,15 +59,20 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     /**
      * Due to problems with a boolean array; a new function with int array needed to be implemented.
      *
-     * @param relaysValues  usually from config ; 1 == ACTIVATE; 0 == DEACTIVATE
+     * @param relaysValues usually from config ; 1 == ACTIVATE; 0 == DEACTIVATE
      */
-    private void allocateRelaysValues(int[] relaysValues) {
-        boolean[] tempsave = new boolean[relaysValues.length];
-        AtomicInteger counter = new AtomicInteger(0);
-        Arrays.stream(relaysValues).forEach(value -> {
-            tempsave[counter.getAndIncrement()] = value == 1;
-        });
-        this.relaysValues = tempsave;
+    private void allocateRelaysValues(String relaysValues) {
+        char[] tempRelaysValues = relaysValues.toCharArray();
+
+        if(this.relaysList.size()>tempRelaysValues.length) {
+            this.logInfo(this.log, "Attention! Not enough RelaysValues! Missing Values: " + (this.relaysList.size()-tempRelaysValues.length));
+        }
+
+        boolean[] tempSaveRelaysValueAsBoolean = new boolean[tempRelaysValues.length];
+        for (int counter = 0; counter < tempRelaysValues.length; counter++) {
+            tempSaveRelaysValueAsBoolean[counter] = tempRelaysValues[counter] == '1';
+        }
+        this.relaysValues = tempSaveRelaysValueAsBoolean;
     }
 
 
@@ -72,7 +81,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
      *
      * @param deviceList is the DeviceList configured by the User.
      * @param identifier is needed for switch case and shows if devices have the correct nature.
-     * @throws ConfigurationException                                          if the Component exists but is the wrong instance
+     * @throws ConfigurationException             if the Component exists but is the wrong instance
      * @throws OpenemsError.OpenemsNamedException if the component isn't loaded yet.
      */
     private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
