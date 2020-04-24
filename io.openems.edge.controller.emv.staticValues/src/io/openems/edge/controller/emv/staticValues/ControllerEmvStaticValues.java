@@ -62,17 +62,18 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
      * @param relaysValues usually from config ; 1 == ACTIVATE; 0 == DEACTIVATE
      */
     private void allocateRelaysValues(String relaysValues) {
+
         char[] tempRelaysValues = relaysValues.toCharArray();
 
         if(this.relaysList.size()>tempRelaysValues.length) {
-            this.logInfo(this.log, "Attention! Not enough RelaysValues! Missing Values: " + (this.relaysList.size()-tempRelaysValues.length));
+            this.logInfo(this.log, "Attention! Not enough RelaysValues! Missing Values: " + (this.relaysList.size()-tempRelaysValues.length)
+            + " Following Relays Values will be 0 == false == deactivate");
+        }
+        this.relaysValues = new boolean [this.relaysList.size()];
+        for (int counter = 0; counter < tempRelaysValues.length && counter < this.relaysList.size(); counter++) {
+            this.relaysValues[counter] = tempRelaysValues[counter] == '1';
         }
 
-        boolean[] tempSaveRelaysValueAsBoolean = new boolean[tempRelaysValues.length];
-        for (int counter = 0; counter < tempRelaysValues.length; counter++) {
-            tempSaveRelaysValueAsBoolean[counter] = tempRelaysValues[counter] == '1';
-        }
-        this.relaysValues = tempSaveRelaysValueAsBoolean;
     }
 
 
