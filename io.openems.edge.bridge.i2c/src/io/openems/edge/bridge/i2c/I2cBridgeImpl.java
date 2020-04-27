@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 
 import io.openems.edge.bridge.i2c.api.I2cBridge;
+import io.openems.edge.bridge.i2c.task.I2cPcaTask;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.PcaMainModuleProvider;
 import io.openems.edge.i2c.mcp.api.Mcp;
 import io.openems.edge.i2c.mcp.api.McpChannelRegister;
 import org.osgi.service.component.ComponentContext;
@@ -125,6 +127,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         this.tasks.remove(id);
     }
 
+
     /**
      * If an I2c Task will be removed, it'll be set off.
      *
@@ -199,5 +202,24 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         }
     }
 
+    @Override
+    public void addMainModulePca(String id, PcaMainModuleProvider pcaMain) {
+
+    }
+
+    @Override
+    public void removeMainModulePca(String id) {
+
+    }
+
+    @Override
+    public void addMainModulePcaTask(String id, I2cPcaTask pca) {
+
+    }
+
+    @Override
+    public void removeMainModulePcaTask(String id) {
+
+    }
 
 }

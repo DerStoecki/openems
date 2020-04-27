@@ -5,12 +5,9 @@ Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
     This Bundle summarizes the devices, build in the main module. Like the PCA I/Os. Not inculding remapping of GPIOs etc.\
 
-
-Export-Package:  \
-	io.openems.edge.consolinno.leaflet.maindevice.api;-provide=true
-
 Private-Package:  \
-	io.openems.edge.consolinno.leaflet.maindevice
+	io.openems.edge.consolinno.leaflet.maindevice,\
+	io.openems.edge.consolinno.leaflet.maindevice.pca,\
 
 -includeresource: {readme.md}
 
