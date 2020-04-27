@@ -1,0 +1,21 @@
+Bundle-Name: OpenEMS Edge Leaflet Mainmodule
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This Bundle utilize the build in pca of the main module. Put it to the I2c Bridge so the pca is accessable by the device.
+
+Private-Package:  \
+	io.openems.edge.consolinno.leaflet.mainmodule
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.common;version=latest,\
+	io.openems.edge.common;version=latest,\
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+

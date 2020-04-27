@@ -17,6 +17,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.io.IOException;
+
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Device.Relays",

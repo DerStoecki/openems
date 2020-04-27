@@ -51,12 +51,20 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
 
     private int setCorrectGpioPosition(String pinPosition) {
         switch (pinPosition) {
-            case "1":
-                return 4;
-            case "2":
-                return 17;
-            case "3":
-                return 27;
+            // case "1":
+            //     return 4;
+            // case "2":
+            //     return 17;
+            // case "3":
+            //     return 27;
+            case "1.1" : return 0;
+            case "1.2" : return 22;
+            case "1.3" : return 1;
+            case "1.4" : return 27;
+            case "2.1" : return 13;
+            case "2.2" : return 12;
+
+
         }
         return -1;
     }

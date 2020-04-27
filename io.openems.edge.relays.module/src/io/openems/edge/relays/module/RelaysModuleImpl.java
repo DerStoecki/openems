@@ -68,8 +68,11 @@ public class RelaysModuleImpl extends AbstractOpenemsComponent implements Relays
             for (Map.Entry<Integer, Boolean> entry : mcp.getValuesPerDefault().entrySet()) {
                 mcp.setPosition(entry.getKey(), entry.getValue());
             }
+
             mcp.shift();
-            this.refI2cBridge.removeMcp(this.mcp);
+
+
+        this.refI2cBridge.removeMcp(this.mcp);
     }
 
     private void allocateBus(int config) {
