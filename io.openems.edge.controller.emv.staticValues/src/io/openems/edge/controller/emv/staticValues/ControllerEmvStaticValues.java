@@ -6,6 +6,7 @@ import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
@@ -38,6 +39,8 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     private boolean[] relaysValues;
     private double[] dacValues;
     private float[] pwmValues;
+    private List<PcaDevice> pcaList = new ArrayList<>();
+    private boolean[] pcaValue;
 
     public ControllerEmvStaticValues() {
         super(OpenemsComponent.ChannelId.values(),
@@ -51,10 +54,22 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         allocateComponents(config.relaysDeviceList(), "Relays");
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
+        allocateComponents(config.pcaDevice(), "Pca");
         allocateRelaysValues(config.relaysValues());
+        allocatePcaValue(config.pcaDeviceValue());
         this.dacValues = config.dacValues();
         this.pwmValues = config.pwmValues();
     }
+
+    private void allocatePcaValue(int[] pcaDeviceValue) {
+        AtomicInteger counter = new AtomicInteger(0);
+
+        Arrays.stream(pcaDeviceValue).forEach(pca -> {
+            this.pcaValue[counter.intValue()] = pca == 1;
+            counter.getAndIncrement();
+        });
+    }
+
 
     /**
      * Due to problems with a boolean array; a new function with int array needed to be implemented.
@@ -65,11 +80,11 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
         char[] tempRelaysValues = relaysValues.toCharArray();
 
-        if(this.relaysList.size()>tempRelaysValues.length) {
-            this.logInfo(this.log, "Attention! Not enough RelaysValues! Missing Values: " + (this.relaysList.size()-tempRelaysValues.length)
-            + " Following Relays Values will be 0 == false == deactivate");
+        if (this.relaysList.size() > tempRelaysValues.length) {
+            this.logInfo(this.log, "Attention! Not enough RelaysValues! Missing Values: " + (this.relaysList.size() - tempRelaysValues.length)
+                    + " Following Relays Values will be 0 == false == deactivate");
         }
-        this.relaysValues = new boolean [this.relaysList.size()];
+        this.relaysValues = new boolean[this.relaysList.size()];
         for (int counter = 0; counter < tempRelaysValues.length && counter < this.relaysList.size(); counter++) {
             this.relaysValues[counter] = tempRelaysValues[counter] == '1';
         }
@@ -120,6 +135,14 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                         }
                         break;
 
+                    case "Pca":
+                        if (cpm.getComponent(string) instanceof PcaDevice) {
+                            this.pcaList.add(counter.intValue(), cpm.getComponent(string));
+                        } else {
+                            throw new ConfigurationException("Could not allocate Component: Dac " + string,
+                                    "Config error; Check your Config --> Dac");
+                        }
+
                 }
                 counter.getAndIncrement();
             } catch (ConfigurationException e) {
@@ -136,6 +159,9 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         }
     }
 
+    private void allocatePcaDevice(String pcaDevice) throws ConfigurationException, OpenemsError.OpenemsNamedException {
+
+    }
 
     @Deactivate
     public void deactivate() {
@@ -182,6 +208,15 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                 e.printStackTrace();
             }
         });
+        this.pcaList.forEach(pca -> {
+            try {
+                pca.getOnOff().setNextWriteValue(this.pcaValue[counter.getAndIncrement()]);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+            }
+        });
+
+
     }
 
     private Integer calculateAmpereToPercent(double dacValue) {

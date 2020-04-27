@@ -6,7 +6,6 @@ Bundle-Description: \
     This Bundle utilize the build in pca of the main module. Put it to the I2c Bridge so the pca is accessable by the device.
 
 Private-Package:  \
-	io.openems.edge.consolinno.leaflet.mainmodule,\
 	io.openems.edge.consolinno.leaflet.mainmodule.pcaGpioExpansion,\
 
 -includeresource: {readme.md}

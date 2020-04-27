@@ -2,6 +2,7 @@ package io.openems.edge.consolinno.leaflet.mainmodule.pcaGpioExpansion;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -30,19 +31,19 @@ public class PcaGpioExpansion extends AbstractOpenemsComponent implements Openem
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
+    public void activate(ComponentContext context, Config config) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException, OpenemsException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocatePcaProvider(config);
 
     }
 
-    private void allocatePcaProvider(Config config) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
+    private void allocatePcaProvider(Config config) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException, OpenemsException {
         switch (config.version()) {
             case "0.55":
             default:
                 this.pca = new Pca9536MainModuleProvider(config.bus_address(), Integer.parseInt(config.pca_address()),
-                        config.version());
-                this.refI2cBridge.addMainModulePca(super.id(), this.pca);
+                        config.version(), super.id());
+                this.refI2cBridge.addMainModulePca(this.pca);
         }
     }
 

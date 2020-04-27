@@ -7,7 +7,6 @@ import org.osgi.service.metatype.annotations.Option;
 @ObjectClassDefinition( //
         name = "Controller Emv Static Values", //
         description = "This Controller sets Static values to given Components.")
-
 @interface Config {
 
     @AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component.")
@@ -70,7 +69,7 @@ import org.osgi.service.metatype.annotations.Option;
     String[] DacDeviceList();
 
     @AttributeDefinition(name = "DacValues in mA", description = "Set the DacValues in mA")
-    double [] dacValues() default {7,15,20,10};
+    double[] dacValues() default {7, 15, 20, 10};
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices",
             options = {
@@ -87,8 +86,16 @@ import org.osgi.service.metatype.annotations.Option;
     String[] PwmDeviceList();
 
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
-            float [] pwmValues() default {25,100,75,40,80,50,100,10};
+    float[] pwmValues() default {25, 100, 75, 40, 80, 50, 100, 10};
 
+    @AttributeDefinition(name = "PcaDevices", description = "Select PcaDevices",
+            options = {
+                    @Option(label = "IO2", value = "IO2")
+            })
+    String[] pcaDevice();
+
+    @AttributeDefinition(name = "PcaValue", description = "What would you like to write in the PcaDevice.")
+    int[] pcaDeviceValue() default {1};
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Static Values [{id}]";
 

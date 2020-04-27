@@ -43,13 +43,15 @@ public interface I2cBridge {
 
     void removeI2cTask(String id);
 
-    void addMainModulePca(String id, PcaMainModuleProvider pcaMain);
+    void addMainModulePca(PcaMainModuleProvider pcaMain) throws OpenemsException;
 
     void removeMainModulePca(String id);
 
-    void addMainModulePcaTask(String id, I2cPcaTask pca);
+    void addMainModulePcaTask(String id, I2cPcaTask pca) throws OpenemsException;
 
     void removeMainModulePcaTask(String id);
+
+    String getPcaMainProviderVersion(String moduleId);
 
 
 

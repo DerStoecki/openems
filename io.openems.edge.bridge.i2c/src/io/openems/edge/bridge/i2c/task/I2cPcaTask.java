@@ -1,10 +1,8 @@
 package io.openems.edge.bridge.i2c.task;
 
+import java.io.IOException;
+
 public interface I2cPcaTask {
-
-    int getPinPosition();
-
-    boolean isInverse();
 
     String getPcaModuleId();
 

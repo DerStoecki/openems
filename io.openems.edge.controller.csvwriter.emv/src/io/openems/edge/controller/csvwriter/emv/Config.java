@@ -7,7 +7,6 @@ import org.osgi.service.metatype.annotations.Option;
 @ObjectClassDefinition( //
         name = "Controller Emv Csv Writer", //
         description = "This Controller Writes Timestamp Devices ChannelID and Values in a CSV file.")
-
 @interface Config {
 
     @AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component.")
@@ -20,7 +19,7 @@ import org.osgi.service.metatype.annotations.Option;
     boolean enabled() default true;
 
     @AttributeDefinition(name = "Path", description = "Path to write the CSV File")
-    String path () default "/home/sshconsolinno/DataLog/";
+    String path() default "/home/sshconsolinno/DataLog/";
 
     @AttributeDefinition(name = "TemperatureSensorId", description = "Select TemperatureSensors",
             options = {
@@ -91,6 +90,7 @@ import org.osgi.service.metatype.annotations.Option;
 
             })
     String[] temperaturSensorList();
+
     @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices",
             options = {
                     @Option(label = "Relays0", value = "Relays0"),
@@ -127,7 +127,8 @@ import org.osgi.service.metatype.annotations.Option;
                     @Option(label = "Relays31", value = "Relays31"),
 
             })
-            String[] relaysDeviceList();
+    String[] relaysDeviceList();
+
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
                     @Option(label = "DacDevice0", value = "DacDevice0"),
@@ -135,7 +136,7 @@ import org.osgi.service.metatype.annotations.Option;
                     @Option(label = "DacDevice2", value = "DacDevice2"),
                     @Option(label = "DacDevice3", value = "DacDevice3")
             })
-            String [] DacDeviceList();
+    String[] DacDeviceList();
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices",
             options = {
@@ -149,7 +150,7 @@ import org.osgi.service.metatype.annotations.Option;
                     @Option(label = "PwmDevice7", value = "PwmDevice7")
 
             })
-            String[] PwmDeviceList();
+    String[] PwmDeviceList();
 
     @AttributeDefinition(name = "Meter d0", description = "Select Meter d0",
             options = {
@@ -158,9 +159,16 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String[] meterList();
 
+    @AttributeDefinition(name = "Pca", description = "Select Pca from Main module",
+            options = {
+                    @Option(label = "IO2", value = "IO2")
+            })
+    String[] pcaList();
+
     @AttributeDefinition(name = "Time Interval", description = "Interval of Time in seconds")
-            double timeInterval() default 1;
+    double timeInterval() default 1;
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Csv Writer [{id}]";
+
     String service_pid();
 }

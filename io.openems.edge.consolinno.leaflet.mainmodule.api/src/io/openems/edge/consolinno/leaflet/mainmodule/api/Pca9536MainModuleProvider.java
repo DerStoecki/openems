@@ -7,6 +7,7 @@ import org.osgi.service.cm.ConfigurationException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
 
@@ -14,12 +15,11 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
 
     private I2CDevice device;
 
-    private String mainModuleVersion;
 
-    public Pca9536MainModuleProvider(int bus, int address, String mainModuleVersion) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
+    public Pca9536MainModuleProvider(int bus, int address, String mainModuleVersion, String moduleId) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
+        super(mainModuleVersion,moduleId);
         this.bus = allocateBus(bus);
         this.device = this.bus.getDevice(address);
-        this.mainModuleVersion = mainModuleVersion;
     }
 
     private I2CBus allocateBus(int bus_address) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
@@ -80,7 +80,7 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
 
 
         }
-        throw new ConfigurationException("I2CBus","I2cBus not supported!: " + bus_address);
+        throw new ConfigurationException("I2CBus", "I2cBus not supported!: " + bus_address);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
     }
 
     private boolean isValueInverse(int position, boolean readData) {
-        switch (this.mainModuleVersion) {
+        switch (super.version) {
             case "0.05":
             default:
                 switch (position) {
@@ -113,7 +113,7 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
     public void writeToPinPosition(boolean onOff) throws IOException {
         byte[] address;
 
-        switch (this.mainModuleVersion) {
+        switch (super.version) {
             case "0.05":
             default:
                 int valueToWrite = 0xFD;
