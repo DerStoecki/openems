@@ -7,19 +7,23 @@ import org.osgi.service.cm.ConfigurationException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.List;
 
 public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
-
-    private I2CBus bus;
 
     private I2CDevice device;
 
 
     public Pca9536MainModuleProvider(int bus, int address, String mainModuleVersion, String moduleId) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
-        super(mainModuleVersion,moduleId);
-        this.bus = allocateBus(bus);
-        this.device = this.bus.getDevice(address);
+        super(mainModuleVersion, moduleId);
+        I2CBus bus1 = allocateBus(bus);
+        this.device = bus1.getDevice(address);
+        //        switch (address) {
+        //            case "0x41":
+        //            default:
+        //                this.device = bus1.getDevice(0x41);
+        //                break;
+        //        }
+
     }
 
     private I2CBus allocateBus(int bus_address) throws IOException, I2CFactory.UnsupportedBusNumberException, ConfigurationException {
@@ -96,7 +100,7 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
     }
 
     private boolean isValueInverse(int position, boolean readData) {
-        switch (super.version) {
+        switch (super.getVersion()) {
             case "0.05":
             default:
                 switch (position) {
@@ -113,14 +117,14 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
     public void writeToPinPosition(boolean onOff) throws IOException {
         byte[] address;
 
-        switch (super.version) {
+        switch (super.getVersion()) {
             case "0.05":
             default:
                 int valueToWrite = 0xFD;
                 if (onOff) {
                     valueToWrite = 0xFF;
                 }
-                address = ByteBuffer.allocate(2).putInt(valueToWrite).array();
+                address = ByteBuffer.allocate(4).putInt(valueToWrite).array();
         }
         this.device.write(0x01, address);
     }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "ControllerEmvStaticValues")
@@ -165,17 +166,11 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
     @Deactivate
     public void deactivate() {
+
         super.deactivate();
-        for (boolean relaysValue : this.relaysValues) {
-            relaysValue = false;
-
-        }
+        IntStream.range(0, this.relaysValues.length).forEach(x -> this.relaysValues[x] = false);
         Arrays.stream(this.dacValues).forEach(value -> value = 0);
-
-        for (float pwm : this.pwmValues) {
-            pwm = 0;
-        }
-
+        IntStream.range(0, this.pwmValues.length).forEach(x -> this.pwmValues[x] = 0.f);
         writeValueToChannel();
     }
 

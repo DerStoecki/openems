@@ -1,10 +1,10 @@
 package io.openems.edge.consolinno.leaflet.mainmodule.api;
 
 public abstract class AbstractPcaMainModuleProvider implements PcaMainModuleProvider {
-    String version;
-    String moduleId;
+    private String version;
+    private String moduleId;
 
-    public AbstractPcaMainModuleProvider(String version, String moduleId) {
+    AbstractPcaMainModuleProvider(String version, String moduleId) {
         this.version = version;
         this.moduleId = moduleId;
     }

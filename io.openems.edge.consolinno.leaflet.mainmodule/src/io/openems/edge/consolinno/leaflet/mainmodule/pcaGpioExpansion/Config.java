@@ -25,7 +25,7 @@ import org.osgi.service.metatype.annotations.Option;
     int bus_address() default 1;
 
     @AttributeDefinition(name = "Pca Address", description = "The address of your Pca.")
-    String pca_address() default "0x41";
+    int pca_address() default 0x41;
 
     boolean enabled() default true;
 

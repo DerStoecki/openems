@@ -159,15 +159,6 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
         return gpioMap;
     }
 
-    @Override
-    public void addMainModulePcaTask(String id, I2cPcaTask pca) throws OpenemsException {
-        if (!this.pcaTasks.containsKey(id)) {
-            this.pcaTasks.put(id, pca);
-        } else {
-            throw new OpenemsException("Attention, id " + id + "is already Key, activate again with a new name.");
-        }
-    }
-
 
     @Override
     public String getPcaMainProviderVersion(String moduleId) {
@@ -193,6 +184,15 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
             }
         });
         this.pcaMainModuleProviders.remove(id);
+    }
+
+    @Override
+    public void addMainModulePcaTask(String id, I2cPcaTask pca) throws OpenemsException {
+        if (!this.pcaTasks.containsKey(id)) {
+            this.pcaTasks.put(id, pca);
+        } else {
+            throw new OpenemsException("Attention, id " + id + "is already Key, activate again with a new name.");
+        }
     }
 
     @Override

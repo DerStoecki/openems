@@ -1,6 +1,5 @@
 package io.openems.edge.consolinno.leaflet.mainmodule.pcaGpioExpansion;
 
-import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.i2c.api.I2cBridge;
@@ -24,7 +23,7 @@ public class PcaGpioExpansion extends AbstractOpenemsComponent implements Openem
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     I2cBridge refI2cBridge;
 
-    AbstractPcaMainModuleProvider pca;
+    private AbstractPcaMainModuleProvider pca;
 
     public PcaGpioExpansion() {
         super(OpenemsComponent.ChannelId.values());
@@ -41,13 +40,11 @@ public class PcaGpioExpansion extends AbstractOpenemsComponent implements Openem
         switch (config.version()) {
             case "0.55":
             default:
-                this.pca = new Pca9536MainModuleProvider(config.bus_address(), Integer.parseInt(config.pca_address()),
+                this.pca = new Pca9536MainModuleProvider(config.bus_address(), config.pca_address(),
                         config.version(), super.id());
                 this.refI2cBridge.addMainModulePca(this.pca);
         }
     }
-
-
 
     @Deactivate
     public void deactivate() {
@@ -55,4 +52,7 @@ public class PcaGpioExpansion extends AbstractOpenemsComponent implements Openem
         super.deactivate();
     }
 
+    public AbstractPcaMainModuleProvider getPca() {
+        return pca;
+    }
 }
