@@ -17,12 +17,23 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
         super(mainModuleVersion, moduleId);
         I2CBus bus1 = allocateBus(bus);
         this.device = bus1.getDevice(address);
+        configureReadAndWrite();
         //        switch (address) {
         //            case "0x41":
         //            default:
         //                this.device = bus1.getDevice(0x41);
         //                break;
         //        }
+
+    }
+
+    private void configureReadAndWrite() throws IOException {
+        switch (super.getVersion()) {
+            case "0.05":
+            default:
+                this.device.write(0x03, (byte) 0xFD);
+
+        }
 
     }
 
@@ -90,13 +101,28 @@ public class Pca9536MainModuleProvider extends AbstractPcaMainModuleProvider {
     @Override
     public boolean getDataOnPinPosition(int position) throws IOException {
         byte[] data = new byte[1];
-        byte pinPosition = (byte) (position & 0x0F);
+        //byte pinPosition = (byte) (position & 0x0F);
+        byte pinPosition = calculatePinPos(position);
         data[0] = (byte) device.read(0x00);
         if ((data[0] & pinPosition) == 0) {
             return (isValueInverse(position, false));
         }
-
         return isValueInverse(position, true);
+    }
+
+    private byte calculatePinPos(int position) {
+        switch (position) {
+            case 1:
+                return (byte) 2;
+            case 2:
+                return (byte) 4;
+            case 3:
+                return (byte) 8;
+
+            case 0:
+            default:
+                return (byte) 1;
+        }
     }
 
     private boolean isValueInverse(int position, boolean readData) {
