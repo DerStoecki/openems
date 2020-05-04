@@ -2,6 +2,7 @@ package io.openems.edge.i2c.mcp.api;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
+import com.pi4j.io.i2c.I2CFactory;
 import io.openems.edge.i2c.mcp.api.task.McpTask;
 import io.openems.edge.i2c.mcp.api.task.RelaysTask;
 
@@ -14,10 +15,13 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
 
     private String parentCircuitBoard;
     private final int length = 8;
-    private final I2CDevice device;
+    private I2CDevice device;
     private Map<Integer, Boolean> valuesPerDefault = new ConcurrentHashMap<>();
     private final boolean[] shifters;
     private final Map<String, RelaysTask> tasks = new ConcurrentHashMap<>();
+    private boolean wasRemoved = false;
+    private String address;
+    private I2CBus i2CBus;
 
     public Mcp23008(String address, I2CBus device, String parentCircuitBoard) throws IOException {
         this.parentCircuitBoard = parentCircuitBoard;
@@ -26,26 +30,30 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
         for (int i = 0; i < length; i++) {
             this.shifters[i] = false;
         }
+        this.address = address;
+        this.i2CBus = device;
+        getPhysicalDevice();
+        int data = 0x00;
+            this.device.write(0x00, (byte) data);
+    }
+
+    private boolean getPhysicalDevice() throws IOException {
+
         switch (address) {
             case "0x22":
-                this.device = device.getDevice(0x22);
+                this.device = i2CBus.getDevice(0x22);
                 break;
             case "0x24":
-                this.device = device.getDevice(0x24);
+                this.device = i2CBus.getDevice(0x24);
                 break;
             case "0x26":
-                this.device = device.getDevice(0x26);
+                this.device = i2CBus.getDevice(0x26);
                 break;
             default:
-                this.device = device.getDevice(0x20);
+                this.device = i2CBus.getDevice(0x20);
                 break;
         }
-        int data = 0x00;
-        try {
-            this.device.write(0x00, (byte) data);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        return true;
     }
 
     public void setPosition(int position, boolean activate) {
@@ -65,8 +73,9 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
      * </p>
      */
     @Override
-    public void shift() {
-        for (RelaysTask task : tasks.values()) {
+    public void shift(){
+
+            for (RelaysTask task : tasks.values()) {
 
             task.getWriteChannel().getNextWriteValueAndReset()
                     .ifPresent(aboolean -> {
@@ -83,11 +92,22 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
             }
         }
         try {
+            if(wasRemoved) {
+                try {
+                    this.i2CBus = I2CFactory.getInstance(I2CBus.BUS_1);
+                } catch (I2CFactory.UnsupportedBusNumberException e) {
+                    e.printStackTrace();
+                }
+                getPhysicalDevice();
+            }
             device.write(0x09, data);
+            wasRemoved = false;
         } catch (IOException ex) {
             ex.printStackTrace();
+            wasRemoved = true;
         }
     }
+
 
     /**
      * Gets a position and default status for deactivation method.
@@ -117,7 +137,7 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
         for (Map.Entry<Integer, Boolean> entry : getValuesPerDefault().entrySet()) {
             setPosition(entry.getKey(), entry.getValue());
         }
-        shift();
+            shift();
     }
 
     @Override

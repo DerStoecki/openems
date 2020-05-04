@@ -18,6 +18,7 @@ Export-Package:  \
 	io.openems.common;version=latest,\
     io.openems.edge.pwm.module.api;version=latest,\
     io.openems.edge.i2c.mcp.api;version=latest,\
+    io.openems.edge.consolinno.leaflet.mainmodule.api;version=latest,\
     pi4j-core,\
 
 -testpath: \

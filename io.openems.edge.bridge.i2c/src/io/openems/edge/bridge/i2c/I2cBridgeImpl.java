@@ -1,12 +1,18 @@
 package io.openems.edge.bridge.i2c;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openems.edge.bridge.i2c.api.I2cBridge;
+import io.openems.edge.bridge.i2c.task.I2cPcaReadTask;
+import io.openems.edge.bridge.i2c.task.I2cPcaTask;
+import io.openems.edge.bridge.i2c.task.I2cPcaWriteTask;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.PcaMainModuleProvider;
 import io.openems.edge.i2c.mcp.api.Mcp;
 import io.openems.edge.i2c.mcp.api.McpChannelRegister;
 import org.osgi.service.component.ComponentContext;
@@ -40,7 +46,11 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     //String --> PwmModule Id
     private Map<String, PcaGpioProvider> gpioMap = new ConcurrentHashMap<>();
     //String --> PwmDevice Id
-    private Map<String, I2cTask> tasks = new ConcurrentHashMap<>();
+    private Map<String, I2cTask> pwmTasks = new ConcurrentHashMap<>();
+
+    private Map<String, PcaMainModuleProvider> pcaMainModuleProviders = new ConcurrentHashMap<>();
+
+    private Map<String, I2cPcaTask> pcaTasks = new ConcurrentHashMap<>();
 
     @Activate
     public void activate(ComponentContext context, Config config) {
@@ -59,6 +69,8 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
 
         // should always be empty already but to make sure..
         this.gpioMap.keySet().forEach(this::removeGpioDevice);
+
+        this.pcaMainModuleProviders.keySet().forEach(this::removeMainModulePca);
 
     }
 
@@ -98,7 +110,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
      */
     @Override
     public void removeGpioDevice(String id) {
-        this.tasks.values().stream().filter(task -> (task.getPwmModuleId().equals(id))).forEach(value -> {
+        this.pwmTasks.values().stream().filter(task -> (task.getPwmModuleId().equals(id))).forEach(value -> {
             removeI2cTask(value.getDeviceId());
         });
         this.gpioMap.remove(id);
@@ -112,8 +124,8 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
      */
     @Override
     public void addI2cTask(String id, I2cTask i2cTask) throws OpenemsException {
-        if (!this.tasks.containsKey(id)) {
-            this.tasks.put(id, i2cTask);
+        if (!this.pwmTasks.containsKey(id)) {
+            this.pwmTasks.put(id, i2cTask);
         } else {
             throw new OpenemsException("Attention, id " + id + "is already Key, activate again with a new name.");
         }
@@ -122,8 +134,9 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     @Override
     public void removeI2cTask(String id) {
         shutdown(id);
-        this.tasks.remove(id);
+        this.pwmTasks.remove(id);
     }
+
 
     /**
      * If an I2c Task will be removed, it'll be set off.
@@ -131,12 +144,12 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
      * @param id unique id of the I2cTask.
      */
     private void shutdown(String id) {
-        PcaGpioProvider gpio = gpioMap.get(tasks.get(id).getPwmModuleId());
+        PcaGpioProvider gpio = gpioMap.get(pwmTasks.get(id).getPwmModuleId());
         if (gpio != null) {
-            if (tasks.get(id).isInverse()) {
-                gpio.setAlwaysOn(tasks.get(id).getPinPosition());
+            if (pwmTasks.get(id).isInverse()) {
+                gpio.setAlwaysOn(pwmTasks.get(id).getPinPosition());
             } else {
-                gpio.setAlwaysOff(tasks.get(id).getPinPosition());
+                gpio.setAlwaysOff(pwmTasks.get(id).getPinPosition());
             }
         }
 
@@ -145,6 +158,48 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
     private Map<String, PcaGpioProvider> getGpioMap() {
         return gpioMap;
     }
+
+
+    @Override
+    public String getPcaMainProviderVersion(String moduleId) {
+        return this.pcaMainModuleProviders.get(moduleId).getVersion();
+
+    }
+
+    @Override
+    public void addMainModulePca(PcaMainModuleProvider pcaMain) throws OpenemsException {
+        if (!this.pcaMainModuleProviders.containsKey(pcaMain.getModuleId())) {
+            this.pcaMainModuleProviders.put(pcaMain.getModuleId(), pcaMain);
+        } else {
+            throw new OpenemsException("Attention, id " + pcaMain.getModuleId() + "is already Key, activate again with a new name.");
+        }
+
+    }
+
+    @Override
+    public void removeMainModulePca(String id) {
+        this.pcaTasks.forEach((key, value) -> {
+            if (value.getPcaModuleId().equals(id)) {
+                removeMainModulePcaTask(id);
+            }
+        });
+        this.pcaMainModuleProviders.remove(id);
+    }
+
+    @Override
+    public void addMainModulePcaTask(String id, I2cPcaTask pca) throws OpenemsException {
+        if (!this.pcaTasks.containsKey(id)) {
+            this.pcaTasks.put(id, pca);
+        } else {
+            throw new OpenemsException("Attention, id " + id + "is already Key, activate again with a new name.");
+        }
+    }
+
+    @Override
+    public void removeMainModulePcaTask(String id) {
+        this.pcaTasks.remove(id);
+    }
+
 
     private class I2cWorker extends AbstractCycleWorker {
         @Override
@@ -167,7 +222,7 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
             for (Mcp mcp : getMcpList()) {
                 mcp.shift();
             }
-            tasks.values().forEach(task -> {
+            pwmTasks.values().forEach(task -> {
                 Optional.ofNullable(getGpioMap().get(task.getPwmModuleId())).ifPresent(gpio -> {
 
                     int digit = task.calculateDigit(4096);
@@ -188,6 +243,27 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
                         gpio.setPwm(task.getPinPosition(), digit);
                     }
                 });
+            });
+            //TODO Make in accessable for every version not just 1st.
+            //foreachPwmMainModuleTasks
+            pcaTasks.values().forEach(task -> {
+                PcaMainModuleProvider currentPca = pcaMainModuleProviders.get(task.getPcaModuleId());
+                if (currentPca != null) {
+                    if (task instanceof I2cPcaReadTask) {
+                        try {
+                            ((I2cPcaReadTask) task).setResponse(currentPca
+                                    .getDataOnPinPosition(((I2cPcaReadTask) task).getRequest()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (task instanceof I2cPcaWriteTask) {
+                        try {
+                            currentPca.writeToPinPosition(((I2cPcaWriteTask) task).getRequest());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             });
         }
     }

@@ -5,6 +5,7 @@ import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
 import io.openems.edge.controller.api.Controller;
 
 import io.openems.edge.meter.api.SymmetricMeter;
@@ -43,6 +44,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<PowerLevel> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
+    private List<PcaDevice> pcaDeviceList = new ArrayList<>();
 
     private int dateDay;
     private String fileName;
@@ -64,6 +66,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.meterList(), "meter");
+        allocateComponents(config.pcaList(), "pca");
         this.timeInterval = config.timeInterval() * 1000;
         if (timeInterval <= 0) {
             this.timeInterval = 1000;
@@ -178,6 +181,13 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                                     "Config error; Check your Config --> meter");
                         }
                         break;
+                    case "pca":
+                        if (cpm.getComponent(string) instanceof PcaDevice) {
+                            this.pcaDeviceList.add(counter.intValue(), cpm.getComponent(string));
+                        } else {
+                            throw new ConfigurationException("Could not allocate Component: Pca " + string,
+                                    "Config error; Check your Config --> Pca Device");
+                        }
 
                 }
                 counter.getAndIncrement();
@@ -266,6 +276,14 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 }
 
             });
+            this.pcaDeviceList.forEach(pca -> {
+                try {
+                    String s = pca.id() + "/" + pca.getOnOff().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             csvWriter.append("\n");
             csvWriter.flush();
         } catch (IOException e) {
@@ -345,6 +363,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 writeDacData();
                 writePwmData();
                 writeMeterData();
+                writePcaData();
                 csvWriter.append("\n");
                 csvWriter.flush();
             } catch (IOException e) {
@@ -352,6 +371,22 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             }
         }
 
+    }
+
+    private void writePcaData() {
+        this.pcaDeviceList.forEach(pca -> {
+            String pcaString = "-";
+
+            try {
+                if (pca.getOnOff().getNextWriteValue().isPresent()) {
+                    pcaString = pca.getOnOff().getNextWriteValue().get().toString();
+                }
+                csvWriter.append(pcaString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
     }
 
     /**
