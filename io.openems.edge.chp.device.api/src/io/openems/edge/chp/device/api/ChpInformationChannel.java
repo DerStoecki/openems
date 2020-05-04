@@ -16,7 +16,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * <ul>
          *
          *  <li>Type: Integer
-         *
+         * <p>
          * *</ul>
          */
         MODE(Doc.of(OpenemsType.INTEGER)),
@@ -207,13 +207,14 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * Reserved by Chp.
          * <li>Unit: kWh</li>
          * <li>Type: Integer</li>
-         * */
+         */
         RESERVE(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT_HOURS)),
         /**
          * All occuring Errors as String.
-         *
-         * */
-        ERROR_CHANNEL(Doc.of(OpenemsType.STRING));
+         */
+        ERROR_CHANNEL(Doc.of(OpenemsType.STRING)),
+
+        ERROR_OCCURED(Doc.of(OpenemsType.BOOLEAN));
 
 
         private final Doc doc;
@@ -425,5 +426,9 @@ public interface ChpInformationChannel extends OpenemsComponent {
 
     default Channel<String> getErrorChannel() {
         return this.channel(ChannelId.ERROR_CHANNEL);
+    }
+
+    default Channel<Boolean> isErrorOccured() {
+        return this.channel(ChannelId.ERROR_OCCURED);
     }
 }

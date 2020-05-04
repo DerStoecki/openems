@@ -2,8 +2,7 @@ package io.openems.edge.chp.device.simpleDac;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.chp.device.ChpType;
-import io.openems.edge.chp.device.api.PowerLevel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.chp.device.task.ChpTaskImpl;
 import io.openems.edge.chp.module.api.ChpModule;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -19,7 +18,7 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(name = "DacDevice",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
-public class DacDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, PowerLevel {
+public class DacDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, ChpPowerPercentage {
     private Mcp mcp;
 
     @Reference
@@ -27,7 +26,7 @@ public class DacDeviceImpl extends AbstractOpenemsComponent implements OpenemsCo
 
     public DacDeviceImpl() {
         super(OpenemsComponent.ChannelId.values(),
-                PowerLevel.ChannelId.values());
+                ChpPowerPercentage.ChannelId.values());
     }
 
 
