@@ -1,5 +1,6 @@
 package io.openems.edge.chp.device.api;
 
+import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
@@ -16,7 +17,6 @@ public interface ChpInformationChannel extends ChpPowerPercentage {
          * <ul>
          *
          *  <li>Type: Integer
-         * <p>
          * *</ul>
          */
         MODE(Doc.of(OpenemsType.INTEGER)),
@@ -46,7 +46,7 @@ public interface ChpInformationChannel extends ChpPowerPercentage {
          */
         SET_POINT_OPERATION_MODE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
         /**
-         * Errorbits. Length 2 Byte --> Each bit acts as a flag --> Vitobloc Gateway
+         * ErrorBits. Length 2 Byte --> Each bit acts as a flag --> Vitobloc Gateway
          */
         ERROR_BITS_1(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_2(Doc.of(OpenemsType.INTEGER)),

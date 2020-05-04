@@ -11,8 +11,6 @@ import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.*;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.chp.device.api.ChpInformationChannel;
-import io.openems.edge.chp.device.api.ChpInteract;
-import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.chp.device.task.ChpTaskImpl;
 import io.openems.edge.chp.module.api.ChpModule;
 
@@ -42,7 +40,7 @@ import java.util.List;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)
-public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements OpenemsComponent, ChpPowerPercentage, ChpInformationChannel, EventHandler, Heater, ChpInteract {
+public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements OpenemsComponent, ChpInformationChannel, EventHandler, Heater {
     private Mcp mcp;
     private ChpType chpType;
     private String accessMode;
@@ -145,7 +143,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     public ChpImplViessmann() {
         super(OpenemsComponent.ChannelId.values(),
-                ChpPowerPercentage.ChannelId.values(),
+       // ChpPowerPercentage.ChannelId.values(),
                 ChpInformationChannel.ChannelId.values());
     }
 
@@ -396,73 +394,6 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     @Override
     public void setOffline() throws OpenemsError.OpenemsNamedException {
         getPowerLevelChannel().setNextWriteValue(0);
-    }
-
-    @Override
-    public boolean setOnOff(int percentage) {
-        try {
-            this.getPowerLevelChannel().setNextWriteValue(percentage);
-        } catch (OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public int getPowerValue() {
-        if(getPowerLevelChannel().getNextWriteValue().isPresent()) {
-            return getPowerLevelChannel().getNextWriteValue().get();
-        }
-        return 0;
-    }
-
-    @Override
-    public int getForward() {
-        //TODO In Future get via Config --> Which Connector is for forward / Rewind
-        return this.getPt100_1().getNextValue().get();
-    }
-
-    @Override
-    public int getRewind() {
-        return this.getPt100_2().getNextValue().get();
-    }
-
-    @Override
-    public float getElectricalPower() {
-        return this.getEnginePerformance().getNextValue().get();
-    }
-
-    @Override
-    public boolean isError() {
-        if (isErrorOccured().getNextValue().isDefined()) {
-            return this.isErrorOccured().getNextValue().get();
-        }
-        return false;
-    }
-
-    @Override
-    public String getErrorMessage() {
-        return this.getErrorChannel().getNextValue().get();
-    }
-
-    @Override
-    public boolean isWarnMessage() {
-        //only errors
-        return false;
-    }
-
-    @Override
-    public String getWarnMessage() {
-        return null;
-    }
-
-    @Override
-    public boolean isReady() {
-        if (this.getStatus().getNextValue().isDefined()) {
-            return this.getStatus().getNextValue().get() != 0 && this.getStatus().getNextValue().get() != 4;
-        }
-        return false;
     }
 
 
