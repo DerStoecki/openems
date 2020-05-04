@@ -410,6 +410,14 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     }
 
     @Override
+    public int getPowerValue() {
+        if(getPowerLevelChannel().getNextWriteValue().isPresent()) {
+            return getPowerLevelChannel().getNextWriteValue().get();
+        }
+        return 0;
+    }
+
+    @Override
     public int getForward() {
         //TODO In Future get via Config --> Which Connector is for forward / Rewind
         return this.getPt100_1().getNextValue().get();

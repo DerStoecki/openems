@@ -6,7 +6,7 @@ import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.OpenemsComponent;
 
-public interface ChpInformationChannel extends OpenemsComponent {
+public interface ChpInformationChannel extends ChpPowerPercentage {
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         /**
          * Module Modus Channel.

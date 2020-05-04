@@ -7,7 +7,7 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
-public interface ChpPowerPercentage extends ChpInformationChannel {
+public interface ChpPowerPercentage extends OpenemsComponent {
 
         public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
             /**
