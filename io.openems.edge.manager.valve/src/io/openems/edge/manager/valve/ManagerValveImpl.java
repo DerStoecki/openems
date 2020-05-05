@@ -21,72 +21,76 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "ConsolinnoManagerValve",
-		immediate = true,
-		configurationPolicy = ConfigurationPolicy.REQUIRE,
-		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
+@Component(name = "Consolinno.Manager.Valve",
+        immediate = true,
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
 public class ManagerValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler, ManagerValve {
 
-	private Map<String, Valve> valves = new ConcurrentHashMap<>();
-	private ManagerValveWorker worker = new ManagerValveWorker();
+    private Map<String, Valve> valves = new ConcurrentHashMap<>();
+    private ManagerValveWorker worker = new ManagerValveWorker();
 
-	public ManagerValveImpl() {
-		super(OpenemsComponent.ChannelId.values());
-	}
-
-
-	@Activate
-	void activate(ComponentContext context, Config config) {
-		super.activate(context, config.id(), config.alias(), config.enabled());
-		worker.activate(config.id());
-	}
-
-	@Deactivate
-	public void deactivate() {
-		super.deactivate();
-	}
-
-	@Override
-	public void addValve(String id, Valve valve) {
-		this.valves.put(id, valve);
-
-	}
-
-	@Override
-	public void removeValve(String id) {
-		this.valves.remove(id);
-	}
+    public ManagerValveImpl() {
+        super(OpenemsComponent.ChannelId.values());
+    }
 
 
-	private class ManagerValveWorker extends AbstractCycleWorker {
-		@Override
-		public void activate(String name) {
-			super.activate(name);
-		}
+    @Activate
+    void activate(ComponentContext context, Config config) {
+        super.activate(context, config.id(), config.alias(), config.enabled());
+        worker.activate(config.id());
+    }
 
-		@Override
-		public void deactivate() {
-			super.deactivate();
-		}
+    @Deactivate
+    public void deactivate() {
+        super.deactivate();
+    }
 
-		@Override
-		protected void forever() throws Throwable {
-			//just set off so position is fix
-			valves.values().forEach(valve -> {
-				if (valve.readyToChange()) {
-					valve.controlRelays(false, "Closed");
-					valve.controlRelays(false, "Opened");
-				}
-			});
-		}
-	}
+    @Override
+    public void addValve(String id, Valve valve) {
+        this.valves.put(id, valve);
 
-	@Override
-	public void handleEvent(Event event) {
-		if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
-			this.worker.triggerNextRun();
-		}
+    }
+
+    @Override
+    public void removeValve(String id) {
+        this.valves.remove(id);
+    }
 
 
-	}
+    private class ManagerValveWorker extends AbstractCycleWorker {
+        @Override
+        public void activate(String name) {
+            super.activate(name);
+        }
+
+        @Override
+        public void deactivate() {
+            super.deactivate();
+        }
+
+        /**
+         * This manager makes sure (just in case) every Valve Relays is set to "false". if they are ready to change-->
+         * No more Power Consumption than needed. Normally it's handled by valve itself but just to make sure.
+         */
+        @Override
+        protected void forever() throws Throwable {
+            //just set off so position is fix
+            valves.values().forEach(valve -> {
+                if (valve.readyToChange()) {
+                    valve.controlRelays(false, "Closed");
+                    valve.controlRelays(false, "Opened");
+                }
+            });
+        }
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
+            this.worker.triggerNextRun();
+        }
+
+
+    }
 }

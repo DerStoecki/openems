@@ -25,14 +25,8 @@ import org.osgi.service.metatype.annotations.Option;
     })
     String informationType() default "OnOff";
 
-    @AttributeDefinition(name = "Pin Position", description = "Position of the Gpio Device on Raspberry Pi.",
-    options = {
-            @Option(label = "1", value = "1"),
-            @Option(label = "2", value = "2"),
-            @Option(label = "3", value = "3")
-
-    })
-    String pinPosition() default "1";
+    @AttributeDefinition(name = "Pin Position", description = "Position of the Gpio Device on Raspberry Pi.")
+    String pinPosition() default "1.1";
 
     boolean enabled() default true;
 

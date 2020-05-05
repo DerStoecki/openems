@@ -2,6 +2,7 @@ package io.openems.edge.i2c.mcp.api;
 
 import io.openems.edge.i2c.mcp.api.task.McpTask;
 
+import java.io.IOException;
 import java.util.Map;
 
 public interface McpChannelRegister {

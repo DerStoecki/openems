@@ -10,32 +10,32 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "LucidControlModule")
+@Component(name = "Module.Lucid.Control")
 public class LucidControlModuleImpl extends AbstractOpenemsComponent implements OpenemsComponent, LucidControlModule {
 
-	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     LucidControlBridge lucidControlBridge;
 
     private String path;
     private String voltage;
 
-	public LucidControlModuleImpl(){
-		super(OpenemsComponent.ChannelId.values());
-	}
+    public LucidControlModuleImpl() {
+        super(OpenemsComponent.ChannelId.values());
+    }
 
     @Activate
     public void activate(ComponentContext context, Config config) {
-    super.activate(context, config.id(),config.alias(), config.enabled());
-    lucidControlBridge.addPath(config.id(), config.path());
-    lucidControlBridge.addVoltage(config.id(), config.voltage());
-    this.path = config.path();
-    this.voltage = config.voltage();
+        super.activate(context, config.id(), config.alias(), config.enabled());
+        lucidControlBridge.addPath(config.id(), config.path());
+        lucidControlBridge.addVoltage(config.id(), config.voltage());
+        this.path = config.path();
+        this.voltage = config.voltage();
     }
 
     @Deactivate
-   public void deactivate() {
-	    super.deactivate();
-	    lucidControlBridge.removeModule(super.id());
+    public void deactivate() {
+        super.deactivate();
+        lucidControlBridge.removeModule(super.id());
     }
 
 

@@ -26,7 +26,7 @@ import java.util.Set;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "TemperatureModule", immediate = true,
+@Component(name = "Module.Temperature", immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 
 public class TemperatureModuleImpl extends AbstractOpenemsComponent implements OpenemsComponent, TemperatureModule {

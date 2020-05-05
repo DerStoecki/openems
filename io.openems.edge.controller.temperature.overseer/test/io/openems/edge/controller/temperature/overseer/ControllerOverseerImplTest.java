@@ -30,9 +30,9 @@ public class ControllerOverseerImplTest {
         private String allocated_Passing_Controller;
         private final int minTemperature;
         private final int toleratedTemperatureRange;
-        private String allocatedTemperatureSensor;
+        private String []allocatedTemperatureSensor;
 
-        MyConfig(String id, String alias, boolean enabled, String service_pid, String allocated_Passing_Controller, int minTemperature, int toleratedTemperatureRange, String allocatedTemperatureSensor) {
+        MyConfig(String id, String alias, boolean enabled, String service_pid, String allocated_Passing_Controller, int minTemperature, int toleratedTemperatureRange, String [] allocatedTemperatureSensor) {
             super(Config.class, id);
             this.id = id;
             this.alias = alias;
@@ -65,7 +65,7 @@ public class ControllerOverseerImplTest {
         }
 
         @Override
-        public String allocated_Temperature_Sensor() {
+        public String[] allocated_Temperature_Sensor() {
             return this.allocatedTemperatureSensor;
         }
     }
@@ -93,8 +93,9 @@ public class ControllerOverseerImplTest {
         overseer.cpm = cpm;
 
         config = new MyConfig("ControllerOverseer0", "", true, "", "ControllerPassing0",
-                400, 20, "TemperatureSensor8");
-        allocatedThermometer = new DummyThermometer(config.allocated_Temperature_Sensor());
+                400, 20, new String[]{"TemperatureSensor8"});
+        String temperatureSensor = config.allocatedTemperatureSensor[0];
+        allocatedThermometer = new DummyThermometer(temperatureSensor);
         passing = new DummyControllerPassing(config.allocated_Passing_Controller());
         allocatedRelays = new DummyRelays("Relays1");
         passingOnOff = new ChannelAddress(config.allocated_Passing_Controller(), "OnOff");
@@ -102,7 +103,7 @@ public class ControllerOverseerImplTest {
         passingNoError = new ChannelAddress(config.allocated_Passing_Controller(), "NoError");
         relaysOnOff = new ChannelAddress("Relays1", "OnOff");
         relaysIsCloser = new ChannelAddress("Relays1", "IsCloser");
-        thermometer = new ChannelAddress(config.allocated_Temperature_Sensor(), "Temperature");
+        thermometer = new ChannelAddress(temperatureSensor, "Temperature");
         errorR = new DummyRelays("Relays20");
         errorT = new DummyThermometer("TemperatureSensor20");
 
@@ -241,7 +242,7 @@ public class ControllerOverseerImplTest {
 
     @Test(expected = ConfigurationException.class)
     public void testHeatingConfigurationErrorThermo() throws Exception {
-        config.allocatedTemperatureSensor = "Relays20";
+        config.allocatedTemperatureSensor = new String[]{"Relays20"};
         overseer.activate(null, config);
         overseer.activate(null, config);
         overseer.passing.getMinTemperature().setNextValue(config.minTemperature);

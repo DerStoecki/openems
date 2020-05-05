@@ -8,13 +8,14 @@ import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "PassingValve")
+@Component(name = "Passing.Valve")
 public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
 
     private ActuatorRelaysChannel closing;
@@ -26,7 +27,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     ComponentManager cpm;
 
 
-    @Reference
+    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     ManagerValve managerValve;
 
     public ValveImpl() {
@@ -35,18 +36,15 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
         super.activate(context, config.id(), config.alias(), config.enabled());
-        try {
+
             if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
                 closing = cpm.getComponent(config.closing_Relays());
             }
             if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
                 opens = cpm.getComponent(config.opening_Relays());
             }
-        } catch (OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-        }
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getLastPowerLevel().setNextValue(0);
@@ -105,28 +103,30 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     @Override
     public void controlRelays(boolean activate, String whichRelays) {
         try {
-            switch (whichRelays) {
-                case "Open":
-                    if (this.opens.isCloser().value().get()) {
-                        this.opens.getRelaysChannel().setNextWriteValue(activate);
-                    } else {
-                        this.opens.getRelaysChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-                case "Closed":
-                    if (this.closing.isCloser().value().get()) {
-                        this.closing.getRelaysChannel().setNextWriteValue(activate);
-                    } else {
-                        this.closing.getRelaysChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-            }
-            //            if (!activate) {
-            //                this.getIsBusy().setNextValue(false);
-            //            }
+                switch (whichRelays) {
+                    case "Open":
+                        if (this.opens.isCloser().value().get()) {
+                            this.opens.getRelaysChannel().setNextWriteValue(activate);
+                        } else {
+                            this.opens.getRelaysChannel().setNextWriteValue(!activate);
+                        }
+                        break;
+                    case "Closed":
+                        if (this.closing.isCloser().value().get()) {
+                            this.closing.getRelaysChannel().setNextWriteValue(activate);
+                        } else {
+                            this.closing.getRelaysChannel().setNextWriteValue(!activate);
+                        }
+                        break;
+                }
+                //            if (!activate) {
+                //                this.getIsBusy().setNextValue(false);
+                //            }
+
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
+
     }
 
     /**

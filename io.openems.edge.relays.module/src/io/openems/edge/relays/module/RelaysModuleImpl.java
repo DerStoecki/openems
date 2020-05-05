@@ -24,7 +24,7 @@ import java.util.Map;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "RelaysBoard",
+@Component(name = "Module.Relays",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class RelaysModuleImpl extends AbstractOpenemsComponent implements RelaysModule, OpenemsComponent {
@@ -68,8 +68,11 @@ public class RelaysModuleImpl extends AbstractOpenemsComponent implements Relays
             for (Map.Entry<Integer, Boolean> entry : mcp.getValuesPerDefault().entrySet()) {
                 mcp.setPosition(entry.getKey(), entry.getValue());
             }
+
             mcp.shift();
-            this.refI2cBridge.removeMcp(this.mcp);
+
+
+        this.refI2cBridge.removeMcp(this.mcp);
     }
 
     private void allocateBus(int config) {

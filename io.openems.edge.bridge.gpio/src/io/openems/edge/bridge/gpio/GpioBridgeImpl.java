@@ -96,20 +96,22 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
          * Get's the input data as 0 or 1 and sets the respond as true or false
          * to the GpioDevice Channel.
          * Note!
+         * OLD VERSION:
          * Raspberry Pi from Consolinno : Logic is swapped due to relinking etc.
          * that's why gpio >=1 --> no error/ offline
          * gpio == 0 error/online
+         *
+         * NEW VERSION : Not Inverse logic
          *
          * */
         @Override
         protected void forever() throws Throwable {
 
             getTasks().values().forEach(task -> {
-
                 if (Gpio.digitalRead(task.getRequest()) >= 1) {
-                    task.setResponse(false);
-                } else {
                     task.setResponse(true);
+                } else {
+                    task.setResponse(false);
                 }
 
             });
