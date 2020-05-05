@@ -1,23 +1,20 @@
-#
-# io.openems.edge.dachs.gltinterface.api PROVIDER BUNDLE
-#
+Bundle-Name: OpenEMS Edge Dachs GLT-interface API
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 
-Bundle-Version:					1.0.0.${tstamp}
 Bundle-Description: \
-	The provider bundle for io.openems.edge.dachs.gltinterface.api. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.dachs.gltinterface.api/api.bnd}
+            The channel to communicate with the Dachs GLT-interface.
 
 Export-Package:  \
-	io.openems.edge.dachs.gltinterface.api.api;-provide=true
-
-Private-Package:  \
-	io.openems.edge.dachs.gltinterface.api
+	io.openems.edge.dachs.gltinterface.api,\
 
 -includeresource: {readme.md}
 
 -buildpath:  \
-	osgi.enroute.base.api;version=2.1
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \

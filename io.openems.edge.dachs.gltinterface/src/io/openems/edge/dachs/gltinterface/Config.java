@@ -1,33 +1,32 @@
-package io.openems.edge.controller.passing.heatingcurveregulator;
+package io.openems.edge.dachs.gltinterface;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "Controller Consolinno Heating Curve Regulator",
-        description = "Automatic regulator that adjusts heating depending on outside temperature."
+        name = "Consolinno Dachs GLT-Interface",
+        description = "Module to communicate with a Dachs CHP using it's GLT web interface."
 )
 @interface Config {
 
     String service_pid();
 
-    @AttributeDefinition(name = "Controller Name", description = "Unique Name of the Heating Controller.")
-    String id() default "HeatingCurveRegulator0";
+    @AttributeDefinition(name = "Interface Name", description = "Unique Name of the Interface.")
+    String id() default "DachsGltInterface0";
 
     @AttributeDefinition(name = "alias", description = "Human Readable Name of Component.")
-    String alias() default "Heizkurvengesteuerter automatischer Heizregler";
+    String alias() default "Dachs GLT-Schnittstelle";
 
-    @AttributeDefinition(name = "TemperatureSensor", description = "The Temperaturesensor allocated to this controller")
-    String temperatureSensorId() default "TemperatureSensor5";
+    @AttributeDefinition(name = "IP address", description = "IP address of the GLT web interface")
+    String address() default "localhost";
 
-    @AttributeDefinition(name = "Curve parameter: room temperature", description = "The desired room temperature, in °C.")
-    int room_temp() default 20;
+    @AttributeDefinition(name = "Username", description = "Username for the GLT web interface")
+    String username() default "glt";
 
-    @AttributeDefinition(name = "Curve parameter: slope", description = "Slope of the heating curve.")
-    double slope() default 1;
-
+    @AttributeDefinition(name = "Password", description = "Password for the GLT web interface")
+    String password() default "";
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Controller Consolinno Heating Curve Regulator [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Consolinno Dachs GLT-Interface [{id}]";
 }
