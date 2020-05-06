@@ -5,6 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.dachs.gltinterface.api.DachsGltInterfaceChannel;
+import io.openems.edge.chp.device.api.ChpBasic;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
+import java.util.Base64;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -29,6 +30,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 	private final Logger log = LoggerFactory.getLogger(DachsGltInterfaceImpl.class);
 	private InputStream is = null;
 	private String urlBuilderIP;
+	private String basicAuth;
 	private int testcounter = 0;
 
 	public DachsGltInterfaceImpl() {
@@ -42,18 +44,10 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 	public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
 		super.activate(context, config.id(), config.alias(), config.enabled());
 
-		this.noError().setNextValue(true);
+		this.isError().setNextValue(false);
 		urlBuilderIP = config.address();
-		Authenticator.setDefault(new Authenticator()
-		{
-			@Override protected PasswordAuthentication getPasswordAuthentication()
-			{
-
-				//System.out.printf( "url=%s, host=%s, ip=%s, port=%s%n", getRequestingURL(), getRequestingHost(),	getRequestingSite(), getRequestingPort() );
-
-				return new PasswordAuthentication( config.username(), config.password().toCharArray() );
-			}
-		} );
+		String gltpass = config.username()+":"+config.password();
+		basicAuth = "Basic " + new String(Base64.getEncoder().encode(gltpass.getBytes()));
 
 	}
 
@@ -64,32 +58,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 	public void run() throws OpenemsError.OpenemsNamedException {
 
 		if (testcounter == 2){
-
-			this.logInfo(this.log, getKeyDachs("Hka_Bd.ulArbeitElektr"));
-
-			try {
-				URL url = new URL("http://"+urlBuilderIP+":8081/getKey?k=Hka_Bd.ulArbeitElektr");
-				is = url.openStream();
-
-				// read text returned by server
-				BufferedReader in = new BufferedReader(new InputStreamReader(is));
-
-				String line;
-				while ((line = in.readLine()) != null) {
-					this.logInfo(this.log, line);
-				}
-				in.close();
-
-			} catch (MalformedURLException e) {
-				this.logInfo(this.log, "Malformed URL: " + e.getMessage());
-			} catch (IOException e) {
-				this.logInfo(this.log, "I/O Error: " + e.getMessage());
-			} finally {
-				if ( is != null )
-					try { is.close(); } catch ( IOException e ) { this.logInfo(this.log, "I/O Error: " + e.getMessage()); }
-			}
-
-
+			updateChannels();
 		}
 
 
@@ -97,26 +66,46 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 
 	}
 
+	protected void updateChannels() {
+		String temp = getKeyDachs("k=Hka_Bd_Stat.ulInbetriebnahmedatum&k=Hka_Bd.ulAnzahlStarts&k=Hka_Bd.ulBetriebssekunden&k=Hka_Bd.ulArbeitThermKon&k=Hka_Bd.UHka_Frei.usFreigabe&k=Hka_Bd.UHka_Anf.usAnforderung&k=Hka_Bd.UHka_Anf.Anforderung.fStrom&k=Hka_Bd.bWarnung&k=Hka_Bd.UStromF_Frei.bFreigabe&k=Hka_Bd.Anforderung.UStromF_Anf.bFlagSF&k=Hka_Bd.Anforderung.ModulAnzahl&k=Wartung_Cache.fStehtAn&k=Hka_Mw1.usDrehzahl&k=Hka_Mw1.sWirkleistung&k=Hka_Bd.ulArbeitElektr&k=Hka_Bd.ulArbeitThermHka&k=Hka_Mw1.Temp.sbRuecklauf&k=Hka_Mw1.Temp.sbVorlauf&k=Hka_Bd.bStoerung");
+		if (temp.contains("Hka_Bd.bStoerung=")) {
+
+			String wirkleistung = temp.substring(temp.indexOf("Hka_Mw1.sWirkleistung=")+"Hka_Mw1.sWirkleistung=".length(), temp.indexOf("/n",temp.indexOf("Hka_Mw1.sWirkleistung=")));
+			this.logInfo(this.log, wirkleistung);
+
+		} else {
+		    this.logInfo(this.log, "Error: Couldn't read data from GLT interface.");
+		}
+	}
+
+
 	protected String getKeyDachs(String key) {
 		String message = "";
 		try {
-			URL url = new URL("http://"+urlBuilderIP+":8081/getKey?k="+key);
-			is = url.openStream();
+            URL url = new URL("http://"+urlBuilderIP+":8081/getKey?"+key);
 
-			// read text returned by server
-			BufferedReader in = new BufferedReader(new InputStreamReader(is));
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty ("Authorization", basicAuth);
+            is = connection.getInputStream();
 
-			String line;
-			while ((line = in.readLine()) != null) {
-				this.logInfo(this.log, line);
-				message = message + line + "/n";
-			}
-			in.close();
+            // read text returned by server
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                this.logInfo(this.log, line);
+                message = message + line + "/n";
+            }
+            reader.close();
 
 		} catch (MalformedURLException e) {
 			this.logInfo(this.log, "Malformed URL: " + e.getMessage());
 		} catch (IOException e) {
 			this.logInfo(this.log, "I/O Error: " + e.getMessage());
+            if (e.getMessage().contains("code: 401")) {
+                this.logInfo(this.log, "Wrong user/password. Access refused.");
+            } else if (e.getMessage().contains("code: 404") || e.getMessage().contains("Connection refused")) {
+                this.logInfo(this.log, "No GLT interface at specified address.");
+            }
 		} finally {
 			if ( is != null )
 				try { is.close(); } catch ( IOException e ) { this.logInfo(this.log, "I/O Error: " + e.getMessage()); }
@@ -132,6 +121,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 
 			URL url = new URL( "http://"+urlBuilderIP+":8081/setKeys" );
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestProperty ("Authorization", basicAuth);
 			connection.setRequestMethod( "POST" );
 			connection.setDoInput( true );
 			connection.setDoOutput( true );
@@ -141,24 +131,26 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 			connection.setRequestProperty( "Content-Length", String.valueOf(body.length()) );
 
 			OutputStreamWriter writer = new OutputStreamWriter( connection.getOutputStream() );
-			writer.write( body );
+			writer.write(body);
 			writer.flush();
+			writer.close();
 
-			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()) );
-
+			is = connection.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is) );
 			String line;
 			while ((line = reader.readLine()) != null) {
 				this.logInfo(this.log, line);
 				message = message + line + "/n";
 			}
-
-			writer.close();
 			reader.close();
 
 		} catch (MalformedURLException e) {
 			this.logInfo(this.log, "Malformed URL: " + e.getMessage());
 		} catch (IOException e) {
 			this.logInfo(this.log, "I/O Error: " + e.getMessage());
+		} finally {
+			if ( is != null )
+				try { is.close(); } catch ( IOException e ) { this.logInfo(this.log, "I/O Error: " + e.getMessage()); }
 		}
 
 		return message;
