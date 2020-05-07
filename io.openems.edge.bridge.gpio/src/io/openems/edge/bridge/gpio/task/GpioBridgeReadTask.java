@@ -1,6 +1,6 @@
 package io.openems.edge.bridge.gpio.task;
 
-public interface GpioBridgeTask {
+public interface GpioBridgeReadTask {
 
     String getDeviceId();
 
