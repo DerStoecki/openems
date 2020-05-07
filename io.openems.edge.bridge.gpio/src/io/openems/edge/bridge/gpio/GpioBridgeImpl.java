@@ -3,10 +3,12 @@ package io.openems.edge.bridge.gpio;
 import com.pi4j.wiringpi.Gpio;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.gpio.api.GpioBridge;
-import io.openems.edge.bridge.gpio.task.GpioBridgeTask;
+import io.openems.edge.bridge.gpio.task.GpioBridgeReadTask;
+import io.openems.edge.bridge.gpio.task.GpioBridgeWriteTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -20,6 +22,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "GpioBridge",
         immediate = true,
@@ -28,7 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, GpioBridge, EventHandler {
 
     private final GpioBridgeWorker worker = new GpioBridgeWorker();
-    private Map<String, GpioBridgeTask> tasks = new ConcurrentHashMap<>();
+    private Map<String, GpioBridgeReadTask> readTasks = new ConcurrentHashMap<>();
+    private Map<String, GpioBridgeWriteTask> writeTasks = new ConcurrentHashMap<>();
 
     public GpioBridgeImpl() {
         super(OpenemsComponent.ChannelId.values());
@@ -55,29 +59,54 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     /**
      * Adds a gpio task to the Map and enables input for gpio.
-     * @param id Id of the Gpio Device
+     *
+     * @param id   Id of the Gpio Device
      * @param task the created GpioBridgeTask by the GpioDevice
-     *
+     *             <p>
      *             Gpio.pinMode --> Declares that the allocated Pin is an Input
-     *
-     * */
+     */
     @Override
-    public void addGpioTask(String id, GpioBridgeTask task) {
-        getTasks().put(id, task);
-        Gpio.pinMode(task.getRequest(), Gpio.INPUT);
+    public void addGpioReadTask(String id, GpioBridgeReadTask task) throws ConfigurationException {
+        if (!getReadTasks().containsKey(id)) {
+            getReadTasks().put(id, task);
+            Gpio.pinMode(task.getRequest(), Gpio.INPUT);
+        } else {
+            throw new ConfigurationException(id, "Gpio Already Configured, make sure to change Unique Id !");
+        }
 
     }
 
 
     @Override
-    public void removeGpioTask(String id) {
-        this.tasks.remove(id);
+    public void removeGpioReadTask(String id) {
+        this.readTasks.remove(id);
+    }
+
+    @Override
+    public void addGpioWriteTask(String id, GpioBridgeWriteTask task) throws ConfigurationException {
+        if (!getWriteTasks().containsKey(id)) {
+            getWriteTasks().put(id, task);
+            Gpio.pinMode(task.getPosition(), Gpio.OUTPUT);
+        } else {
+            throw new ConfigurationException(id, "Gpio Already in List, Try another Id if you are certain it's a new GPIO");
+        }
+    }
+
+    @Override
+    public void removeGpioWriteTask(String id) {
+        this.getWriteTasks().remove(id);
+
     }
 
 
     @Override
-    public Map<String, GpioBridgeTask> getTasks() {
-        return this.tasks;
+    public Map<String, GpioBridgeReadTask> getReadTasks() {
+        return this.readTasks;
+    }
+
+    @Override
+    public Map<String, GpioBridgeWriteTask> getWriteTasks() {
+        return this.writeTasks;
     }
 
     private class GpioBridgeWorker extends AbstractCycleWorker {
@@ -100,14 +129,13 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
          * Raspberry Pi from Consolinno : Logic is swapped due to relinking etc.
          * that's why gpio >=1 --> no error/ offline
          * gpio == 0 error/online
-         *
+         * <p>
          * NEW VERSION : Not Inverse logic
-         *
-         * */
+         */
         @Override
         protected void forever() throws Throwable {
 
-            getTasks().values().forEach(task -> {
+            getReadTasks().values().forEach(task -> {
                 if (Gpio.digitalRead(task.getRequest()) >= 1) {
                     task.setResponse(true);
                 } else {
@@ -115,9 +143,13 @@ public class GpioBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                 }
 
             });
+            getWriteTasks().values().forEach(task -> {
+                boolean errorFlag = task.getRequest();
+                Gpio.digitalWrite(task.getPosition(), errorFlag);
+            });
+
         }
     }
-
 
 
     @Override

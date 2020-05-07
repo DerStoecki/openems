@@ -8,6 +8,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
 import io.openems.edge.controller.api.Controller;
 
+import io.openems.edge.gpio.device.api.GpioDevice;
 import io.openems.edge.meter.api.SymmetricMeter;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
@@ -45,6 +46,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
     private List<PcaDevice> pcaDeviceList = new ArrayList<>();
+    private List<GpioDevice> gpioDeviceList = new ArrayList<>();
 
     private int dateDay;
     private String fileName;
@@ -67,11 +69,14 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.meterList(), "meter");
         allocateComponents(config.pcaList(), "pca");
+        allocateComponents(config.gpioList(), "gpio");
         this.timeInterval = config.timeInterval() * 1000;
         if (timeInterval <= 0) {
             this.timeInterval = 1000;
         }
-        this.path = config.path();
+        if (!config.path().equals("")) {
+            this.path = config.path();
+        }
         //create /home/sshconsolinno/DataLog if not exist
         createCSVPath();
         //initialize FileName --> Calendar year month and day
@@ -93,10 +98,11 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         //month starts with 0;
-        int month = calendar.get(Calendar.MONTH) + 1;
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        //int intMonth = calendar.get(Calendar.MONTH) + 1;
+        String month = String.format("%2s", Integer.toString(( calendar.get(Calendar.MONTH) + 1))).replace(" ", "0");
+        String day = String.format("%2s", Integer.toString(calendar.get(Calendar.DAY_OF_MONTH))).replace(" ", "0");
         this.fileName = "test" + year + month + day + ".csv";
-        this.dateDay = day;
+        this.dateDay = Calendar.DAY_OF_MONTH;
     }
 
     /**
@@ -188,6 +194,15 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                             throw new ConfigurationException("Could not allocate Component: Pca " + string,
                                     "Config error; Check your Config --> Pca Device");
                         }
+                        break;
+
+                    case "gpio":
+                        if (cpm.getComponent(string) instanceof GpioDevice) {
+                            this.gpioDeviceList.add(counter.intValue(), cpm.getComponent(string));
+                        } else {
+                            throw new ConfigurationException("Coult not allocate Component: Gpio " + string,
+                                    "Config error; Check your Config --> Gpio Device");
+                        }
 
                 }
                 counter.getAndIncrement();
@@ -276,9 +291,21 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 }
 
             });
+            //PCA
             this.pcaDeviceList.forEach(pca -> {
                 try {
                     String s = pca.id() + "/" + pca.getOnOff().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            //GPIO
+            this.gpioDeviceList.forEach(gpio -> {
+                try {
+                    String s = gpio.id() + "/" + gpio.getReadError().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = gpio.id() + "/" + gpio.getWriteError().channelId().id();
                     csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -364,6 +391,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 writePwmData();
                 writeMeterData();
                 writePcaData();
+                writeGpioData();
                 csvWriter.append("\n");
                 csvWriter.flush();
             } catch (IOException e) {
@@ -372,7 +400,31 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         }
 
     }
-
+    /**
+     * Writes Gpio Data in CSV file.
+     * */
+    private void writeGpioData() {
+        this.gpioDeviceList.forEach(gpio -> {
+            String gpioString = "-";
+            try {
+                if (gpio.getReadError().getNextValue().isDefined()) {
+                    gpioString = gpio.getReadError().getNextValue().get().toString();
+                }
+                csvWriter.append(gpioString);
+                csvWriter.append(",");
+                gpioString = "-";
+                if (gpio.getWriteError().getNextWriteValue().isPresent()) {
+                    gpioString = gpio.getWriteError().getNextWriteValue().get().toString();
+                }
+                csvWriter.append(gpioString);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    /**
+     * Writes PCA Data in Csv File.
+     * */
     private void writePcaData() {
         this.pcaDeviceList.forEach(pca -> {
             String pcaString = "-";
@@ -382,6 +434,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                     pcaString = pca.getOnOff().getNextWriteValue().get().toString();
                 }
                 csvWriter.append(pcaString);
+                csvWriter.append(",");
             } catch (Exception e) {
                 e.printStackTrace();
             }
