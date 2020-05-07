@@ -1,0 +1,23 @@
+Bundle-Name: OpenEMS Edge RestRequestAndResponseController
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This Bundle provides a Controller who gets Components to read and write Data from \
+    Different OpenEMS via REST. \
+
+Export-Package:  \
+	io.openems.edge.controller.RestRequestAndResponse.api;-provide=true
+
+Private-Package:  \
+	io.openems.edge.controller.RestRequestAndResponse
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+
