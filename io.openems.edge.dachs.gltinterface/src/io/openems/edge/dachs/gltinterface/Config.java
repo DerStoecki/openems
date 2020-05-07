@@ -26,6 +26,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Password", description = "Password for the GLT web interface")
     String password() default "";
 
+    @AttributeDefinition(name = "Polling interval", description = "Unit: seconds. Time between calls of the GLT interface to updates the values.")
+    int interval() default 10;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Consolinno Dachs GLT-Interface [{id}]";

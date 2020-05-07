@@ -121,20 +121,20 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
         /**
          * Serial number. Hka_Bd_Stat.uchSeriennummer
          * <ul>
-         * <li>Type: integer
+         * <li>Type: string
          * </ul>
          */
 
-        SERIAL_NUMBER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
+        SERIAL_NUMBER(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Parts number. Hka_Bd_Stat.uchTeilenummer
          * <ul>
-         * <li>Type: integer
+         * <li>Type: string
          * </ul>
          */
 
-        PARTS_NUMBER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
+        PARTS_NUMBER(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Maintenance needed. Wartung_Cache.fStehtAn
@@ -281,7 +281,7 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
      * @return the Channel
      */
 
-    default Channel<Integer> getSerialNumber() { return this.channel(ChannelId.SERIAL_NUMBER); }
+    default Channel<String> getSerialNumber() { return this.channel(ChannelId.SERIAL_NUMBER); }
 
     /**
      * Parts number. Hka_Bd_Stat.uchTeilenummer
@@ -289,7 +289,7 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
      * @return the Channel
      */
 
-    default Channel<Integer> getPartsNumber() { return this.channel(ChannelId.PARTS_NUMBER); }
+    default Channel<String> getPartsNumber() { return this.channel(ChannelId.PARTS_NUMBER); }
 
     /**
      * Flag signaling that a maintenance is needed soon. Wartung_Cache.fStehtAn
