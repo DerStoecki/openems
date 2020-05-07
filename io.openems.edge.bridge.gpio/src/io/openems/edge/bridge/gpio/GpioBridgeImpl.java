@@ -22,7 +22,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.pi4j.wiringpi.Gpio.wiringPiSetup;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "GpioBridge",

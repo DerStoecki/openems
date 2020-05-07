@@ -38,8 +38,9 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
         int pinPosition = setCorrectGpioPosition(config.pinPosition());
         if (isWrite) {
             gpioBridge.addGpioWriteTask(super.id(), new GpioDeviceWriteTaskImpl(super.id(), pinPosition, getWriteError()));
+        } else {
+            gpioBridge.addGpioReadTask(super.id(), new GpioDeviceReadTaskImpl(super.id(), pinPosition, getReadError()));
         }
-        gpioBridge.addGpioReadTask(super.id(), new GpioDeviceReadTaskImpl(super.id(), pinPosition, getReadError()));
         this.informationType = config.informationType();
     }
 
@@ -103,22 +104,25 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
 
     @Override
     public String debugLog() {
-        if (getReadError().getNextValue().isDefined()) {
-            String debugInfo = "The GpioDevice: " + super.id();
+        if (getWriteError().getNextWriteValue().isPresent() || getReadError().getNextValue().isDefined()) {
+            String debugInfo = "The Gpio Device: " + super.id();
+
             if (this.informationType.equals("OnOff")) {
-                if (getReadError().getNextValue().get()) {
+
+                if (getReadError().getNextValue().get() || getWriteError().getNextWriteValue().get()) {
                     debugInfo += " is On";
                 } else {
                     debugInfo += " is Offline";
                 }
             } else {
-                if (getReadError().getNextValue().get()) {
+                if (getReadError().getNextValue().get() || getWriteError().getNextWriteValue().get()) {
                     debugInfo += " got an error!";
                 } else {
                     debugInfo += " no errors";
                 }
             }
-            return debugInfo;
+            return debugInfo + "\n";
+
         } else {
             return null;
         }
