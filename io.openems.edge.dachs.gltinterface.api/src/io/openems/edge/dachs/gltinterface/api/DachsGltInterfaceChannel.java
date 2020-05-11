@@ -24,6 +24,15 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
         RUN_SETTING(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_ONLY)),
 
         /**
+         * Requested modules setting. Anzahl der angeforderten Module, Hka_Bd.Anforderung.ModulAnzahl
+         * <ul>
+         * <li>Type: integer
+         * </ul>
+         */
+
+        NUMBER_OF_MODULES(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
+
+        /**
          * Not ready message of the chp. Dachs-Lauf-Freigabe, Hka_Bd.UHka_Frei.usFreigabe
          * <ul>
          * <li>Type: string
@@ -92,12 +101,12 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
         /**
          * Time since last restart. Hka_Bd.ulBetriebssekunden (<- unit is hours, even if this says otherwise)
          * <ul>
-         * <li>Type: integer
+         * <li>Type: double
          * <li>Unit: hours
          * </ul>
          */
 
-        RUNTIME(Doc.of(OpenemsType.INTEGER).unit(Unit.HOUR).accessMode(AccessMode.READ_ONLY)),
+        RUNTIME(Doc.of(OpenemsType.DOUBLE).unit(Unit.HOUR).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Rotations per minute of the chp engine. Hka_Mw1.usDrehzahl
@@ -188,6 +197,15 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
     }
 
     /**
+     * Number of requested modules. Only available (!=0) if Dachs has more than one module.
+     * Anzahl der angeforderten Module, Hka_Bd.Anforderung.ModulAnzahl
+     *
+     * @return the Channel
+     */
+
+    default Channel<Integer> getNumberOfRequestedModules() { return this.channel(ChannelId.RPM); }
+
+    /**
      * Not ready message of the chp. Dachs-Lauf-Freigabe, Hka_Bd.UHka_Frei.usFreigabe.
      *
      * @return the Channel
@@ -257,7 +275,7 @@ public interface DachsGltInterfaceChannel extends ChpBasic {
      * @return the Channel
      */
 
-    default Channel<Integer> getRuntimeSinceRestart() { return this.channel(ChannelId.RUNTIME); }
+    default Channel<Double> getRuntimeSinceRestart() { return this.channel(ChannelId.RUNTIME); }
 
     /**
      * Rotations per minute of the chp engine. Hka_Mw1.usDrehzahl
