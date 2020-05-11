@@ -1,11 +1,11 @@
 package io.openems.edge.dachs.gltinterface;
 
 import io.openems.common.exceptions.OpenemsError;
+import io.openems.edge.chp.device.api.ChpBasic;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.dachs.gltinterface.api.DachsGltInterfaceChannel;
-import io.openems.edge.chp.device.api.ChpBasic;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -17,8 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.*;
-import java.time.Duration;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -27,10 +28,12 @@ import java.util.Base64;
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "DachsGltInterfaceImpl",
 		configurationPolicy = ConfigurationPolicy.REQUIRE,
+		//property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS,
 		immediate = true)
 public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements OpenemsComponent, ChpBasic, DachsGltInterfaceChannel, Controller {
 
 	private final Logger log = LoggerFactory.getLogger(DachsGltInterfaceImpl.class);
+	//private final GltCycleWorker gltCycleWorker = new GltCycleWorker();
 	private InputStream is = null;
 	private String urlBuilderIP;
 	private String basicAuth;
@@ -51,35 +54,82 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 		interval = config.interval();
 		timestamp = LocalDateTime.now().minusSeconds(interval-2);	//Shift timing a bit, may help to avoid executing at the same time as other demanding controllers.
 		urlBuilderIP = config.address();
-		String gltpass = config.username()+":"+config.password();
+		String gltpass = config.username() + ":" + config.password();
 		basicAuth = "Basic " + new String(Base64.getEncoder().encode(gltpass.getBytes()));
 		getSerialAndPartsNumber();
 
 	}
 
 	@Deactivate
-	public void deactivate() {super.deactivate();}
+	public void deactivate() { super.deactivate(); }
+
 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
-		if (ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= interval){
+		if (ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= interval) {
 			updateChannels();
 			timestamp = LocalDateTime.now();
 
 
-			if (this.setOnOff().getNextWriteValue().isPresent()){
+			if (this.setOnOff().getNextWriteValue().isPresent()) {
 				if (this.setOnOff().getNextWriteValue().get()) {
 					activateDachs();
 				} else {
 					deactivateDachs();
 				}
 			}
-			
+
 		}
 
+	}
+
+
+
+	/*
+	private class GltCycleWorker extends AbstractCycleWorker {
+
+		@Override
+		public void activate(String name) {
+			super.activate(name);
+		}
+
+		@Override
+		public void deactivate() {
+			super.deactivate();
+		}
+
+		@Override
+		protected void forever() throws Throwable {
+
+			if (ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= interval) {
+				updateChannels();
+				timestamp = LocalDateTime.now();
+
+
+				if (setOnOff().getNextWriteValue().isPresent()) {
+					if (setOnOff().getNextWriteValue().get()) {
+						activateDachs();
+					} else {
+						deactivateDachs();
+					}
+				}
+
+			}
+
+		}
 
 	}
+
+
+	@Override
+	public void handleEvent(Event event) {
+		if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
+			this.gltCycleWorker.triggerNextRun();
+		}
+	}
+	*/
+
 
 	protected void updateChannels() {
 		String serverMessage = getKeyDachs(		//For a description of these commands, look in DachsGltInterfaceChannel
@@ -368,7 +418,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 				if (stoerung.contains("355")) {
 					returnMessage = returnMessage + " Int. Stack > Soll - interner Fehler.";
 				}
-				if (returnMessage.charAt( returnMessage.length() - 1) == ',') {
+				if (returnMessage.charAt(returnMessage.length() - 1) == ',') {
 					returnMessage = returnMessage.substring(0, returnMessage.length() - 1) + ".";
 				}
 				this.getErrorMessages().setNextValue(returnMessage);
@@ -502,7 +552,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 					if (fourthDigitInBinary.charAt(3) == '0') {
 						returnMessage = returnMessage + " Anforderung HKA.";
 					}
-					if (returnMessage.charAt( returnMessage.length() - 1) == ',') {
+					if (returnMessage.charAt(returnMessage.length() - 1) == ',') {
 						returnMessage = returnMessage.substring(0, returnMessage.length() - 1) + ".";
 					}
 					this.getNotReadyCode().setNextValue(returnMessage);
@@ -553,7 +603,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 					if (inBinary.charAt(7) == '1') {
 						returnMessage = returnMessage + " Mindestlaufzeit.";
 					}
-					if (returnMessage.charAt( returnMessage.length() - 1) == ',') {
+					if (returnMessage.charAt(returnMessage.length() - 1) == ',') {
 						returnMessage = returnMessage.substring(0, returnMessage.length() - 1) + ".";
 					}
 					this.getRunSetting().setNextValue(returnMessage);
@@ -589,7 +639,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 					// second digit has meaning. The server then transmits this number as a base 10 integer. The Manual
 					// discusses the code as a hex number.
 					String secondDigitInBinary = "1111";	// Fallbackvalue in case inHex.length() != 2
-					if (inHex.length() == 2){
+					if (inHex.length() == 2) {
 						secondDigitInBinary = Integer.toBinaryString(Integer.parseInt(String.valueOf(inHex.charAt(1)),16));
 					} else {
 						returnMessage = "Code " + inHex + ": Error deciphering code.";
@@ -609,7 +659,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 					if (secondDigitInBinary.charAt(3) == '0') {
 						returnMessage = returnMessage + " Anforderung Strom.";
 					}
-					if (returnMessage.charAt( returnMessage.length() - 1) == ',') {
+					if (returnMessage.charAt(returnMessage.length() - 1) == ',') {
 						returnMessage = returnMessage.substring(0, returnMessage.length() - 1) + ".";
 					}
 					this.getElecGuidedClearance().setNextValue(returnMessage);
@@ -659,7 +709,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 					if (inBinary.charAt(4) == '1') {
 						returnMessage = returnMessage + " Can extern.";
 					}
-					if (returnMessage.charAt( returnMessage.length() - 1) == ',') {
+					if (returnMessage.charAt(returnMessage.length() - 1) == ',') {
 						returnMessage = returnMessage.substring(0, returnMessage.length() - 1) + ".";
 					}
 					this.getElecGuidedSettings().setNextValue(returnMessage);
@@ -751,7 +801,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 	}
 
 
-	//Seperate method for these as they don't change and only need to be requested once.
+	//Separate method for these as they don't change and only need to be requested once.
     protected void getSerialAndPartsNumber() {
         String temp = getKeyDachs("k=Hka_Bd_Stat.uchSeriennummer&k=Hka_Bd_Stat.uchTeilenummer");
         if (temp.contains("Hka_Bd_Stat.uchSeriennummer=")) {
@@ -767,7 +817,7 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
     //Extract a value from the server return message. "stuff" is the return message from the server. "marker" is the value
 	//after which you want to read. Reads until the end of the line.
     protected String readEntryAfterString(String stuff, String marker) {
-        return stuff.substring(stuff.indexOf(marker)+marker.length(), stuff.indexOf("/n",stuff.indexOf(marker)));
+        return stuff.substring(stuff.indexOf(marker) + marker.length(), stuff.indexOf("/n",stuff.indexOf(marker)));
 	}
 
 
@@ -775,10 +825,10 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 	protected String getKeyDachs(String key) {
 		String message = "";
 		try {
-            URL url = new URL("http://"+urlBuilderIP+":8081/getKey?"+key);
+            URL url = new URL("http://" + urlBuilderIP + ":8081/getKey?" + key);
 
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty ("Authorization", basicAuth);
+            connection.setRequestProperty("Authorization", basicAuth);
             is = connection.getInputStream();
 
             // read text returned by server
@@ -800,8 +850,13 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
                 this.logInfo(this.log, "No GLT interface at specified address.");
             }
 		} finally {
-			if ( is != null )
-				try { is.close(); } catch ( IOException e ) { this.logInfo(this.log, "I/O Error: " + e.getMessage()); }
+			if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    this.logInfo(this.log, "I/O Error: " + e.getMessage());
+                }
+            }
 		}
 
 		return message;
@@ -814,24 +869,23 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 		try {
 			String body = key;
 
-			URL url = new URL( "http://"+urlBuilderIP+":8081/setKeys" );
+			URL url = new URL("http://" + urlBuilderIP + ":8081/setKeys");
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestProperty ("Authorization", basicAuth);
-			connection.setRequestMethod( "POST" );
-			connection.setDoInput( true );
-			connection.setDoOutput( true );
-			connection.setUseCaches( false );
-			connection.setRequestProperty( "Content-Type",
-					"application/x-www-form-urlencoded" );
-			connection.setRequestProperty( "Content-Length", String.valueOf(body.length()) );
+			connection.setRequestProperty("Authorization", basicAuth);
+			connection.setRequestMethod("POST");
+			connection.setDoInput(true);
+			connection.setDoOutput(true);
+			connection.setUseCaches(false);
+			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			connection.setRequestProperty("Content-Length", String.valueOf(body.length()));
 
-			OutputStreamWriter writer = new OutputStreamWriter( connection.getOutputStream() );
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
 			writer.write(body);
 			writer.flush();
 			writer.close();
 
 			is = connection.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is) );
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 			String line;
 			while ((line = reader.readLine()) != null) {
 				this.logInfo(this.log, line);
@@ -844,8 +898,13 @@ public class DachsGltInterfaceImpl extends AbstractOpenemsComponent implements O
 		} catch (IOException e) {
 			this.logInfo(this.log, "I/O Error: " + e.getMessage());
 		} finally {
-			if ( is != null )
-				try { is.close(); } catch ( IOException e ) { this.logInfo(this.log, "I/O Error: " + e.getMessage()); }
+			if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    this.logInfo(this.log, "I/O Error: " + e.getMessage());
+                }
+            }
 		}
 
 		return message;
