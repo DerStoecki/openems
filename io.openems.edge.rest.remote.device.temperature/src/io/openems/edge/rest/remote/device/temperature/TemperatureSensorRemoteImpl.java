@@ -67,7 +67,7 @@ public class TemperatureSensorRemoteImpl extends AbstractOpenemsComponent implem
     public String debugLog() {
 
         if (restBridge.getRequests(this.slaveMasterId).contains(task)) {
-            return "T:" + this.getTemperature().value().asString() + " of RemoteTemperatureSensor: " + super.id() + super.alias()
+            return "T:" + this.getTemperature().value().asString() + " of RemoteTemperatureSensor: " + super.id()
                     + "\n";
         } else {
             return "\n";

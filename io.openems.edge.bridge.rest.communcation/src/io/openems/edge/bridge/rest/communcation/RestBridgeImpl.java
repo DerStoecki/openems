@@ -12,7 +12,9 @@ import io.openems.edge.common.event.EdgeEventConstants;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
+import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.io.BufferedReader;
@@ -32,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
-public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBridge, OpenemsComponent {
+public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBridge, OpenemsComponent, EventHandler {
     @Reference
     ComponentManager cpm;
 
@@ -68,7 +70,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     @Override
     public void addCommunicator(String id, String ip, String port, String header) throws ConfigurationException {
         if (!this.deviceIdHeader.containsKey(id) && !this.deviceIdIpAndPort.containsKey(id)) {
-            this.deviceIdHeader.put(id, header);
+            this.deviceIdHeader.put(id, "Basic " + header);
             this.deviceIdIpAndPort.put(id, ip + ":" + port);
         } else {
             throw new ConfigurationException(id, "Already in Device List, Please Change the Unique Id of " + id);
@@ -211,7 +213,15 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
             });
 
         }
+
     }
 
+    @Override
+    public void handleEvent(Event event) {
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
+            this.worker.triggerNextRun();
+        }
+
+    }
 
 }
