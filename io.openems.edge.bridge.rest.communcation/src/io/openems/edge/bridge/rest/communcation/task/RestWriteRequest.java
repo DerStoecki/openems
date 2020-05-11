@@ -1,6 +1,6 @@
 package io.openems.edge.bridge.rest.communcation.task;
 
-public interface RestWriteRequest {
+public interface RestWriteRequest extends RestRequest {
 
     String getPostMessage();
 

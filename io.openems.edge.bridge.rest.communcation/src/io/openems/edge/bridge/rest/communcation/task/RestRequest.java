@@ -12,6 +12,6 @@ public interface RestRequest {
 
     String getDeviceId();
 
-    boolean isSlave();
+    boolean isMaster();
 
 }

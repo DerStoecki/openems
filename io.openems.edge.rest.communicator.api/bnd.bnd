@@ -1,16 +1,14 @@
-Bundle-Name: OpenEMS Edge RestCommunication Bridge
+Bundle-Name: OpenEMS Edge RestCommunicator Api
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-    This Bundle provides the basis for the communication with other Devices using REST. \
-    2 Openems Edges can communicate via Rest. One as "Master" one as "Slave" \
-    The Slave needs to active the Rest controller.
+    This Bundle is the API  for registering Master or Slave Device for the REST Communication.
+
 
 Export-Package:  \
-	io.openems.edge.bridge.rest.communcation,\
-	io.openems.edge.bridge.rest.communcation.api,\
-	io.openems.edge.bridge.rest.communcation.task,\
+	io.openems.edge.rest.communicator.api,\
+
 
 -includeresource: {readme.md}
 

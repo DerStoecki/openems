@@ -1,6 +1,5 @@
 package io.openems.edge.bridge.rest.communcation;
 
-import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.rest.communcation.api.RestBridge;
 import io.openems.edge.bridge.rest.communcation.task.RestReadRequest;
@@ -21,13 +20,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Bridge.Rest",
@@ -37,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBridge, OpenemsComponent {
     @Reference
     ComponentManager cpm;
+
     //authorization
     private Map<String, String> deviceIdHeader = new ConcurrentHashMap<>();
     //Ip+Port as String
@@ -68,7 +67,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
 
     @Override
     public void addCommunicator(String id, String ip, String port, String header) throws ConfigurationException {
-        if (!this.deviceIdHeader.containsKey(id) && this.deviceIdIpAndPort.containsKey(id)) {
+        if (!this.deviceIdHeader.containsKey(id) && !this.deviceIdIpAndPort.containsKey(id)) {
             this.deviceIdHeader.put(id, header);
             this.deviceIdIpAndPort.put(id, ip + ":" + port);
         } else {
@@ -80,23 +79,17 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     public void removeCommunicator(String id) {
 
         this.deviceIdIpAndPort.remove(id);
-
-        this.tasks.forEach((key, value) -> {
-            if (value.stream().anyMatch(entry -> entry.getSlaveId().equals(id) || entry.getMasterId().equals(id))) {
-                removeRestRemoteDevice(key);
-            }
-        });
-
+        this.tasks.remove(id);
         this.deviceIdHeader.remove(id);
     }
 
     @Override
-    public void addRestRequest(String id, RestRequest request, String identifier) {
+    public void addRestRequest(String id, RestRequest request) {
 
         if (!this.tasks.containsKey(id)) {
             List<RestRequest> tempRequest = new ArrayList<>();
             tempRequest.add(request);
-            this.tasks.put(identifier, tempRequest);
+            this.tasks.put(id, tempRequest);
         } else {
             this.tasks.get(id).add(request);
         }
@@ -105,9 +98,24 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
 
     //Important! Not a Single Request will be removed but a Whole device ---> Can contain multiple tasks & requests
     @Override
-    public void removeRestRemoteDevice(String id) {
-        this.tasks.remove(id);
+    public void removeRestRemoteDevice(String deviceId, String communicatorId) {
+        AtomicInteger index = new AtomicInteger();
+        if (this.tasks.get(communicatorId).stream().anyMatch(request -> {
+            if (request.getDeviceId().equals(deviceId)) {
+                index.set(this.tasks.get(communicatorId).indexOf(request));
+                return true;
+            }
+            return false;
+        })) {
+            this.tasks.get(communicatorId).remove(index.intValue());
+        }
 
+
+    }
+
+    @Override
+    public List<RestRequest> getRequests(String slaveMasterCommunicator) {
+        return this.tasks.get(slaveMasterCommunicator);
     }
 
 
@@ -130,7 +138,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                     String header;
                     String ipAddress;
 
-                    if (entry.isSlave()) {
+                    if (entry.isMaster()) {
                         header = deviceIdHeader.get(entry.getMasterId());
                         ipAddress = deviceIdIpAndPort.get(entry.getMasterId());
                     } else {

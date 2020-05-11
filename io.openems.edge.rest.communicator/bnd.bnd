@@ -1,0 +1,25 @@
+Bundle-Name: OpenEMS Edge RestCommunicator
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+    This Bundle is for registering Master or Slave Device for the REST Communication.
+    Master has to declare Devices as Slave with their IP Address and need to set Authentication Header.
+    Further If Slaves want to Communicate with Master --> IsMaster needs to be ticked.
+
+Private-Package:  \
+	io.openems.edge.rest.communicator
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.edge.common;version=latest,\
+	io.openems.common;version=latest,\
+	io.openems.edge.bridge.rest.communcation;version=latest,\
+	io.openems.edge.rest.communicator.api;version=latest,\
+
+-testpath: \
+	osgi.enroute.junit.wrapper;version=4.12, \
+	osgi.enroute.hamcrest.wrapper;version=1.3
+
