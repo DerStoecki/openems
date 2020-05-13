@@ -6,7 +6,9 @@ public interface RestWriteRequest extends RestRequest {
 
     void wasSuccess(Boolean succ, String response);
 
-    boolean readToWrite();
+    boolean readyToWrite();
 
+
+    //allow Requests
     void setReadyToWrite(boolean ready);
 }

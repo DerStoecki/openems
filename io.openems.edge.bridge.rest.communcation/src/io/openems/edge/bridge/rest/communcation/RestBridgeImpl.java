@@ -176,7 +176,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                         } else if (entry instanceof RestWriteRequest) {
                             RestWriteRequest tempEntry = ((RestWriteRequest) entry);
                             //Important for Controllers --> if Ready To Write set True and give Value to channel
-                            if (tempEntry.readToWrite()) {
+                            if (tempEntry.readyToWrite()) {
                                 connection.setRequestMethod("POST");
                                 connection.setRequestProperty("Content-Type", "application/json");
                                 connection.setDoOutput(true);

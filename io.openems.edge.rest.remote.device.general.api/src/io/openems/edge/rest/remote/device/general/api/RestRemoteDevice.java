@@ -1,12 +1,6 @@
 package io.openems.edge.rest.remote.device.general.api;
 
-public interface RestRemoteDevice extends RestRemoteChannel {
-
-    boolean setValue(float value);
-
-    boolean setValue(int value);
-
-    boolean setValue(boolean value);
+public interface RestRemoteDevice {
 
     boolean setValue(String value);
 

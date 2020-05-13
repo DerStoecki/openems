@@ -40,7 +40,7 @@ public class TemperatureSensorRemoteReadTask implements RestReadRequest {
                 answerNumeric.append(m.group());
             }
             if (!answerNumeric.toString().equals("")) {
-                temperature.setNextValue(String.valueOf(answerNumeric.toString()));
+                temperature.setNextValue(answerNumeric.toString());
             }
         }
     }
@@ -68,5 +68,15 @@ public class TemperatureSensorRemoteReadTask implements RestReadRequest {
     @Override
     public boolean isMaster() {
         return master;
+    }
+
+    @Override
+    public String getDeviceType() {
+        return null;
+    }
+
+    @Override
+    public boolean isAutoAdapt() {
+        return false;
     }
 }

@@ -4,7 +4,7 @@ public interface RestRequest {
     //Return DeviceId + Channel
     String getRequest();
 
-
+    String getAutoAdaptRequest();
 
     String getMasterId();
 
@@ -13,5 +13,9 @@ public interface RestRequest {
     String getDeviceId();
 
     boolean isMaster();
+
+    String getDeviceType();
+
+    boolean isAutoAdapt();
 
 }
