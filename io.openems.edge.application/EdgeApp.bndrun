@@ -68,6 +68,7 @@
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter',\
+	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator.api',\
 	bnd.identity;id='io.openems.edge.controller.pid.passing',\
@@ -228,6 +229,7 @@
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
 	io.openems.edge.controller.passing.controlcenter;version=snapshot,\
+	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
 	io.openems.edge.controller.passing.heatingcurveregulator;version=snapshot,\
 	io.openems.edge.controller.passing.heatingcurveregulator.api;version=snapshot,\
 	io.openems.edge.controller.pid.passing;version=snapshot,\

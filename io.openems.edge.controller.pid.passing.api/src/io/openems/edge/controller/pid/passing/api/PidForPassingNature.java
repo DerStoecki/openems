@@ -14,6 +14,17 @@ public interface PidForPassingNature extends OpenemsComponent {
 
 
         /**
+         * Turn PID on or off.
+         * <ul>
+         * <li>Type: Boolean
+         * <li>
+         * </ul>
+         */
+
+        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+
+
+        /**
          * Min Temperature.
          * <ul>
          * <li> Min Temperature that has to be reached
@@ -37,6 +48,15 @@ public interface PidForPassingNature extends OpenemsComponent {
 
     }
 
+    /**
+     * Turn PID on or off.
+     *
+     * @return the Channel
+     */
+
+    default WriteChannel<Boolean> turnOn() {
+        return this.channel(ChannelId.ON_OFF);
+    }
 
     /**
      * Min Temperature you want to reach / check if it can be reached.

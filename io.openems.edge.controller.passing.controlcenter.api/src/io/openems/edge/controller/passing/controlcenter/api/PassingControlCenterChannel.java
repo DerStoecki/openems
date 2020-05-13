@@ -1,4 +1,4 @@
-package io.openems.edge.controller.passing.heatingcurveregulator.api;
+package io.openems.edge.controller.passing.controlcenter.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
@@ -8,32 +8,43 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
-public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
+public interface PassingControlCenterChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
 
         /**
-         * Heating Temperature.
+         * Temperature Override.
          * <ul>
-         * <li> Output value for the heating temperature.
+         * <li> Overrides output value for the heating temperature.
          * <li>Type: Integer
          * <li>Unit: Decimal degrees Celsius
          * </ul>
          */
 
-        HEATING_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_ONLY)),
+        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
 
         /**
-         * Is Active.
+         * Tells the controller to use the temperature override.
          * <ul>
-         * <li> If the controller is active.
+         * <li> If the override is active.
          * <li>Type: Boolean
          * <li>
          * </ul>
          */
 
-        ACTIVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
+        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+
+        /**
+         * Controller output. If the heater should activate or not.
+         * <ul>
+         * <li> If the heater should activate.
+         * <li>Type: Boolean
+         * <li>
+         * </ul>
+         */
+
+        ACTIVATE_HEATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Is Error.
@@ -60,26 +71,33 @@ public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
 
 
     /**
-     * Read the output temperature of the heating curve regulator. To output this number is the main purpose of the
-     * controller.
+     * Set the override temperature.
      * Unit is decimal degree celsius.
      *
      * @return the Channel
      */
-    default Channel<Integer> getHeatingTemperature() {
-        return this.channel(ChannelId.HEATING_TEMPERATURE);
+    default WriteChannel<Integer> setOverrideTemperature() {
+        return this.channel(ChannelId.TEMPERATURE_OVERRIDE);
     }
 
     /**
-     * Is the controller currently active.
-     * This is true when the temperature measured by the allocated sensor is lower than the room temperature set
-     * in the configuration.
+     * Activate the temperature override.
      *
      * @return the Channel
      */
 
-    default Channel<Boolean> isActive() {
-        return this.channel(ChannelId.ACTIVE);
+    default WriteChannel<Boolean> activateTemperatureOverride() {
+        return this.channel(ChannelId.ACTIVATE_OVERRIDE);
+    }
+
+    /**
+     * Controller output. If the heater should activate or not.
+     *
+     * @return the Channel
+     */
+
+    default Channel<Boolean> activateHeater() {
+        return this.channel(ChannelId.ACTIVATE_HEATER);
     }
 
     /**

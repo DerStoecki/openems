@@ -5,6 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenterChannel;
 import io.openems.edge.controller.passing.heatingcurveregulator.api.HeatingCurveRegulatorChannel;
 import io.openems.edge.controller.pid.passing.api.PidForPassingNature;
 import io.openems.edge.controller.warmup.passing.api.ControllerWarmupChannel;
@@ -16,9 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Designate( ocd=Config.class, factory=true)
-@Component(name="PassingControlCenter", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class PassingControlCenterImpl extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
+@Designate(ocd = Config.class, factory = true)
+@Component(name = "PassingControlCenter", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class PassingControlCenterImpl extends AbstractOpenemsComponent implements OpenemsComponent, PassingControlCenterChannel, Controller {
 
 	private final Logger log = LoggerFactory.getLogger(PassingControlCenterImpl.class);
 
@@ -31,8 +32,8 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 	private int temperatureDezidegree;
 
 	public PassingControlCenterImpl() {
-
 		super(OpenemsComponent.ChannelId.values(),
+				PassingControlCenterChannel.ChannelId.values(),
 				Controller.ChannelId.values());
 	}
 
@@ -65,8 +66,8 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 			throw e;
 		}
 
-		temperatureDezidegree = 0;
-		if (config.run_warmup_program()){
+		this.activateHeater().setNextValue(false);
+		if (config.run_warmup_program()) {
 			warmupControllerChannel.playPauseWarmupController().setNextWriteValue(true);
 		}
 	}
@@ -76,25 +77,43 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
-		if (warmupControllerChannel.noError().getNextValue().isDefined() &&
-				warmupControllerChannel.getWarmupTemperature().getNextValue().isDefined()){
-			if (!warmupControllerChannel.noError().getNextValue().get()){
-				temperatureDezidegree = warmupControllerChannel.getWarmupTemperature().getNextValue().get();
-			}
-		}
-		//If Warmup Controller has no value or paused/deactivated, get value from Heating Curve Regulator.
-		if (!warmupControllerChannel.playPauseWarmupController().getNextWriteValue().isPresent() ||
-				!warmupControllerChannel.playPauseWarmupController().getNextWriteValue().get()){
-			if (heatingCurveRegulatorChannel.getHeatingTemperature().getNextValue().isDefined() &&
-					heatingCurveRegulatorChannel.noError().getNextValue().get()){
-				temperatureDezidegree = heatingCurveRegulatorChannel.getHeatingTemperature().getNextValue().get();
-			} else {
-				//Fallback, if both controllers give error
-				temperatureDezidegree = 200;
-			}
+
+		// Check all channels if they have values in them.
+		boolean overrideChannelHasValues = this.activateTemperatureOverride().getNextWriteValue().isPresent()
+				&& this.setOverrideTemperature().getNextWriteValue().isPresent();
+
+		boolean warmupControllerChannelHasValues = warmupControllerChannel.playPauseWarmupController().getNextWriteValue().isPresent()
+				&& warmupControllerChannel.getWarmupTemperature().getNextValue().isDefined()
+				&& warmupControllerChannel.noError().getNextValue().isDefined();
+
+		boolean heatingCurveRegulatorChannelHasValues = heatingCurveRegulatorChannel.isActive().getNextValue().isDefined()
+				&& heatingCurveRegulatorChannel.getHeatingTemperature().getNextValue().isDefined()
+				&& heatingCurveRegulatorChannel.noError().getNextValue().isDefined();
+
+		// Execute controllers by priority. From high to low: override, warmup, heatingCurve
+		if (overrideChannelHasValues && this.activateTemperatureOverride().getNextWriteValue().get()) {
+			temperatureDezidegree = this.setOverrideTemperature().getNextWriteValue().get();
+			this.activateHeater().setNextValue(true);
+		} else if (warmupControllerChannelHasValues && warmupControllerChannel.playPauseWarmupController().getNextWriteValue().get()
+				&& warmupControllerChannel.noError().getNextValue().get()) {
+			temperatureDezidegree = warmupControllerChannel.getWarmupTemperature().getNextValue().get();
+			this.activateHeater().setNextValue(true);
+		} else if (heatingCurveRegulatorChannelHasValues && heatingCurveRegulatorChannel.isActive().getNextValue().get()
+				&& heatingCurveRegulatorChannel.noError().getNextValue().get()) {
+			temperatureDezidegree = heatingCurveRegulatorChannel.getHeatingTemperature().getNextValue().get();
+			this.activateHeater().setNextValue(true);
+		} else {
+			this.activateHeater().setNextValue(false);
 		}
 
-		pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureDezidegree);
+		// Send controller output to pid.
+		if (this.activateHeater().getNextValue().get()) {
+			pidControllerChannel.turnOn().setNextWriteValue(true);
+			pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureDezidegree);
+		} else {
+			pidControllerChannel.turnOn().setNextWriteValue(false);
+		}
+
 
 	}
 

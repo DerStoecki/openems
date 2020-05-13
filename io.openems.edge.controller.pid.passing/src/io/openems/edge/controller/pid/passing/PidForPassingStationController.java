@@ -112,25 +112,28 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     public void run() throws OpenemsError.OpenemsNamedException {
 
 
-        if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
-            if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
-                if (this.setMinTemperature().getNextWriteValue().isPresent()) {
-                    this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
-                }
-                this.timestamp = System.currentTimeMillis();
-                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
-                // is percentage value fix if so substract from current powerlevel?
-                output -= this.passingForPid.getPowerLevel().getNextValue().get();
+        if (this.turnOn().getNextWriteValue().isPresent() && this.turnOn().getNextWriteValue().get()) {
+            if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
+                if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
+                    if (this.setMinTemperature().getNextWriteValue().isPresent()) {
+                        this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
+                    }
+                    this.timestamp = System.currentTimeMillis();
+                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
+                    // is percentage value fix if so substract from current powerlevel?
+                    output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
-                if (this.isPump) {
-                    output *= -1;
-                }
-                if (this.passingForPid.readyToChange()) {
-                    this.passingForPid.changeByPercentage(output / 10);
-                }
+                    if (this.isPump) {
+                        output *= -1;
+                    }
+                    if (this.passingForPid.readyToChange()) {
+                        this.passingForPid.changeByPercentage(output / 10);
+                    }
 
+                }
             }
         }
+
     }
 
     private boolean readyToCalc() {
