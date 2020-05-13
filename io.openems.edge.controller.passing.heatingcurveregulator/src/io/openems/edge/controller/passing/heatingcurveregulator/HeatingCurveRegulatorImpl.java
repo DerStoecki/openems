@@ -75,18 +75,22 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
-		if (outsideTempSensor.getTemperature().getNextValue().isDefined() && outsideTempSensor.getTemperature().getNextValue().get() <= activationTemp) {
-			//function calculates everything in degree, not dezidegree!
-            double function = (slope * 1.8317984 * Math.pow((roomTemp - (0.1 * outsideTempSensor.getTemperature().getNextValue().get())), 0.8281902)) + roomTemp + offset;
-			//Convert back to dezidegree integer
-			this.getHeatingTemperature().setNextValue((int)Math.round(function * 10));
-			this.logInfo(this.log, "Thermometer measures " + 0.1 * outsideTempSensor.getTemperature().getNextValue().get() + "°C. Heater temperature calculates to " + (int)Math.round(function) + "°C.");
+		if (outsideTempSensor.getTemperature().getNextValue().isDefined()) {
+			if (outsideTempSensor.getTemperature().getNextValue().get() <= activationTemp) {
+				//function calculates everything in degree, not dezidegree!
+				double function = (slope * 1.8317984 * Math.pow((roomTemp - (0.1 * outsideTempSensor.getTemperature().getNextValue().get())), 0.8281902))
+						+ roomTemp + offset;
+				//Convert back to dezidegree integer
+				this.getHeatingTemperature().setNextValue((int)Math.round(function * 10));
+				this.logInfo(this.log, "Thermometer measures " + 0.1 * outsideTempSensor.getTemperature().getNextValue().get()
+						+ "°C. Heater temperature calculates to " + (int)Math.round(function) + "°C.");
+				this.isActive().setNextValue(true);
+			}
 			//Set Error channel back to no error if there has been an error.
 			if (this.noError().getNextValue().isDefined() && !this.noError().getNextValue().get()) {
 				this.noError().setNextValue(true);
 				this.logInfo(this.log, "Everything is fine now!");
 			}
-			this.isActive().setNextValue(true);
 		} else {
 			this.isActive().setNextValue(false);
 			if (!outsideTempSensor.getTemperature().getNextValue().isDefined()) {

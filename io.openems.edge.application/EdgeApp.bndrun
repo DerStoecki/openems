@@ -74,6 +74,8 @@
 	bnd.identity;id='io.openems.edge.controller.pid.passing',\
 	bnd.identity;id='io.openems.edge.controller.pvinverter.fixpowerlimit',\
 	bnd.identity;id='io.openems.edge.controller.selltogridlimit',\
+	bnd.identity;id='io.openems.edge.controller.signalhotwater',\
+	bnd.identity;id='io.openems.edge.controller.signalhotwater.api',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.balancing',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.balancingschedule',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.fixactivepower',\
@@ -235,6 +237,8 @@
 	io.openems.edge.controller.pid.passing;version=snapshot,\
 	io.openems.edge.controller.pvinverter.fixpowerlimit;version=snapshot,\
 	io.openems.edge.controller.selltogridlimit;version=snapshot,\
+	io.openems.edge.controller.signalhotwater;version=snapshot,\
+	io.openems.edge.controller.signalhotwater.api;version=snapshot,\
 	io.openems.edge.controller.symmetric.balancing;version=snapshot,\
 	io.openems.edge.controller.symmetric.balancingschedule;version=snapshot,\
 	io.openems.edge.controller.symmetric.fixactivepower;version=snapshot,\
