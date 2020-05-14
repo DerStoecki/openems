@@ -26,7 +26,8 @@ public interface RestRemoteChannel extends OpenemsComponent {
         VALUE_READ(Doc.of(OpenemsType.STRING)),
         VALUE_WRITE(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_WRITE)),
         WHAT_TYPE_SET(Doc.of(OpenemsType.STRING)),
-        ALLOW_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
+        ALLOW_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        IS_INVERSE(Doc.of(OpenemsType.BOOLEAN));
 
 
         private final Doc doc;

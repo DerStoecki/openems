@@ -13,7 +13,8 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
     private String realDeviceId;
     private String deviceType;
 
-    AbstractRestRemoteDeviceTask(String remoteDeviceId, String slaveMasterId, boolean isMaster, String realDeviceId, String deviceChannel, boolean autoAdapt, String deviceType) {
+    AbstractRestRemoteDeviceTask(String remoteDeviceId, String slaveMasterId, boolean isMaster,
+                                 String realDeviceId, String deviceChannel, boolean autoAdapt, String deviceType) {
         this.remoteDeviceId = remoteDeviceId;
         this.isMaster = isMaster;
         if (isMaster) {
@@ -67,8 +68,11 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         if (isAutoAdapt()) {
             if (this.deviceType.equals("Relays")) {
                 return this.realDeviceId + "/" + "OnOff";
+            } else {
+                return "Device is Not Supported via AutoAdapt";
             }
         }
+        return "AutoAdaptNotSet!";
     }
 
 }

@@ -8,31 +8,14 @@ import java.util.regex.Pattern;
 
 public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements RestReadRequest {
 
-    private String deviceId;
-    private String slaveId = "COMMUNICATOR IS NOT A SLAVE";
-    private String masterId = "COMMUNICATOR IS NOT A MASTER";
-    private boolean master;
-    private String realDeviceId;
-    private String channel;
-    private boolean autoAdapt;
-    private boolean isRelaysCloser;
-    private String requestString;
+
     private Channel<String> value;
 
-    public RestRemoteReadTask(String remoteDeviceId, String masterSlaveId, Boolean master, String realDeviceId, String deviceChannel, boolean autoAdapt, Channel<String> value, String deviceType) {
+    public RestRemoteReadTask(String remoteDeviceId, String masterSlaveId, boolean isMaster, String realDeviceId, String deviceChannel, boolean autoAdapt, Channel<String> value, String deviceType) {
 
         //super(....)
-        super();
-        this.deviceId = remoteDeviceId;
-        this.master = master;
-        if (master) {
-            this.masterId = masterSlaveId;
-        } else {
-            this.slaveId = masterSlaveId;
-        }
-        this.realDeviceId = realDeviceId;
-        this.channel = deviceChannel;
-        this.autoAdapt = autoAdapt;
+        super(remoteDeviceId, masterSlaveId, isMaster, realDeviceId, deviceChannel, autoAdapt, deviceType);
+
         this.value = value;
 
     }
@@ -49,7 +32,7 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
                 answerNumeric.append(m.group());
             }
             if (!answerNumeric.toString().equals("")) {
-                //TODO
+                this.value.setNextValue(answerNumeric);
             }
         }
     }
