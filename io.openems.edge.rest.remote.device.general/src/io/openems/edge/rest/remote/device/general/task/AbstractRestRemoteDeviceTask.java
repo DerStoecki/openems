@@ -1,6 +1,10 @@
 package io.openems.edge.rest.remote.device.general.task;
 
 import io.openems.edge.bridge.rest.communcation.task.RestRequest;
+import io.openems.edge.common.channel.Channel;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
 
@@ -12,6 +16,8 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
     private boolean autoAdapt;
     private String realDeviceId;
     private String deviceType;
+    boolean isInverse;
+    private boolean isInverseSet;
 
     AbstractRestRemoteDeviceTask(String remoteDeviceId, String slaveMasterId, boolean isMaster,
                                  String realDeviceId, String deviceChannel, boolean autoAdapt, String deviceType) {
@@ -25,6 +31,8 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         this.deviceChannel = deviceChannel;
         this.autoAdapt = autoAdapt;
         this.realDeviceId = realDeviceId;
+        this.deviceType = deviceType;
+        this.isInverse = isInverse;
 
     }
 
@@ -64,6 +72,12 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
 
     }
 
+    @Override
+    public boolean isInverseSet() {
+        return this.isInverseSet;
+    }
+
+
     public String getAutoAdaptRequest() {
         if (isAutoAdapt()) {
             if (this.deviceType.equals("Relays")) {
@@ -75,4 +89,27 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         return "AutoAdaptNotSet!";
     }
 
+    @Override
+    public boolean setAutoAdaptResponse(boolean succ, String answer) {
+
+        if (succ && !isInverseSet) {
+            Pattern p = Pattern.compile("\\d+");
+            Matcher m = p.matcher(answer);
+            StringBuilder answerNumeric = new StringBuilder();
+            while (m.find()) {
+                answerNumeric.append(m.group());
+            }
+            if (!answerNumeric.toString().equals("")) {
+
+                boolean asBoolean = Boolean.parseBoolean(answerNumeric.toString());
+                this.isInverse = !asBoolean;
+                this.isInverseSet = true;
+                return true;
+            }
+
+
+        }
+        return false;
+
+    }
 }

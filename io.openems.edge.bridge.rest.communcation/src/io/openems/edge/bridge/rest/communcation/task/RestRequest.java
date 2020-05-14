@@ -18,4 +18,8 @@ public interface RestRequest {
 
     boolean isAutoAdapt();
 
+    boolean setAutoAdaptResponse(boolean succ, String answer);
+
+    boolean isInverseSet();
+
 }

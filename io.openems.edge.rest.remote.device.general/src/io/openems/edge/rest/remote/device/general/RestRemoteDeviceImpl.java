@@ -50,7 +50,8 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
                 //config.autoAdapt() config.deviceChannel() config.deviceType() config.realDeviceId()
 
 
-                restBridge.addRestRequest(slaveMasterId, createNewTask(config.deviceType(), config.deviceChannel(), config.id(), config.realDeviceId(), config.autoAdapt(), config.deviceMode()));
+                restBridge.addRestRequest(slaveMasterId, createNewTask(config.deviceType(), config.deviceChannel(),
+                        config.id(), config.realDeviceId(), config.autoAdapt(), config.deviceMode()));
             } else {
                 throw new ConfigurationException(config.slaveMasterId(), "Master Slave Id Incorrect or not configured yet!");
             }
@@ -58,16 +59,18 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
         }
     }
 
-    private RestRequest createNewTask(String deviceType, String deviceChannel, String remoteDeviceId, String realDeviceId, boolean autoAdapt, String deviceMode) throws ConfigurationException {
+    private RestRequest createNewTask(String deviceType, String deviceChannel, String remoteDeviceId,
+                                      String realDeviceId, boolean autoAdapt, String deviceMode) throws ConfigurationException {
 
         if (deviceMode.equals("Write")) {
 
             if (deviceType.equals("TemperatureSensor")) {
-                throw new ConfigurationException("TemperatureSensor write not allowed", "Warning! TemperatureSensor does not support Write Tasks!");
+                throw new ConfigurationException("TemperatureSensor write not allowed", "Warning!"
+                        + " TemperatureSensor does not support Write Tasks!");
             } else {
                 this.getTypeSet().setNextValue("Write");
                 return new RestRemoteWriteTask(remoteDeviceId, slaveMasterId, communicator.isMaster().getNextValue().get(),
-                        realDeviceId, deviceChannel, autoAdapt, getWriteValue(), deviceType);
+                        realDeviceId, deviceChannel, autoAdapt, getWriteValue(), deviceType, this.getAllowRequest(), this.getIsInverse());
             }
         } else if (deviceMode.equals("Read")) {
             this.getTypeSet().setNextValue("Write");

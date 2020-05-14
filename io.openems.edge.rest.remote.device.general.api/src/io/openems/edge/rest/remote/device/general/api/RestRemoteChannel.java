@@ -85,4 +85,15 @@ public interface RestRemoteChannel extends OpenemsComponent {
     default Channel<String> getTypeSet() {
         return this.channel(ChannelId.WHAT_TYPE_SET);
     }
+
+    //        ALLOW_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+    //        IS_INVERSE(Doc.of(OpenemsType.BOOLEAN));
+
+    default WriteChannel<Boolean> getAllowRequest() {
+        return this.channel(ChannelId.ALLOW_REQUEST);
+    }
+
+    default Channel<Boolean> getIsInverse() {
+        return this.channel(ChannelId.IS_INVERSE);
+    }
 }
