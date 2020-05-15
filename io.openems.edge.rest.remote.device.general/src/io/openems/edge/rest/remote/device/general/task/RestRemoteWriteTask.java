@@ -9,6 +9,8 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
 
     private WriteChannel<String> value;
     private WriteChannel<Boolean> allowRequest;
+    private String lastValue = "Nothing set";
+    private boolean hasBeenSet = false;
 
 
     public RestRemoteWriteTask(String remoteDeviceId, String slaveMasterId, boolean isMaster, String realDeviceId,
@@ -25,26 +27,37 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
     public String getPostMessage() {
         if (readyToWrite()) {
 
-            if (super.isAutoAdapt() && this.value.getNextValue().isDefined()) {
-                if (super.isInverse) {
-                    if (this.value.getNextValue().get().toLowerCase().equals("true")) {
-                        return super.getRealDeviceId() + "/" + "false";
-                    } else if (this.value.getNextValue().get().toLowerCase().equals("false")) {
-                        return super.getRealDeviceId() + "/" + "true";
+            if (this.value.getNextValue().isDefined()) {
+                String msg = "{\"value\":";
+                if (super.isAutoAdapt()) {
+                    if (super.isInverse) {
+                        if (this.value.getNextValue().get().toLowerCase().equals("true")) {
+                            msg += "false}";
+                        } else if (this.value.getNextValue().get().toLowerCase().equals("false")) {
+                            msg += "true}";
+                        }
+                    } else {
+                        msg += msg + this.value.getNextValue().get() + "}";
                     }
                 } else {
-                    return super.getRealDeviceId() + "/" + this.value.getNextValue().get();
+                    msg += msg + this.value.getNextValue().get() + "}";
                 }
+                return msg;
+
             }
+            System.out.println("NoValueDefined");
+            return "NoValueDefined";
+
+
         }
-
+        System.out.println("NotReadyToWrite");
         return "NotReadyToWrite";
-
     }
 
     @Override
     public void wasSuccess(Boolean succ, String response) {
         if (succ) {
+            hasBeenSet = true;
             System.out.println("Was successfully set to " + response);
         } else {
             System.out.println("Error while Posting Value, please try again!");
@@ -70,12 +83,27 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
     }
 
     @Override
+    public boolean valueHasChanged() {
+        if (this.value.getNextValue().isDefined()) {
+            if (this.lastValue.equals(this.value.getNextValue().get()) && hasBeenSet) {
+                return false;
+            } else {
+                this.lastValue = this.value.getNextValue().get();
+                hasBeenSet = false;
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public void nextValueSet() {
 
-        if(this.allowRequest.getNextWriteValue().isPresent()) {
+        if (this.allowRequest.getNextWriteValue().isPresent()) {
             this.allowRequest.setNextValue(this.allowRequest.getNextWriteValueAndReset());
         }
-        if(this.value.getNextWriteValue().isPresent()){
+        if (this.value.getNextWriteValue().isPresent()) {
             this.value.setNextValue(this.value.getNextWriteValueAndReset());
         }
 

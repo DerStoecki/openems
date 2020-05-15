@@ -11,4 +11,6 @@ public interface RestWriteRequest extends RestRequest {
     void nextValueSet();
     //allow Requests
     boolean setReadyToWrite(boolean ready);
+
+    boolean valueHasChanged();
 }

@@ -167,7 +167,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     }
 
     private void handlePostRequest(RestWriteRequest tempEntry, String ipAddress, String header) throws IOException {
-        URL url = new URL("http://" + ipAddress + "/rest/channel/" + tempEntry.getPostMessage());
+        URL url = new URL("http://" + ipAddress + "/rest/channel/" + tempEntry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("Authorization", header);
 
@@ -177,6 +177,9 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                     return;
                 }
             }
+//            if(!tempEntry.valueHasChanged() || tempEntry.getPostMessage().equals("NoValueDefined") || tempEntry.getPostMessage().equals("NotReadyToWrite")){
+//                return;
+//            }
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
