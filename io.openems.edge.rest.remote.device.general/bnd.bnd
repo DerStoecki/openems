@@ -9,6 +9,7 @@ Bundle-Description: \
 
 Private-Package:  \
 	io.openems.edge.rest.remote.device.general,\
+	io.openems.edge.rest.remote.device.general.task,\
 
 -includeresource: {readme.md}
 

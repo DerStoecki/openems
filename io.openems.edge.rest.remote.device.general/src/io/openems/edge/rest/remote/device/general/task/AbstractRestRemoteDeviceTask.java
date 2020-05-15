@@ -83,7 +83,7 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
     public String getAutoAdaptRequest() {
         if (isAutoAdapt()) {
             if (this.deviceType.equals("Relays")) {
-                return this.realDeviceId + "/" + "OnOff";
+                return this.realDeviceId + "/" + "IsCloser";
             } else {
                 return "Device is Not Supported via AutoAdapt";
             }
@@ -103,9 +103,7 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
                 answerNumeric.append(m.group());
             }
             if (!answerNumeric.toString().equals("")) {
-
-                boolean asBoolean = Boolean.parseBoolean(answerNumeric.toString());
-                this.isInverse = !asBoolean;
+                this.isInverse = answerNumeric.toString().equals("0");
                 this.isInverseSet = true;
                 return true;
             }

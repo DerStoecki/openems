@@ -26,7 +26,7 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
         if (readyToWrite()) {
 
             if (super.isAutoAdapt() && this.value.getNextValue().isDefined()) {
-                if (this.isInverse) {
+                if (super.isInverse) {
                     if (this.value.getNextValue().get().toLowerCase().equals("true")) {
                         return super.getRealDeviceId() + "/" + "false";
                     } else if (this.value.getNextValue().get().toLowerCase().equals("false")) {
@@ -65,6 +65,18 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
             return false;
+        }
+
+    }
+
+    @Override
+    public void nextValueSet() {
+
+        if(this.allowRequest.getNextWriteValue().isPresent()) {
+            this.allowRequest.setNextValue(this.allowRequest.getNextWriteValueAndReset());
+        }
+        if(this.value.getNextWriteValue().isPresent()){
+            this.value.setNextValue(this.value.getNextWriteValueAndReset());
         }
 
     }

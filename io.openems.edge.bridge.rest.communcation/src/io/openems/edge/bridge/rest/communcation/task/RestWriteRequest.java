@@ -8,7 +8,7 @@ public interface RestWriteRequest extends RestRequest {
 
     boolean readyToWrite();
 
-
+    void nextValueSet();
     //allow Requests
     boolean setReadyToWrite(boolean ready);
 }

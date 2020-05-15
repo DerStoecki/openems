@@ -136,6 +136,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         public void forever() throws Throwable {
             tasks.forEach((key, value) -> {
                 value.forEach(entry -> {
+
                     String header;
                     String ipAddress;
 
@@ -147,24 +148,15 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                         ipAddress = deviceIdIpAndPort.get(entry.getSlaveId());
                     }
                     try {
-                        URL url = new URL("http://" + ipAddress + "/rest/channel/" + entry.getRequest());
-                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                        connection.setRequestProperty("Authorization", header);
-
                         if (entry instanceof RestReadRequest) {
-                            handleReadRequest(entry, connection);
+                            handleReadRequest(entry, ipAddress, header);
 
                         } else if (entry instanceof RestWriteRequest) {
                             RestWriteRequest tempEntry = ((RestWriteRequest) entry);
+                            tempEntry.nextValueSet();
                             //Important for Controllers --> if Ready To Write set True and give Value to channel
-                            if (tempEntry.readyToWrite()) {
-                                if (tempEntry.isAutoAdapt()) {
-                                    if (!autoAdaptSuccess(entry, connection)) {
-                                        return;
-                                    }
-                                }
-                                handlePostRequest(tempEntry, connection);
-                            }
+                                handlePostRequest(tempEntry, ipAddress, header);
+
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -174,33 +166,47 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
-    private void handlePostRequest(RestWriteRequest tempEntry, HttpURLConnection connection) throws IOException {
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setDoOutput(true);
-        OutputStream os = connection.getOutputStream();
-        os.write(tempEntry.getPostMessage().getBytes());
-        os.flush();
-        os.close();
-        //Task can check if everythings ok --> good for Controller etc; ---> Check Channel
-        int responseCode = connection.getResponseCode();
+    private void handlePostRequest(RestWriteRequest tempEntry, String ipAddress, String header) throws IOException {
+        URL url = new URL("http://" + ipAddress + "/rest/channel/" + tempEntry.getPostMessage());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestProperty("Authorization", header);
 
-        if (responseCode == HttpURLConnection.HTTP_CREATED) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    connection.getInputStream()));
-            String inputLine;
-            StringBuilder response = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+        if (tempEntry.readyToWrite()) {
+            if (tempEntry.isAutoAdapt()) {
+                if (!autoAdaptSuccess(tempEntry, ipAddress, header)) {
+                    return;
+                }
             }
-            in.close();
-            tempEntry.wasSuccess(true, response.toString());
-        } else {
-            tempEntry.wasSuccess(false, "POST NOT WORKED");
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            OutputStream os = connection.getOutputStream();
+            os.write(tempEntry.getPostMessage().getBytes());
+            os.flush();
+            os.close();
+            //Task can check if everythings ok --> good for Controller etc; ---> Check Channel
+            int responseCode = connection.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        connection.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                tempEntry.wasSuccess(true, response.toString());
+            } else {
+                tempEntry.wasSuccess(false, "POST NOT WORKED");
+            }
         }
     }
 
-    private void handleReadRequest(RestRequest entry, HttpURLConnection connection) throws IOException {
+    private void handleReadRequest(RestRequest entry,String ipAddress, String header) throws IOException {
+        URL url = new URL("http://" + ipAddress + "/rest/channel/" + entry.getAutoAdaptRequest());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestProperty("Authorization", header);
         RestReadRequest temp = (RestReadRequest) entry;
         connection.setRequestMethod("GET");
         int responseCode = connection.getResponseCode();
@@ -223,7 +229,10 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
-    private boolean autoAdaptSuccess(RestRequest entry, HttpURLConnection connection) throws IOException {
+    private boolean autoAdaptSuccess(RestRequest entry,String ipAddress ,String header) throws IOException {
+        URL url = new URL("http://" + ipAddress + "/rest/channel/" + entry.getAutoAdaptRequest());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestProperty("Authorization", header);
 
         RestWriteRequest temp = (RestWriteRequest) entry;
         connection.setRequestMethod("GET");

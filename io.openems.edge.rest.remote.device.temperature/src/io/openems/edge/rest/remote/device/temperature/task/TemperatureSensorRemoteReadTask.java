@@ -99,4 +99,5 @@ public class TemperatureSensorRemoteReadTask implements RestReadRequest {
     public boolean isInverseSet() {
         return false;
     }
+
 }

@@ -152,7 +152,8 @@
 	bnd.identity;id='io.openems.edge.relays.module.api',\
 	bnd.identity;id='io.openems.edge.rest.communicator',\
 	bnd.identity;id='io.openems.edge.rest.communicator.api',\
-	bnd.identity;id='io.openems.edge.rest.remote.device.temperature',\
+	bnd.identity;id='io.openems.edge.rest.remote.general',\
+	bnd.identity;id='io.openems.edge.rest.remote.general.api',\
 	bnd.identity;id='io.openems.edge.scheduler.allalphabetically',\
 	bnd.identity;id='io.openems.edge.scheduler.daily',\
 	bnd.identity;id='io.openems.edge.scheduler.fixedorder',\
@@ -315,7 +316,8 @@
 	io.openems.edge.relays.module.api;version=snapshot,\
 	io.openems.edge.rest.communicator;version=snapshot,\
 	io.openems.edge.rest.communicator.api;version=snapshot,\
-	io.openems.edge.rest.remote.device.temperature;version=snapshot,\
+	io.openems.edge.rest.remote.device.general;version=snapshot,\
+	io.openems.edge.rest.remote.device.general.api;version=snapshot,\
 	io.openems.edge.scheduler.allalphabetically;version=snapshot,\
 	io.openems.edge.scheduler.daily;version=snapshot,\
 	io.openems.edge.scheduler.fixedorder;version=snapshot,\
