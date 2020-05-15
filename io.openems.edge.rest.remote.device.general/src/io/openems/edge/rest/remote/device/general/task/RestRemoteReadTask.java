@@ -12,16 +12,13 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
     private Channel<String> value;
 
     public RestRemoteReadTask(String remoteDeviceId, String masterSlaveId, boolean isMaster, String realDeviceId,
-                              String deviceChannel, boolean autoAdapt, Channel<String> value, String deviceType,
-                              Channel<Boolean> isInverse) {
+                              String deviceChannel, boolean autoAdapt, Channel<String> value, String deviceType) {
 
-        //super(....)
         super(remoteDeviceId, masterSlaveId, isMaster, realDeviceId, deviceChannel, autoAdapt, deviceType);
 
         this.value = value;
 
     }
-
 
     @Override
     public void setResponse(boolean succ, String answer) {

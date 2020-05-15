@@ -9,4 +9,7 @@ public interface RestRemoteDevice {
 
     String getType();
 
+    boolean setAllowRequest(boolean allow);
+
+
 }

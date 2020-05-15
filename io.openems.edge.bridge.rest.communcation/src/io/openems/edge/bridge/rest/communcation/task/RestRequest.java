@@ -12,6 +12,8 @@ public interface RestRequest {
 
     String getDeviceId();
 
+    String getRealDeviceId();
+
     boolean isMaster();
 
     String getDeviceType();

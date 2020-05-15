@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,8 +112,6 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         })) {
             this.tasks.get(communicatorId).remove(index.intValue());
         }
-
-
     }
 
     @Override
@@ -153,67 +152,100 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                         connection.setRequestProperty("Authorization", header);
 
                         if (entry instanceof RestReadRequest) {
-                            RestReadRequest temp = (RestReadRequest) entry;
-                            connection.setRequestMethod("GET");
-                            int responseCode = connection.getResponseCode();
+                            handleReadRequest(entry, connection);
 
-                            if (responseCode == HttpURLConnection.HTTP_OK) {
-                                String readLine;
-                                BufferedReader in = new BufferedReader(
-                                        new InputStreamReader(connection.getInputStream()));
-
-                                StringBuilder response = new StringBuilder();
-                                while ((readLine = in.readLine()) != null) {
-                                    response.append(readLine);
-                                }
-                                in.close();
-                                //---------------------//
-                                temp.setResponse(true, response.toString());
-                                //---------------------//
-                            } else {
-                                temp.setResponse(false, "ERROR WITH CONNECTION");
-                            }
                         } else if (entry instanceof RestWriteRequest) {
                             RestWriteRequest tempEntry = ((RestWriteRequest) entry);
                             //Important for Controllers --> if Ready To Write set True and give Value to channel
                             if (tempEntry.readyToWrite()) {
-                                connection.setRequestMethod("POST");
-                                connection.setRequestProperty("Content-Type", "application/json");
-                                connection.setDoOutput(true);
-                                OutputStream os = connection.getOutputStream();
-                                os.write(tempEntry.getPostMessage().getBytes());
-                                os.flush();
-                                os.close();
-                                //Task can check if everythings ok --> good for Controller etc; ---> Check Channel
-                                int responseCode = connection.getResponseCode();
-
-                                if (responseCode == HttpURLConnection.HTTP_CREATED) {
-                                    BufferedReader in = new BufferedReader(new InputStreamReader(
-                                            connection.getInputStream()));
-                                    String inputLine;
-                                    StringBuilder response = new StringBuilder();
-                                    while ((inputLine = in.readLine()) != null) {
-                                        response.append(inputLine);
+                                if (tempEntry.isAutoAdapt()) {
+                                    if (!autoAdaptSuccess(entry, connection)) {
+                                        return;
                                     }
-                                    in.close();
-                                    tempEntry.wasSuccess(true, response.toString());
-                                } else {
-                                    tempEntry.wasSuccess(false, "POST NOT WORKED");
                                 }
+                                handlePostRequest(tempEntry, connection);
                             }
                         }
-
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-
                 });
-
             });
-
         }
+    }
 
+    private void handlePostRequest(RestWriteRequest tempEntry, HttpURLConnection connection) throws IOException {
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
+        OutputStream os = connection.getOutputStream();
+        os.write(tempEntry.getPostMessage().getBytes());
+        os.flush();
+        os.close();
+        //Task can check if everythings ok --> good for Controller etc; ---> Check Channel
+        int responseCode = connection.getResponseCode();
+
+        if (responseCode == HttpURLConnection.HTTP_CREATED) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(
+                    connection.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+            tempEntry.wasSuccess(true, response.toString());
+        } else {
+            tempEntry.wasSuccess(false, "POST NOT WORKED");
+        }
+    }
+
+    private void handleReadRequest(RestRequest entry, HttpURLConnection connection) throws IOException {
+        RestReadRequest temp = (RestReadRequest) entry;
+        connection.setRequestMethod("GET");
+        int responseCode = connection.getResponseCode();
+
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            String readLine;
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream()));
+
+            StringBuilder response = new StringBuilder();
+            while ((readLine = in.readLine()) != null) {
+                response.append(readLine);
+            }
+            in.close();
+            //---------------------//
+            temp.setResponse(true, response.toString());
+            //---------------------//
+        } else {
+            temp.setResponse(false, "ERROR WITH CONNECTION");
+        }
+    }
+
+    private boolean autoAdaptSuccess(RestRequest entry, HttpURLConnection connection) throws IOException {
+
+        RestWriteRequest temp = (RestWriteRequest) entry;
+        connection.setRequestMethod("GET");
+        int responseCode = connection.getResponseCode();
+
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            String readLine;
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream()));
+
+            StringBuilder response = new StringBuilder();
+            while ((readLine = in.readLine()) != null) {
+                response.append(readLine);
+            }
+            in.close();
+            //---------------------//
+            return temp.setAutoAdaptResponse(true, response.toString());
+            //---------------------//
+        } else {
+            temp.setAutoAdaptResponse(false, "ERROR WITH CONNECTION");
+            return false;
+        }
     }
 
     @Override

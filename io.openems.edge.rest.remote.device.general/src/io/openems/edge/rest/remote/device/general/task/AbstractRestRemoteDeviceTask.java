@@ -16,7 +16,7 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
     private boolean autoAdapt;
     private String realDeviceId;
     private String deviceType;
-    boolean isInverse;
+    boolean isInverse = false;
     private boolean isInverseSet;
 
     AbstractRestRemoteDeviceTask(String remoteDeviceId, String slaveMasterId, boolean isMaster,
@@ -32,8 +32,6 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         this.autoAdapt = autoAdapt;
         this.realDeviceId = realDeviceId;
         this.deviceType = deviceType;
-        this.isInverse = isInverse;
-
     }
 
     @Override
@@ -67,9 +65,13 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
     }
 
     @Override
+    public String getRealDeviceId() {
+        return this.realDeviceId;
+    }
+
+    @Override
     public boolean isAutoAdapt() {
         return this.autoAdapt;
-
     }
 
     @Override
@@ -91,8 +93,9 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
 
     @Override
     public boolean setAutoAdaptResponse(boolean succ, String answer) {
-
-        if (succ && !isInverseSet) {
+        if (isInverseSet) {
+            return true;
+        } else if (succ) {
             Pattern p = Pattern.compile("\\d+");
             Matcher m = p.matcher(answer);
             StringBuilder answerNumeric = new StringBuilder();
@@ -106,10 +109,7 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
                 this.isInverseSet = true;
                 return true;
             }
-
-
         }
         return false;
-
     }
 }

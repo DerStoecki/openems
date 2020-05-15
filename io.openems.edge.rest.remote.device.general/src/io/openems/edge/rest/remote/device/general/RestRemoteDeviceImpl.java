@@ -30,6 +30,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
     private RestCommunicator communicator;
 
     private String slaveMasterId;
+    private RestRequest task;
 
     public RestRemoteDeviceImpl() {
 
@@ -47,15 +48,12 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
                 communicator = cpm.getComponent(config.slaveMasterId());
                 this.slaveMasterId = config.slaveMasterId();
 
-                //config.autoAdapt() config.deviceChannel() config.deviceType() config.realDeviceId()
-
-
                 restBridge.addRestRequest(slaveMasterId, createNewTask(config.deviceType(), config.deviceChannel(),
                         config.id(), config.realDeviceId(), config.autoAdapt(), config.deviceMode()));
             } else {
                 throw new ConfigurationException(config.slaveMasterId(), "Master Slave Id Incorrect or not configured yet!");
             }
-
+            this.getAllowRequest().setNextValue(true);
         }
     }
 
@@ -69,14 +67,16 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
                         + " TemperatureSensor does not support Write Tasks!");
             } else {
                 this.getTypeSet().setNextValue("Write");
-                return new RestRemoteWriteTask(remoteDeviceId, slaveMasterId, communicator.isMaster().getNextValue().get(),
-                        realDeviceId, deviceChannel, autoAdapt, getWriteValue(), deviceType, this.getAllowRequest(), this.getIsInverse());
+                task = new RestRemoteWriteTask(remoteDeviceId, slaveMasterId, communicator.isMaster().getNextValue().get(),
+                        realDeviceId, deviceChannel, autoAdapt, getWriteValue(), deviceType, this.getAllowRequest());
+                return task;
             }
         } else if (deviceMode.equals("Read")) {
-            this.getTypeSet().setNextValue("Write");
+            this.getTypeSet().setNextValue("Read");
             //String deviceId, String masterSlaveId, boolean master, String realTemperatureSensor, Channel<Integer> temperature
-            return new RestRemoteReadTask(remoteDeviceId, slaveMasterId, communicator.isMaster().getNextValue().get(),
+            task = new RestRemoteReadTask(remoteDeviceId, slaveMasterId, communicator.isMaster().getNextValue().get(),
                     realDeviceId, deviceChannel, autoAdapt, getReadValue(), deviceType);
+            return task;
         }
 
         throw new ConfigurationException("Impossible Error", "Error shouldn't Occur because of Fix options");
@@ -91,14 +91,9 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
 
     @Override
     public String debugLog() {
-        /*
         if (restBridge.getRequests(this.slaveMasterId).contains(task)) {
-            return "T:" + this.getValue()().value().asString() + " of RemoteTemperatureSensor: " + super.id()
-                    + "\n";
-        } else {
-            return "\n";
+            return task.getDeviceType() + " " + this.getValue() + " of " + super.id() + " \n";
         }
-        */
         return "";
     }
 
@@ -140,5 +135,16 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
     @Override
     public String getType() {
         return this.getTypeSet().getNextValue().get();
+    }
+
+    @Override
+    public boolean setAllowRequest(boolean allow) {
+        try {
+            this.getAllowRequest().setNextWriteValue(allow);
+            return true;
+        } catch (OpenemsError.OpenemsNamedException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

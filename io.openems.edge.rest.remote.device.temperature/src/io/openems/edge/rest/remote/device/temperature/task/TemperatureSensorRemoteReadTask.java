@@ -51,6 +51,11 @@ public class TemperatureSensorRemoteReadTask implements RestReadRequest {
     }
 
     @Override
+    public String getAutoAdaptRequest() {
+        return null;
+    }
+
+    @Override
     public String getMasterId() {
         return masterId;
     }
@@ -66,6 +71,11 @@ public class TemperatureSensorRemoteReadTask implements RestReadRequest {
     }
 
     @Override
+    public String getRealDeviceId() {
+        return null;
+    }
+
+    @Override
     public boolean isMaster() {
         return master;
     }
@@ -77,6 +87,16 @@ public class TemperatureSensorRemoteReadTask implements RestReadRequest {
 
     @Override
     public boolean isAutoAdapt() {
+        return false;
+    }
+
+    @Override
+    public boolean setAutoAdaptResponse(boolean succ, String answer) {
+        return false;
+    }
+
+    @Override
+    public boolean isInverseSet() {
         return false;
     }
 }

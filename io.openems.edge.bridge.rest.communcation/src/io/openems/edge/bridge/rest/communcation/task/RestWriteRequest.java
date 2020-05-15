@@ -10,5 +10,5 @@ public interface RestWriteRequest extends RestRequest {
 
 
     //allow Requests
-    void setReadyToWrite(boolean ready);
+    boolean setReadyToWrite(boolean ready);
 }
