@@ -37,10 +37,10 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
                             msg += "true}";
                         }
                     } else {
-                        msg += msg + this.value.getNextValue().get() + "}";
+                        msg += this.value.getNextValue().get() + "}";
                     }
                 } else {
-                    msg += msg + this.value.getNextValue().get() + "}";
+                    msg += this.value.getNextValue().get() + "}";
                 }
                 return msg;
 
