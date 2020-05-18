@@ -6,15 +6,9 @@ public interface RestRequest {
 
     String getAutoAdaptRequest();
 
-    String getMasterId();
-
-    String getSlaveId();
-
     String getDeviceId();
 
     String getRealDeviceId();
-
-    boolean isMaster();
 
     String getDeviceType();
 

@@ -9,9 +9,6 @@ import java.util.regex.Pattern;
 public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
 
     private String remoteDeviceId;
-    private boolean isMaster;
-    private String slaveId = "COMMUNICATOR IS NOT A SLAVE";
-    private String masterId = "COMMUNICATOR IS NOT A MASTER";
     private String deviceChannel;
     private boolean autoAdapt;
     private String realDeviceId;
@@ -19,17 +16,17 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
     boolean isInverse = false;
     private boolean isInverseSet;
 
-    AbstractRestRemoteDeviceTask(String remoteDeviceId, String slaveMasterId, boolean isMaster,
-                                 String realDeviceId, String deviceChannel, boolean autoAdapt, String deviceType) {
+    AbstractRestRemoteDeviceTask(String remoteDeviceId, String realDeviceId, String deviceChannel,
+                                 boolean autoAdapt, String deviceType) {
         this.remoteDeviceId = remoteDeviceId;
-        this.isMaster = isMaster;
-        if (isMaster) {
-            this.masterId = slaveMasterId;
-        } else {
-            this.slaveId = slaveMasterId;
-        }
+
         this.deviceChannel = deviceChannel;
-        this.autoAdapt = autoAdapt;
+        if(deviceType.toLowerCase().equals("relays")) {
+            this.autoAdapt = autoAdapt;
+        } else {
+            this.autoAdapt = false;
+        }
+
         this.realDeviceId = realDeviceId;
         this.deviceType = deviceType;
     }
@@ -39,25 +36,13 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         return this.realDeviceId + "/" + this.deviceChannel;
     }
 
-    @Override
-    public String getMasterId() {
-        return this.masterId;
-    }
 
-    @Override
-    public String getSlaveId() {
-        return this.slaveId;
-    }
 
     @Override
     public String getDeviceId() {
         return this.remoteDeviceId;
     }
 
-    @Override
-    public boolean isMaster() {
-        return this.isMaster;
-    }
 
     @Override
     public String getDeviceType() {
@@ -82,7 +67,7 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
 
     public String getAutoAdaptRequest() {
         if (isAutoAdapt()) {
-            if (this.deviceType.equals("Relays")) {
+            if (this.deviceType.toLowerCase().equals("relays")) {
                 return this.realDeviceId + "/" + "IsCloser";
             } else {
                 return "Device is Not Supported via AutoAdapt";
@@ -96,6 +81,7 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         if (isInverseSet) {
             return true;
         } else if (succ) {
+            //only true or false allowed
             Pattern p = Pattern.compile("\\d+");
             Matcher m = p.matcher(answer);
             StringBuilder answerNumeric = new StringBuilder();

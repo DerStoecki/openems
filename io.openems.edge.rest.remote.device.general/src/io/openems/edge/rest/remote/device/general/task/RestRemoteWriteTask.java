@@ -13,10 +13,10 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
     private boolean hasBeenSet = false;
 
 
-    public RestRemoteWriteTask(String remoteDeviceId, String slaveMasterId, boolean isMaster, String realDeviceId,
+    public RestRemoteWriteTask(String remoteDeviceId,String realDeviceId,
                                String deviceChannel, boolean autoAdapt, WriteChannel<String> value, String deviceType,
                                WriteChannel<Boolean> allowRequest) {
-        super(remoteDeviceId, slaveMasterId, isMaster, realDeviceId, deviceChannel, autoAdapt, deviceType);
+        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType);
 
         this.value = value;
         this.allowRequest = allowRequest;

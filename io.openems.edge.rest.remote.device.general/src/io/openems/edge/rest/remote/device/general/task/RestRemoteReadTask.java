@@ -11,10 +11,10 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
 
     private Channel<String> value;
 
-    public RestRemoteReadTask(String remoteDeviceId, String masterSlaveId, boolean isMaster, String realDeviceId,
+    public RestRemoteReadTask(String remoteDeviceId, String realDeviceId,
                               String deviceChannel, boolean autoAdapt, Channel<String> value, String deviceType) {
 
-        super(remoteDeviceId, masterSlaveId, isMaster, realDeviceId, deviceChannel, autoAdapt, deviceType);
+        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType);
 
         this.value = value;
 
@@ -24,7 +24,7 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
     public void setResponse(boolean succ, String answer) {
 
         if (succ) {
-            Pattern p = Pattern.compile("\\d+");
+            Pattern p = Pattern.compile("[-+]?([0-9]*[.][0-9]+|[0-9]+)");
             Matcher m = p.matcher(answer);
             StringBuilder answerNumeric = new StringBuilder();
             while (m.find()) {

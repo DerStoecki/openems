@@ -22,13 +22,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Bridge.Rest",
@@ -39,15 +36,11 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     @Reference
     ComponentManager cpm;
 
-    //authorization
-    private Map<String, String> deviceIdHeader = new ConcurrentHashMap<>();
-    //Ip+Port as String
-    private Map<String, String> deviceIdIpAndPort = new ConcurrentHashMap<>();
-
-    //can handle Read and Write from one Device
-    private Map<String, List<RestRequest>> tasks = new ConcurrentHashMap<>();
-
     private RestBridgeCycleWorker worker = new RestBridgeCycleWorker();
+
+    private Map<String, RestRequest> tasks = new ConcurrentHashMap<>();
+    private String loginData;
+    private String ipAddressAndPort;
 
     public RestBridgeImpl() {
         super(OpenemsComponent.ChannelId.values());
@@ -57,6 +50,8 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
         if (config.enabled()) {
+            this.loginData = "Basic " + Base64.getEncoder().encodeToString((config.username() + ":" + config.password()).getBytes());
+            this.ipAddressAndPort = config.ipAddress() + ":" + config.port();
             this.worker.activate(super.id());
         }
     }
@@ -65,60 +60,33 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        this.deviceIdIpAndPort.keySet().forEach(this::removeCommunicator);
     }
 
     @Override
-    public void addCommunicator(String id, String ip, String port, String header) throws ConfigurationException {
-        if (!this.deviceIdHeader.containsKey(id) && !this.deviceIdIpAndPort.containsKey(id)) {
-            this.deviceIdHeader.put(id, "Basic " + header);
-            this.deviceIdIpAndPort.put(id, ip + ":" + port);
-        } else {
-            throw new ConfigurationException(id, "Already in Device List, Please Change the Unique Id of " + id);
-        }
+    public void addRestRequest(String id, RestRequest request) throws ConfigurationException {
+
+       if(this.tasks.containsKey(id)){
+           throw new ConfigurationException(id, "Already in RemoteTasks Check your UniqueId please.");
+       }else {
+           this.tasks.put(id, request);
+       }
+
     }
 
     @Override
-    public void removeCommunicator(String id) {
-
-        this.deviceIdIpAndPort.remove(id);
-        this.tasks.remove(id);
-        this.deviceIdHeader.remove(id);
+    public void removeRestRemoteDevice(String deviceId) {
+        this.tasks.remove(deviceId);
     }
 
     @Override
-    public void addRestRequest(String id, RestRequest request) {
-
-        if (!this.tasks.containsKey(id)) {
-            List<RestRequest> tempRequest = new ArrayList<>();
-            tempRequest.add(request);
-            this.tasks.put(id, tempRequest);
-        } else {
-            this.tasks.get(id).add(request);
-        }
-
-    }
-
-    //Important! Not a Single Request will be removed but a Whole device ---> Can contain multiple tasks & requests
-    @Override
-    public void removeRestRemoteDevice(String deviceId, String communicatorId) {
-        AtomicInteger index = new AtomicInteger();
-        if (this.tasks.get(communicatorId).stream().anyMatch(request -> {
-            if (request.getDeviceId().equals(deviceId)) {
-                index.set(this.tasks.get(communicatorId).indexOf(request));
-                return true;
-            }
-            return false;
-        })) {
-            this.tasks.get(communicatorId).remove(index.intValue());
-        }
+   public RestRequest getRemoteRequest(String id) {
+        return this.tasks.get(id);
     }
 
     @Override
-    public List<RestRequest> getRequests(String slaveMasterCommunicator) {
-        return this.tasks.get(slaveMasterCommunicator);
+    public Map<String, RestRequest> getAllRequests() {
+        return this.tasks;
     }
-
 
     private class RestBridgeCycleWorker extends AbstractCycleWorker {
 
@@ -134,46 +102,33 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
 
         @Override
         public void forever() throws Throwable {
-            tasks.forEach((key, value) -> {
-                value.forEach(entry -> {
+            tasks.forEach((key, entry) -> {
 
-                    String header;
-                    String ipAddress;
-
-                    if (entry.isMaster()) {
-                        header = deviceIdHeader.get(entry.getMasterId());
-                        ipAddress = deviceIdIpAndPort.get(entry.getMasterId());
-                    } else {
-                        header = deviceIdHeader.get(entry.getSlaveId());
-                        ipAddress = deviceIdIpAndPort.get(entry.getSlaveId());
-                    }
                     try {
                         if (entry instanceof RestReadRequest) {
-                            handleReadRequest(entry, ipAddress, header);
+                            handleReadRequest(entry);
 
                         } else if (entry instanceof RestWriteRequest) {
-                            RestWriteRequest tempEntry = ((RestWriteRequest) entry);
-                            tempEntry.nextValueSet();
+                            ((RestWriteRequest) entry).nextValueSet();
                             //Important for Controllers --> if Ready To Write set True and give Value to channel
-                            handlePostRequest(tempEntry, ipAddress, header);
-
+                            handlePostRequest((RestWriteRequest) entry);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
-            });
+
         }
     }
 
-    private void handlePostRequest(RestWriteRequest tempEntry, String ipAddress, String header) throws IOException {
-        URL url = new URL("http://" + ipAddress + "/rest/channel/" + tempEntry.getRequest());
+    private void handlePostRequest(RestWriteRequest tempEntry) throws IOException {
+        URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + tempEntry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestProperty("Authorization", header);
+        connection.setRequestProperty("Authorization", this.loginData);
 
         if (tempEntry.readyToWrite()) {
             if (tempEntry.isAutoAdapt()) {
-                if (!autoAdaptSuccess(tempEntry, ipAddress, header)) {
+                if (!autoAdaptSuccess(tempEntry)) {
                     return;
                 }
             }
@@ -207,10 +162,10 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
-    private void handleReadRequest(RestRequest entry, String ipAddress, String header) throws IOException {
-        URL url = new URL("http://" + ipAddress + "/rest/channel/" + entry.getAutoAdaptRequest());
+    private void handleReadRequest(RestRequest entry) throws IOException {
+        URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestProperty("Authorization", header);
+        connection.setRequestProperty("Authorization", this.loginData);
         RestReadRequest temp = (RestReadRequest) entry;
         connection.setRequestMethod("GET");
         int responseCode = connection.getResponseCode();
@@ -233,13 +188,13 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
-    private boolean autoAdaptSuccess(RestRequest entry, String ipAddress, String header) throws IOException {
+    private boolean autoAdaptSuccess(RestRequest entry) throws IOException {
         if (entry.isInverseSet()) {
             return true;
         }
-        URL url = new URL("http://" + ipAddress + "/rest/channel/" + entry.getAutoAdaptRequest());
+        URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getAutoAdaptRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestProperty("Authorization", header);
+        connection.setRequestProperty("Authorization", this.loginData);
 
         RestWriteRequest temp = (RestWriteRequest) entry;
         connection.setRequestMethod("GET");
