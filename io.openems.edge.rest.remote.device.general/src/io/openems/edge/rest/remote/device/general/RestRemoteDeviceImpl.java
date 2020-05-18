@@ -54,6 +54,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
         }
     }
 
+    /***/
     private RestRequest createNewTask(String deviceType, String deviceChannel, String remoteDeviceId,
                                       String realDeviceId, boolean autoAdapt, String deviceMode) throws ConfigurationException {
 
@@ -72,7 +73,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
             this.getTypeSet().setNextValue("Read");
             //String deviceId, String masterSlaveId, boolean master, String realTemperatureSensor, Channel<Integer> temperature
             task = new RestRemoteReadTask(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt,
-                    getReadValue(), deviceType);
+                    getReadValue(), deviceType, this.getUnit());
             return task;
         }
 
@@ -89,7 +90,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
     @Override
     public String debugLog() {
         if (restBridge.getRemoteRequest(super.id()) != null) {
-            return task.getDeviceType() + " " + this.getValue() + this.getUnit().getNextValue().get() + " of " + super.id() + " \n";
+            return task.getDeviceType() + " " + this.getValue() + " of " + super.id() + " \n";
         }
         return "";
     }
@@ -119,12 +120,12 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
     public String getValue() {
         if (this.getTypeSet().getNextValue().get().equals("Write")) {
             if (this.getWriteValue().getNextValue().isDefined()) {
-                return this.getWriteValue().getNextValue().get() + this.getUnit().getNextValue().get();
+                return this.getWriteValue().getNextValue().get() + " " +  this.getUnit().getNextValue().get();
             } else {
                 return "Value not available yet!";
             }
         } else if (this.getReadValue().getNextValue().isDefined()) {
-            return this.getReadValue().getNextValue().get() + this.getUnit().getNextValue().get();
+            return this.getReadValue().getNextValue().get() + " " + this.getUnit().getNextValue().get();
         }
         return "Read Value not available yet";
     }

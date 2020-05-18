@@ -62,14 +62,22 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         super.deactivate();
     }
 
+
+    /**
+     * Adds the RestRequest to the tasks map.
+     *
+     * @param id      identifier == remote device Id usually from Remote Device config
+     * @param request the RestRequest created by the Remote Device.
+     * @throws ConfigurationException if the id is already in the Map.
+     */
     @Override
     public void addRestRequest(String id, RestRequest request) throws ConfigurationException {
 
-       if(this.tasks.containsKey(id)){
-           throw new ConfigurationException(id, "Already in RemoteTasks Check your UniqueId please.");
-       }else {
-           this.tasks.put(id, request);
-       }
+        if (this.tasks.containsKey(id)) {
+            throw new ConfigurationException(id, "Already in RemoteTasks Check your UniqueId please.");
+        } else {
+            this.tasks.put(id, request);
+        }
 
     }
 
@@ -79,7 +87,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
     }
 
     @Override
-   public RestRequest getRemoteRequest(String id) {
+    public RestRequest getRemoteRequest(String id) {
         return this.tasks.get(id);
     }
 
@@ -104,36 +112,48 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         public void forever() throws Throwable {
             tasks.forEach((key, entry) -> {
 
-                    try {
-                        if (entry instanceof RestReadRequest) {
-                            handleReadRequest(entry);
+                try {
+                    if (entry instanceof RestReadRequest) {
+                        handleReadRequest((RestReadRequest)entry);
 
-                        } else if (entry instanceof RestWriteRequest) {
-                            ((RestWriteRequest) entry).nextValueSet();
-                            //Important for Controllers --> if Ready To Write set True and give Value to channel
-                            handlePostRequest((RestWriteRequest) entry);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } else if (entry instanceof RestWriteRequest) {
+                        ((RestWriteRequest) entry).nextValueSet();
+                        //Important for Controllers --> if Ready To Write set True and give Value to channel
+                        handlePostRequest((RestWriteRequest) entry);
                     }
-                });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
 
         }
     }
 
-    private void handlePostRequest(RestWriteRequest tempEntry) throws IOException {
-        URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + tempEntry.getRequest());
+    /**
+     * handles PostRequests called by the CycleWorker.
+     * @param entry the RestWriteRequest given by the CycleWorker. from this.tasks
+     *              <p>
+     *              Creates URL and if ReadyToWrite (can be changed via Interface) && isAudoadapt --> AutoAdaptRequest.
+     *              AutoAdaptRequests is only necessary if Device is a Relays. --> IsCloser will be asked.
+     *              Bc Opener and Closer have Inverse Logic. A Closer is Normally Open and an Opener is NormallyClosed,
+     *              Therefor Changes in Relays needs to be Adapted. "ON" means true with closer but false with opener and
+     *              vice versa.
+     *              </p>
+     *
+     * */
+    private void handlePostRequest(RestWriteRequest entry) throws IOException {
+        URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("Authorization", this.loginData);
 
-        if (tempEntry.readyToWrite()) {
-            if (tempEntry.isAutoAdapt()) {
-                if (!autoAdaptSuccess(tempEntry)) {
+        if (entry.readyToWrite()) {
+            if (entry.isAutoAdapt()) {
+                if (!autoAdaptSuccess(entry)) {
                     return;
                 }
             }
-            String msg = tempEntry.getPostMessage();
-            if (!tempEntry.valueHasChanged() || msg.equals("NoValueDefined") || msg.equals("NotReadyToWrite")) {
+            String msg = entry.getPostMessage();
+            if (!entry.valueHasChanged() || msg.equals("NoValueDefined") || msg.equals("NotReadyToWrite")) {
                 return;
             }
             connection.setRequestMethod("POST");
@@ -155,18 +175,26 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                     response.append(inputLine);
                 }
                 in.close();
-                tempEntry.wasSuccess(true, response.toString());
+                entry.wasSuccess(true, response.toString());
             } else {
-                tempEntry.wasSuccess(false, "POST NOT WORKED");
+                entry.wasSuccess(false, "POST NOT WORKED");
             }
         }
     }
 
-    private void handleReadRequest(RestRequest entry) throws IOException {
+    /**
+     * Gets a RestRequest and creates the GET Rest Method.
+     * @param entry entry the RestWriteRequest given by the CycleWorker. from this.tasks
+     *              <p>
+     *              Gets a Request via Cycleworker. Creates the URL and reacts if HTTP_OK is true
+     *              If that's the case, the response will be set to entry.
+     *              </p>
+     *
+     * */
+    private void handleReadRequest(RestReadRequest entry) throws IOException {
         URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("Authorization", this.loginData);
-        RestReadRequest temp = (RestReadRequest) entry;
         connection.setRequestMethod("GET");
         int responseCode = connection.getResponseCode();
 
@@ -181,12 +209,18 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
             }
             in.close();
             //---------------------//
-            temp.setResponse(true, response.toString());
+            entry.setResponse(true, response.toString());
             //---------------------//
         } else {
-            temp.setResponse(false, "ERROR WITH CONNECTION");
+            entry.setResponse(false, "ERROR WITH CONNECTION");
         }
     }
+
+    /**
+     * Called if WriteRequest has autoAdapt set to true.
+     * @param entry
+     *
+     * */
 
     private boolean autoAdaptSuccess(RestRequest entry) throws IOException {
         if (entry.isInverseSet()) {
