@@ -54,7 +54,18 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
         }
     }
 
-    /***/
+    /**
+     * This Method creates a RestRequest with it's given parameters coming from config. Usually called by the @Activate
+     *
+     * @param deviceType     usually from Config, declares the DeviceType e.g. Temperature or Relays.
+     * @param deviceChannel  usually from Config, declares the Channel of the actual Device you want to access.
+     * @param remoteDeviceId usually from Config, is the Remote Device Id.
+     * @param realDeviceId   usually from Config, is the Unique Id of the Device you want to access.
+     * @param autoAdapt      usually from Config, just a boolean if the Device should AutoAdapt or not.(only Relays is supported).
+     * @param deviceMode     usually from Config, declares if you want to Read or Write.
+     * @return RestRequest if creation of Instance was successful.
+     * @throws ConfigurationException if TemperatureSensor is set to Write; or if an impossible Case occurs (deviceMode neither Read/Write)
+     */
     private RestRequest createNewTask(String deviceType, String deviceChannel, String remoteDeviceId,
                                       String realDeviceId, boolean autoAdapt, String deviceMode) throws ConfigurationException {
 
@@ -66,7 +77,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
             } else {
                 this.getTypeSet().setNextValue("Write");
                 task = new RestRemoteWriteTask(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, getWriteValue(),
-                        deviceType, this.getAllowRequest());
+                        deviceType, this.getAllowRequest(), this.getUnit());
                 return task;
             }
         } else if (deviceMode.equals("Read")) {
@@ -95,7 +106,12 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
         return "";
     }
 
-
+    /**
+     * SetsValue of Remote Device, if Remote Device TypeSet is set to "Write".
+     *
+     * @param value Value which will be Written to Device configured by the Remote Device.
+     * @return boolean depending if setNextWriteValue was successful or not (and depending if TypeSet is Read or Write).
+     */
     @Override
     public boolean setValue(String value) {
         if (!this.getTypeSet().getNextValue().isDefined()) {
@@ -120,7 +136,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
     public String getValue() {
         if (this.getTypeSet().getNextValue().get().equals("Write")) {
             if (this.getWriteValue().getNextValue().isDefined()) {
-                return this.getWriteValue().getNextValue().get() + " " +  this.getUnit().getNextValue().get();
+                return this.getWriteValue().getNextValue().get() + " " + this.getUnit().getNextValue().get();
             } else {
                 return "Value not available yet!";
             }
@@ -144,5 +160,10 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public String getRemoteUnit() {
+        return this.getUnit().getNextValue().get();
     }
 }

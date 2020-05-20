@@ -36,8 +36,6 @@ public abstract class AbstractRestRemoteDeviceTask implements RestRequest {
         return this.realDeviceId + "/" + this.deviceChannel;
     }
 
-
-
     @Override
     public String getDeviceId() {
         return this.remoteDeviceId;

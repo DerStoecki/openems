@@ -10,9 +10,35 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface RestRemoteChannel extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-
+        /**
+         * Value Read.
+         *
+         * <ul>
+         * <li>Interface: RestRemoteChannel
+         * <li>Type: String
+         * <li>Will be Set and Get if the RestRemoteDevice is set to Read
+         * </ul>
+         */
         VALUE_READ(Doc.of(OpenemsType.STRING)),
+        /**
+         * Value Write.
+         *
+         * <ul>
+         * <li>Interface: RestRemoteChannel
+         * <li>Type: String
+         * <li>Will be Set and Get if the RestRemoteDevice is set to Write
+         * </ul>
+         */
         VALUE_WRITE(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * WhatTypeSet.
+         *
+         * <ul>
+         * <li>Interface: RestRemoteChannel
+         * <li>Type: String
+         * <li>States if the RemoteDevice is For Read or Write.
+         * </ul>
+         */
         WHAT_TYPE_SET(Doc.of(OpenemsType.STRING)),
         ALLOW_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         UNIT(Doc.of(OpenemsType.STRING)),

@@ -11,5 +11,7 @@ public interface RestRemoteDevice {
 
     boolean setAllowRequest(boolean allow);
 
+    String getRemoteUnit();
+
 
 }

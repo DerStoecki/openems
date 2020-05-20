@@ -11,7 +11,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String service_pid();
 
     @AttributeDefinition(name = "Rest Bridge - Id", description = "Id of Rest Bridge.")
-    String id() default "Rest0";
+    String id() default "RestBridge0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";

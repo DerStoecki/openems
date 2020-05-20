@@ -23,6 +23,12 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
 
     }
 
+    /**
+     * Called by the Rest Bridge sets answer after successful REST Communication.
+     *
+     * @param succ   declares successful communication.
+     * @param answer the REST Response from the GET Method.
+     */
     @Override
     public void setResponse(boolean succ, String answer) {
 
@@ -34,31 +40,41 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
         }
     }
 
+    /**
+     * Only Calld until unitSet = true. Sets the Unit of the Remote Device.
+     *
+     * @param answer REST GET Answer
+     *               <p>Splits the Answer into 2 pieces, when Unit is found. Complete Unit.toString() of
+     *               the Device is gotten and written into Remote Device Unit Channel.
+     *               </p>
+     */
     private void setResponseUnit(String answer) {
         if (answer.contains("Unit")) {
             String[] parts = answer.split("\"Unit\"");
             if (parts[1].contains("\"")) {
 
-                String newParts = parts[1].substring(parts[1].indexOf("\""), parts[1].indexOf("\"", parts[1].indexOf("\"")+1));
-                System.out.println(newParts);
-                parts[1] = parts[1].replace("\"", "");
+                String newParts = parts[1].substring(parts[1].indexOf("\""), parts[1].indexOf("\"", parts[1].indexOf("\"") + 1));
+                newParts = newParts.replace("\"", "");
+                this.unit.setNextValue(newParts);
+                this.unitSet = true;
             }
-            if (parts[1].contains("}")) {
-                parts[1] = parts[1].replace("}", "");
-            }
-            if(parts[1].contains(":")){
-                parts[1] = parts[1].replace(":", "");
-            }
-            this.unit.setNextValue(parts[1]);
-            this.unitSet = true;
-
         }
     }
 
+    /**
+     * Sets the Value of the REST GET Method.
+     *
+     * @param answer REST response
+     *               <p>Get only Number Value and set that value to the Value of the Remote Device.
+     *               Splits after "value" and get the substring of 0 and "\"" ---> only the Value number Part will be
+     *               considered. ---> Get Only Numbers (with optional floatingpoint) .
+     *               </p>
+     */
     private void setResponseValue(String answer) {
-
+        String[] parts = answer.split("\"value\"");
+        String newParts = parts[1].substring(0, parts[1].indexOf("\""));
         Pattern p = Pattern.compile("[-+]?([0-9]*[.][0-9]+|[0-9]+)");
-        Matcher m = p.matcher(answer);
+        Matcher m = p.matcher(newParts);
         StringBuilder answerNumeric = new StringBuilder();
         while (m.find()) {
             answerNumeric.append(m.group());

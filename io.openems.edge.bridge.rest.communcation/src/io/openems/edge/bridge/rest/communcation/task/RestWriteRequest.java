@@ -4,7 +4,7 @@ public interface RestWriteRequest extends RestRequest {
 
     String getPostMessage();
 
-    void wasSuccess(Boolean succ, String response);
+    void wasSuccess(boolean succ, String response);
 
     boolean readyToWrite();
 
@@ -13,4 +13,8 @@ public interface RestWriteRequest extends RestRequest {
     boolean setReadyToWrite(boolean ready);
 
     boolean valueHasChanged();
+
+    boolean unitWasSet();
+
+    void setUnit(boolean succ, String answer);
 }

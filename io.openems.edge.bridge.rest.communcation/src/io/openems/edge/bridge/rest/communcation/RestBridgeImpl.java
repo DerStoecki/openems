@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Map;
@@ -114,7 +115,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
 
                 try {
                     if (entry instanceof RestReadRequest) {
-                        handleReadRequest((RestReadRequest)entry);
+                        handleReadRequest((RestReadRequest) entry);
 
                     } else if (entry instanceof RestWriteRequest) {
                         ((RestWriteRequest) entry).nextValueSet();
@@ -131,6 +132,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
 
     /**
      * handles PostRequests called by the CycleWorker.
+     *
      * @param entry the RestWriteRequest given by the CycleWorker. from this.tasks
      *              <p>
      *              Creates URL and if ReadyToWrite (can be changed via Interface) && isAudoadapt --> AutoAdaptRequest.
@@ -139,14 +141,17 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
      *              Therefor Changes in Relays needs to be Adapted. "ON" means true with closer but false with opener and
      *              vice versa.
      *              </p>
-     *
-     * */
+     * @throws IOException Bc of URL and connection.
+     */
     private void handlePostRequest(RestWriteRequest entry) throws IOException {
         URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("Authorization", this.loginData);
 
         if (entry.readyToWrite()) {
+            if(!entry.unitWasSet()){
+                handleUnitGet(entry, connection);
+            }
             if (entry.isAutoAdapt()) {
                 if (!autoAdaptSuccess(entry)) {
                     return;
@@ -182,15 +187,38 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
+    private void handleUnitGet(RestWriteRequest entry, HttpURLConnection connection) throws IOException {
+        connection.setRequestMethod("GET");
+        int responseCode = connection.getResponseCode();
+
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            String readLine;
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream()));
+
+            StringBuilder response = new StringBuilder();
+            while ((readLine = in.readLine()) != null) {
+                response.append(readLine);
+            }
+            in.close();
+            //---------------------//
+            entry.setUnit(true, response.toString());
+            //---------------------//
+        } else {
+            entry.setUnit(false, "ERROR WITH CONNECTION");
+        }
+    }
+
     /**
      * Gets a RestRequest and creates the GET Rest Method.
-     * @param entry entry the RestWriteRequest given by the CycleWorker. from this.tasks
-     *              <p>
-     *              Gets a Request via Cycleworker. Creates the URL and reacts if HTTP_OK is true
-     *              If that's the case, the response will be set to entry.
-     *              </p>
      *
-     * */
+     * @param entry entry the RestWriteRequest given by the CycleWorker. from this.tasks
+     * @throws IOException bc of URL requests etc.
+     *                     <p>
+     *                     Gets a Request via Cycleworker. Creates the URL and reacts if HTTP_OK is true
+     *                     If that's the case, the response will be set to entry.
+     *                     </p>
+     */
     private void handleReadRequest(RestReadRequest entry) throws IOException {
         URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -218,9 +246,17 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
 
     /**
      * Called if WriteRequest has autoAdapt set to true.
-     * @param entry
      *
-     * */
+     * @param entry current RestRequest entry.
+     * @return true if autoAdapt was sucessfully set.
+     * @throws IOException if URL Incorrect or ConnectionFails etc.
+     *
+     *                     <p>
+     *                     AutoAdaptSucces is used by Remote devices who access a Relays; to get their IsCloser channel and see if
+     *                     the device isACloser, if not --> inverse Logic
+     *                     However this will only happens one time (one success time), after that always return true.
+     *                     </p>
+     */
 
     private boolean autoAdaptSuccess(RestRequest entry) throws IOException {
         if (entry.isInverseSet()) {
