@@ -77,9 +77,9 @@ public class PcaDeviceImpl extends AbstractOpenemsComponent implements OpenemsCo
                     debugInfo += " no errors";
                 }
             }
-            return debugInfo;
+            return debugInfo + "\n";
         } else {
-            return null;
+            return "\n";
         }
     }
 }
