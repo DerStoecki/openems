@@ -228,8 +228,8 @@ public class RestHandler extends AbstractHandler {
 		// writable
 		j.addProperty("writable", //
 				channel instanceof WriteChannel<?> ? true : false //
-
 		);
+		j.addProperty("Unit", channel.channelDoc().getUnit().toString());
 
 		return this.sendOkResponse(baseRequest, response, j);
 	}

@@ -33,6 +33,7 @@
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
 	bnd.identity;id='io.openems.edge.bridge.onewire',\
+	bnd.identity;id='io.openems.edge.bridge.rest.communication',\
 	bnd.identity;id='io.openems.edge.bridge.spi',\
 	bnd.identity;id='io.openems.edge.chp.device',\
 	bnd.identity;id='io.openems.edge.chp.device.api',\
@@ -149,6 +150,8 @@
 	bnd.identity;id='io.openems.edge.relays.device.api',\
 	bnd.identity;id='io.openems.edge.relays.module',\
 	bnd.identity;id='io.openems.edge.relays.module.api',\
+	bnd.identity;id='io.openems.edge.rest.remote.general',\
+	bnd.identity;id='io.openems.edge.rest.remote.general.api',\
 	bnd.identity;id='io.openems.edge.scheduler.allalphabetically',\
 	bnd.identity;id='io.openems.edge.scheduler.daily',\
 	bnd.identity;id='io.openems.edge.scheduler.fixedorder',\
@@ -192,6 +195,7 @@
 	io.openems.edge.bridge.mbus;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
 	io.openems.edge.bridge.onewire;version=snapshot,\
+	io.openems.edge.bridge.rest.communcation;version=snapshot,\
 	io.openems.edge.bridge.spi;version=snapshot,\
 	io.openems.edge.chp.device;version=snapshot,\
 	io.openems.edge.chp.device.api;version=snapshot,\
@@ -308,6 +312,8 @@
 	io.openems.edge.relays.device.api;version=snapshot,\
 	io.openems.edge.relays.module;version=snapshot,\
 	io.openems.edge.relays.module.api;version=snapshot,\
+	io.openems.edge.rest.remote.device.general;version=snapshot,\
+	io.openems.edge.rest.remote.device.general.api;version=snapshot,\
 	io.openems.edge.scheduler.allalphabetically;version=snapshot,\
 	io.openems.edge.scheduler.daily;version=snapshot,\
 	io.openems.edge.scheduler.fixedorder;version=snapshot,\
