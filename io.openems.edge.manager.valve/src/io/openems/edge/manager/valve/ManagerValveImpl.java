@@ -1,9 +1,11 @@
 package io.openems.edge.manager.valve;
 
+import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.controller.api.Controller;
 import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import org.osgi.service.component.ComponentContext;
@@ -23,22 +25,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Consolinno.Manager.Valve",
         immediate = true,
-        configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
-public class ManagerValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler, ManagerValve {
+        configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class ManagerValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Controller, ManagerValve {
 
     private Map<String, Valve> valves = new ConcurrentHashMap<>();
-    private ManagerValveWorker worker = new ManagerValveWorker();
 
     public ManagerValveImpl() {
-        super(OpenemsComponent.ChannelId.values());
+        super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
     }
 
 
     @Activate
     void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
-        worker.activate(config.id());
     }
 
     @Deactivate
@@ -57,40 +56,13 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
         this.valves.remove(id);
     }
 
-
-    private class ManagerValveWorker extends AbstractCycleWorker {
-        @Override
-        public void activate(String name) {
-            super.activate(name);
-        }
-
-        @Override
-        public void deactivate() {
-            super.deactivate();
-        }
-
-        /**
-         * This manager makes sure (just in case) every Valve Relays is set to "false". if they are ready to change-->
-         * No more Power Consumption than needed. Normally it's handled by valve itself but just to make sure.
-         */
-        @Override
-        protected void forever() throws Throwable {
-            //just set off so position is fix
-            valves.values().forEach(valve -> {
-                if (valve.readyToChange()) {
-                    valve.controlRelays(false, "Closed");
-                    valve.controlRelays(false, "Opened");
-                }
-            });
-        }
-    }
-
     @Override
-    public void handleEvent(Event event) {
-        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
-            this.worker.triggerNextRun();
-        }
-
-
+    public void run() throws OpenemsError.OpenemsNamedException {
+        valves.values().forEach(valve -> {
+            if (valve.readyToChange()) {
+                valve.controlRelays(false, "Closed");
+                valve.controlRelays(false, "Opened");
+            }
+        });
     }
 }
