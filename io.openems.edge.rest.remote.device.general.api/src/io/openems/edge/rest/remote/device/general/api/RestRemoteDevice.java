@@ -13,5 +13,4 @@ public interface RestRemoteDevice {
 
     String getRemoteUnit();
 
-
 }

@@ -10,17 +10,12 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
 
 
     private Channel<String> value;
-    private Channel<String> unit;
-    private boolean unitSet;
 
     public RestRemoteReadTask(String remoteDeviceId, String realDeviceId, String deviceChannel,
                               boolean autoAdapt, Channel<String> value, String deviceType, Channel<String> unit) {
 
-        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType);
-
+        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType, unit);
         this.value = value;
-        this.unit = unit;
-
     }
 
     /**
@@ -34,29 +29,8 @@ public class RestRemoteReadTask extends AbstractRestRemoteDeviceTask implements 
 
         if (succ) {
             setResponseValue(answer);
-            if (!unitSet) {
-                setResponseUnit(answer);
-            }
-        }
-    }
-
-    /**
-     * Only Calld until unitSet = true. Sets the Unit of the Remote Device.
-     *
-     * @param answer REST GET Answer
-     *               <p>Splits the Answer into 2 pieces, when Unit is found. Complete Unit.toString() of
-     *               the Device is gotten and written into Remote Device Unit Channel.
-     *               </p>
-     */
-    private void setResponseUnit(String answer) {
-        if (answer.contains("Unit")) {
-            String[] parts = answer.split("\"Unit\"");
-            if (parts[1].contains("\"")) {
-
-                String newParts = parts[1].substring(parts[1].indexOf("\""), parts[1].indexOf("\"", parts[1].indexOf("\"") + 1));
-                newParts = newParts.replace("\"", "");
-                this.unit.setNextValue(newParts);
-                this.unitSet = true;
+            if (!super.unitWasSet()) {
+                super.setUnit(true, answer);
             }
         }
     }

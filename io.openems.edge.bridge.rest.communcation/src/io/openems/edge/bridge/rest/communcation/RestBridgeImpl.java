@@ -6,12 +6,14 @@ import io.openems.edge.bridge.rest.communcation.task.RestReadRequest;
 import io.openems.edge.bridge.rest.communcation.task.RestRequest;
 import io.openems.edge.bridge.rest.communcation.task.RestWriteRequest;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
-import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -22,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Map;
@@ -34,8 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
 public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBridge, OpenemsComponent, EventHandler {
-    @Reference
-    ComponentManager cpm;
 
     private RestBridgeCycleWorker worker = new RestBridgeCycleWorker();
 
@@ -118,9 +117,9 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
                         handleReadRequest((RestReadRequest) entry);
 
                     } else if (entry instanceof RestWriteRequest) {
-                        ((RestWriteRequest) entry).nextValueSet();
                         //Important for Controllers --> if Ready To Write set True and give Value to channel
                         handlePostRequest((RestWriteRequest) entry);
+                        ((RestWriteRequest) entry).nextValueSet();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -149,7 +148,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         connection.setRequestProperty("Authorization", this.loginData);
 
         if (entry.readyToWrite()) {
-            if(!entry.unitWasSet()){
+            if (!entry.unitWasSet()) {
                 handleUnitGet(entry, connection);
             }
             if (entry.isAutoAdapt()) {
@@ -187,6 +186,17 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
+    /**
+     * Handles UnitGet for entry.
+     *
+     * @param entry      the RestRequest from tasks. Usually called within forever Method --> handlePostRequest.
+     * @param connection the Connection usually parsed by the handlePostRequest.
+     * @throws IOException due to URL and response etc.
+     *                     <p>
+     *   This gets the Unit for a POST Request by Setting Request to GET and split the answer to UNIT --> Auto unit setting.
+     *   </p>
+     */
+
     private void handleUnitGet(RestWriteRequest entry, HttpURLConnection connection) throws IOException {
         connection.setRequestMethod("GET");
         int responseCode = connection.getResponseCode();
@@ -223,6 +233,7 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getRequest());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("Authorization", this.loginData);
+
         connection.setRequestMethod("GET");
         int responseCode = connection.getResponseCode();
 

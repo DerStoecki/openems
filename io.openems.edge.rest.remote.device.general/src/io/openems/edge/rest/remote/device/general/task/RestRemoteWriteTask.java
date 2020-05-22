@@ -9,20 +9,17 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
 
     private WriteChannel<String> value;
     private WriteChannel<Boolean> allowRequest;
-    private Channel<String> unit;
     private String lastValue = "Nothing set";
     private boolean hasBeenSet = false;
-    private boolean unitWasSet = false;
 
 
     public RestRemoteWriteTask(String remoteDeviceId, String realDeviceId,
                                String deviceChannel, boolean autoAdapt, WriteChannel<String> value, String deviceType,
                                WriteChannel<Boolean> allowRequest, Channel<String> unit) {
-        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType);
+        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType, unit);
 
         this.value = value;
         this.allowRequest = allowRequest;
-        this.unit = unit;
     }
 
     /**
@@ -122,30 +119,6 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
         }
     }
 
-    @Override
-    public boolean unitWasSet() {
-        return this.unitWasSet;
-    }
-
-    @Override
-    public void setUnit(boolean succ, String answer) {
-        if (succ && !this.unitWasSet) {
-            if (answer.contains("Unit")) {
-                String[] parts = answer.split("\"Unit\"");
-                if (parts[1].contains("\"")) {
-
-                    String newParts = parts[1].substring(parts[1].indexOf("\""), parts[1].indexOf("\"", parts[1].indexOf("\"") + 1));
-                    newParts = newParts.replace("\"", "");
-                    this.unit.setNextValue(newParts);
-                    this.unitWasSet = true;
-                }
-            } else {
-                this.unit.setNextValue("");
-                this.unitWasSet = true;
-            }
-        }
-
-    }
 
     /**
      * Updates the Channel.
