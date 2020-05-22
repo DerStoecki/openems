@@ -61,7 +61,7 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
         valves.values().forEach(valve -> {
             if (valve.readyToChange()) {
                 valve.controlRelays(false, "Closed");
-                valve.controlRelays(false, "Opened");
+                valve.controlRelays(false, "Open");
             }
         });
     }
