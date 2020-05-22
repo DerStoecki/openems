@@ -75,8 +75,8 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
-		if (outsideTempSensor.getTemperature().getNextValue().isDefined()) {
-			if (outsideTempSensor.getTemperature().getNextValue().get() <= activationTemp) {
+		if (outsideTempSensor.getTemperature().value().isDefined()) {
+			if (outsideTempSensor.getTemperature().value().get() <= activationTemp) {
 				//function calculates everything in degree, not dezidegree!
 				double function = (slope * 1.8317984 * Math.pow((roomTemp - (0.1 * outsideTempSensor.getTemperature().getNextValue().get())), 0.8281902))
 						+ roomTemp + offset;
@@ -87,17 +87,14 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 				this.isActive().setNextValue(true);
 			}
 			//Set Error channel back to no error if there has been an error.
-			if (this.noError().getNextValue().isDefined() && !this.noError().getNextValue().get()) {
+			if (this.noError().value().isDefined() && !this.noError().value().get()) {
 				this.noError().setNextValue(true);
 				this.logInfo(this.log, "Everything is fine now!");
 			}
 		} else {
 			this.isActive().setNextValue(false);
-			if (!outsideTempSensor.getTemperature().getNextValue().isDefined()) {
-				this.noError().setNextValue(false);
-				this.logInfo(this.log, "Not getting any data from the outside temperature sensor.");
-			}
-
+			this.noError().setNextValue(false);
+			this.logInfo(this.log, "Not getting any data from the outside temperature sensor " + outsideTempSensor.id() + ".");
 		}
 
 	}

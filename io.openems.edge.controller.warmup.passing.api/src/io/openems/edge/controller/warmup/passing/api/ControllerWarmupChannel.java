@@ -3,9 +3,7 @@ package io.openems.edge.controller.warmup.passing.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface ControllerWarmupChannel extends OpenemsComponent {
@@ -22,7 +20,13 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
          * </ul>
          */
 
-        PLAY_PAUSE(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE)),
+        PLAY_PAUSE(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+            // on each Write to the channel -> set the value
+            ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
+                channel.setNextValue(value);
+            });
+        })),
 
         /**
          * Current temperature of the heating program.
@@ -66,7 +70,13 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
          * </ul>
          */
 
-        GOTO_MINUTE(Doc.of(OpenemsType.INTEGER).unit(Unit.MINUTE).accessMode(AccessMode.READ_WRITE)),
+        GOTO_MINUTE(Doc.of(OpenemsType.INTEGER).unit(Unit.MINUTE).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+            // on each Write to the channel -> set the value
+            ((IntegerWriteChannel) channel).onSetNextWrite(value -> {
+                channel.setNextValue(value);
+            });
+        })),
 
         /**
          * Load a heating program from file.
@@ -77,7 +87,13 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
          * </ul>
          */
 
-        LOAD_FILE(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)),
+        LOAD_FILE(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+            // on each Write to the channel -> set the value
+            ((StringWriteChannel) channel).onSetNextWrite(value -> {
+                channel.setNextValue(value);
+            });
+        })),
 
         /**
          * Is Error.

@@ -13,11 +13,15 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.warmup.passing.api.ControllerWarmupChannel;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +43,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 	private final int activationInterval = 1;	//Interval in minutes between activation of recurring code in run() method. Done this way because recurring code saves to file every time it is run. Doing that every second would increase system load.
 	private boolean isSwitchedOn;   //This is used to remember last state when playpause channel is changed.
 	private int totalLengthMinutes;	//Total length of the heating program loaded in minutes.
-//    private int testcounter;	//Only used for testing the controller
+    //private int testcounter;	//Only used for testing the controller
 
 	public WarmupPassingImpl() {
 
@@ -52,7 +56,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 	public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
 		super.activate(context, config.id(), config.alias(), config.enabled());
 
-//		testcounter = 0;
+		//testcounter = 0;
 
 		this.noError().setNextValue(true);
 		isSwitchedOn = false;
@@ -65,7 +69,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 				if (warmupstate.get("elapsedTime").getAsInt() == 0){     //No heating run was in progress.
                     this.logInfo(this.log, "Ready to start next heating run.");
 				} else {		//If elapsedTime is not 0, a heating run was in progress and has been interrupted. Try to resume.
-                    this.playPauseWarmupController().setNextWriteValue(true);
+                    this.playPauseWarmupController().setNextValue(true);
 				}
 			}
 		} else {
@@ -75,7 +79,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
         this.getElapsedTimeWarmupProgram().setNextValue(warmupstate.get("elapsedTime").getAsInt());
         this.getLengthWarmupProgram().setNextValue(totalLengthMinutes);
         if (config.start_on_activation()) {
-            this.playPauseWarmupController().setNextWriteValue(true);
+            this.playPauseWarmupController().setNextValue(true);
         }
 	}
 
@@ -197,7 +201,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
                 warmupstate.addProperty("elapsedTime", 0);  //Make sure elapsed time is not out of bounds.
             }
 		} else {
-			this.playPauseWarmupController().setNextWriteValue(false);
+			this.playPauseWarmupController().setNextValue(false);
 			this.logInfo(this.log, "Encountered an error, deactivating.");
 		}
 	}
@@ -255,9 +259,9 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 			this.logInfo(this.log, "Error, found no such file: " + filepath);
 		}
 		if (nofileloaderror) {
-            this.loadWarmupProgram().setNextWriteValue("done");
+            this.loadWarmupProgram().setNextValue("done");
         } else {
-            this.loadWarmupProgram().setNextWriteValue("failed");
+            this.loadWarmupProgram().setNextValue("failed");
         }
 
 	}
@@ -265,37 +269,36 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
-
 /*
 	    //For testing:
         testcounter++;
-        if(testcounter == 5){
-            this.playPauseWarmupController().setNextWriteValue(false);
-			this.goToMinuteWarmupProgram().setNextWriteValue(2);
+        if (testcounter == 5) {
+            this.playPauseWarmupController().setNextValue(false);
+			this.goToMinuteWarmupProgram().setNextValue(2);
         }
-        if(testcounter == 10){
-            this.playPauseWarmupController().setNextWriteValue(true);
+        if (testcounter == 10) {
+            this.playPauseWarmupController().setNextValue(true);
         }
-        if(testcounter == 15){
-            this.playPauseWarmupController().setNextWriteValue(false);
-            this.loadWarmupProgram().setNextWriteValue("loadprogram.json");
+        if (testcounter == 15) {
+            this.playPauseWarmupController().setNextValue(false);
+            this.loadWarmupProgram().setNextValue("loadprogram.json");
         }
-		if(testcounter == 20){
-			this.playPauseWarmupController().setNextWriteValue(true);
+		if (testcounter == 20) {
+			this.playPauseWarmupController().setNextValue(true);
 		}
-		if(testcounter == 30){
-			this.goToMinuteWarmupProgram().setNextWriteValue(4);
+		if (testcounter == 30) {
+			this.goToMinuteWarmupProgram().setNextValue(4);
 		}
- */
+*/
 
 
 	    //Forward/rewind button
-	    if (this.goToMinuteWarmupProgram().getNextWriteValue().isPresent()) {
-	    	if (this.goToMinuteWarmupProgram().getNextWriteValue().get() >= 0) {	//Negative values mean "do nothing". Do not need to check if >totalLength, code will execute "heating finished" branch in that case.
-				warmupstate.addProperty("elapsedTime", this.goToMinuteWarmupProgram().getNextWriteValue().get());
+	    if (this.goToMinuteWarmupProgram().value().isDefined()) {
+	    	if (this.goToMinuteWarmupProgram().value().get() >= 0) {	//Negative values mean "do nothing". Do not need to check if >totalLength, code will execute "heating finished" branch in that case.
+				warmupstate.addProperty("elapsedTime", this.goToMinuteWarmupProgram().value().get());
 				lastTimestampRuntime = LocalDateTime.now().minusMinutes(activationInterval);   //Adjust this so that recurring code executes immediately and updates the temperature.
 				adjustedStartDate = LocalDateTime.now().minusMinutes(warmupstate.get("elapsedTime").getAsInt());
-				this.goToMinuteWarmupProgram().setNextWriteValue(-1);	//Deactivate forward/rewind button
+				this.goToMinuteWarmupProgram().setNextValue(-1);	//Deactivate forward/rewind button
 				this.logInfo(this.log, "Heating program elapsed time moved to " + warmupstate.get("elapsedTime").getAsInt() / 1440 + "d "
 						+ warmupstate.get("elapsedTime").getAsInt() / 60 + "h " + warmupstate.get("elapsedTime").getAsInt() % 60
 						+ "m, total length is " + totalLengthMinutes / 1440 + "d " + totalLengthMinutes / 60 + "h " + totalLengthMinutes % 60 + "m.");
@@ -304,10 +307,10 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
         }
 
         //The play/pause channel has a value and no error is true
-		if (this.playPauseWarmupController().getNextWriteValue().isPresent() && this.noError().getNextValue().get()) {
+		if (this.playPauseWarmupController().value().isDefined() && this.noError().getNextValue().get()) {
 
 			//Pause has just been pressed
-			if (isSwitchedOn && !this.playPauseWarmupController().getNextWriteValue().get()) {
+			if (isSwitchedOn && !this.playPauseWarmupController().value().get()) {
                 lastTimestampRuntime = LocalDateTime.now();
                 this.getWarmupTemperature().setNextValue(0);    //Set a low temperature to stop heating.
 				isSwitchedOn = false;   //track state
@@ -315,7 +318,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 			}
 
 			//Play has just been pressed.
-			if (!isSwitchedOn && this.playPauseWarmupController().getNextWriteValue().get()) {
+			if (!isSwitchedOn && this.playPauseWarmupController().value().get()) {
 
 			    if (warmupstate.get("elapsedTime").getAsInt() == 0) {     //Start of new heating run.
                     try {
@@ -343,7 +346,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 			}
 
             //Recurring code during heating run. Activate every activationInterval. SaveToConfigFile() is part of this code, so should not do it every second to reduce system load.
-            if (this.playPauseWarmupController().getNextWriteValue().get() && ChronoUnit.MINUTES.between(lastTimestampRuntime, LocalDateTime.now()) >= activationInterval) {
+            if (this.playPauseWarmupController().value().get() && ChronoUnit.MINUTES.between(lastTimestampRuntime, LocalDateTime.now()) >= activationInterval) {
                 lastTimestampRuntime = LocalDateTime.now();
                 try {
                     warmupstate.addProperty("lastTimestamp", lastTimestampRuntime.format(timeformat)); //Store timestamp
@@ -367,7 +370,7 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 					this.logInfo(this.log, "Ready to start next heating run.");
                     this.getWarmupTemperature().setNextValue(0);    //Set a low temperature to stop heating.
                     warmupstate.addProperty("elapsedTime", 0);  //Reset everything
-                    this.playPauseWarmupController().setNextWriteValue(false);
+                    this.playPauseWarmupController().setNextValue(false);
                     isSwitchedOn = false;
                 }
                 saveToConfigFile();		//Save changed parameters to file.
@@ -376,15 +379,15 @@ public class WarmupPassingImpl extends AbstractOpenemsComponent implements Opene
 		}
 
 		//Load program button
-		if (this.loadWarmupProgram().getNextWriteValue().isPresent()) {
-			if (!this.loadWarmupProgram().getNextWriteValue().get().equals("done")
-					&& !this.loadWarmupProgram().getNextWriteValue().get().equals("failed")) {
-				if (this.playPauseWarmupController().getNextWriteValue().isPresent()) {    //Controller needs to be paused or not yet activated.
-					if (!this.playPauseWarmupController().getNextWriteValue().get()) {
-						loadHeatingProgramFromFile(this.loadWarmupProgram().getNextWriteValue().get());
+		if (this.loadWarmupProgram().value().isDefined()) {
+			if (!this.loadWarmupProgram().value().get().equals("done")
+					&& !this.loadWarmupProgram().value().get().equals("failed")) {
+				if (this.playPauseWarmupController().value().isDefined()) {    //Controller needs to be paused or not yet activated.
+					if (!this.playPauseWarmupController().value().get()) {
+						loadHeatingProgramFromFile(this.loadWarmupProgram().value().get());
 					}
 				} else {
-					loadHeatingProgramFromFile(this.loadWarmupProgram().getNextWriteValue().get());
+					loadHeatingProgramFromFile(this.loadWarmupProgram().value().get());
 				}
 			}
 		}

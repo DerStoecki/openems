@@ -112,14 +112,14 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     public void run() throws OpenemsError.OpenemsNamedException {
 
 
-        if (this.turnOn().getNextWriteValue().isPresent() && this.turnOn().getNextWriteValue().get()) {
+        if (this.turnOn().value().isDefined() && this.turnOn().value().get()) {
             if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
-                if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
-                    if (this.setMinTemperature().getNextWriteValue().isPresent()) {
-                        this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
+                if (this.thermometer.getTemperature().value().isDefined() && readyToCalc()) {
+                    if (this.setMinTemperature().value().isDefined()) {
+                        this.setMinTemperature().setNextValue(this.setMinTemperature().value().get());
                     }
                     this.timestamp = System.currentTimeMillis();
-                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
+                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().value().get(), this.setMinTemperature().value().get());
                     // is percentage value fix if so substract from current powerlevel?
                     output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
