@@ -39,12 +39,12 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-            if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
-                closing = cpm.getComponent(config.closing_Relays());
-            }
-            if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
-                opens = cpm.getComponent(config.opening_Relays());
-            }
+        if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
+            closing = cpm.getComponent(config.closing_Relays());
+        }
+        if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
+            opens = cpm.getComponent(config.opening_Relays());
+        }
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getLastPowerLevel().setNextValue(0);
@@ -103,25 +103,25 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     @Override
     public void controlRelays(boolean activate, String whichRelays) {
         try {
-                switch (whichRelays) {
-                    case "Open":
-                        if (this.opens.isCloser().value().get()) {
-                            this.opens.getRelaysChannel().setNextWriteValue(activate);
-                        } else {
-                            this.opens.getRelaysChannel().setNextWriteValue(!activate);
-                        }
-                        break;
-                    case "Closed":
-                        if (this.closing.isCloser().value().get()) {
-                            this.closing.getRelaysChannel().setNextWriteValue(activate);
-                        } else {
-                            this.closing.getRelaysChannel().setNextWriteValue(!activate);
-                        }
-                        break;
-                }
-                //            if (!activate) {
-                //                this.getIsBusy().setNextValue(false);
-                //            }
+            switch (whichRelays) {
+                case "Open":
+                    if (this.opens.isCloser().value().get()) {
+                        this.opens.getRelaysChannel().setNextWriteValue(activate);
+                    } else {
+                        this.opens.getRelaysChannel().setNextWriteValue(!activate);
+                    }
+                    break;
+                case "Closed":
+                    if (this.closing.isCloser().value().get()) {
+                        this.closing.getRelaysChannel().setNextWriteValue(activate);
+                    } else {
+                        this.closing.getRelaysChannel().setNextWriteValue(!activate);
+                    }
+                    break;
+            }
+            //            if (!activate) {
+            //                this.getIsBusy().setNextValue(false);
+            //            }
 
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -195,5 +195,19 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
+    @Override
+    public String debugLog() {
+        if (this.getPowerLevel().getNextValue().isDefined()) {
+            String name = "";
+            if (!super.alias().equals("")) {
+                name = super.alias();
+            } else {
+                name = super.id();
+            }
+            return "Valve: " + name + ": " + this.getPowerLevel().getNextValue().toString() + "\n";
+        } else {
+            return "\n";
+        }
+    }
 
 }
