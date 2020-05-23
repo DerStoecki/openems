@@ -43,6 +43,16 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
         NEED_HOT_WATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
+         * Water tank temperature
+         * <li>
+         * <li>Type: Integer
+         * <li>
+         * </ul>
+         */
+
+        WATER_TANK_TEMP(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY)),
+
+        /**
          * Is Error.
          * <ul>
          * <li> If an Error occurred within this Controller
@@ -97,7 +107,22 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
     }
 
     /**
+<<<<<<< feature/HeatingScheduler
      * Has an Error occurred or is everything's fine.
+=======
+     * Temperature of the water tank lower sensor, which should be the lowest temperature in the water tank.
+     *
+     * @return the Channel
+     */
+
+    default Channel<Integer> waterTankTemp() {
+        return this.channel(ChannelId.WATER_TANK_TEMP);
+    }
+
+    /**
+     * Has an Error occurred or is everything's fine. An error occurs when the controller does not get a signal
+     * from one of the temperature sensors.
+>>>>>>> local
      *
      * @return the Channel
      */

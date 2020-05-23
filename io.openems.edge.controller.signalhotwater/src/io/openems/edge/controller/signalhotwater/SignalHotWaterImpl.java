@@ -71,11 +71,67 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
+<<<<<<< feature/HeatingScheduler
 		// Check if water tank temperature is low, start call and timer if yes.
 		if (watertankTempSensor.getTemperature().getNextValue().isDefined()) {
 			if (watertankTempSensor.getTemperature().getNextValue().get() < minTemp) {
 				if (!this.temperatureLow().getNextValue().get() && !this.remoteHotWaterSignal().getNextWriteValue().get()) {
 					timestamp = LocalDateTime.now();
+=======
+
+		// Sensor checks.
+		if (watertankTempSensorUpper.getTemperature().value().isDefined()) {
+			if (watertankTempSensorLower.getTemperature().value().isDefined()) {
+
+				// Remote changes from false to true
+				if (this.remoteHotWaterSignal().value().isDefined() && this.remoteHotWaterSignal().value().get()
+						&& !remoteSignal) {
+					this.heatTankRequest().setNextValue(true);
+					remoteSignal = true;
+				}
+
+				// Remote changes from true to false
+				if (this.remoteHotWaterSignal().value().isDefined() && !this.remoteHotWaterSignal().value().get()
+						&& remoteSignal) {
+					this.heatTankRequest().setNextValue(false);
+					remoteSignal = false;
+				}
+
+				// Check lower temperature limit. Use heatTankRequest().getNextValue() here, to override remote if needed.
+				if (!this.heatTankRequest().getNextValue().get()) {
+					if (watertankTempSensorUpper.getTemperature().value().get() < minTempUpper) {
+						timestamp = LocalDateTime.now();
+						this.heatTankRequest().setNextValue(true);
+					}
+				}
+
+				// Stop when hot enough
+				if (watertankTempSensorLower.getTemperature().value().get() > maxTempLower) {
+					this.heatTankRequest().setNextValue(false);
+					this.needHotWater().setNextValue(false);
+				} else {
+					if (this.heatTankRequest().value().get()) {
+						// Wait for remote signal or execute after timeout.
+						if ((this.remoteHotWaterSignal().value().isDefined() && this.remoteHotWaterSignal().value().get())
+								|| ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= responseTimeout) {
+							if (!(this.remoteHotWaterSignal().value().isDefined() && this.remoteHotWaterSignal().value().get())
+									&& !this.needHotWater().value().get()) {
+								this.logInfo(this.log, "Warning: remote response timeout.");
+							}
+							this.needHotWater().setNextValue(true);
+						}
+					} else {
+						this.needHotWater().setNextValue(false);
+					}
+				}
+
+				// Pass on temperature. Saves needing to configure temperature sensor in other controller.
+				this.waterTankTemp().setNextValue(watertankTempSensorLower.getTemperature().value().get());
+
+				if (!this.noError().value().get()) {
+					this.noError().setNextValue(true);
+					this.logInfo(this.log, "Temperature sensors are fine now!");
+>>>>>>> local
 				}
 				this.temperatureLow().setNextValue(true);
 			} else {
