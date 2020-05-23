@@ -27,8 +27,10 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 	@Reference
 	protected ComponentManager cpm;
 
-	private Thermometer watertankTempSensor;
-	private int minTemp;
+	private Thermometer watertankTempSensorUpper;
+	private Thermometer watertankTempSensorLower;
+	private int minTempUpper;
+	private int maxTempLower;
 	private int responseTimeout;
 	private LocalDateTime timestamp;
 	private boolean remoteSignal;
@@ -43,20 +45,27 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 	public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
 		super.activate(context, config.id(), config.alias(), config.enabled());
 
-		minTemp = config.min_temp() * 10;	// Convert to dezidegree.
+		minTempUpper = config.min_temp_upper() * 10;	// Convert to dezidegree.
+		maxTempLower = config.max_temp_lower() * 10;
 		responseTimeout = config.response_timeout();
-		this.temperatureLow().setNextValue(false);
+		this.heatTankRequest().setNextValue(false);
 		this.needHotWater().setNextValue(false);
-		this.remoteHotWaterSignal().setNextWriteValue(false);
+		this.remoteHotWaterSignal().setNextValue(false);
 		remoteSignal = false;
 
 		this.noError().setNextValue(true);
 		try {
-			if (cpm.getComponent(config.temperatureSensorId()) instanceof Thermometer) {
-				this.watertankTempSensor = cpm.getComponent(config.temperatureSensorId());
+			if (cpm.getComponent(config.temperatureSensorUpperId()) instanceof Thermometer) {
+				this.watertankTempSensorUpper = cpm.getComponent(config.temperatureSensorUpperId());
 			} else {
 				throw new ConfigurationException("The configured component is not a temperature sensor! Please check "
-						+ config.temperatureSensorId(), "configured component is incorrect!");
+						+ config.temperatureSensorUpperId(), "configured component is incorrect!");
+			}
+			if (cpm.getComponent(config.temperatureSensorLowerId()) instanceof Thermometer) {
+				this.watertankTempSensorLower = cpm.getComponent(config.temperatureSensorLowerId());
+			} else {
+				throw new ConfigurationException("The configured component is not a temperature sensor! Please check "
+						+ config.temperatureSensorLowerId(), "configured component is incorrect!");
 			}
 		} catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
 			e.printStackTrace();
@@ -71,13 +80,6 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
-<<<<<<< feature/HeatingScheduler
-		// Check if water tank temperature is low, start call and timer if yes.
-		if (watertankTempSensor.getTemperature().getNextValue().isDefined()) {
-			if (watertankTempSensor.getTemperature().getNextValue().get() < minTemp) {
-				if (!this.temperatureLow().getNextValue().get() && !this.remoteHotWaterSignal().getNextWriteValue().get()) {
-					timestamp = LocalDateTime.now();
-=======
 
 		// Sensor checks.
 		if (watertankTempSensorUpper.getTemperature().value().isDefined()) {
@@ -131,43 +133,15 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 				if (!this.noError().value().get()) {
 					this.noError().setNextValue(true);
 					this.logInfo(this.log, "Temperature sensors are fine now!");
->>>>>>> local
 				}
-				this.temperatureLow().setNextValue(true);
 			} else {
-				this.temperatureLow().setNextValue(false);
-			}
-			if (this.noError().getNextValue().isDefined() && !this.noError().getNextValue().get()) {
-				this.noError().setNextValue(true);
-				this.logInfo(this.log, "Everything is fine now!");
+				this.noError().setNextValue(false);
+				this.logInfo(this.log, "Not getting any data from the water tank upper temperature sensor " + watertankTempSensorUpper.id() + ".");
 			}
 		} else {
 			this.noError().setNextValue(false);
-			this.logInfo(this.log, "Not getting any data from the water tank temperature sensor.");
+			this.logInfo(this.log, "Not getting any data from the water tank lower temperature sensor " + watertankTempSensorLower.id() + ".");
 		}
-
-		// Wait for remote signal or execute after timeout. Also pass through of remote signal independent of water tank temp.
-		if ((this.remoteHotWaterSignal().getNextWriteValue().isPresent() && this.remoteHotWaterSignal().getNextWriteValue().get())
-				|| (this.temperatureLow().getNextValue().get() && ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= responseTimeout)) {
-			if (!(this.remoteHotWaterSignal().getNextWriteValue().isPresent() && this.remoteHotWaterSignal().getNextWriteValue().get())
-					&& !this.needHotWater().getNextValue().get()) {
-				this.logInfo(this.log, "Warning: remote response timeout.");
-			}
-			if (this.remoteHotWaterSignal().getNextWriteValue().get()) {
-				remoteSignal = true;
-			}
-			this.needHotWater().setNextValue(true);
-		} else {
-			this.needHotWater().setNextValue(false);
-		}
-
-		// Reset timer when remote signal changes from true to false.
-		if (!(this.remoteHotWaterSignal().getNextWriteValue().isPresent() && this.remoteHotWaterSignal().getNextWriteValue().get()) && remoteSignal) {
-			timestamp = LocalDateTime.now();
-			remoteSignal = false;
-		}
-
-
 	}
 
 }

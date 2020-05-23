@@ -2,6 +2,7 @@ package io.openems.edge.controller.signalhotwater.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
@@ -13,14 +14,14 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
 
         /**
-         * Low temperature in water tank.
+         * Request to heat the water tank.
          * <li>
          * <li>Type: Boolean
          * <li>
          * </ul>
          */
 
-        TEMP_LOW(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        HEAT_TANK_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Controller input
@@ -30,7 +31,13 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
          * </ul>
          */
 
-        HOT_WATER_REMOTE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        HOT_WATER_REMOTE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+                    // on each Write to the channel -> set the value
+                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
+                        channel.setNextValue(value);
+                    });
+                })),
 
         /**
          * Controller output
@@ -77,13 +84,13 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
 
     /**
-     * Temperature in the water tank is low.
+     * Request to heat the water tank.
      *
      * @return the Channel
      */
 
-    default Channel<Boolean> temperatureLow() {
-        return this.channel(ChannelId.TEMP_LOW);
+    default Channel<Boolean> heatTankRequest() {
+        return this.channel(ChannelId.HEAT_TANK_REQUEST);
     }
 
     /**
@@ -107,9 +114,6 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
     }
 
     /**
-<<<<<<< feature/HeatingScheduler
-     * Has an Error occurred or is everything's fine.
-=======
      * Temperature of the water tank lower sensor, which should be the lowest temperature in the water tank.
      *
      * @return the Channel
@@ -122,7 +126,6 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
     /**
      * Has an Error occurred or is everything's fine. An error occurs when the controller does not get a signal
      * from one of the temperature sensors.
->>>>>>> local
      *
      * @return the Channel
      */
