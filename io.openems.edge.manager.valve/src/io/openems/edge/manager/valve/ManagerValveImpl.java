@@ -2,17 +2,16 @@ package io.openems.edge.manager.valve;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.worker.AbstractCycleWorker;
+import io.openems.edge.bridge.i2c.api.I2cBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.i2c.mcp.api.McpChannelRegister;
 import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -27,6 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ManagerValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Controller, ManagerValve {
+    @Reference(policy = ReferencePolicy.STATIC,
+            policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    I2cBridge i2cBridge;
+
 
     private Map<String, Valve> valves = new ConcurrentHashMap<>();
 
@@ -59,5 +62,6 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         valves.values().forEach(Valve::readyToChange);
+        i2cBridge.getMcpList().forEach(McpChannelRegister::shift);
     }
 }

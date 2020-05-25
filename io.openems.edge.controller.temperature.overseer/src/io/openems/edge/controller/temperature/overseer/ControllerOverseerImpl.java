@@ -87,7 +87,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
         if (exConfig[0] != null) {
             throw exConfig[0];
         }
-        if(exNamed[0] != null){
+        if (exNamed[0] != null) {
             throw exNamed[0];
         }
     }
