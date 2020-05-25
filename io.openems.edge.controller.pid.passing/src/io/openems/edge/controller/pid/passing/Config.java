@@ -39,9 +39,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "TemperatureSensor", description = "The Temperaturesensor allocated to this controller")
     String temperatureSensorId() default "TemperatureSensor4";
 
-    @AttributeDefinition(name = "Interval", description = "Interval the PID should be calculating a Value (t in seconds).")
-            double intervalTime() default 2.2d;
-
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Controller PID For Passing [{id}]";

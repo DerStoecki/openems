@@ -58,11 +58,6 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        valves.values().forEach(valve -> {
-            if (valve.readyToChange()) {
-                valve.controlRelays(false, "Closed");
-                valve.controlRelays(false, "Open");
-            }
-        });
+        valves.values().forEach(Valve::readyToChange);
     }
 }

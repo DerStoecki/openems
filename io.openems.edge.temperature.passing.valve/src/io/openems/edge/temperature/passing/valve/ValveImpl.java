@@ -94,14 +94,14 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     /**
      * Controls the relays by typing either activate or not and what relays should be called.
-     *
+     * DO NOT USE THIS !!!! Exception: ValveManager --> Needs this method if Time is up to set Valve Relays off.
+     * If ExceptionHandling --> use ValveChangeByPercent -100!
      * @param activate    activate or deactivate.
      * @param whichRelays opening or closing relays ?
      *                    <p>Writes depending if the relays is an opener or closer, the correct boolean.
      *                    if the relays was set false (no power) busy will be false.</p>
      */
-    @Override
-    public void controlRelays(boolean activate, String whichRelays) {
+    private void controlRelays(boolean activate, String whichRelays) {
         try {
             switch (whichRelays) {
                 case "Open":
@@ -138,6 +138,8 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         if ((System.currentTimeMillis() - timeStampValve)
                 >= ((this.getTimeNeeded().getNextValue().get() * 1000))) {
             this.getIsBusy().setNextValue(false);
+            controlRelays(false, "Open");
+            controlRelays(false, "Closed");
             return true;
         }
 

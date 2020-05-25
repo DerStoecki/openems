@@ -56,7 +56,6 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
-        this.intervalTime = config.intervalTime() > 0 ? config.intervalTime() * 1000 : 2000;
     }
 
     /**
@@ -111,7 +110,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
 
         if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
-            if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
+            if (this.thermometer.getTemperature().getNextValue().isDefined()) {
                 if (this.setMinTemperature().getNextWriteValue().isPresent()) {
                     this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
                 }
@@ -129,9 +128,5 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
             }
         }
-    }
-
-    private boolean readyToCalc() {
-        return System.currentTimeMillis() - this.timestamp >= intervalTime;
     }
 }

@@ -66,8 +66,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
      * If everything's okay, the task will be created and added to the spiTasks.
      *
      * @throws ConfigurationException if the User configured something wrong.
-     *
-     * */
+     */
     private void createTemperatureDigitalReadTask() throws ConfigurationException {
         try {
             ConfigurationException[] ex = {null};
@@ -116,7 +115,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
     public String debugLog() {
 
         if (bridgeSpi.getTasks().containsKey(super.id())) {
-            return "T:" + this.getTemperature().value().asString() + " of TemperatureSensor: " + super.id() + this.alias
+            return "T:" + this.getTemperature().value().asString() + " of TemperatureSensor: " + super.id() + " " + this.alias
                     + "\n";
         } else {
             return "\n";

@@ -90,8 +90,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private void defaultOptions() {
 
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
-        this.valve.controlRelays(false, "Open");
-        this.valve.controlRelays(false, "Closed");
+        valve.changeByPercentage(-100);
         this.pump.controlRelays(false, "");
     }
 
@@ -127,7 +126,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                                 return;
                             }
                         } else if (!isClosed && valve.readyToChange()) {
-                            valve.controlRelays(false, "Open");
+                            //controlRelays will be handled by an extra Controller
+                            // valve.controlRelays(false, "Open");
                             isOpen = true;
                             timeSetHeating = false;
                         } else {
@@ -172,8 +172,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
                     this.noError().setNextValue(false);
-                    valve.controlRelays(false, "Open");
-                    valve.controlRelays(true, "Closed");
+                    valve.changeByPercentage(-100);
+                    //valve.controlRelays(false, "Open");
+                    //valve.controlRelays(true, "Closed");
                     throw e;
                 }
 
@@ -188,7 +189,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             isOpen = false;
                         }
                     } else if (valve.readyToChange()) {
-                        valve.controlRelays(false, "Closed");
+                        //valve.controlRelays(false, "Closed");
                         isClosed = true;
                         timeSetHeating = false;
                     }

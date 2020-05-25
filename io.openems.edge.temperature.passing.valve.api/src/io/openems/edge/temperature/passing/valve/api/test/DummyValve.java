@@ -100,7 +100,7 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
         }
     }
 
-    @Override
+
     public void controlRelays(boolean activate, String whichRelays) {
         switch (whichRelays) {
             case "Open":
