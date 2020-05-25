@@ -135,7 +135,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         }
     }
 
-    // gonna be easier in future (when Heater becomes an interface
+
     private void allocateHeater(String device, String concreteType) throws OpenemsError.OpenemsNamedException {
 
         switch (concreteType) {
@@ -190,9 +190,19 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
 
     }
 
-    /*
-     * In Future --> Set bhkw not to 100% but a certain value --> Depending on Kind of chp
-     * */
+    /**
+     * MultipleHeaterCombined logic to activate Primrary-->secondary--->Fallback Heater depending on demand.
+     * <p>
+     * Via AverageConsumption from the HeatMeter a performance demand is calculated.
+     * Each Heater got a Temperature where they should activate and deactivate (Saving energy).
+     * If the temperature threshold is met either deactivate (above max temperature) or activate (below min Temperature)
+     * the Heater. In Order -> Primary --> secondary --> fallback.
+     * In Addition a BufferValue is needed and calculated; depending on the Average Temperature in the System.
+     * Meaning either More or Less Performance than needed is calculated/provided.
+     * The Buffer Values are set via Config. As Well as all the TemperatureSensors Heaters etc etc.
+     *
+     * </p>
+     */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //in kW
@@ -230,6 +240,13 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
 
     }
 
+    /**
+     * <p>Calculates the Average Temperature of all T.Sensors and compares it to the threshold.
+     * If its below the minTemperature --> A higher Buffer Value is placed;
+     * Above MaxTemperature --> Lower Buffer Value is placed
+     * Neither case --> inBetweenBufferFactor.
+     * </p>
+     */
     private float getCorrectBufferValue() {
         float averageTemperature = 0;
         if (temperatureSensorHeater1On.getTemperature().getNextValue().isDefined()) {

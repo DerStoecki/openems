@@ -48,6 +48,7 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
      * calculates the digit what will be written in the pwm module --> device.
      * straight forward: depending on percentage (inverse or not) the digit value will be written.
      * If it's inverse --> 80% power becomes 20% digit - wise.
+     * Inverse means: Pwm Device reacts to low flank.
      */
     @Override
     public int calculateDigit(int digitRange) {

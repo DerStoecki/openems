@@ -4,7 +4,9 @@ import io.openems.edge.bridge.gpio.api.GpioBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.gpio.device.api.GpioDevice;
-import io.openems.edge.gpio.device.task.GpioDeviceTaskImpl;
+import io.openems.edge.gpio.device.task.GpioDeviceReadTaskImpl;
+import io.openems.edge.gpio.device.task.GpioDeviceWriteTaskImpl;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
@@ -20,7 +22,7 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY,
             cardinality = ReferenceCardinality.MANDATORY)
     GpioBridge gpioBridge;
-
+    boolean isWrite = false;
 
     public GpioDeviceImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -29,23 +31,63 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws ConfigurationException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-
-        gpioBridge.addGpioTask(super.id(), new GpioDeviceTaskImpl(super.id(), setCorrectGpioPosition(config.pinPosition()), getOnOff()));
+        int pinPosition = setCorrectGpioPosition(config.pinPosition());
+        if (isWrite) {
+            gpioBridge.addGpioWriteTask(super.id(), new GpioDeviceWriteTaskImpl(super.id(), pinPosition, getWriteError()));
+        } else {
+            gpioBridge.addGpioReadTask(super.id(), new GpioDeviceReadTaskImpl(super.id(), pinPosition, getReadError()));
+        }
         this.informationType = config.informationType();
     }
 
+    /**
+     * Sets The correctPinPosition.
+     *
+     * @param pinPosition usually from config. Sets the Pin position.
+     *
+     *                    <p>The Pin Position on the Leaflet base module is set. first input remapped the 4thGpio
+     *                    2nd input the 17th Gpio
+     *                    and 3rd input to 27th gpio</p>
+     * @return the gpio position as an int.
+     */
+
     private int setCorrectGpioPosition(String pinPosition) {
         switch (pinPosition) {
-            case "1":
-                return 4;
-            case "2":
-                return 17;
-            case "3":
+            // case "1":
+            //     return 4;
+            // case "2":
+            //     return 17;
+            // case "3":
+            //     return 27;
+            case "1.1":
+                return 0;
+            case "1.2":
+                return 22;
+            case "1.3":
+                return 1;
+            case "1.4":
                 return 27;
+            case "2.1":
+                return 13;
+            case "2.2":
+                return 12;
+
+
+            case "0.1":
+                isWrite = true;
+                return 4; //red
+            case "0.2":
+                isWrite = true;
+                return 17; // yellow
+            case "0.3":
+                isWrite = true;
+                return 18; // green
+
+
         }
         return -1;
     }
@@ -53,29 +95,36 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        gpioBridge.removeGpioTask(super.id());
+        if (isWrite) {
+            gpioBridge.removeGpioWriteTask(super.id());
+        } else {
+            gpioBridge.removeGpioReadTask(super.id());
+        }
     }
 
     @Override
     public String debugLog() {
-        if (getOnOff().getNextValue().isDefined()) {
-            String debugInfo = "The GpioDevice: " + super.id();
+        if (getWriteError().getNextWriteValue().isPresent() || getReadError().getNextValue().isDefined()) {
+            String debugInfo = "The Gpio Device: " + super.id();
+
             if (this.informationType.equals("OnOff")) {
-                if (getOnOff().getNextValue().get()) {
+
+                if (getReadError().getNextValue().get() || getWriteError().getNextWriteValue().get()) {
                     debugInfo += " is On";
                 } else {
                     debugInfo += " is Offline";
                 }
             } else {
-                if (getOnOff().getNextValue().get()) {
+                if (getReadError().getNextValue().get() || getWriteError().getNextWriteValue().get()) {
                     debugInfo += " got an error!";
                 } else {
                     debugInfo += " no errors";
                 }
             }
-            return debugInfo;
+            return debugInfo + "\n";
+
         } else {
-            return null;
+            return "\n";
         }
     }
 

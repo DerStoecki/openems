@@ -76,9 +76,9 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         //start of variables needed for relays cycling
 
         //print log just for debugging, can be turned off
-        for (int index = 0; index < config.relaysDeviceList().length; index++) {
+       // for (int index = 0; index < config.relaysDeviceList().length; index++) {
            // this.logInfo(this.log, "Relay array entry " + index + ": " + config.relaysDeviceList()[index]);
-        }
+        //}
 
         relayArray = new ActuatorRelaysChannel[config.relaysDeviceList().length];        //array is filled with entries in allocate_Component method
         cycleRelays = config.cycle_relays();
@@ -94,9 +94,9 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         //start of variables needed for dac ramping
 
         //print log just for debugging, can be turned off
-        for (int index = 0; index < config.DacDeviceList().length; index++) {
+        //for (int index = 0; index < config.DacDeviceList().length; index++) {
          //   this.logInfo(this.log, "DAC array entry " + index + ": " + config.DacDeviceList()[index]);
-        }
+        //}
 
         dacArray = new PowerLevel[config.DacDeviceList().length];        //array is filled with entries in allocate_Component method
         rampDac = config.ramp_dac();
@@ -116,9 +116,9 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         //start of variables needed for pwm ramping
 
         //print log just for debugging, can be turned off
-        for (int index = 0; index < config.PwmDeviceList().length; index++) {
+        //for (int index = 0; index < config.PwmDeviceList().length; index++) {
          //   this.logInfo(this.log, "PWM array entry " + index + ": " + config.PwmDeviceList()[index]);
-        }
+        //}
 
         pwmArray = new PwmPowerLevelChannel[config.PwmDeviceList().length];        //array is filled with entries in allocate_Component method
         rampPwm = config.ramp_pwm();
@@ -137,7 +137,6 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
             allocate_Component(config.DacDeviceList(), "Dac");
             allocate_Component(config.PwmDeviceList(), "Pwm");
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            e.printStackTrace();
             throw e;
         }
 

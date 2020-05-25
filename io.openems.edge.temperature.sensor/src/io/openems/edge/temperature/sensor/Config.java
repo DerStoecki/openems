@@ -3,7 +3,7 @@ package io.openems.edge.temperature.sensor;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@ObjectClassDefinition(name = "Temperature-sensor Spi", description = "Temperature-sensor communicating via Spi.")
+@ObjectClassDefinition(name = "Temperature Sensor Spi", description = "Temperature-sensor communicating via Spi.")
 @interface Config {
     String service_pid();
 

@@ -1,6 +1,8 @@
 package io.openems.edge.bridge.i2c.api;
 
+import io.openems.edge.bridge.i2c.task.I2cPcaTask;
 import io.openems.edge.bridge.i2c.task.I2cTask;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.PcaMainModuleProvider;
 import io.openems.edge.i2c.mcp.api.Mcp;
 import io.openems.edge.pwm.module.api.PcaGpioProvider;
 import io.openems.common.exceptions.OpenemsException;
@@ -40,6 +42,16 @@ public interface I2cBridge {
     void addI2cTask(String id, I2cTask i2cTask) throws OpenemsException;
 
     void removeI2cTask(String id);
+
+    void addMainModulePca(PcaMainModuleProvider pcaMain) throws OpenemsException;
+
+    void removeMainModulePca(String id);
+
+    void addMainModulePcaTask(String id, I2cPcaTask pca) throws OpenemsException;
+
+    void removeMainModulePcaTask(String id);
+
+    String getPcaMainProviderVersion(String moduleId);
 
 
 

@@ -34,7 +34,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponents(config.pump_Type(), config.pump_Relays(), config.pump_Pwm());
         this.getIsBusy().setNextValue(false);
@@ -54,7 +54,7 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
      *                    The relays and or pump will be off (just in case).
      *                    </p>
      */
-    private void allocateComponents(String pump_type, String pump_relays, String pump_pwm) {
+    private void allocateComponents(String pump_type, String pump_relays, String pump_pwm) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         switch (pump_type) {
             case "Relays":
                 isRelays = true;
@@ -69,28 +69,27 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
                 isPwm = true;
                 break;
         }
-        try {
-            if (isRelays) {
-                if (cpm.getComponent(pump_relays) instanceof ActuatorRelaysChannel) {
-                    this.relays = cpm.getComponent(pump_relays);
-                    this.relays.getRelaysChannel().setNextWriteValue(!this.relays.isCloser().getNextValue().get());
-                } else {
-                    throw new ConfigurationException(pump_relays, "Allocated relays not a (configured) relays.");
-                }
+
+        if (isRelays) {
+            if (cpm.getComponent(pump_relays) instanceof ActuatorRelaysChannel) {
+                this.relays = cpm.getComponent(pump_relays);
+                this.relays.getRelaysChannel().setNextWriteValue(!this.relays.isCloser().getNextValue().get());
+            } else {
+                throw new ConfigurationException(pump_relays, "Allocated relays not a (configured) relays.");
             }
-            if (isPwm) {
-                if (cpm.getComponent(pump_pwm) instanceof PwmPowerLevelChannel) {
-                    this.pwm = cpm.getComponent(pump_pwm);
-                    //reset pwm to 0; so pump is on activation off
-                    this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
-                } else {
-                    throw new ConfigurationException(pump_pwm, "Allocated Pwm, not a (configured) pwm-device.");
-                }
-            }
-        } catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
         }
+        if (isPwm) {
+            if (cpm.getComponent(pump_pwm) instanceof PwmPowerLevelChannel) {
+                this.pwm = cpm.getComponent(pump_pwm);
+                //reset pwm to 0; so pump is on activation off
+                this.pwm.getPwmPowerLevelChannel().setNextWriteValue(0.f);
+            } else {
+                throw new ConfigurationException(pump_pwm, "Allocated Pwm, not a (configured) pwm-device.");
+            }
+        }
+
     }
+
 
     /**
      * Deactivates the pump.
@@ -124,13 +123,13 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
      *
      * @param percentage to adjust the current powerlevel.
      * @return successful boolean
-     *                   <p>
-     *                         If the Pump is only a relays --> if negative --> controlyRelays false, else true
-     *                   If it's in addition a pwm --> check if the powerlevel - percentage <= 0
-     *                   --> pump is idle --> relays off and pwm is 0.f %
-     *                   Otherwise it's calculating the new Power-level and writing
-     *                   the old power-level in the LastPowerLevel Channel
-     *                   </p>
+     * <p>
+     * If the Pump is only a relays --> if negative --> controlyRelays false, else true
+     * If it's in addition a pwm --> check if the powerlevel - percentage <= 0
+     * --> pump is idle --> relays off and pwm is 0.f %
+     * Otherwise it's calculating the new Power-level and writing
+     * the old power-level in the LastPowerLevel Channel
+     * </p>
      */
     @Override
     public boolean changeByPercentage(double percentage) {
@@ -148,6 +147,8 @@ public class PumpImpl extends AbstractOpenemsComponent implements OpenemsCompone
                     }
                     controlRelays(false, "");
                     return true;
+                } else {
+                    controlRelays(true,"");
                 }
             } else if (percentage <= 0) {
                 controlRelays(false, "");

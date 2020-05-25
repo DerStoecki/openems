@@ -23,7 +23,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Temperature.Controller.Passing")
+@Component(name = "Controller.Passing.Main")
 public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller {
 
     @Reference
@@ -44,7 +44,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
 
     //for Tpv> minTemp + toleranceTemp
-    private static int TOLERANCE_TEMPERATURE = 20;
+    private static int TOLERANCE_TEMPERATURE = 10;
     private int timeToHeatUp;
 
     private static int EXTRA_BUFFER_TIME = 2 * 1000;
@@ -53,8 +53,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private int startingTemperature;
     //T in dC
     private static int ROUND_ABOUT_TEMP = 20;
+    private static int WAITING_FOR_TOO_HOT = 100 * 1000;
     //ty
     private long timeStampHeating;
+
+    private long timeStampWarmthPump;
 
 
     public ControllerPassingImpl() {
@@ -76,26 +79,21 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
             this.timeToHeatUp = 5 * 1000 * 60;
         }
         this.timeToHeatUp = config.heating_Time() * 1000;
-        try {
-            allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
-            allocate_Component(config.primary_Rewind_Sensor(), "Thermometer", "PR");
-            allocate_Component(config.secundary_Forward_Sensor(), "Thermometer", "SF");
-            allocate_Component(config.secundary_Rewind_Sensor(), "Thermometer", "SR");
-            allocate_Component(config.valve_id(), "Valve", "Valve");
-            allocate_Component(config.pump_id(), "Pump", "Pump");
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            e.printStackTrace();
-            throw e;
 
-        }
+        allocate_Component(config.primary_Forward_Sensor(), "Thermometer", "PF");
+        allocate_Component(config.primary_Rewind_Sensor(), "Thermometer", "PR");
+        allocate_Component(config.secundary_Forward_Sensor(), "Thermometer", "SF");
+        allocate_Component(config.secundary_Rewind_Sensor(), "Thermometer", "SR");
+        allocate_Component(config.valve_id(), "Valve", "Valve");
+        allocate_Component(config.pump_id(), "Pump", "Pump");
+
         defaultOptions();
     }
 
     private void defaultOptions() {
 
         this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
-        this.valve.controlRelays(false, "Open");
-        this.valve.controlRelays(false, "Closed");
+        valve.changeByPercentage(-100);
         this.pump.controlRelays(false, "");
     }
 
@@ -103,7 +101,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     public void deactivate() {
         super.deactivate();
         this.getOnOff_PassingController().setNextValue(false);
-        this.valve.changeByPercentage(-100);
+        this.valve.forceClose();
         this.pump.changeByPercentage(-100);
     }
 
@@ -131,7 +129,8 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                                 return;
                             }
                         } else if (!isClosed && valve.readyToChange()) {
-                            valve.controlRelays(false, "Open");
+                            //controlRelays will be handled by an extra Controller
+                            // valve.controlRelays(false, "Open");
                             isOpen = true;
                             timeSetHeating = false;
                         } else {
@@ -141,6 +140,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                     if (primaryForwardReadyToHeat() && !pumpActive) {
 
                         timeSetHeating = false;
+                        timeStampWarmthPump = System.currentTimeMillis();
 
                         pump.changeByPercentage(50);
                         pumpActive = true;
@@ -176,8 +176,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
                     this.noError().setNextValue(false);
-                    valve.controlRelays(false, "Open");
-                    valve.controlRelays(true, "Closed");
+                    valve.forceClose();
+                    //valve.controlRelays(false, "Open");
+                    //valve.controlRelays(true, "Closed");
                     throw e;
                 }
 
@@ -192,7 +193,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                             isOpen = false;
                         }
                     } else if (valve.readyToChange()) {
-                        valve.controlRelays(false, "Closed");
+                        //valve.controlRelays(false, "Closed");
                         isClosed = true;
                         timeSetHeating = false;
                     }
@@ -226,7 +227,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      * @param exactType only important for the TemperatureSensor, to validate it's task.
      * @throws OpenemsError.OpenemsNamedException coming from the componentManager. if the getComponent method
      *                                            throws an error.
-     * @throws ConfigurationException if the configured component is not the correct instanceof.
+     * @throws ConfigurationException             if the configured component is not the correct instanceof.
      */
     private void allocate_Component(String id, String type, String exactType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         switch (type) {
@@ -276,12 +277,16 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      * @return true if the secondary rewind is as hot as the secondary forward --> no heat loss --> no heat needed.
      */
     private boolean tooHot() {
-        if (this.secondaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
-            return this.secondaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
-                    > this.secondaryForward.getTemperature().getNextValue().get();
+        if (System.currentTimeMillis() - this.timeStampWarmthPump > WAITING_FOR_TOO_HOT) {
+            if (this.secondaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
+                return this.secondaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
+                        > this.secondaryForward.getTemperature().getNextValue().get();
+            }
+            return false;
         }
         return false;
     }
+
 
 
 }

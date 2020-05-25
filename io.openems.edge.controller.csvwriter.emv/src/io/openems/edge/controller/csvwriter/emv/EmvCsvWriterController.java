@@ -5,8 +5,10 @@ import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
 import io.openems.edge.controller.api.Controller;
 
+import io.openems.edge.gpio.device.api.GpioDevice;
 import io.openems.edge.meter.api.SymmetricMeter;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
@@ -43,6 +45,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<PowerLevel> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
+    private List<PcaDevice> pcaDeviceList = new ArrayList<>();
+    private List<GpioDevice> gpioDeviceList = new ArrayList<>();
 
     private int dateDay;
     private String fileName;
@@ -57,18 +61,22 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, IOException {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, IOException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponents(config.temperaturSensorList(), "Thermometer");
         allocateComponents(config.relaysDeviceList(), "Relays");
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.meterList(), "meter");
+        allocateComponents(config.pcaList(), "pca");
+        allocateComponents(config.gpioList(), "gpio");
         this.timeInterval = config.timeInterval() * 1000;
         if (timeInterval <= 0) {
             this.timeInterval = 1000;
         }
-        this.path = config.path();
+        if (!config.path().equals("")) {
+            this.path = config.path();
+        }
         //create /home/sshconsolinno/DataLog if not exist
         createCSVPath();
         //initialize FileName --> Calendar year month and day
@@ -89,10 +97,12 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        //month starts with 0;
+        //int intMonth = calendar.get(Calendar.MONTH) + 1;
+        String month = String.format("%2s", Integer.toString(( calendar.get(Calendar.MONTH) + 1))).replace(" ", "0");
+        String day = String.format("%2s", Integer.toString(calendar.get(Calendar.DAY_OF_MONTH))).replace(" ", "0");
         this.fileName = "test" + year + month + day + ".csv";
-        this.dateDay = day;
+        this.dateDay = Calendar.DAY_OF_MONTH;
     }
 
     /**
@@ -122,11 +132,16 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      *
      * @param deviceList is the DeviceList configured by the User.
      * @param identifier is needed for switch case and shows if devices have the correct nature.
+     * @throws ConfigurationException                                          if allocated component exists but it's wrong instance.
+     * @throws io.openems.common.exceptions.OpenemsError.OpenemsNamedException if component doesn't exist.
      */
-    private void allocateComponents(String[] deviceList, String identifier) {
+    private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
 
         AtomicInteger counter = new AtomicInteger();
         counter.set(0);
+        OpenemsError.OpenemsNamedException[] openemsNamedExceptions = {null};
+        ConfigurationException[] configurationExceptions = {null};
+
         Arrays.stream(deviceList).forEach(string -> {
             try {
                 switch (identifier) {
@@ -149,7 +164,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                         break;
                     case "Dac":
                         if (cpm.getComponent(string) instanceof PowerLevel) {
-                            this.relaysList.add(counter.intValue(), cpm.getComponent(string));
+                            this.dacList.add(counter.intValue(), cpm.getComponent(string));
                         } else {
                             throw new ConfigurationException("Could not allocate Component: Dac " + string,
                                     "Config error; Check your Config --> Dac");
@@ -172,13 +187,37 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                                     "Config error; Check your Config --> meter");
                         }
                         break;
+                    case "pca":
+                        if (cpm.getComponent(string) instanceof PcaDevice) {
+                            this.pcaDeviceList.add(counter.intValue(), cpm.getComponent(string));
+                        } else {
+                            throw new ConfigurationException("Could not allocate Component: Pca " + string,
+                                    "Config error; Check your Config --> Pca Device");
+                        }
+                        break;
+
+                    case "gpio":
+                        if (cpm.getComponent(string) instanceof GpioDevice) {
+                            this.gpioDeviceList.add(counter.intValue(), cpm.getComponent(string));
+                        } else {
+                            throw new ConfigurationException("Coult not allocate Component: Gpio " + string,
+                                    "Config error; Check your Config --> Gpio Device");
+                        }
 
                 }
                 counter.getAndIncrement();
-            } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-                e.printStackTrace();
+            } catch (ConfigurationException e) {
+                configurationExceptions[0] = e;
+            } catch (OpenemsError.OpenemsNamedException e) {
+                openemsNamedExceptions[0] = e;
             }
         });
+        if (configurationExceptions[0] != null) {
+            throw configurationExceptions[0];
+        }
+        if (openemsNamedExceptions[0] != null) {
+            throw openemsNamedExceptions[0];
+        }
     }
 
     /**
@@ -252,6 +291,26 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 }
 
             });
+            //PCA
+            this.pcaDeviceList.forEach(pca -> {
+                try {
+                    String s = pca.id() + "/" + pca.getOnOff().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            //GPIO
+            this.gpioDeviceList.forEach(gpio -> {
+                try {
+                    String s = gpio.id() + "/" + gpio.getReadError().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = gpio.id() + "/" + gpio.getWriteError().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             csvWriter.append("\n");
             csvWriter.flush();
         } catch (IOException e) {
@@ -318,6 +377,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             // Do Stuff
 
             try {
+                this.timeStamp = System.currentTimeMillis() - 100;
                 this.csvWriter = new FileWriter(path + fileName, true);
                 //Write Current Time; File Writer maybe broken?
                 Calendar calendar = Calendar.getInstance();
@@ -330,14 +390,56 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 writeDacData();
                 writePwmData();
                 writeMeterData();
+                writePcaData();
+                writeGpioData();
                 csvWriter.append("\n");
                 csvWriter.flush();
-                this.timeStamp = System.currentTimeMillis();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
+    }
+    /**
+     * Writes Gpio Data in CSV file.
+     * */
+    private void writeGpioData() {
+        this.gpioDeviceList.forEach(gpio -> {
+            String gpioString = "-";
+            try {
+                if (gpio.getReadError().getNextValue().isDefined()) {
+                    gpioString = gpio.getReadError().getNextValue().get().toString();
+                }
+                csvWriter.append(gpioString);
+                csvWriter.append(",");
+                gpioString = "-";
+                if (gpio.getWriteError().getNextWriteValue().isPresent()) {
+                    gpioString = gpio.getWriteError().getNextWriteValue().get().toString();
+                }
+                csvWriter.append(gpioString);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    /**
+     * Writes PCA Data in Csv File.
+     * */
+    private void writePcaData() {
+        this.pcaDeviceList.forEach(pca -> {
+            String pcaString = "-";
+
+            try {
+                if (pca.getOnOff().getNextWriteValue().isPresent()) {
+                    pcaString = pca.getOnOff().getNextWriteValue().get().toString();
+                }
+                csvWriter.append(pcaString);
+                csvWriter.append(",");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
     }
 
     /**

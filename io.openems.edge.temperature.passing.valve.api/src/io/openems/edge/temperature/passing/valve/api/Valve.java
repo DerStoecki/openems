@@ -8,6 +8,21 @@ public interface Valve extends PassingForPid {
 
     boolean changeByPercentage(double percentage);
 
-    void controlRelays(boolean activate, String whichRelays);
+    /**
+     * Closes the valve completely, overriding any current valve operation.
+     * If a closed valve is all you need, better use this instead of changeByPercentage(-100) as you do not need
+     * to check if the valve is busy or not.
+     */
+
+    void forceClose();
+
+    /**
+     * Opens the valve completely, overriding any current valve operation.
+     * If an open valve is all you need, better use this instead of changeByPercentage(100) as you do not need
+     * to check if the valve is busy or not.
+     */
+
+    void forceOpen();
+
 
 }

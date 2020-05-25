@@ -22,7 +22,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "PidPassingStationController")
+@Component(name = "Controller.Passing.Pid")
 public class PidForPassingStationController extends AbstractOpenemsComponent implements OpenemsComponent, Controller, PidForPassingNature {
 
     @Reference
@@ -42,7 +42,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponent(config.temperatureSensorId());
         allocateComponent(config.allocatedPassingDevice());
@@ -56,7 +56,6 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
-        this.intervalTime = config.intervalTime() > 0 ? config.intervalTime() * 1000 : 2000;
     }
 
     /**
@@ -66,26 +65,24 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
      *               <p>
      *               Allocate the Component --> Access to Channels
      *               </p>
+     * @throws OpenemsError.OpenemsNamedException when cpm can't access / somethings wrong with cpm.
+     * @throws ConfigurationException                                          when cpm tries to access device but it's not correct instance.
      */
-    private void allocateComponent(String Device) {
-        try {
-            if (cpm.getComponent(Device) instanceof PassingForPid) {
-                if (cpm.getComponent(Device) instanceof Pump) {
-                    this.isPump = true;
-                }
-                this.passingForPid = cpm.getComponent(Device);
-            } else if (cpm.getComponent(Device) instanceof Thermometer) {
-                this.thermometer = cpm.getComponent(Device);
-            } else if (cpm.getComponent(Device) instanceof ControllerPassingChannel) {
-                this.passing = cpm.getComponent(Device);
-            } else {
-                throw new ConfigurationException("The configured Component is neither Valve, Pump, PassingController nor TemperatureSensor! Please Check "
-                        + Device, "Configured Component is incorrect!");
+    private void allocateComponent(String Device) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        if (cpm.getComponent(Device) instanceof PassingForPid) {
+            if (cpm.getComponent(Device) instanceof Pump) {
+                this.isPump = true;
             }
-
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            e.printStackTrace();
+            this.passingForPid = cpm.getComponent(Device);
+        } else if (cpm.getComponent(Device) instanceof Thermometer) {
+            this.thermometer = cpm.getComponent(Device);
+        } else if (cpm.getComponent(Device) instanceof ControllerPassingChannel) {
+            this.passing = cpm.getComponent(Device);
+        } else {
+            throw new ConfigurationException("The configured Component is neither Valve, Pump, PassingController nor TemperatureSensor! Please Check "
+                    + Device, "Configured Component is incorrect!");
         }
+
     }
 
     @Deactivate
@@ -114,14 +111,14 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
         if (this.turnOn().value().isDefined() && this.turnOn().value().get()) {
             if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
-                if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
-                    if (this.setMinTemperature().getNextWriteValue().isPresent()) {
-                        this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
-                    }
-                    this.timestamp = System.currentTimeMillis();
-                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
-                    // is percentage value fix if so substract from current powerlevel?
-                    output -= this.passingForPid.getPowerLevel().getNextValue().get();
+            if (this.thermometer.getTemperature().getNextValue().isDefined()) {
+                if (this.setMinTemperature().getNextWriteValue().isPresent()) {
+                    this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
+                }
+                this.timestamp = System.currentTimeMillis();
+                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
+                // is percentage value fix if so substract from current powerlevel?
+                output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
                     if (this.isPump) {
                         output *= -1;
@@ -134,9 +131,5 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
             }
         }
 
-    }
-
-    private boolean readyToCalc() {
-        return System.currentTimeMillis() - this.timestamp >= intervalTime;
     }
 }

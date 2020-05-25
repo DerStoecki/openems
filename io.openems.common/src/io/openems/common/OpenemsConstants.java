@@ -13,14 +13,14 @@ public class OpenemsConstants {
 	 * 
 	 * This is usually the year of the release
 	 */
-	public final static short VERSION_MAJOR = 0;
+	public final static short VERSION_MAJOR = 2019;
 
 	/**
 	 * The minor version of OpenEMS.
 	 * 
 	 * This is usually the number of the sprint within the year
 	 */
-	public final static short VERSION_MINOR = 1;
+	public final static short VERSION_MINOR = 18;
 
 	/**
 	 * The patch version of OpenEMS.
@@ -33,11 +33,7 @@ public class OpenemsConstants {
 	 * The additional version string
 	 */
 	// public final static String VERSION_STRING = "";
-<<<<<<< feature/HeatingScheduler
-	public final static String VERSION_STRING = "dev.0.4433+20200513T183926Z";
-=======
-	public final static String VERSION_STRING = "dev.0.4436+20200523T174107Z";
->>>>>>> local
+	public final static String VERSION_STRING = "dev.0.244+20200402T101701Z";
 
 	/**
 	 * The complete version as a SemanticVersion.

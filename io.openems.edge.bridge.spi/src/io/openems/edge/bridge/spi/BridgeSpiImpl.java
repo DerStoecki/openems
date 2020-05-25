@@ -27,7 +27,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import com.pi4j.wiringpi.Spi;
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "SpiBridge",
+@Component(name = "Bridge.Spi",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)

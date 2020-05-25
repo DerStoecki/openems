@@ -4,6 +4,7 @@ import io.openems.edge.bridge.spi.api.BridgeSpi;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.spi.mcp.api.Adc;
+import io.openems.edge.spi.mcp.api.mcpmodels.type8.Mcp3208;
 import io.openems.edge.temperature.module.api.TemperatureModule;
 import io.openems.edge.temperature.module.api.TemperatureModuleVersions;
 import org.osgi.service.cm.ConfigurationException;
@@ -23,10 +24,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "TemperatureModule", immediate = true,
+@Component(name = "Module.Temperature", immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 
 public class TemperatureModuleImpl extends AbstractOpenemsComponent implements OpenemsComponent, TemperatureModule {
@@ -76,19 +78,27 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
      *                      the mcp-container has all the mcp's without initializing them --> basic properties are set
      *                      e.g. pin values.
      *                      </p>
+     * @throws ConfigurationException is thrown if DipSwitch Size != frequency Size.
      */
-    private void createTemperatureBoard(String versionNumber, List<String> frequency, List<Integer> dipSwitch) {
+    private void createTemperatureBoard(String versionNumber, List<String> frequency, List<Integer> dipSwitch) throws ConfigurationException {
+        if (dipSwitch.size() != frequency.size()) {
+            throw new ConfigurationException("Frequency and DipSwitch Mismatch " + frequency.size(),
+                    "Frequency size doesn't match dipSwitch size: Check your "
+                    + "Configuration ; DipSwitch Size: " + dipSwitch.size() + "\nFrequency Size: " + frequency.size());
+        }
         switch (versionNumber) {
             //more to come with further Versions + development of the hardware
             case "1":
-                short counter = 0;
-                for (Adc mcpWantToCreate : TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getMcpContainer()) {
-                    createAdc(mcpWantToCreate, frequency.get(counter), dipSwitch.get(counter));
-                    counter++;
-                }
-                break;
+                AtomicInteger counter = new AtomicInteger(0);
+                // for (Adc mcpWantToCreate : TemperatureModuleVersions.TEMPERATURE_MODULE_V_1.getMcpContainer()) {
+                //     createAdc(mcpWantToCreate, frequency.get(counter), dipSwitch.get(counter));
+                //     counter++;
+                dipSwitch.forEach(dip -> {
+                    createAdc(new Mcp3208(), frequency.get(counter.getAndIncrement()), dip);
+                });
         }
     }
+
 
     /**
      * Initializes the Adc.
@@ -97,7 +107,7 @@ public class TemperatureModuleImpl extends AbstractOpenemsComponent implements O
      * @param frequency       set by the user.
      * @param dipSwitch       == spi channel.
      *
-     *<p>Adds the Adc to the spi bridge.</p>
+     *                        <p>Adds the Adc to the spi bridge.</p>
      */
     private void createAdc(Adc mcpWantToCreate, String frequency, int dipSwitch) {
         mcpWantToCreate.initialize(dipSwitch, Integer.parseInt(frequency), this.circuitBoardId, this.versionId);
