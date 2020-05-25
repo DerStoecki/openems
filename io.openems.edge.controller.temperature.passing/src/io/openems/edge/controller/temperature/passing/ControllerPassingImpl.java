@@ -101,7 +101,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     public void deactivate() {
         super.deactivate();
         this.getOnOff_PassingController().setNextValue(false);
-        this.valve.changeByPercentage(-100);
+        this.valve.forceClose();
         this.pump.changeByPercentage(-100);
     }
 
@@ -176,7 +176,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                 } catch (ValveDefectException | NoHeatNeededException | HeatToLowException e) {
                     this.noError().setNextValue(false);
-                    valve.changeByPercentage(-100);
+                    valve.forceClose();
                     //valve.controlRelays(false, "Open");
                     //valve.controlRelays(true, "Closed");
                     throw e;
