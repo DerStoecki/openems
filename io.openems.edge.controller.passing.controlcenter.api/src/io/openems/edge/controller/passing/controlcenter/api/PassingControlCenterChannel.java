@@ -3,6 +3,7 @@ package io.openems.edge.controller.passing.controlcenter.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
@@ -22,7 +23,13 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
          * </ul>
          */
 
-        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
+        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+                    // on each Write to the channel -> set the value
+                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
+                        channel.setNextValue(value);
+                    });
+                })),
 
         /**
          * Tells the controller to use the temperature override.
@@ -33,7 +40,13 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
          * </ul>
          */
 
-        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+                    // on each Write to the channel -> set the value
+                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
+                        channel.setNextValue(value);
+                    });
+                })),
 
         /**
          * Controller output. If the heater should activate or not.

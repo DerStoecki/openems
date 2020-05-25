@@ -3,6 +3,7 @@ package io.openems.edge.controller.pid.passing.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
@@ -21,7 +22,13 @@ public interface PidForPassingNature extends OpenemsComponent {
          * </ul>
          */
 
-        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+                    // on each Write to the channel -> set the value
+                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
+                        channel.setNextValue(value);
+                    });
+                })),
 
 
         /**

@@ -112,7 +112,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     public void run() throws OpenemsError.OpenemsNamedException {
 
 
-        if (this.turnOn().getNextWriteValue().isPresent() && this.turnOn().getNextWriteValue().get()) {
+        if (this.turnOn().value().isDefined() && this.turnOn().value().get()) {
             if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
                 if (this.thermometer.getTemperature().getNextValue().isDefined() && readyToCalc()) {
                     if (this.setMinTemperature().getNextWriteValue().isPresent()) {
