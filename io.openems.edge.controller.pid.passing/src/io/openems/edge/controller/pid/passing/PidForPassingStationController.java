@@ -111,14 +111,14 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
         if (this.turnOn().value().isDefined() && this.turnOn().value().get()) {
             if (this.passing.getOnOff_PassingController().getNextWriteValue().isPresent() && this.passing.getOnOff_PassingController().getNextWriteValue().get()) {
-            if (this.thermometer.getTemperature().getNextValue().isDefined()) {
-                if (this.setMinTemperature().getNextWriteValue().isPresent()) {
-                    this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
-                }
-                this.timestamp = System.currentTimeMillis();
-                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
-                // is percentage value fix if so substract from current powerlevel?
-                output -= this.passingForPid.getPowerLevel().getNextValue().get();
+                if (this.thermometer.getTemperature().getNextValue().isDefined()) {
+                    if (this.setMinTemperature().getNextWriteValue().isPresent()) {
+                        this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
+                    }
+                    this.timestamp = System.currentTimeMillis();
+                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
+                    // is percentage value fix if so substract from current powerlevel?
+                    output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
                     if (this.isPump) {
                         output *= -1;

@@ -110,8 +110,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				// Heating process is executed in steps. Stepcounter tracks progress, start is at stepcounter == 0.
 				if (stepcounter == 0) {
 					// open valveUS01
-					valveUS01.controlRelays(true, "Open");
-					valveUS01.controlRelays(false, "Closed");
+					valveUS01.forceOpen();
 
 					stepcounter = 1;
 
@@ -128,12 +127,10 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
                         this.blockValve().setNextValue(true);
 
                         // open valveTL01
-                        valveTL01.controlRelays(true, "Open");
-                        valveTL01.controlRelays(false, "Closed");
+                        valveTL01.forceOpen();
 
                         // close valveUS01
-                        valveUS01.controlRelays(false, "Open");
-                        valveUS01.controlRelays(true, "Closed");
+                        valveUS01.forceClose();
 
                         stepcounter = 2;
                         this.logInfo(this.log, "Temperature reached, heating water tank.");
@@ -158,12 +155,10 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
                                     this.blockValve().setNextValue(true);
 
                                     // open valveTL01
-                                    valveTL01.controlRelays(true, "Open");
-                                    valveTL01.controlRelays(false, "Closed");
+                                    valveTL01.forceOpen();
 
                                     // close valveUS01
-                                    valveUS01.controlRelays(false, "Open");
-                                    valveUS01.controlRelays(true, "Closed");
+                                    valveUS01.forceClose();
 
                                     stepcounter = 2;
                                     this.logInfo(this.log, "Temperature is only at " + (waermetauscherVorlauf.getTemperature().value().get() / 10)
@@ -196,14 +191,12 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				this.blockValve().setNextValue(false);
 
 				// close valveTL01
-				valveTL01.controlRelays(false, "Open");
-				valveTL01.controlRelays(true, "Closed");
+				valveTL01.forceClose();
 
 				// Executes after heating the water tank. Do just once to not mess with other controllers accessing valveUS01.
 				if (stepcounter == 2) {
 					//open valveUS01
-					valveUS01.controlRelays(true, "Open");
-					valveUS01.controlRelays(false, "Closed");
+					valveUS01.forceOpen();
 
 					stepcounter = 0;
 					this.logInfo(this.log, "Stopped heating the water tank.");
