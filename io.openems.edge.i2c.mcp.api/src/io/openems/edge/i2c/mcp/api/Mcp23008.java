@@ -99,6 +99,7 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
                     e.printStackTrace();
                 }
                 getPhysicalDevice();
+                this.device.write(0x00, (byte)0x00);
             }
             device.write(0x09, data);
             wasRemoved = false;
