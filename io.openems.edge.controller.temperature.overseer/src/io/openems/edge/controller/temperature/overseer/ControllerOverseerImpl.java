@@ -29,6 +29,8 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     protected ControllerPassingChannel passing;
     protected List<Thermometer> temperatureSensor = new ArrayList<>();
     private int tolerance;
+    private long coolDownTime;
+    private boolean coolDownTimeSet;
 
     public ControllerOverseerImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
@@ -103,11 +105,24 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
         if (passing == null) {
             throw new RuntimeException("The Allocated Passing Controller is not active, please Check.");
         } else if (!heatingReached() && passing.noError().getNextValue().get()) {
+            coolDownTimeSet = false;
             this.passing.getOnOff_PassingController().setNextWriteValue(true);
         } else if (heatingReached() && passing.noError().getNextValue().get()) {
+            coolDownTimeSet = false;
             this.passing.getOnOff_PassingController().setNextWriteValue(false);
         } else {
-            throw new OpenemsException("The Passing Controller got an Error!");
+            if (!coolDownTimeSet && this.passing.getErrorCode().getNextValue().get() == 2) {
+                this.coolDownTime = System.currentTimeMillis();
+                coolDownTimeSet = true;
+            }
+            //After Cooldown set Value to true; Only happens if ErrorCode was 2.
+            if (coolDownTimeSet) {
+                if (System.currentTimeMillis() - coolDownTime > 30 * 1000) {
+                    passing.noError().setNextValue(true);
+                }
+            }
+            throw new OpenemsException("The Passing Controller got an Error! With ErrorCode: "
+                    + this.passing.getErrorCode().getNextValue().get());
         }
     }
 

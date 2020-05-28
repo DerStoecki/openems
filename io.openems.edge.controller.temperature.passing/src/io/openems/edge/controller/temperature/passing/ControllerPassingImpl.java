@@ -150,6 +150,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         pump.changeByPercentage(-100);
                         pumpActive = false;
                         this.noError().setNextValue(false);
+                        getErrorCode().setNextValue(2);
                         throw new NoHeatNeededException("Heat is not needed;"
                                 + "Shutting down pump and Valves");
                     } else { //Check if there's something wrong with Valve or Heat to low
@@ -164,9 +165,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
                             if (Math.abs(primaryRewind.getTemperature().getNextValue().get()
                                     - startingTemperature) <= ROUND_ABOUT_TEMP) {
+                                getErrorCode().setNextValue(0);
                                 throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
 
                             } else {
+                                getErrorCode().setNextValue(1);
                                 throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; "
                                         + "Closing Valve");
 
@@ -286,7 +289,6 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
         }
         return false;
     }
-
 
 
 }
