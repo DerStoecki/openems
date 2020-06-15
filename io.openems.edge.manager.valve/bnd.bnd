@@ -21,6 +21,8 @@ Private-Package:  \
 	io.openems.edge.temperature.passing.api;version=latest,\
 	io.openems.edge.manager.valve.api;version=latest,\
 	io.openems.edge.controller.api;version=latest,\
+	io.openems.edge.bridge.i2c;version=latest,\
+	io.openems.edge.i2c.mcp.api;version=latest,\
 
 
 -testpath: \
