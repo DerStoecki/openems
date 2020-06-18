@@ -19,7 +19,7 @@ Export-Package:  \
     io.openems.edge.pwm.module.api;version=latest,\
     io.openems.edge.i2c.mcp.api;version=latest,\
     io.openems.edge.consolinno.leaflet.mainmodule.api;version=latest,\
-    pi4j-core,\
+	io.openems.edge.generic.pi4j;version=latest,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \

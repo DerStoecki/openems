@@ -1,0 +1,24 @@
+Bundle-Name: OpenEMS Edge Generic Pi4j
+Bundle-Vendor: Consolinno Energie GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+
+# Spi channels erweitert um 6 Chipselect spi0.0, spi0.1, spi0.2, spi0.3, spi0.4, spi0.5, spi0.6, spi0.7
+# https://github.com/ljonka/pi4j library of github
+-includeresource.jsonlogic: \
+	@lib/pi4j-core-1.3-SNAPSHOT.jar; lib:=true
+
+Export-Package:  \
+    com.pi4j.*
+
+-buildpath: \
+	${buildpath},\
+	io.openems.common,\
+	io.openems.edge.common,\
+	io.openems.edge.controller.api,\
+	io.openems.edge.ess.api,\
+	io.openems.edge.io.api,\
+	lib/pi4j-core-1.3-SNAPSHOT.jar;version=file,\
+
+-testpath: \
+	${testpath}
