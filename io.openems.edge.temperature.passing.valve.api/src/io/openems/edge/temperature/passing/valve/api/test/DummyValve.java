@@ -122,4 +122,12 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
             this.getIsBusy().setNextValue(false);
         }
     }
+
+
+    // Added because of changes to valve interface. Won't compile otherwise.
+    @Override
+    public void forceOpen() {}
+
+    @Override
+    public void forceClose() {}
 }
