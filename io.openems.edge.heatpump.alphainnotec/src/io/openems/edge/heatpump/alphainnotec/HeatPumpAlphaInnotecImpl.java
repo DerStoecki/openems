@@ -371,7 +371,7 @@ public class HeatPumpAlphaInnotecImpl extends AbstractOpenemsModbusComponent imp
 	public void handleEvent(Event event) {
 		switch (event.getTopic()) {
 			case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
-				channeltest();	// Just for testing
+				//channeltest();	// Just for testing
 				channelmapping();
 				break;
 		}
