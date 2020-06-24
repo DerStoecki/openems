@@ -7,6 +7,7 @@ Bundle-Description: \
 
 Private-Package:  \
 	io.openems.edge.consolinno.leaflet.mainmodule.pcaGpioExpansion,\
+	io.openems.edge.consolinno.leaflet.mainmodule.sc16,\
 
 -includeresource: {readme.md}
 
@@ -15,6 +16,7 @@ Private-Package:  \
 	io.openems.common;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.edge.bridge.i2c;version=latest,\
+	io.openems.edge.bridge.spi;version=latest,\
 	io.openems.edge.consolinno.leaflet.mainmodule.api;version=latest,\
 	io.openems.edge.generic.pi4j;version=latest,\
 

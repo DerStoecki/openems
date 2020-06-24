@@ -1,6 +1,7 @@
 package io.openems.edge.bridge.spi.api;
 
 import io.openems.edge.bridge.spi.task.SpiTask;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.DoubleUart;
 import io.openems.edge.spi.mcp.api.Adc;
 import org.osgi.service.cm.ConfigurationException;
 
@@ -21,4 +22,8 @@ public interface BridgeSpi {
     void removeSpiTask(String id);
 
     Map<String, SpiTask> getTasks();
+
+    void addDoubleUart(DoubleUart uart);
+
+    void removeDoubleUart(DoubleUart uart);
 }

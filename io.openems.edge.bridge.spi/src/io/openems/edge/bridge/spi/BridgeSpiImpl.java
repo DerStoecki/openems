@@ -7,10 +7,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.spi.api.BridgeSpi;
+import io.openems.edge.bridge.spi.task.SpiDoubleUartTask;
 import io.openems.edge.bridge.spi.task.SpiTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.DoubleUart;
 import io.openems.edge.spi.mcp.api.Adc;
 
 import org.osgi.service.cm.ConfigurationException;
@@ -34,8 +36,10 @@ import com.pi4j.wiringpi.Spi;
 public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi, EventHandler, OpenemsComponent {
 
     private Set<Adc> adcList = new HashSet<>();
+    private Set<DoubleUart> uartList = new HashSet<>();
     private final SpiWorker worker = new SpiWorker();
     private Map<String, SpiTask> tasks = new ConcurrentHashMap<>();
+    private Map<String, SpiDoubleUartTask> uartTasks = new ConcurrentHashMap<>();
 
 
     public BridgeSpiImpl() {
@@ -71,10 +75,10 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
 
     /**
      * Removes the given Adc and every Task that is connected to this Adc.
+     *
      * @param adc is the given Adc, tasks are checked by SpiChannel and adcList is checked
      *            and correct Adc will be deactivated.
-     *
-     * */
+     */
 
     @Override
     public void removeAdc(Adc adc) {
@@ -83,12 +87,26 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         adc.deactivate();
     }
 
+    @Override
+    public void addDoubleUart(DoubleUart uArt) {
+        if (uArt != null) {
+            this.uartList.add(uArt);
+        }
+    }
+
+    @Override
+    public void removeDoubleUart(DoubleUart uart) {
+            uartTasks.values().removeIf(value -> value.getSpiChannel() == uart.getSpiChannel());
+            this.uartList.removeIf(value -> value.getId().equals(uart.getId()));
+            uart.deactivate();
+    }
+
     /**
      * Adds an Spi Task, called by the SpiDevices.
-     * @param id , the unique Id of the SpiDevice.
-     * @param spiTask the spiTask which will be handled during the work-cycle.
      *
-     * */
+     * @param id      , the unique Id of the SpiDevice.
+     * @param spiTask the spiTask which will be handled during the work-cycle.
+     */
 
     @Override
     public void addSpiTask(String id, SpiTask spiTask) throws ConfigurationException {
@@ -106,8 +124,8 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         this.tasks.remove(id);
     }
 
-
     private class SpiWorker extends AbstractCycleWorker {
+
 
         @Override
         public void activate(String name) {
@@ -118,12 +136,10 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         public void deactivate() {
             super.deactivate();
         }
-
         /**
          * for every task the temperature is read by the pin value, written in the pin and then
          * in the response, written in the Thermometer Nature. (Temperature)
-         *
-         * */
+         */
         @Override
         public void forever() throws Throwable {
             tasks.values().forEach(task -> {
@@ -132,6 +148,7 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
                 task.setResponse(data);
             });
         }
+
     }
 
     public Map<String, SpiTask> getTasks() {
