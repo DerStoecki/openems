@@ -12,7 +12,7 @@ import org.osgi.service.metatype.annotations.Option;
     String service_pid();
 
     @AttributeDefinition(name = "Pca Module Name", description = "The Unique Id of the Module.")
-    String id() default "LeafletPca";
+    String id() default "LeafletSc16";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";

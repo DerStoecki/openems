@@ -5,10 +5,9 @@ import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
+import io.openems.edge.consolinno.leaflet.maindevice.api.doubleuart.DoubleUartDevice;
 import io.openems.edge.controller.api.Controller;
 
-import io.openems.edge.gpio.device.api.GpioDevice;
 import io.openems.edge.meter.api.SymmetricMeter;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
@@ -45,8 +44,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<PowerLevel> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
-    private List<PcaDevice> pcaDeviceList = new ArrayList<>();
-    private List<GpioDevice> gpioDeviceList = new ArrayList<>();
+    private List<DoubleUartDevice> uartList = new ArrayList<>();
 
     private int dateDay;
     private String fileName;
@@ -68,8 +66,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.meterList(), "meter");
-        allocateComponents(config.pcaList(), "pca");
-        allocateComponents(config.gpioList(), "gpio");
+        allocateComponents(config.doubleUartList(), "doubleUart");
         this.timeInterval = config.timeInterval() * 1000;
         if (timeInterval <= 0) {
             this.timeInterval = 1000;
@@ -78,7 +75,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             this.path = config.path();
         }
         //create /home/sshconsolinno/DataLog if not exist
-        createCSVPath();
+        createCsvPath();
         //initialize FileName --> Calendar year month and day
         initializeFileName();
         //check if file exists with param. else init
@@ -99,7 +96,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         int year = calendar.get(Calendar.YEAR);
         //month starts with 0;
         //int intMonth = calendar.get(Calendar.MONTH) + 1;
-        String month = String.format("%2s", Integer.toString(( calendar.get(Calendar.MONTH) + 1))).replace(" ", "0");
+        String month = String.format("%2s", Integer.toString((calendar.get(Calendar.MONTH) + 1))).replace(" ", "0");
         String day = String.format("%2s", Integer.toString(calendar.get(Calendar.DAY_OF_MONTH))).replace(" ", "0");
         this.fileName = "test" + year + month + day + ".csv";
         this.dateDay = Calendar.DAY_OF_MONTH;
@@ -119,7 +116,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     /**
      * Creates the Path to the CSV Files if not already existing.
      */
-    private void createCSVPath() {
+    private void createCsvPath() {
         File f = new File(this.path);
         if (!f.exists() || !f.isDirectory()) {
             boolean dirCreated = f.mkdir();
@@ -132,8 +129,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      *
      * @param deviceList is the DeviceList configured by the User.
      * @param identifier is needed for switch case and shows if devices have the correct nature.
-     * @throws ConfigurationException                                          if allocated component exists but it's wrong instance.
-     * @throws io.openems.common.exceptions.OpenemsError.OpenemsNamedException if component doesn't exist.
+     * @throws ConfigurationException             if allocated component exists but it's wrong instance.
+     * @throws OpenemsError.OpenemsNamedException if component doesn't exist.
      */
     private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
 
@@ -144,66 +141,59 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         Arrays.stream(deviceList).forEach(string -> {
             try {
-                switch (identifier) {
-                    case "Thermometer":
-                        if (cpm.getComponent(string) instanceof Thermometer) {
-                            this.thermometerList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Thermometer " + string,
-                                    "Config error; Check your Config --> Temperature Sensor");
-                        }
-                        break;
-                    case "Relays":
-                        if (cpm.getComponent(string) instanceof ActuatorRelaysChannel) {
-                            this.relaysList.add(counter.intValue(), cpm.getComponent(string));
+                if (!string.equals("")) {
+                    switch (identifier) {
+                        case "Thermometer":
+                            if (cpm.getComponent(string) instanceof Thermometer) {
+                                this.thermometerList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Thermometer " + string,
+                                        "Config error; Check your Config --> Temperature Sensor");
+                            }
+                            break;
+                        case "Relays":
+                            if (cpm.getComponent(string) instanceof ActuatorRelaysChannel) {
+                                this.relaysList.add(counter.intValue(), cpm.getComponent(string));
 
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Relays " + string,
-                                    "Config error; Check your Config --> Relays");
-                        }
-                        break;
-                    case "Dac":
-                        if (cpm.getComponent(string) instanceof PowerLevel) {
-                            this.dacList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Dac " + string,
-                                    "Config error; Check your Config --> Dac");
-                        }
-                        break;
-                    case "Pwm":
-                        if (cpm.getComponent(string) instanceof PwmPowerLevelChannel) {
-                            this.pwmDeviceList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Pwm " + string,
-                                    "Config error; Check your Config --> Pwm Device");
-                        }
-                        break;
-                    case "meter":
-                        if (cpm.getComponent(string) instanceof SymmetricMeter) {
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Relays " + string,
+                                        "Config error; Check your Config --> Relays");
+                            }
+                            break;
+                        case "Dac":
+                            if (cpm.getComponent(string) instanceof PowerLevel) {
+                                this.dacList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Dac " + string,
+                                        "Config error; Check your Config --> Dac");
+                            }
+                            break;
+                        case "Pwm":
+                            if (cpm.getComponent(string) instanceof PwmPowerLevelChannel) {
+                                this.pwmDeviceList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Pwm " + string,
+                                        "Config error; Check your Config --> Pwm Device");
+                            }
+                            break;
+                        case "meter":
+                            if (cpm.getComponent(string) instanceof SymmetricMeter) {
 
-                            this.meterList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: meter " + string,
-                                    "Config error; Check your Config --> meter");
-                        }
-                        break;
-                    case "pca":
-                        if (cpm.getComponent(string) instanceof PcaDevice) {
-                            this.pcaDeviceList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Pca " + string,
-                                    "Config error; Check your Config --> Pca Device");
-                        }
-                        break;
-
-                    case "gpio":
-                        if (cpm.getComponent(string) instanceof GpioDevice) {
-                            this.gpioDeviceList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Coult not allocate Component: Gpio " + string,
-                                    "Config error; Check your Config --> Gpio Device");
-                        }
-
+                                this.meterList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: meter " + string,
+                                        "Config error; Check your Config --> meter");
+                            }
+                            break;
+                        case "doubleUart":
+                            if (cpm.getComponent(string) instanceof DoubleUartDevice) {
+                                this.uartList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: DoubleUArt Device " + string,
+                                        "Config error; Check your Config --> Sc16 Device");
+                            }
+                            break;
+                    }
                 }
                 counter.getAndIncrement();
             } catch (ConfigurationException e) {
@@ -291,21 +281,10 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 }
 
             });
-            //PCA
-            this.pcaDeviceList.forEach(pca -> {
+            //Sc16/DoubleUart
+            this.uartList.forEach(uart -> {
                 try {
-                    String s = pca.id() + "/" + pca.getOnOff().channelId().id();
-                    csvWriterAppendLineForHead(s);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-            //GPIO
-            this.gpioDeviceList.forEach(gpio -> {
-                try {
-                    String s = gpio.id() + "/" + gpio.getReadError().channelId().id();
-                    csvWriterAppendLineForHead(s);
-                    s = gpio.id() + "/" + gpio.getWriteError().channelId().id();
+                    String s = uart.id() + "/" + uart.getOnOff().channelId().id();
                     csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -390,8 +369,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 writeDacData();
                 writePwmData();
                 writeMeterData();
-                writePcaData();
-                writeGpioData();
+                writeUartData();
+
                 csvWriter.append("\n");
                 csvWriter.flush();
             } catch (IOException e) {
@@ -400,45 +379,24 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         }
 
     }
-    /**
-     * Writes Gpio Data in CSV file.
-     * */
-    private void writeGpioData() {
-        this.gpioDeviceList.forEach(gpio -> {
-            String gpioString = "-";
-            try {
-                if (gpio.getReadError().getNextValue().isDefined()) {
-                    gpioString = gpio.getReadError().getNextValue().get().toString();
-                }
-                csvWriter.append(gpioString);
-                csvWriter.append(",");
-                gpioString = "-";
-                if (gpio.getWriteError().getNextWriteValue().isPresent()) {
-                    gpioString = gpio.getWriteError().getNextWriteValue().get().toString();
-                }
-                csvWriter.append(gpioString);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-    }
+
+
     /**
      * Writes PCA Data in Csv File.
-     * */
-    private void writePcaData() {
-        this.pcaDeviceList.forEach(pca -> {
+     */
+    private void writeUartData() {
+        this.uartList.forEach(uart -> {
             String pcaString = "-";
 
             try {
-                if (pca.getOnOff().getNextWriteValue().isPresent()) {
-                    pcaString = pca.getOnOff().getNextWriteValue().get().toString();
+                if (uart.getOnOff().getNextWriteValue().isPresent()) {
+                    pcaString = uart.getOnOff().getNextWriteValue().get().toString();
                 }
                 csvWriter.append(pcaString);
                 csvWriter.append(",");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         });
     }
 
@@ -571,7 +529,6 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             e.printStackTrace();
         }
         super.deactivate();
-
     }
 
 

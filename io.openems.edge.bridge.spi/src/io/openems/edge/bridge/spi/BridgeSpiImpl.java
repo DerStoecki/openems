@@ -7,7 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.spi.api.BridgeSpi;
+import io.openems.edge.bridge.spi.task.SpiDoubleUartReadTask;
 import io.openems.edge.bridge.spi.task.SpiDoubleUartTask;
+import io.openems.edge.bridge.spi.task.SpiDoubleUartWriteTask;
 import io.openems.edge.bridge.spi.task.SpiTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -96,9 +98,23 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
 
     @Override
     public void removeDoubleUart(DoubleUart uart) {
-            uartTasks.values().removeIf(value -> value.getSpiChannel() == uart.getSpiChannel());
-            this.uartList.removeIf(value -> value.getId().equals(uart.getId()));
-            uart.deactivate();
+        uartTasks.values().removeIf(value -> value.getSpiChannel() == uart.getSpiChannel());
+        this.uartList.remove(uart);
+        uart.deactivate();
+    }
+
+    @Override
+    public void addDoubleUartTask(String id, SpiDoubleUartTask task) throws ConfigurationException {
+        if (this.uartTasks.containsKey(id)) {
+            throw new ConfigurationException("ID: " + id, "Config id already exists");
+        } else {
+            this.uartTasks.put(id, task);
+        }
+    }
+
+    @Override
+    public void removeDoubleUartTask(String id) {
+        this.uartTasks.remove(id);
     }
 
     /**
@@ -136,6 +152,7 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
         public void deactivate() {
             super.deactivate();
         }
+
         /**
          * for every task the temperature is read by the pin value, written in the pin and then
          * in the response, written in the Thermometer Nature. (Temperature)
@@ -146,6 +163,18 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
                 byte[] data = task.getRequest();
                 Spi.wiringPiSPIDataRW(task.getSpiChannel(), data);
                 task.setResponse(data);
+            });
+
+            uartTasks.values().forEach(task -> {
+                task.update();
+                if (task instanceof SpiDoubleUartReadTask) {
+                    byte[] data = task.getPinAddressAsByte();
+                    Spi.wiringPiSPIDataRW(task.getSpiChannel(), data);
+                    ((SpiDoubleUartReadTask) task).setResponse(data);
+                } else {
+                    //TODO Get PinAddress And To Write Data and send to correct Address
+                    Spi.wiringPiSPIDataRW(task.getSpiChannel(), ((SpiDoubleUartWriteTask) task).getRequest());
+                }
             });
         }
 

@@ -88,17 +88,11 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
     float[] pwmValues() default {25, 100, 75, 40, 80, 50, 100, 10};
 
-    @AttributeDefinition(name = "PcaDevices", description = "Select PcaDevices")
-    String[] pcaDevice() default {"IO1"};
+    @AttributeDefinition (name = "SC16DeviceList", description = "What Sc16 should be in the List")
+    String[] sc16List() default {"Status4"};
 
-    @AttributeDefinition(name = "PcaValue", description = "What would you like to write in the PcaDevice.")
-    String pcaDeviceValue() default "1";
-
-    @AttributeDefinition(name = "GpioWriteDevice", description = "What GPIO Devices do you want to use.")
-            String [] gpioDevices() default {"ChpOnOffStatus0"};
-
-     @AttributeDefinition(name = "GpioWriteValues", description = "Add the Values e.g. ErrorFlags")
-             String gpioDeviceValues () default "111";
+    @AttributeDefinition(name = "Sc16Values", description = "Values for the Statuses")
+    String sc16Values() default "1";
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Static Values [{id}]";
 

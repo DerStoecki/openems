@@ -18,8 +18,10 @@ public interface DoubleUartDevice extends OpenemsComponent {
          * <li>Type: Boolean
          * </ul>
          */
-        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)); //
+        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)), //
+        IS_INPUT(Doc.of(OpenemsType.BOOLEAN));
         private final Doc doc;
+
 
         ChannelId(Doc doc) {
             this.doc = doc;

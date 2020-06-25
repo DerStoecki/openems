@@ -159,11 +159,9 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String[] meterList();
 
-    @AttributeDefinition(name = "Pca", description = "Select Pca from Main module")
-    String[] pcaList()default {"IO0"};
+    @AttributeDefinition(name = "Sc16Devices", description = "Select Sc16Device")
+    String[] doubleUartList()default {"Gpio0"};
 
-    @AttributeDefinition(name = "Gpio", description = "Selects the remapped Gpios")
-    String [] gpioList() default {"ChpOnOffStatus0"};
 
     @AttributeDefinition(name = "Time Interval", description = "Interval of Time in seconds")
     double timeInterval() default 1;
