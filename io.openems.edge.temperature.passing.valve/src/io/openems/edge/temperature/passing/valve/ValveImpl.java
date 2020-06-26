@@ -39,12 +39,12 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-            if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
-                closing = cpm.getComponent(config.closing_Relays());
-            }
-            if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
-                opens = cpm.getComponent(config.opening_Relays());
-            }
+        if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
+            closing = cpm.getComponent(config.closing_Relays());
+        }
+        if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
+            opens = cpm.getComponent(config.opening_Relays());
+        }
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getLastPowerLevel().setNextValue(0);
@@ -67,7 +67,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     /**
-     * closes the valve and set a time stamp. as well as setting a timestamp.
+     * Closes the valve and sets a time stamp.
+     * DO NOT CALL DIRECTLY! Might not work if called directly as the timer for "readyToChange()" is not
+     * set properly. Use either "changeByPercentage()" or forceClose / forceOpen.
      */
     private void valveClose() {
         if (!this.getIsBusy().getNextValue().get()) {
@@ -79,7 +81,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     /**
-     * Opens the valve, sets a timestamp and make the valve busy.
+     * Opens the valve and sets a time stamp.
+     * DO NOT CALL DIRECTLY! Might not work if called directly as the timer for "readyToChange()" is not
+     * set properly. Use either "changeByPercentage()" or forceClose / forceOpen.
      */
     private void valveOpen() {
         //opens will be set true when closing is done
@@ -94,34 +98,34 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     /**
      * Controls the relays by typing either activate or not and what relays should be called.
-     *
+     * DO NOT USE THIS !!!! Exception: ValveManager --> Needs this method if Time is up to set Valve Relays off.
+     * If ExceptionHandling --> use forceClose or forceOpen!
      * @param activate    activate or deactivate.
      * @param whichRelays opening or closing relays ?
      *                    <p>Writes depending if the relays is an opener or closer, the correct boolean.
      *                    if the relays was set false (no power) busy will be false.</p>
      */
-    @Override
-    public void controlRelays(boolean activate, String whichRelays) {
+    private void controlRelays(boolean activate, String whichRelays) {
         try {
-                switch (whichRelays) {
-                    case "Open":
-                        if (this.opens.isCloser().value().get()) {
-                            this.opens.getRelaysChannel().setNextWriteValue(activate);
-                        } else {
-                            this.opens.getRelaysChannel().setNextWriteValue(!activate);
-                        }
-                        break;
-                    case "Closed":
-                        if (this.closing.isCloser().value().get()) {
-                            this.closing.getRelaysChannel().setNextWriteValue(activate);
-                        } else {
-                            this.closing.getRelaysChannel().setNextWriteValue(!activate);
-                        }
-                        break;
-                }
-                //            if (!activate) {
-                //                this.getIsBusy().setNextValue(false);
-                //            }
+            switch (whichRelays) {
+                case "Open":
+                    if (this.opens.isCloser().value().get()) {
+                        this.opens.getRelaysChannel().setNextWriteValue(activate);
+                    } else {
+                        this.opens.getRelaysChannel().setNextWriteValue(!activate);
+                    }
+                    break;
+                case "Closed":
+                    if (this.closing.isCloser().value().get()) {
+                        this.closing.getRelaysChannel().setNextWriteValue(activate);
+                    } else {
+                        this.closing.getRelaysChannel().setNextWriteValue(!activate);
+                    }
+                    break;
+            }
+            //            if (!activate) {
+            //                this.getIsBusy().setNextValue(false);
+            //            }
 
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -138,6 +142,8 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         if ((System.currentTimeMillis() - timeStampValve)
                 >= ((this.getTimeNeeded().getNextValue().get() * 1000))) {
             this.getIsBusy().setNextValue(false);
+            controlRelays(false, "Open");
+            controlRelays(false, "Closed");
             return true;
         }
 
@@ -146,10 +152,15 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     }
 
     /**
-     * Changes Valve Position by incoming percentage
-     * Depending on + or - it changes the current State to open/close it more.
+     * Changes Valve Position by incoming percentage.
+     * Warning, only executes if valve is not busy!
+     * Depending on + or - it changes the current State to open/close it more. Switching the relays on/off does
+     * not open/close the valve instantly but slowly. The time it takes from completely closed to completely
+     * open is entered in the config. Partial open state of x% is then archived by switching the relay on for
+     * time-to-open * x%, or the appropriate amount of time depending on initial state.
      *
-     * @param percentage adjusting the current powerlevel in %.
+     * @param percentage adjusting the current powerlevel in % points. Meaning if current state is 10%, requesting
+     *                   changeByPercentage(20) will change the state to 30%.
      *                   <p>
      *                   If the Valve is busy (already changing by a previous percentagechange. return false
      *                   otherwise: save the current PowerLevel to the old one and overwrite the new one.
@@ -195,5 +206,48 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
+
+    /**
+     * Closes the valve completely, overriding any current valve operation.
+     * If a closed valve is all you need, better use this instead of changeByPercentage(-100) as you do not need
+     * to check if the valve is busy or not.
+     */
+    @Override
+    public void forceClose() {
+        this.getIsBusy().setNextValue(false);
+        this.getPowerLevel().setNextValue(0);
+        this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
+        valveClose();
+        this.getIsBusy().setNextValue(true);
+    }
+
+    /**
+     * Opens the valve completely, overriding any current valve operation.
+     * If an open valve is all you need, better use this instead of changeByPercentage(100) as you do not need
+     * to check if the valve is busy or not.
+     */
+    @Override
+    public void forceOpen() {
+        this.getIsBusy().setNextValue(false);
+        this.getPowerLevel().setNextValue(100);
+        this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
+        valveOpen();
+        this.getIsBusy().setNextValue(true);
+    }
+
+    @Override
+    public String debugLog() {
+        if (this.getPowerLevel().getNextValue().isDefined()) {
+            String name = "";
+            if (!super.alias().equals("")) {
+                name = super.alias();
+            } else {
+                name = super.id();
+            }
+            return "Valve: " + name + ": " + this.getPowerLevel().getNextValue().toString() + "\n";
+        } else {
+            return "\n";
+        }
+    }
 
 }

@@ -47,17 +47,17 @@ public class DacDeviceImpl extends AbstractOpenemsComponent implements OpenemsCo
     @Deactivate
     public void deactivate() {
         super.deactivate();
-            this.mcp.removeTask(super.id());
+        this.mcp.removeTask(super.id());
     }
 
 
     @Override
     public String debugLog() {
 
-            if (this.getPowerLevelChannel().getNextValue().get() != null) {
-                return "DAC: " + super.id() + "is at " + this.getPowerLevelChannel().getNextValue().get();
-            }
-            return "Percentage Level at 0";
+        if (this.getPowerLevelChannel().getNextValue().get() != null) {
+            return "DAC: " + super.id() + "is at " + this.getPowerLevelChannel().getNextValue().get() + "\n";
+        }
+        return "Percentage Level at 0\n";
 
     }
 

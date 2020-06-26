@@ -24,12 +24,13 @@ import io.openems.edge.scheduler.api.Scheduler;
  */
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Scheduler.FixedOrder", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class FixedOrder extends AbstractScheduler implements Scheduler {
+public class FixedOrder extends AbstractScheduler implements Scheduler, OpenemsComponent {
 
 	@Reference
 	protected ComponentManager componentManager;
 
 	private Config config;
+	private String [] controllerIds;
 
 	public enum ThisChannelId implements io.openems.edge.common.channel.ChannelId {
 		;
@@ -45,7 +46,7 @@ public class FixedOrder extends AbstractScheduler implements Scheduler {
 		}
 	}
 
-	protected FixedOrder() {
+	public FixedOrder() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				Scheduler.ChannelId.values(), //
@@ -56,6 +57,7 @@ public class FixedOrder extends AbstractScheduler implements Scheduler {
 	@Activate
 	void activate(ComponentContext context, Config config) {
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.cycleTime());
+		this.controllerIds = config.controllers_ids();
 	}
 
 	@Deactivate
@@ -68,7 +70,7 @@ public class FixedOrder extends AbstractScheduler implements Scheduler {
 		LinkedHashSet<Controller> result = new LinkedHashSet<>();
 
 		// add sorted controllers
-		for (String id : this.config.controllers_ids()) {
+		for (String id : this.controllerIds) {
 			if (id.equals("")) {
 				continue;
 			}
