@@ -27,7 +27,7 @@ public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements Op
     public void activate(ComponentContext context, Config config) throws ConfigurationException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
-        int pinAddress = setCorrectGpioAddress(config.pinAddress());
+        byte pinAddress = setCorrectGpioAddress(config.pinAddress());
 
         if (isWrite) {
             bridgeSpi.addDoubleUartTask(super.id(), new DoubleUartWriteTaskImpl(super.id(), config.spiChannel(),
@@ -45,29 +45,31 @@ public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements Op
 
     }
 
-    private int setCorrectGpioAddress(int pinAddress) throws ConfigurationException {
+    private byte setCorrectGpioAddress(int pinAddress) throws ConfigurationException {
         switch (pinAddress) {
-
+            //GPIO 0-7 will be translated --> Bit 7 == R/W (0/1); Bit 6:3 == GPIO; 2:1 == Channel A/B; 0 == not used
+            // == Register Address
+            // E.g. GPIO 0 == DSRB --> Write + 0001 + 01 + 0 --> 00001010
             case 0:
                 this.isWrite = true;
-                return 18;
+                return 10;
             case 1:
                 this.isWrite = true;
-                return 19;
+                return 18;
             case 2:
                 this.isWrite = true;
-                return 20;
+                return 34;
             case 6:
                 this.isWrite = true;
-                return 27;
+                return 32;
             case 4:
-                return 25;
+                return 8;
             case 5:
-                return 26;
+                return 16;
             case 7:
-                return 28;
+                return 64;
         }
-        throw new ConfigurationException("setCorrectGpioAddress", "The PinAddress " + pinAddress + " is not supported");
+        throw new ConfigurationException("setCorrectGpioAddress", "The Pin " + pinAddress + " is not supported");
     }
 
 

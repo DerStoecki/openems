@@ -21,18 +21,10 @@ public abstract class AbstractUartTask implements SpiDoubleUartTask {
 
     @Override
     public byte[] getPinAddressAsByte() {
-
-    /*       long output = pinAddress;
-            byte[] data = {0, 0, 0};
-            for (int i = 0; i < 3; i++) {
-                data[2 - i] = (byte) (output % 256);
-                output = output >> 8;
-            }
-           return data;
-      */
-        //0x41 == read; pinAddress to byte, and 0x00 for data; (?)
+        //pin Address == RW Bit + UART + Channel
+        //0x0E == register Address; pinAddress to byte, and 0x00 for data; (?)
         return new byte[]{
-                0x41, (byte) pinAddress, 0x00
+                0x0E, (byte) pinAddress, 0x00
         };
     }
 
