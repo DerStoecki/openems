@@ -5,6 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.passing.valvepumpcontrol.api.ValvePumpControlChannel;
 import io.openems.edge.controller.signalhotwater.api.SignalHotWaterChannel;
 import io.openems.edge.controller.signalhotwater.valvecontroller.api.SignalHotWaterValvecontrollerChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
@@ -19,6 +20,13 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * This controller receives the "needHotWater" signal from the "SignalHotWater" controller. This controller is
+ * responsible for switching the right valves in the right order to transfer heat to the water tank the
+ * "SignalHotWater" controller is monitoring.
+ *
+ */
+
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "SignalHotWater.Valvecontroller", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent implements OpenemsComponent, SignalHotWaterValvecontrollerChannel, Controller {
@@ -30,7 +38,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 
 	private Thermometer waermetauscherVorlauf;
 	private SignalHotWaterChannel signalHotWaterChannel;
-	private Valve valveUS01;
+	private ValvePumpControlChannel valvePumpControlChannel;
 	private Valve valveTL01;
 	private int minTempVorlauf;
 	private int stepcounter;
@@ -52,7 +60,6 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 
 		minTempVorlauf = config.min_temp_vl() * 10;	// Convert to dezidegree.
 		stepcounter = 0;
-		this.blockValve().setNextValue(false);
 		this.noError().setNextValue(true);
 		timeoutMinutes = config.timeout();
 		valveError = false;
@@ -70,11 +77,11 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				throw new ConfigurationException("The configured component is not a SignalHotWater controller! Please check "
 						+ config.signalHotWaterId(), "configured component is incorrect!");
 			}
-			if (cpm.getComponent(config.valveUS01Id()) instanceof Valve) {
-				this.valveUS01 = cpm.getComponent(config.valveUS01Id());
+			if (cpm.getComponent(config.valveUS01overrideId()) instanceof ValvePumpControlChannel) {
+				this.valvePumpControlChannel = cpm.getComponent(config.valveUS01overrideId());
 			} else {
-				throw new ConfigurationException("The configured component is not a valve! Please check "
-						+ config.valveUS01Id(), "configured component is incorrect!");
+				throw new ConfigurationException("The configured component is not a valve override controller! Please check "
+						+ config.valveUS01overrideId(), "configured component is incorrect!");
 			}
 			if (cpm.getComponent(config.valveTL01Id()) instanceof Valve) {
 				this.valveTL01 = cpm.getComponent(config.valveTL01Id());
@@ -92,12 +99,6 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 	@Deactivate
 	public void deactivate() {super.deactivate();}
 
-	/**
-	 * This controller receives the "needHotWater" signal from the "SignalHotWater" controller. This controller is
-	 * responsible for switching the right valves in the right order to transfer heat to the water tank the
-	 * "SignalHotWater" controller is monitoring.
-	 *
-	 */
 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
@@ -109,8 +110,10 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 
 				// Heating process is executed in steps. Stepcounter tracks progress, start is at stepcounter == 0.
 				if (stepcounter == 0) {
-					// open valveUS01
-					valveUS01.forceOpen();
+					// Activate override and open valveUS01. When override is active, valveUS01 can't be changed by
+					// other controllers.
+					valvePumpControlChannel.activateValveOverride().setNextWriteValue(true);
+					valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(true);
 
 					stepcounter = 1;
 
@@ -124,13 +127,12 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				if (stepcounter == 1) {
 				    // "If = true" is the regular code, "else" is the error handling in case things go wrong.
 				    if (waermetauscherVorlauf.getTemperature().value().get() >= minTempVorlauf) {
-                        this.blockValve().setNextValue(true);
 
                         // open valveTL01
                         valveTL01.forceOpen();
 
                         // close valveUS01
-                        valveUS01.forceClose();
+						valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(false);
 
                         stepcounter = 2;
                         this.logInfo(this.log, "Temperature reached, heating water tank.");
@@ -152,13 +154,12 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				                // Temperature has increased a bit, but not enough
                                 if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) >= timeoutMinutes * 2) {
                                     // After waiting two times the timeout length, try to heat anyway.
-                                    this.blockValve().setNextValue(true);
 
                                     // open valveTL01
                                     valveTL01.forceOpen();
 
                                     // close valveUS01
-                                    valveUS01.forceClose();
+									valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(false);
 
                                     stepcounter = 2;
                                     this.logInfo(this.log, "Temperature is only at " + (waermetauscherVorlauf.getTemperature().value().get() / 10)
@@ -188,16 +189,15 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 			// This executes when needHotWater = false. While heating the water tank, needHotWater is true and will turn
 			// to false when the required temperature in the tank is reached or the external signal stopped the heating.
 			} else {
-				this.blockValve().setNextValue(false);
+				// Deactivate override. ValveUS01 now returns to state before override.
+				valvePumpControlChannel.activateValveOverride().setNextWriteValue(false);
+
 
 				// close valveTL01
 				valveTL01.forceClose();
 
-				// Executes after heating the water tank. Do just once to not mess with other controllers accessing valveUS01.
+				// Executes after heating the water tank.
 				if (stepcounter == 2) {
-					//open valveUS01
-					valveUS01.forceOpen();
-
 					stepcounter = 0;
 					this.logInfo(this.log, "Stopped heating the water tank.");
 				}

@@ -29,8 +29,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Valve timeout", description = "Time in minutes to wait for reaction before the valve is considered defunct.")
     int timeout() default 5;
 
-    @AttributeDefinition(name = "heat exchanger forward valve", description = "The valve of the heat exchanger hot water input pipe.")
-    String valveUS01Id() default "US01";
+    @AttributeDefinition(name = "overrider module for valve US01", description = "The module that handles override access to valve US01.")
+    String valveUS01overrideId() default "ValveAndPumpControl0";
 
     @AttributeDefinition(name = "Water tank heating forward valve", description = "The input valve of the water tank heater.")
     String valveTL01Id() default "TL01";

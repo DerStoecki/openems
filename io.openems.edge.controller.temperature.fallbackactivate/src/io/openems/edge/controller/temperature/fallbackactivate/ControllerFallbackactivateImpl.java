@@ -60,12 +60,17 @@ public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent imp
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (tempSensor.getTemperature().getNextValue().get() < minTemp) {
-            controlRelay(true);
-            //this.logInfo(this.log, "Fallback heater active");
+        if (tempSensor.getTemperature().value().isDefined()) {
+            if (tempSensor.getTemperature().value().get() < minTemp) {
+                controlRelay(true);
+                //this.logInfo(this.log, "Fallback heater active");
+            } else {
+                controlRelay(false);
+            }
         } else {
-			controlRelay(false);
-		}
+            this.logInfo(this.log, "ERROR: Not getting any data from the temperature sensor!");
+        }
+
         //		this.logInfo(this.log, "Temperature sensor getTemperature().getNextValue().get(): " + tempSensor.getTemperature().getNextValue().get());
 
     }

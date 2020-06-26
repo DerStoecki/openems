@@ -76,6 +76,8 @@
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator.api',\
+	bnd.identity;id='io.openems.edge.controller.passing.valvepumpcontrol',\
+	bnd.identity;id='io.openems.edge.controller.passing.valvepumpcontrol.api',\
 	bnd.identity;id='io.openems.edge.controller.pid.passing',\
 	bnd.identity;id='io.openems.edge.controller.pvinverter.fixpowerlimit',\
 	bnd.identity;id='io.openems.edge.controller.selltogridlimit',\
@@ -251,6 +253,8 @@
 	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
 	io.openems.edge.controller.passing.heatingcurveregulator;version=snapshot,\
 	io.openems.edge.controller.passing.heatingcurveregulator.api;version=snapshot,\
+	io.openems.edge.controller.passing.valvepumpcontrol;version=snapshot,\
+	io.openems.edge.controller.passing.valvepumpcontrol.api;version=snapshot,\
 	io.openems.edge.controller.pid.passing;version=snapshot,\
 	io.openems.edge.controller.pvinverter.fixpowerlimit;version=snapshot,\
 	io.openems.edge.controller.selltogridlimit;version=snapshot,\

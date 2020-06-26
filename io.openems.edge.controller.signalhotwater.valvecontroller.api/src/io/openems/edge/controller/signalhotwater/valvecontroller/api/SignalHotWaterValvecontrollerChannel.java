@@ -12,17 +12,6 @@ public interface SignalHotWaterValvecontrollerChannel extends OpenemsComponent {
 
 
         /**
-         * Request to block the valve.
-         * <li>
-         * <li>Type: Boolean
-         * <li>
-         * </ul>
-         */
-
-        BLOCK_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
-
-
-        /**
          * Is Error.
          * <ul>
          * <li> If an Error occurred within this Controller
@@ -43,17 +32,6 @@ public interface SignalHotWaterValvecontrollerChannel extends OpenemsComponent {
             return this.doc;
         }
 
-    }
-
-
-    /**
-     * Request to block the valve.
-     *
-     * @return the Channel
-     */
-
-    default Channel<Boolean> blockValve() {
-        return this.channel(ChannelId.BLOCK_VALVE);
     }
 
 
