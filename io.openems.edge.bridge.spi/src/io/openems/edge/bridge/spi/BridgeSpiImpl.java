@@ -1,15 +1,11 @@
 package io.openems.edge.bridge.spi;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.spi.api.BridgeSpi;
-import io.openems.edge.bridge.spi.task.SpiDoubleUartReadTask;
-import io.openems.edge.bridge.spi.task.SpiDoubleUartTask;
-import io.openems.edge.bridge.spi.task.SpiDoubleUartWriteTask;
 import io.openems.edge.bridge.spi.task.SpiTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -37,11 +33,10 @@ import com.pi4j.wiringpi.Spi;
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
 public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi, EventHandler, OpenemsComponent {
 
-    private Set<Adc> adcList = new HashSet<>();
-    private Set<DoubleUart> uartList = new HashSet<>();
+    private Set<Adc> adcSet = new HashSet<>();
+    private Set<DoubleUart> uartSet = new HashSet<>();
     private final SpiWorker worker = new SpiWorker();
     private Map<String, SpiTask> tasks = new ConcurrentHashMap<>();
-    private Map<String, SpiDoubleUartTask> uartTasks = new ConcurrentHashMap<>();
 
 
     public BridgeSpiImpl() {
@@ -60,19 +55,19 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
     public void deactivate() {
         super.deactivate();
         this.worker.deactivate();
-        adcList.forEach(this::removeAdc);
+        adcSet.forEach(this::removeAdc);
     }
 
     @Override
     public void addAdc(Adc adc) {
         if (adc != null) {
-            this.adcList.add(adc);
+            this.adcSet.add(adc);
         }
     }
 
     @Override
     public Set<Adc> getAdcs() {
-        return this.adcList;
+        return this.adcSet;
     }
 
     /**
@@ -85,36 +80,20 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
     @Override
     public void removeAdc(Adc adc) {
         tasks.values().removeIf(value -> value.getSpiChannel() == adc.getSpiChannel());
-        this.adcList.removeIf(value -> value.getCircuitBoardId().equals(adc.getCircuitBoardId()));
+        this.adcSet.removeIf(value -> value.getCircuitBoardId().equals(adc.getCircuitBoardId()));
         adc.deactivate();
     }
 
     @Override
     public void addDoubleUart(DoubleUart uArt) {
         if (uArt != null) {
-            this.uartList.add(uArt);
+            this.uartSet.add(uArt);
         }
     }
 
     @Override
     public void removeDoubleUart(DoubleUart uart) {
-        uartTasks.values().removeIf(value -> value.getSpiChannel() == uart.getSpiChannel());
-        this.uartList.remove(uart);
-        uart.deactivate();
-    }
-
-    @Override
-    public void addDoubleUartTask(String id, SpiDoubleUartTask task) throws ConfigurationException {
-        if (this.uartTasks.containsKey(id)) {
-            throw new ConfigurationException("ID: " + id, "Config id already exists");
-        } else {
-            this.uartTasks.put(id, task);
-        }
-    }
-
-    @Override
-    public void removeDoubleUartTask(String id) {
-        this.uartTasks.remove(id);
+        this.uartSet.remove(uart);
     }
 
     /**
@@ -164,24 +143,24 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
                 Spi.wiringPiSPIDataRW(task.getSpiChannel(), data);
                 task.setResponse(data);
             });
-
-            uartTasks.values().forEach(task -> {
-                task.update();
-                if (task instanceof SpiDoubleUartReadTask) {
-                    byte[] data = task.getPinAddressAsByte();
-                    Spi.wiringPiSPIDataRW(task.getSpiChannel(), data);
-                    ((SpiDoubleUartReadTask) task).setResponse(data);
-                } else {
-                    //TODO Get PinAddress And To Write Data and send to correct Address
-                    Spi.wiringPiSPIDataRW(task.getSpiChannel(), ((SpiDoubleUartWriteTask) task).getRequest());
-                }
-            });
+            uartSet.forEach(DoubleUart::shift);
         }
 
     }
 
     public Map<String, SpiTask> getTasks() {
         return tasks;
+    }
+
+    @Override
+    public DoubleUart getUart(int spiChannel) throws ConfigurationException {
+        DoubleUart uart = uartSet.stream().filter(u -> u.getSpiChannel() == spiChannel).findAny().orElse(null);
+
+        if (uart == null) {
+            throw new ConfigurationException(Integer.toString(spiChannel), "Cannot find Uart with SpiChannel ");
+        } else {
+            return uart;
+        }
     }
 
     @Override

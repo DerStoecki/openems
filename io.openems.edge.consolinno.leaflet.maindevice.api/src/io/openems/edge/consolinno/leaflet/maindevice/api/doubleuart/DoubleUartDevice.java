@@ -2,6 +2,7 @@ package io.openems.edge.consolinno.leaflet.maindevice.api.doubleuart;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -19,7 +20,7 @@ public interface DoubleUartDevice extends OpenemsComponent {
          * </ul>
          */
         ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)), //
-        IS_INPUT(Doc.of(OpenemsType.BOOLEAN));
+        ERROR_MESSAGE(Doc.of(OpenemsType.STRING));
         private final Doc doc;
 
 
@@ -34,6 +35,10 @@ public interface DoubleUartDevice extends OpenemsComponent {
     }
 
     default WriteChannel<Boolean> getOnOff() {
-        return this.channel(PcaDevice.ChannelId.ON_OFF);
+        return this.channel(ChannelId.ON_OFF);
+    }
+
+    default Channel<String> getErrorMessage() {
+        return this.channel(ChannelId.ERROR_MESSAGE);
     }
 }

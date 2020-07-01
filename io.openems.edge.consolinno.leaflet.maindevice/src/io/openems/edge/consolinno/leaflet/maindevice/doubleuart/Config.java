@@ -25,7 +25,7 @@ import org.osgi.service.metatype.annotations.Option;
     String informationType() default "OnOff";
 
     @AttributeDefinition(name = "GPIO ", description = "What GPIO u want to call (0-7) is possible.")
-    int pinAddress() default 0;
+    byte pinPosition() default 0;
 
     @AttributeDefinition(name = "Spi Channel", description = "Channel Address of DoubleUART")
     int spiChannel() default 8;

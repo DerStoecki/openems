@@ -1,9 +1,9 @@
 package io.openems.edge.consolinno.leaflet.maindevice.doubleuart.task;
 
-import io.openems.edge.bridge.spi.task.SpiDoubleUartTask;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.Sc16Task;
 import io.openems.edge.common.channel.WriteChannel;
 
-public abstract class AbstractUartTask implements SpiDoubleUartTask {
+public abstract class AbstractUartTask implements Sc16Task {
 
     int pinAddress;
     private int spiChannel;
@@ -20,12 +20,10 @@ public abstract class AbstractUartTask implements SpiDoubleUartTask {
     }
 
     @Override
-    public byte[] getPinAddressAsByte() {
+    public int getPin() {
         //pin Address == RW Bit + UART + Channel
         //0x0E == register Address; pinAddress to byte, and 0x00 for data; (?)
-        return new byte[]{
-                0x0E, (byte) pinAddress, 0x00
-        };
+       return this.pinAddress;
     }
 
 
