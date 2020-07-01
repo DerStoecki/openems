@@ -15,11 +15,24 @@ public interface DoubleUartDevice extends OpenemsComponent {
          * OnOff.
          *
          * <ul>
-         * <li>Interface: PcaDevice
+         * <li>Interface: DoubleUartDevice
          * <li>Type: Boolean
          * </ul>
          */
         ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)), //
+
+        /**
+         * Error Message Type.
+         *
+         * <ul>
+         *     <li>Interface: DoubleUartDevice
+         *     <li>Type: String
+         * </ul>
+         * <p>
+         *      Description: Will show for what this Error Message standing for; E.g. LED Green/Red/yellow etc.
+         *      Lookup DoubleUartDeviceImpl as an example.
+         * </p>
+         * */
         ERROR_MESSAGE(Doc.of(OpenemsType.STRING));
         private final Doc doc;
 
@@ -37,7 +50,6 @@ public interface DoubleUartDevice extends OpenemsComponent {
     default WriteChannel<Boolean> getOnOff() {
         return this.channel(ChannelId.ON_OFF);
     }
-
     default Channel<String> getErrorMessage() {
         return this.channel(ChannelId.ERROR_MESSAGE);
     }

@@ -23,7 +23,7 @@ public abstract class AbstractUartTask implements Sc16Task {
     public int getPin() {
         //pin Address == RW Bit + UART + Channel
         //0x0E == register Address; pinAddress to byte, and 0x00 for data; (?)
-       return this.pinAddress;
+        return this.pinAddress;
     }
 
 
@@ -32,12 +32,15 @@ public abstract class AbstractUartTask implements Sc16Task {
         return spiChannel;
     }
 
-    @Override
+    //TODO SEE IF UPDATE IS NECESSARY
+    /*    @Override
     public void update() {
         if (this.onOff.getNextWriteValue().isPresent()) {
             this.onOff.setNextValue(this.onOff.getNextWriteValueAndReset());
         }
     }
+
+        */
 
     @Override
     public String getId() {

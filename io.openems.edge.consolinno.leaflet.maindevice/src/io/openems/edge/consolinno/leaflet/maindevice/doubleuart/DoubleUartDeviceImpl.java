@@ -34,12 +34,12 @@ public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements Op
         setGpioErrorMessageAndWrite(config.pinPosition());
 
 
-            uart = bridgeSpi.getUart(config.spiChannel());
-            if (uart instanceof Sc16IS752) {
-                Sc16IS752 sc16 = (Sc16IS752)uart;
+        uart = bridgeSpi.getUart(config.spiChannel());
+        if (uart instanceof Sc16IS752) {
+            Sc16IS752 sc16 = (Sc16IS752) uart;
 
-                if (isWrite) {
-            sc16.addTask(super.id(), new DoubleUartWriteTaskImpl(super.id(), config.spiChannel(),
+            if (isWrite) {
+                sc16.addTask(super.id(), new DoubleUartWriteTaskImpl(super.id(), config.spiChannel(),
                         config.pinPosition(), getOnOff()));
             } else {
                 sc16.addTask(super.id(), new DoubleUartReadTaskImpl(super.id(), config.spiChannel(),
@@ -78,7 +78,7 @@ public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements Op
                 break;
             case 5:
                 this.getErrorMessage().setNextValue("ERROR-FLAG-HBUS 24V");
-               break;
+                break;
             case 7:
                 this.getErrorMessage().setNextValue("OUTPUT-VOLTAGE-SERVICE-PORTS");
                 break;
@@ -90,11 +90,11 @@ public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements Op
     @Override
     public String debugLog() {
         String onOff = "Off";
-        if (this.getOnOff().getNextValue().isDefined()) {
-            if (this.getOnOff().getNextValue().get()) {
+        if (this.getOnOff().value().isDefined()) {
+            if (this.getOnOff().value().get()) {
                 onOff = "On";
             }
         }
-        return super.id() + " Status: " + onOff;
+        return this.getErrorMessage().value() + " " + super.id() + " Status: " + onOff;
     }
 }

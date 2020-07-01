@@ -143,7 +143,9 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
                 Spi.wiringPiSPIDataRW(task.getSpiChannel(), data);
                 task.setResponse(data);
             });
-            uartSet.forEach(DoubleUart::shift);
+            for (DoubleUart doubleUart : uartSet) {
+                doubleUart.shift();
+            }
         }
 
     }
