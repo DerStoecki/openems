@@ -1,8 +1,1 @@
-# io.openems.edge.dachs.gltinterface.api Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
-
+The interface to communicate with the Dachs GLT-interface module.

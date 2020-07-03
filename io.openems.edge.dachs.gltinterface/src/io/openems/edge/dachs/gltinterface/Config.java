@@ -26,7 +26,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Password", description = "Password for the GLT web interface")
     String password() default "";
 
-    @AttributeDefinition(name = "Polling interval", description = "Unit: seconds. Time between calls of the GLT interface to updates the values.")
+    @AttributeDefinition(name = "Polling interval", description = "Unit: seconds. Time between calls of the GLT interface to updates the values. Maximum 540.")
     int interval() default 10;
 
     boolean enabled() default true;
