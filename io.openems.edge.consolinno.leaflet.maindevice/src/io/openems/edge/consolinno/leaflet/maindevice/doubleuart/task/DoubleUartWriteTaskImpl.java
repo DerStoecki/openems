@@ -5,7 +5,7 @@ import io.openems.edge.common.channel.WriteChannel;
 
 public class DoubleUartWriteTaskImpl extends AbstractUartTask implements Sc16WriteTask {
 
-    public DoubleUartWriteTaskImpl(String id, int spiChannel, byte pinAddress, WriteChannel<Boolean> onOff) {
+    public DoubleUartWriteTaskImpl(String id, int spiChannel, int pinAddress, WriteChannel<Boolean> onOff) {
         super(spiChannel, pinAddress, onOff, id);
 
     }

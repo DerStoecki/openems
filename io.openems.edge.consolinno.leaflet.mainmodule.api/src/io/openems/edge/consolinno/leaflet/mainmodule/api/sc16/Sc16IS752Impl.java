@@ -257,12 +257,12 @@ public class Sc16IS752Impl implements Sc16IS752 {
         //set Pins
         Spi.wiringPiSPIDataRW(spiChannel, basicPinSetup);
         //Setup for Interrupt; Default : 0 (no interrupts when GPIO state changes.)
-        Spi.wiringPiSPIDataRW(spiChannel, basicInterruptConfig);
+      //  Spi.wiringPiSPIDataRW(spiChannel, basicInterruptConfig);
         //interrupts is latched or not Default : 0 (no latch)
-        Spi.wiringPiSPIDataRW(spiChannel, basicIoControl);
+        //Spi.wiringPiSPIDataRW(spiChannel, basicIoControl);
 
-        Spi.wiringPiSPIDataRW(spiChannel, basicFcrSetup);
-        Spi.wiringPiSPIDataRW(spiChannel, basicTlrSetup);
+        //Spi.wiringPiSPIDataRW(spiChannel, basicFcrSetup);
+        //Spi.wiringPiSPIDataRW(spiChannel, basicTlrSetup);
 
     }
 
