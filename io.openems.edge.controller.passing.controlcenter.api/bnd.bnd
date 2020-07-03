@@ -4,7 +4,7 @@ Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
 Bundle-Description: \
-            The channel to communicate with the passing control center.
+            The channel to communicate with the passing control center module.
 
 Export-Package:  \
 	io.openems.edge.controller.passing.controlcenter.api,\

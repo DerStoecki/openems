@@ -211,7 +211,7 @@ public class HeatPumpAlphaInnotecImpl extends AbstractOpenemsModbusComponent imp
 						m(HeatpumpAlphaInnotecChannel.ChannelId.COIL_13_FRH, new CoilElement(13),
 								ElementToChannelConverter.DIRECT_1_TO_1)
 				),
-				// There is no write multiple coils in OpenEMS, so you need a separate write call for each coil.
+				// There is no "write-multiple-coils" command implementation in OpenEMS, so you need a separate write call for each coil.
 				new FC5WriteCoilTask(0,
 						m(HeatpumpAlphaInnotecChannel.ChannelId.COIL_0_ERRORRESET, new CoilElement(0),
 								ElementToChannelConverter.DIRECT_1_TO_1)),
@@ -402,7 +402,7 @@ public class HeatPumpAlphaInnotecImpl extends AbstractOpenemsModbusComponent imp
 				break;
 		}
 
-		// The value can be null. "orElse" means "get value or use alternative value if value = null".
+		// The value in the channel can be null. Use "orElse" to avoid null pointer exception.
 		if (getErrorCode().value().orElse(0) != 0) {
 			noError().setNextValue(false);
 		} else {

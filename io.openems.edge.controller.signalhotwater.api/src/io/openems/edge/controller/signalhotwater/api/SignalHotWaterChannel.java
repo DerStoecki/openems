@@ -14,7 +14,7 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
 
         /**
-         * Request to heat the water tank.
+         * Request to heat the water tank. Controller output, request to turn on the heat network.
          * <li>
          * <li>Type: Boolean
          * <li>
@@ -24,14 +24,14 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
         HEAT_TANK_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
-         * Controller input
+         * Controller input. Remote signal about the heat network status.
          * <li>
          * <li>Type: Boolean
          * <li>
          * </ul>
          */
 
-        HOT_WATER_REMOTE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
+        HEAT_NETWORK_READY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
                 .onInit(channel -> { //
                     // on each Write to the channel -> set the value
                     ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
@@ -40,7 +40,7 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
                 })),
 
         /**
-         * Controller output
+         * Controller output. Signal to the next controller to start heating the water tank.
          * <li>
          * <li>Type: Boolean
          * <li>
@@ -60,9 +60,9 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
         WATER_TANK_TEMP(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY)),
 
         /**
-         * Is Error.
+         * No error in this controller.
          * <ul>
-         * <li> If an Error occurred within this Controller
+         * <li>False if an Error occurred within this Controller.
          * <li>Type: Boolean
          * <li>
          * </ul>
@@ -94,13 +94,17 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
     }
 
     /**
-     * Controller output, signalling need for hot water.
+     * Controller input. Status of the heat network needs to be written in this channel. When the water tank is within
+     * temperature bounds, changes (!) in this channel will be forwarded to the needHotWater channel. That means, if
+     * this channel changes from true to false while the water tank is heating up and already above min temperature,
+     * needHotWater will change to false and the heating will stop. If this channel changes from false to true while
+     * the tank is below max temperature, needHotWater will change to true and heating will start.
      *
      * @return the Channel
      */
 
-    default WriteChannel<Boolean> remoteHotWaterSignal() {
-        return this.channel(ChannelId.HOT_WATER_REMOTE);
+    default WriteChannel<Boolean> heatNetworkReadySignal() {
+        return this.channel(ChannelId.HEAT_NETWORK_READY);
     }
 
     /**
@@ -114,7 +118,7 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
     }
 
     /**
-     * Temperature of the water tank lower sensor, which should be the lowest temperature in the water tank.
+     * Temperature of the water tank lower sensor, which monitors the maximum temperature in the water tank.
      *
      * @return the Channel
      */
@@ -123,9 +127,10 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
         return this.channel(ChannelId.WATER_TANK_TEMP);
     }
 
+
     /**
-     * Has an Error occurred or is everything's fine. An error occurs when the controller does not get a signal
-     * from one of the temperature sensors.
+     * Is true when no error has occurred. An error occurs when the controller does not get a signal from one of the
+     * temperature sensors.
      *
      * @return the Channel
      */

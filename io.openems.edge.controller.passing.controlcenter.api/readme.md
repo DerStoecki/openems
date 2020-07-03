@@ -1,8 +1,3 @@
-# io.openems.edge.controller.passing.controlcenter.api Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
+This is the interface for the Consolinno Passing ControlCenter module. 
+It contains the temperature override channel.
 

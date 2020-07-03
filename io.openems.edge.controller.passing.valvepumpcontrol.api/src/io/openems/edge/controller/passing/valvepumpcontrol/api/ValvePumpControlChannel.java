@@ -13,9 +13,8 @@ public interface ValvePumpControlChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-
         /**
-         * Set status for the valve override setting. True means open, false means close.
+         * Open or close the valve. True means open, false means close. Override needs to be active for this to do anything.
          * <ul>
          * <li>Open or close
          * <li>Type: Boolean
@@ -48,11 +47,10 @@ public interface ValvePumpControlChannel extends OpenemsComponent {
                     });
                 })),
 
-
         /**
-         * Is Error.
+         * No error in this controller.
          * <ul>
-         * <li> If an Error occurred within this Controller
+         * <li>False if an Error occurred within this Controller.
          * <li>Type: Boolean
          * <li>
          * </ul>
@@ -74,7 +72,7 @@ public interface ValvePumpControlChannel extends OpenemsComponent {
 
 
     /**
-     * Set status for the valve override setting. True means open, false means close.
+     * Open or close the valve. True means open, false means close. Override needs to be active for this to do anything.
      *
      * @return the Channel
      */
@@ -94,7 +92,7 @@ public interface ValvePumpControlChannel extends OpenemsComponent {
 
 
     /**
-     * Has an Error occurred or is everything's fine.
+     * Is true when no error has occurred.
      *
      * @return the Channel
      */

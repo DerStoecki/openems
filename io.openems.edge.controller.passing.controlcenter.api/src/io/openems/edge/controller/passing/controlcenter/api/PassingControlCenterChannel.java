@@ -17,58 +17,35 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
         /**
          * Temperature Override.
          * <ul>
-         * <li> Overrides output value for the heating temperature.
+         * <li>Overrides output value for the heating temperature.
          * <li>Type: Integer
          * <li>Unit: Decimal degrees Celsius
          * </ul>
          */
 
-        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)
-                .onInit(channel -> { //
-                    // on each Write to the channel -> set the value
-                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
-                        channel.setNextValue(value);
-                    });
-                })),
+        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
 
         /**
          * Tells the controller to use the temperature override.
          * <ul>
-         * <li> If the override is active.
+         * <li>If the override is active.
          * <li>Type: Boolean
          * <li>
          * </ul>
          */
 
-        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
-                .onInit(channel -> { //
-                    // on each Write to the channel -> set the value
-                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
-                        channel.setNextValue(value);
-                    });
-                })),
+        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
 
         /**
          * Controller output. If the heater should activate or not.
          * <ul>
-         * <li> If the heater should activate.
+         * <li>If the heater should activate.
          * <li>Type: Boolean
          * <li>
          * </ul>
          */
 
-        ACTIVATE_HEATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
-
-        /**
-         * Is Error.
-         * <ul>
-         * <li> If an Error occurred within this Controller
-         * <li>Type: Boolean
-         * <li>
-         * </ul>
-         */
-
-        NO_ERROR(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
+        ACTIVATE_HEATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
 
         private final Doc doc;
 
@@ -113,14 +90,5 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
         return this.channel(ChannelId.ACTIVATE_HEATER);
     }
 
-    /**
-     * Has an Error occurred or is everything's fine.
-     *
-     * @return the Channel
-     */
-
-    default Channel<Boolean> noError() {
-        return this.channel(ChannelId.NO_ERROR);
-    }
 
 }

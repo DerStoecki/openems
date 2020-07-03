@@ -1,8 +1,1 @@
-# io.openems.edge.controller.signalhotwater.valvecontroller.api Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
-
+This is the interface for the Consolinno SignalHotWater ValveController. It contains just the error channel.

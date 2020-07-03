@@ -16,6 +16,14 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This is the Consolinno weather dependent heating controller.
+ * - It takes the outside temperature as input and asks for the heating to be turned on or off based on the outside
+ *   temperature.
+ * - If the outside temperature is below the activation threshold, a heating temperature is calculated based
+ *   on a parametrized heating curve.
+ *
+ */
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "AutomaticRegulator", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -32,6 +40,10 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 	private double slope;
 	private int offset;
 
+	// Variables for channel readout
+	private boolean tempSensorSendsData;
+	private int outsideTemperature;
+
 	public HeatingCurveRegulatorImpl() {
 		super(OpenemsComponent.ChannelId.values(),
 				HeatingCurveRegulatorChannel.ChannelId.values(),
@@ -44,7 +56,7 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 
 		activationTemp = config.activation_temp();
 		roomTemp = config.room_temp();
-		// Function will crash if sensor temp > room temp.
+		// Activation temperature can not be higher than desired room temperature, otherwise the function will crash.
 		if (activationTemp > roomTemp) {
 			activationTemp = roomTemp;
 		}
@@ -54,6 +66,8 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 		offset = config.offset();
 
 		this.noError().setNextValue(true);
+
+		// Allocate temperature sensor.
 		try {
 			if (cpm.getComponent(config.temperatureSensorId()) instanceof Thermometer) {
 
@@ -70,33 +84,60 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 
 
 	@Deactivate
-	public void deactivate() {super.deactivate();}
+	public void deactivate() {
+		super.deactivate();
+		turnOnHeater(false);
+	}
 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
-		if (outsideTempSensor.getTemperature().value().isDefined()) {
-			if (outsideTempSensor.getTemperature().value().get() <= activationTemp) {
-				//function calculates everything in degree, not dezidegree!
-				double function = (slope * 1.8317984 * Math.pow((roomTemp - (0.1 * outsideTempSensor.getTemperature().getNextValue().get())), 0.8281902))
-						+ roomTemp + offset;
-				//Convert back to dezidegree integer
-				this.getHeatingTemperature().setNextValue((int)Math.round(function * 10));
-				this.logInfo(this.log, "Thermometer measures " + 0.1 * outsideTempSensor.getTemperature().getNextValue().get()
-						+ "°C. Heater temperature calculates to " + (int)Math.round(function) + "°C.");
-				this.isActive().setNextValue(true);
-			}
-			//Set Error channel back to no error if there has been an error.
-			if (this.noError().value().isDefined() && !this.noError().value().get()) {
+		// Transfer channel data to local variables for better readability of logic code.
+		tempSensorSendsData = outsideTempSensor.getTemperature().value().isDefined();
+		if (tempSensorSendsData) {
+			outsideTemperature = outsideTempSensor.getTemperature().value().get();
+
+			// Error handling.
+			if (this.noError().value().get() == false) {
 				this.noError().setNextValue(true);
-				this.logInfo(this.log, "Everything is fine now!");
+				this.logError(this.log, "Everything is fine now! Reading from the temperature sensor is "
+						+ outsideTemperature / 10 + "°C.");
 			}
 		} else {
-			this.isActive().setNextValue(false);
+			// No data from the temperature sensor (null in channel). -> Error
+			turnOnHeater(false);
 			this.noError().setNextValue(false);
-			this.logInfo(this.log, "Not getting any data from the outside temperature sensor " + outsideTempSensor.id() + ".");
+			this.logError(this.log, "Not getting any data from the outside temperature sensor " + outsideTempSensor.id() + ".");
 		}
 
+
+		// Control logic.
+		if (tempSensorSendsData) {
+			if (outsideTemperature <= activationTemp) {
+				turnOnHeater(true);
+
+				// Calculate heating temperature. Function calculates everything in degree, not dezidegree!
+				double function = (slope * 1.8317984 * Math.pow((roomTemp - (0.1 * outsideTemperature)), 0.8281902))
+						+ roomTemp + offset;
+
+				// Convert back to dezidegree integer.
+				int outputTempDezidegree = (int)Math.round(function * 10);
+
+				setHeatingTemperature(outsideTemperature);
+				this.logDebug(this.log, "Outside thermometer measures " + 0.1 * outsideTemperature
+						+ "°C. Heater function calculates forward temperature to " + outputTempDezidegree / 10 + "°C.");
+			} else {
+				turnOnHeater(false);
+			}
+		}
+	}
+
+	private void turnOnHeater(boolean activate) {
+		this.signalTurnOnHeater().setNextValue(activate);
+	}
+
+	private void setHeatingTemperature(int temperature) {
+		this.getHeatingTemperature().setNextValue(temperature);
 	}
 
 }

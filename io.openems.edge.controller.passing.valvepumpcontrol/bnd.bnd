@@ -3,7 +3,7 @@ Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-    Provides the valve and pump control module.
+    Control module to manage different controllers manipulating the same valve and pump.
 
 Export-Package:  \
 

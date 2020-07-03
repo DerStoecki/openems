@@ -3,7 +3,7 @@ Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-    Provides the Controller that sends the "need hot water" signal.
+    Provides the Controller that monitors the temperature of a water tank and sends the "need hot water" signal.
 
 Export-Package:  \
 

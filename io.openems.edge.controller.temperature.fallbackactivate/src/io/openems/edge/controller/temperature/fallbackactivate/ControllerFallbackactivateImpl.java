@@ -18,6 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+/**
+ * This controller activates a fallback heater via a relay when a monitored temperature drops below a certain value.
+ *
+ */
+
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "temperature.controller.fallbackactivate")
 public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
@@ -30,9 +35,15 @@ public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent imp
     private Thermometer tempSensor;
     private ActuatorRelaysChannel relay;
     private int minTemp;
+    private boolean displayOnce;
+    private boolean error;
+    private int hysteresis;
+
+    // Variables for channel readout
+    private boolean tempSensorSendsData;
+    private int temperature;
 
     public ControllerFallbackactivateImpl() {
-
         super(OpenemsComponent.ChannelId.values(),
                 Controller.ChannelId.values());
     }
@@ -41,15 +52,33 @@ public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent imp
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
+        // Convert to dezidegree, since temperature sensor data is in dezidegree as well.
+        minTemp = config.min_temp() * 10;
+        hysteresis = config.hysteresis() * 10;
+
+        displayOnce = false;
+        error = false;
+
+        // Allocate components.
         try {
-            allocate_Component(config.temp_Sensor(), "Thermometer");
-            allocate_Component(config.relay_id(), "Relay");
+            if (cpm.getComponent(config.temp_Sensor()) instanceof Thermometer) {
+                tempSensor = cpm.getComponent(config.temp_Sensor());
+            } else {
+                throw new ConfigurationException(config.temp_Sensor(), "The temperature-sensor " + config.temp_Sensor()
+                        + " Is not a (configured) temperature sensor.");
+            }
+            if (cpm.getComponent(config.relay_id()) instanceof ActuatorRelaysChannel) {
+                relay = cpm.getComponent(config.relay_id());
+                // Set relay to "off" state upon initialization.
+                controlRelay(false);
+            } else {
+                throw new ConfigurationException(config.relay_id(), "The allocated relay " + config.relay_id()
+                        + " is not a (configured) relay.");
+            }
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
             throw e;
         }
-        minTemp = config.min_temp();
-
     }
 
 
@@ -60,39 +89,44 @@ public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent imp
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (tempSensor.getTemperature().value().isDefined()) {
-            if (tempSensor.getTemperature().value().get() < minTemp) {
-                controlRelay(true);
-                //this.logInfo(this.log, "Fallback heater active");
-            } else {
-                controlRelay(false);
+
+        // Transfer channel data to local variables for better readability of logic code.
+        tempSensorSendsData = tempSensor.getTemperature().value().isDefined();
+        if (tempSensorSendsData) {
+            temperature = tempSensor.getTemperature().value().get();
+
+            // Error handling
+            if (error) {
+                error = false;
+                this.logError(this.log, "Everything is fine now! Reading from the temperature sensor is "
+                        + temperature / 10 + "°C.");
             }
         } else {
-            this.logInfo(this.log, "ERROR: Not getting any data from the temperature sensor!");
+            // You land here when there is no data from the temperature sensor (null in channel). -> Error
+            error = true;
+            this.logError(this.log, "ERROR: Not getting any data from the temperature sensor!");
         }
 
-        //		this.logInfo(this.log, "Temperature sensor getTemperature().getNextValue().get(): " + tempSensor.getTemperature().getNextValue().get());
 
-    }
-
-
-    private void allocate_Component(String id, String type) throws OpenemsError.OpenemsNamedException, ConfigurationException {
-        switch (type) {
-            case "Thermometer":
-                if (cpm.getComponent(id) instanceof Thermometer) {
-                    tempSensor = cpm.getComponent(id);
-                } else {
-                    throw new ConfigurationException(id, "The temperature-sensor " + id + " Is not a (configured) temperature sensor.");
+        // Control logic.
+        if (tempSensorSendsData) {
+            if (temperature < minTemp) {
+                controlRelay(true);
+                if (displayOnce == false) {
+                    this.logInfo(this.log, "Fallback heater activated. Activation temperature is "
+                            + minTemp / 10 + "°C, measured temperature is " + temperature / 10 + "°C.");
+                    displayOnce = true;
                 }
-                break;
-            case "Relay":
-                if (cpm.getComponent(id) instanceof ActuatorRelaysChannel) {
-                    relay = cpm.getComponent(id);
-                    relay.getRelaysChannel().setNextWriteValue(!relay.isCloser().getNextValue().get());        // set relay to "off" state upon initialization
-                } else {
-                    throw new ConfigurationException(id, "Allocated relay is not a (configured) relay.");
+            } else {
+                if (temperature >= minTemp + hysteresis) {
+                    controlRelay(false);
+                    if (displayOnce) {
+                        this.logInfo(this.log, "Fallback heater deactivated. Activation temperature plus hysteresis is "
+                                + (minTemp + hysteresis) / 10 + "°C, measured temperature is " + temperature / 10 + "°C.");
+                        displayOnce = false;
+                    }
                 }
-                break;
+            }
         }
     }
 

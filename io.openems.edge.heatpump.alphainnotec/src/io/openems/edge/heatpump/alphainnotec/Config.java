@@ -6,7 +6,7 @@ import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
         name = "Heat Pump Alpha Innotec",
-        description = "A heat pump provided by Alpha Innotec, communicating via ModbusTCP."
+        description = "A module to map Modbus calls to OpenEMS channels for an Alpha Innotec heat pump."
 )
 @interface Config {
 
@@ -18,13 +18,14 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you what to allocate to this device.")
     String modbusBridgeId() default "modbus0";
 
-    @AttributeDefinition(name = "HeatPump Type", description = "Select used heat pump.",
+    // Not yet implemented. Not all Modbus calls are supported by all heat pump models. This option will be used to
+    // communicate which functions are available and which are not.
+    @AttributeDefinition(name = "HeatPump Type", description = "Select used heat pump. Not yet implemented",
     options = {
             @Option(label = "Default", value = "Default"),
-            @Option(label = "Placeholder2", value = "Placeholder2"),
             @Option(label = "Not in List", value = "Not in List")
     })
-    String gasBoilerType() default "Default";
+    String heatPumpType() default "Default";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of HeatPump.")
     String alias() default "";

@@ -16,7 +16,7 @@ public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
         /**
          * Heating Temperature.
          * <ul>
-         * <li> Output value for the heating temperature.
+         * <li>Controller output. Value for the heating temperature.
          * <li>Type: Integer
          * <li>Unit: Decimal degrees Celsius
          * </ul>
@@ -25,20 +25,20 @@ public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
         HEATING_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_ONLY)),
 
         /**
-         * Is Active.
+         * Activate the heater.
          * <ul>
-         * <li> If the controller is active.
+         * <li>Controller output. If the heater should be turned on.
          * <li>Type: Boolean
          * <li>
          * </ul>
          */
 
-        ACTIVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
+        ACTIVATE_HEATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
-         * Is Error.
+         * No error in this controller.
          * <ul>
-         * <li> If an Error occurred within this Controller
+         * <li>False if an Error occurred within this Controller.
          * <li>Type: Boolean
          * <li>
          * </ul>
@@ -71,19 +71,19 @@ public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
     }
 
     /**
-     * Is the controller currently active.
-     * This is true when the temperature measured by the allocated sensor is lower than the room temperature set
+     * Controller output: Signal for the heater to be turned on.
+     * This is true when the temperature measured by the allocated sensor is lower than the activation temperature set
      * in the configuration.
      *
      * @return the Channel
      */
 
-    default Channel<Boolean> isActive() {
-        return this.channel(ChannelId.ACTIVE);
+    default Channel<Boolean> signalTurnOnHeater() {
+        return this.channel(ChannelId.ACTIVATE_HEATER);
     }
 
     /**
-     * Has an Error occurred or is everything's fine.
+     * Is true when no error has occurred.
      *
      * @return the Channel
      */

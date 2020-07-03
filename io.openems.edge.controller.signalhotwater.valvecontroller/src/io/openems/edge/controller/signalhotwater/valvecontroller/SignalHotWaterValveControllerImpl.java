@@ -47,6 +47,14 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 	private int temperatureControl;
 	private boolean valveError;
 
+	// Variables for channel readout
+	private boolean temperatureSensorSendsData;
+	private boolean needHotWater;
+	private int heatNetworkTemp;
+	private int waterTankTemperature;
+
+
+
 	public SignalHotWaterValveControllerImpl() {
 		super(OpenemsComponent.ChannelId.values(),
 				Controller.ChannelId.values(),
@@ -63,7 +71,9 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 		this.noError().setNextValue(true);
 		timeoutMinutes = config.timeout();
 		valveError = false;
+		temperatureSensorSendsData = true;
 
+		// Allocate components
 		try {
 			if (cpm.getComponent(config.temperatureSensorVlId()) instanceof Thermometer) {
 				this.waermetauscherVorlauf = cpm.getComponent(config.temperatureSensorVlId());
@@ -103,71 +113,71 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
-		// Sensor checks.
+		// Sensor checks and error handling.
 		if (waermetauscherVorlauf.getTemperature().value().isDefined()) {
-			// Listen to the needHotWater signal
-			if (signalHotWaterChannel.needHotWater().value().isDefined() && signalHotWaterChannel.needHotWater().value().get()) {
+			if (signalHotWaterChannel.waterTankTemp().value().isDefined()) {
+				heatNetworkTemp = waermetauscherVorlauf.getTemperature().value().get();
+				waterTankTemperature = signalHotWaterChannel.waterTankTemp().value().get();
+				if (temperatureSensorSendsData == false) {
+					this.logError(this.log, "Temperature sensors are fine now!");
+				}
+				temperatureSensorSendsData = true;
+				if (valveError == false) {
+					this.noError().setNextValue(true);
+				}
+			} else {
+				temperatureSensorSendsData = false;
+				this.noError().setNextValue(false);
+				this.logError(this.log, "Error, not getting a temperature signal from the water tank!");
+			}
+		} else {
+			temperatureSensorSendsData = false;
+			this.noError().setNextValue(false);
+			this.logError(this.log, "Not getting any data from temperature sensor " + waermetauscherVorlauf.id() + ".");
+		}
+
+
+		// Transfer channel data to local variables for better readability of logic code.
+		needHotWater = signalHotWaterChannel.needHotWater().value().isDefined() && signalHotWaterChannel.needHotWater().value().get();
+
+
+		// Control logic.
+		if (temperatureSensorSendsData) {
+			if (needHotWater) {
 
 				// Heating process is executed in steps. Stepcounter tracks progress, start is at stepcounter == 0.
 				if (stepcounter == 0) {
-					// Activate override and open valveUS01. When override is active, valveUS01 can't be changed by
-					// other controllers.
-					valvePumpControlChannel.activateValveOverride().setNextWriteValue(true);
-					valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(true);
+					// When override is active, valveUS01 can't be changed by other controllers.
+					valveUS01Override(true);
+					controlValveUS01(true);
 
 					stepcounter = 1;
 
 					// Timestamp and temperature saved to check if valve/heat source is functional.
 					timestamp = LocalDateTime.now();
-					temperatureControl = waermetauscherVorlauf.getTemperature().value().get();
+					temperatureControl = heatNetworkTemp;
 					this.logInfo(this.log, "NeedHotWater signal received. Waiting for heat source to reach temperature.");
 				}
 
 
 				if (stepcounter == 1) {
 				    // "If = true" is the regular code, "else" is the error handling in case things go wrong.
-				    if (waermetauscherVorlauf.getTemperature().value().get() >= minTempVorlauf) {
-
-                        // open valveTL01
+				    if (heatNetworkTemp >= minTempVorlauf) {
                         valveTL01.forceOpen();
-
-                        // close valveUS01
-						valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(false);
-
-                        stepcounter = 2;
+						controlValveUS01(false);
+						stepcounter = 2;
                         this.logInfo(this.log, "Temperature reached, heating water tank.");
 
-                        // In case error was triggered, delete error if program can actually get to here.
+                        // In case valveError was triggered, reset error if program can actually get to here.
                         valveError = false;
-                        this.noError().setNextValue(true);
                     } else {
-				        // After timeout, check if temperature has increased at least 5°C
-				        if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) >= timeoutMinutes) {
-				            if (waermetauscherVorlauf.getTemperature().value().get() < temperatureControl + 50) {
-				                // Temperature has not increase at least 5°C --> something is broken.
-                                this.noError().setNextValue(false);
-				                valveError = true;
-                                this.logInfo(this.log, "Error: Valve or heat source malfunction! Getting only "
-										+ (waermetauscherVorlauf.getTemperature().value().get() / 10) + "°C from the heat source. Valve should "
-										+ "be open and temperature should rise, but not detecting the expected increase in temperature.");
-                            } else {
-				                // Temperature has increased a bit, but not enough
-                                if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) >= timeoutMinutes * 2) {
-                                    // After waiting two times the timeout length, try to heat anyway.
-
-                                    // open valveTL01
-                                    valveTL01.forceOpen();
-
-                                    // close valveUS01
-									valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(false);
-
-                                    stepcounter = 2;
-                                    this.logInfo(this.log, "Temperature is only at " + (waermetauscherVorlauf.getTemperature().value().get() / 10)
-                                            + "°C, but should be at least at " + (minTempVorlauf / 10) + "°C by now. Check heat source for possible errors." +
-											" Trying to heat the water tank anyway.");
-                                }
-                            }
-                        }
+						// Heat network should be heating up. If temperature is not reached before timer runs out,
+						// start error handling.
+						if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) >= timeoutMinutes) {
+							checkForValveError();
+						}
+						this.logDebug(this.log, "Waiting for heat network to reach a temperature of "
+								+ minTempVorlauf / 10 + "°C. Currently temperature is at " + heatNetworkTemp / 10 + "°C.");
                     }
 				}
 
@@ -175,25 +185,19 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				if (stepcounter == 2 && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) >= 1) {
 				    timestamp = LocalDateTime.now();
 
-				    // waterTankTemp() is the temperature of the bottom sensor in the tank.
-				    if (signalHotWaterChannel.waterTankTemp().value().isDefined()) {
-						this.logInfo(this.log, "Heating the water tank. Heat source temperature is at "
-										+ (waermetauscherVorlauf.getTemperature().value().get() / 10)
-										+ "°C, water tank lowest temperature is at "
-								+ (signalHotWaterChannel.waterTankTemp().value().get() / 10) + "°C.");
-					} else {
-						this.logInfo(this.log, "Error, not getting a temperature signal from the water tank!");
-					}
+				    // waterTankTemperature is the temperature of the bottom sensor in the tank.
+				    this.logInfo(this.log, "Heating the water tank. Heat source temperature is at "
+							+ heatNetworkTemp / 10 + "°C, water tank lowest temperature is at "
+							+ waterTankTemperature / 10 + "°C.");
                 }
 
-			// This executes when needHotWater = false. While heating the water tank, needHotWater is true and will turn
-			// to false when the required temperature in the tank is reached or the external signal stopped the heating.
 			} else {
-				// Deactivate override. ValveUS01 now returns to state before override.
-				valvePumpControlChannel.activateValveOverride().setNextWriteValue(false);
+				// This executes when needHotWater = false. While heating the water tank, needHotWater is true and will turn
+				// to false when the required temperature in the tank is reached or the external signal stopped the heating.
 
+				// Deactivate override, stop blocking ValveUS01. ValveUS01 now returns to state before override.
+				valveUS01Override(false);
 
-				// close valveTL01
 				valveTL01.forceClose();
 
 				// Executes after heating the water tank.
@@ -208,15 +212,50 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 					this.logInfo(this.log, "Aborted trying to heat the water tank.");
 				}
 			}
-
-			if (!this.noError().value().get() && !valveError) {
-				this.noError().setNextValue(true);
-				this.logInfo(this.log, "Temperature sensor is fine now!");
-			}
-		} else {
-			this.noError().setNextValue(false);
-			this.logInfo(this.log, "Not getting any data from the passing station forward temperature sensor " + waermetauscherVorlauf.id() + ".");
 		}
+	}
+
+	private void checkForValveError() throws OpenemsError.OpenemsNamedException {
+
+		// After timeout, check if temperature has increased at least 5°C
+		if (heatNetworkTemp < temperatureControl + 50) {
+			// Temperature has not increase at least 5°C --> something is broken.
+			this.noError().setNextValue(false);
+			valveError = true;
+			this.logError(this.log, "Error: Valve or heat source malfunction! Getting only "
+					+ (waermetauscherVorlauf.getTemperature().value().get() / 10) + "°C from the heat source. Valve should "
+					+ "be open and temperature should rise, but not detecting the expected increase in temperature.");
+		} else {
+			// Temperature has increased a bit, but not enough
+			if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) >= timeoutMinutes * 2) {
+				// After waiting two times the timeout length, try to heat anyway.
+
+				// open valveTL01
+				valveTL01.forceOpen();
+
+				// close valveUS01
+				valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(false);
+
+				stepcounter = 2;
+				this.logWarn(this.log, "Warning: Temperature is only at " + (waermetauscherVorlauf.getTemperature().value().get() / 10)
+						+ "°C, but should be at least at " + (minTempVorlauf / 10) + "°C by now. Check heat source for possible errors." +
+						" Trying to heat the water tank anyway.");
+
+				// Reset error in case error was triggered.
+				this.noError().setNextValue(true);
+				valveError = false;
+			}
+		}
+
+	}
+
+	private void valveUS01Override(boolean enable) throws OpenemsError.OpenemsNamedException {
+		valvePumpControlChannel.activateValveOverride().setNextWriteValue(enable);
+	}
+
+	// This only works when valveUS01Override is enabled!
+	private void controlValveUS01(boolean open) throws OpenemsError.OpenemsNamedException {
+		valvePumpControlChannel.setValveOverrideOpenClose().setNextWriteValue(open);
 	}
 
 }

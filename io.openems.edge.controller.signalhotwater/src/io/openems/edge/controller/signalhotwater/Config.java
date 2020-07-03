@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
         name = "Controller Consolinno SignalHotWater",
-        description = "Controller that sends the signal \"need hot water\"."
+        description = "Controller that monitors the temperature of a water tank and sends the signal \"need hot water\"."
 )
 @interface Config {
 
@@ -17,10 +17,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human Readable Name of Component.")
     String alias() default "Warmwasser Anforderung";
 
-    @AttributeDefinition(name = "Upper temperature sensor", description = "The upper temperature sensor in the water tank, allocated to this controller")
+    @AttributeDefinition(name = "Upper temperature sensor", description = "The upper temperature sensor in the water tank, allocated to this controller.")
     String temperatureSensorUpperId() default "T_PS_oben";
 
-    @AttributeDefinition(name = "Lower temperature sensor", description = "The lower temperature sensor in the water tank, allocated to this controller")
+    @AttributeDefinition(name = "Lower temperature sensor", description = "The lower temperature sensor in the water tank, allocated to this controller.")
     String temperatureSensorLowerId() default "T_PS_unten";
 
     @AttributeDefinition(name = "Minimum temperature upper sensor", description = "Minimum temperature of the water tank upper sensor. Unit is °C")
@@ -29,7 +29,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Maximum temperature lower sensor", description = "Maximum temperature of the water tank lower sensor. Unit is °C")
     int max_temp_lower() default 65;
 
-    @AttributeDefinition(name = "response timeout", description = "How long to wait for the response signal before continuing without it. Unit is seconds.")
+    @AttributeDefinition(name = "response timeout in seconds", description = "How long to wait for the response signal before continuing without it. Unit is seconds.")
     int response_timeout() default 10;
 
     boolean enabled() default true;

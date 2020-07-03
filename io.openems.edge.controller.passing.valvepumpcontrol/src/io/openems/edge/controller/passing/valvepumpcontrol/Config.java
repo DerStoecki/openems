@@ -4,8 +4,8 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "Controller Consolinno Valve and Pump Controller",
-        description = "Control module for valve and pump."
+        name = "Controller Consolinno Valve and Pump hierarchy Controller",
+        description = "Control module to manage different controllers manipulating the same valve and pump."
 )
 @interface Config {
 
@@ -15,7 +15,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String id() default "ValveAndPumpControl0";
 
     @AttributeDefinition(name = "alias", description = "Human Readable Name of Component.")
-    String alias() default "Controller für Ventil und Pumpe";
+    String alias() default "Zugriffs Controller für Ventil und Pumpe";
 
     @AttributeDefinition(name = "Allocated Heating Controller", description = "Unique Name of the heating controller, allocated to this component.")
     String allocated_Heating_Controller() default "ControllerPassingControlCenter0";

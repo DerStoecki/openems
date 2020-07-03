@@ -1,8 +1,1 @@
-# io.openems.edge.controller.passing.valvepumpcontrol.api Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
-
+Interface for the Consolinno Valve and Pump hierarchy Controller. Contains the override channels and the error channel.

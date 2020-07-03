@@ -29,7 +29,7 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
                 })),
 
         /**
-         * Current temperature of the heating program.
+         * Current temperature of the heating program. Primary output of the controller.
          * <ul>
          * <li>Interface: ControllerWarmupChannel
          * <li>Type: Integer
@@ -96,9 +96,9 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
                 })),
 
         /**
-         * Is Error.
+         * No error in this controller.
          * <ul>
-         * <li> If an Error occurred within this Controller
+         * <li>False if an Error occurred within this Controller.
          * <li>Type: Boolean
          * <li>
          * </ul>
@@ -172,7 +172,7 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
      * with getLengthWarmupProgram()) will stop the warmup controller.
      * The elapsed time of a running heating program is saved to a file and loaded on controller activation. The controller
      * automatically activates and resumes from the last saved position if the elapsed time is >0. To prevent the auto
-     * resume, pause the controller and set the goToMinuteWarmupProgram() channel to 0 before deactivating the controller.
+     * resume, pause the controller and set the goToMinuteWarmupProgram() channel to 0 before deactivating the module.
      * Unit is minutes.
      *
      * @return the Channel
@@ -184,7 +184,8 @@ public interface ControllerWarmupChannel extends OpenemsComponent {
     /**
      * This channel loads a warmup program from the specified file path. Will only execute when controller is paused.
      * Does NOT reset the runtime, so call the GoToMinuteWarmupProgram() with 0 before play to start the program from
-     * the beginning.
+     * the beginning. The idea behind the no runtime reset is to make temperature edits of a running program less of
+     * a hassle. Simply edit the temperatures in the config file and load the edited file with this function.
      * The channel will return "done" if the file was successfully loaded or "failed" if not.
      *
      * @return the Channel

@@ -16,6 +16,13 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This is the Consolinno Passing Control Center module. It manages the hierarchy of heating controllers.
+ * - The output of a heating controller is a temperature and a boolean to signal if the controller wants to heat or not.
+ * - This controller polls three heating controllers by hierarchy and passes on the result (heating or not heating plus
+ *   the temperature) to the next module(s).
+ *
+ */
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "PassingControlCenter", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -29,7 +36,17 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 	private PidForPassingNature pidControllerChannel;
 	private ControllerWarmupChannel warmupControllerChannel;
 	private HeatingCurveRegulatorChannel heatingCurveRegulatorChannel;
-	private int temperatureDezidegree;
+
+	// Variables for channel readout
+	private boolean activateTemperatureOverride;
+	private int overrideTemperature;
+	private boolean warmupControllerIsOn;
+	private boolean warmupControllerNoError;
+	private int warmupControllerTemperature;
+	private boolean heatingCurveRegulatorAskingForHeating;
+	private boolean heatingCurveRegulatorNoError;
+	private int heatingCurveRegulatorTemperature;
+
 
 	public PassingControlCenterImpl() {
 		super(OpenemsComponent.ChannelId.values(),
@@ -67,6 +84,8 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 		}
 
 		this.activateHeater().setNextValue(false);
+
+		// This allows to start the warmupController from this module.
 		if (config.run_warmup_program()) {
 			warmupControllerChannel.playPauseWarmupController().setNextWriteValue(true);
 		}
@@ -78,6 +97,14 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
 
+		// For the Overrides, copy values from the WriteValue to the NextValue fields.
+		if (this.activateTemperatureOverride().getNextWriteValue().isPresent()) {
+			this.activateTemperatureOverride().setNextValue(this.activateTemperatureOverride().getNextWriteValue().get());
+		}
+		if (this.setOverrideTemperature().getNextWriteValue().isPresent()) {
+			this.setOverrideTemperature().setNextValue(this.setOverrideTemperature().getNextWriteValue().get());
+		}
+
 		// Check all channels if they have values in them.
 		boolean overrideChannelHasValues = this.activateTemperatureOverride().value().isDefined()
 				&& this.setOverrideTemperature().value().isDefined();
@@ -86,35 +113,51 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 				&& warmupControllerChannel.getWarmupTemperature().value().isDefined()
 				&& warmupControllerChannel.noError().value().isDefined();
 
-		boolean heatingCurveRegulatorChannelHasValues = heatingCurveRegulatorChannel.isActive().value().isDefined()
+		boolean heatingCurveRegulatorChannelHasValues = heatingCurveRegulatorChannel.signalTurnOnHeater().value().isDefined()
 				&& heatingCurveRegulatorChannel.getHeatingTemperature().value().isDefined()
 				&& heatingCurveRegulatorChannel.noError().value().isDefined();
 
-		// Execute controllers by priority. From high to low: override, warmup, heatingCurve
-		if (overrideChannelHasValues && this.activateTemperatureOverride().value().get()) {
-			temperatureDezidegree = this.setOverrideTemperature().value().get();
-			this.activateHeater().setNextValue(true);
-		} else if (warmupControllerChannelHasValues && warmupControllerChannel.playPauseWarmupController().value().get()
-				&& warmupControllerChannel.noError().value().get()) {
-			temperatureDezidegree = warmupControllerChannel.getWarmupTemperature().value().get();
-			this.activateHeater().setNextValue(true);
-		} else if (heatingCurveRegulatorChannelHasValues && heatingCurveRegulatorChannel.isActive().value().get()
-				&& heatingCurveRegulatorChannel.noError().value().get()) {
-			temperatureDezidegree = heatingCurveRegulatorChannel.getHeatingTemperature().value().get();
-			this.activateHeater().setNextValue(true);
-		} else {
-			this.activateHeater().setNextValue(false);
+		// Transfer channel data to local variables for better readability of logic code.
+		if (overrideChannelHasValues) {
+			activateTemperatureOverride = this.activateTemperatureOverride().value().get();
+			overrideTemperature = this.setOverrideTemperature().value().get();
+		}
+		if (warmupControllerChannelHasValues) {
+			warmupControllerIsOn = warmupControllerChannel.playPauseWarmupController().value().get();
+			warmupControllerNoError = warmupControllerChannel.noError().value().get();
+			warmupControllerTemperature = warmupControllerChannel.getWarmupTemperature().value().get();
+		}
+		if (heatingCurveRegulatorChannelHasValues) {
+			// The HeatingCurveRegulator is asking for heating based on outside temperature. Heating in winter, no
+			// heating in summer.
+			heatingCurveRegulatorAskingForHeating = heatingCurveRegulatorChannel.signalTurnOnHeater().value().get();
+			heatingCurveRegulatorNoError = heatingCurveRegulatorChannel.noError().value().get();
+			heatingCurveRegulatorTemperature = heatingCurveRegulatorChannel.getHeatingTemperature().value().get();
 		}
 
-		// Send controller output to pid.
-		if (this.activateHeater().getNextValue().get()) {
-			pidControllerChannel.turnOn().setNextWriteValue(true);
-			pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureDezidegree);
+		// Control logic. Execute controllers by priority. From high to low: override, warmup, heatingCurve
+		if (overrideChannelHasValues && activateTemperatureOverride) {
+			turnOnHeater(overrideTemperature);
+		} else if (warmupControllerChannelHasValues && warmupControllerIsOn && warmupControllerNoError) {
+			turnOnHeater(warmupControllerTemperature);
+		} else if (heatingCurveRegulatorChannelHasValues && heatingCurveRegulatorAskingForHeating
+				&& heatingCurveRegulatorNoError) {
+			turnOnHeater(heatingCurveRegulatorTemperature);
 		} else {
-			pidControllerChannel.turnOn().setNextWriteValue(false);
+			turnOffHeater();
 		}
+	}
 
 
+	private void turnOnHeater(int temperatureInDezidegree) throws OpenemsError.OpenemsNamedException {
+		this.activateHeater().setNextValue(true);
+		pidControllerChannel.turnOn().setNextWriteValue(true);
+		pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureInDezidegree);
+	}
+
+	private void turnOffHeater() throws OpenemsError.OpenemsNamedException {
+		this.activateHeater().setNextValue(false);
+		pidControllerChannel.turnOn().setNextWriteValue(false);
 	}
 
 }

@@ -12,9 +12,9 @@ public interface SignalHotWaterValvecontrollerChannel extends OpenemsComponent {
 
 
         /**
-         * Is Error.
+         * No error in this controller.
          * <ul>
-         * <li> If an Error occurred within this Controller
+         * <li>False if an Error occurred within this Controller.
          * <li>Type: Boolean
          * <li>
          * </ul>
@@ -36,7 +36,7 @@ public interface SignalHotWaterValvecontrollerChannel extends OpenemsComponent {
 
 
     /**
-     * Has an Error occurred or is everything's fine. An error occurs when the controller does not get a signal
+     * Is true when no error has occurred. An error occurs when the controller does not get a signal
      * from the temperature sensor or there is a problem with the valve or the heat source.
      *
      * @return the Channel

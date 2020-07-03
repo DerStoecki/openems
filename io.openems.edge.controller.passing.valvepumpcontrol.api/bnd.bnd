@@ -1,10 +1,10 @@
-Bundle-Name: OpenEMS Edge Valve and Pump Control Channel
+Bundle-Name: OpenEMS Edge Consolinno Valve and Pump hierarchy Controller Channel
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
 Bundle-Description: \
-            The channel to communicate with the valve and pump control module.
+            The channel to communicate with the Consolinno Valve and Pump hierarchy Controller.
 
 Export-Package:  \
 	io.openems.edge.controller.passing.valvepumpcontrol.api,\

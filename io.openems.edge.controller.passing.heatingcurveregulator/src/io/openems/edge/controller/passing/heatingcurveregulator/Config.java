@@ -15,7 +15,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String id() default "HeatingCurveRegulator0";
 
     @AttributeDefinition(name = "alias", description = "Human Readable Name of Component.")
-    String alias() default "Heizkurvengesteuerter automatischer Heizregler";
+    String alias() default "Witterungsgesteuerter automatischer Heizregler";
 
     @AttributeDefinition(name = "TemperatureSensor", description = "The Temperaturesensor allocated to this controller")
     String temperatureSensorId() default "TemperatureSensor5";

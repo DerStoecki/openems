@@ -3,7 +3,7 @@ Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-    Provides the Control Center for the passing station.
+    Provides the Control Center module for the passing station.
 
 Export-Package:  \
 

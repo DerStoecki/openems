@@ -4,8 +4,8 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "Controller Consolinno WarmupPassing",
-        description = "This Controller is used to warm up the passing station."
+        name = "Controller Consolinno Warmup Program",
+        description = "This Controller is used to run a warm up program."
 )
 @interface Config {
 
@@ -17,7 +17,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human readable name of Controller.")
     String alias() default "WarmupPassing";
 
-    @AttributeDefinition(name = "Auto Resume", description = "Automatically resumes the last running heating program if the controller was shut down while that program was still running (paused counts as running). Specifically, auto resume triggers when an \"elapsed time\">0 is loaded from the config file. Turning this option off will set \"elapsed time\"=0 when the controller loads.")
+    @AttributeDefinition(name = "Auto Resume", description = "Automatically resumes the last running heating program if the controller was shut down while that program was still running (paused counts as running). Specifically, auto resume triggers when a config file is loaded that has \"elapsed time\">0. Turning this option off will set \"elapsed time\"=0 when the controller loads.")
     boolean auto_resume() default true;
 
     @AttributeDefinition(name = "Override Last Program", description = "The controller saves and loads the heating program of the previous run by default. This option overrides that and uses the following parameters instead. NOTE: \"elapsed time\" is not reset.")
