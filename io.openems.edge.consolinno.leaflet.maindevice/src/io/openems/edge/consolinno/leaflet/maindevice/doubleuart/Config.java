@@ -5,14 +5,14 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(
-        name = "Consolinno LeafLet MainModule Pca Device",
-        description = "The Connected Device on the Pca."
+        name = "Consolinno LeafLet MainModule Sc16 Device",
+        description = "The Connected Device on the Sc16."
 )
 @interface Config {
     String service_pid();
 
-    @AttributeDefinition(name = "Gpio Device Id", description = "Unique Id of the Gpio Device.")
-    String id() default "ChpOnOffStatus0";
+    @AttributeDefinition(name = "Sc16 Device Id", description = "Unique Id of the Sc16 Device.")
+    String id() default "GPIO0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";

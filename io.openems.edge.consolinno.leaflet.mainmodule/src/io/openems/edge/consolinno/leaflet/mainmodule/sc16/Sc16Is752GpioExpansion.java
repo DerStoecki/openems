@@ -29,7 +29,9 @@ public class Sc16Is752GpioExpansion extends AbstractOpenemsComponent implements 
     public void activate(ComponentContext context, Config config) throws ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         this.sc16 = new Sc16IS752Impl();
-        this.sc16.initialize(config.spiChannel(), config.frequency(), super.id(), config.version());
+
+        this.sc16.initialize(config.spiChannel(), config.frequency(), super.id(), config.version(),
+                config.interruptActivate(), config.interruptSetting(), config.interruptData());
         this.bridgeSpi.addDoubleUart(this.sc16);
     }
 

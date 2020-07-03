@@ -11,8 +11,8 @@ import org.osgi.service.metatype.annotations.Option;
 @interface Config {
     String service_pid();
 
-    @AttributeDefinition(name = "Pca Module Name", description = "The Unique Id of the Module.")
-    String id() default "LeafletPca";
+    @AttributeDefinition(name = "Sc16 Module Name", description = "The Unique Id of the Module.")
+    String id() default "LeafletSc16";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
@@ -27,7 +27,20 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Frequency", description = "SPI Clock Frequency for this Device")
             int frequency() default 40000;
 
+    @AttributeDefinition(name = "InterruptActivate", description = "Tick on if you want Interrupt Settings.")
+    boolean interruptActivate() default false;
+
+    @AttributeDefinition(name = "InterruptSet", description = "What Type of Interrupt do you want",
+    options = {
+            @Option(label = "FCR", value = "FCR"),
+            @Option(label = "TCR", value = "TCR")
+    })
+            String interruptSetting() default "FCR";
+
+    @AttributeDefinition(name = "InterruptData", description = "Set Write Flags with 0 and 1; max 8bit")
+            String interruptData() default "00000000";
+
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "Consolinno Leaflet Module Pca [{id}]";
+    String webconsole_configurationFactory_nameHint() default "Consolinno Leaflet Module Sc16 [{id}]";
 }

@@ -12,10 +12,24 @@ public class Sc16IS752Impl implements Sc16IS752 {
     private int spiChannel;
     private int frequency;
     private String id;
+    private static DoubleUartRegistries SC16REGISTRY = DoubleUartRegistries.Sc16IS752;
+
+    private boolean interruptSet;
+
     //private String versionId;
     //sets 7 5 4 3 to output and 0 1 2 6 to input
     // out == 0; in == 1;
-    private byte[] basicSetup = {(byte) 0x0A, (byte) 0x47};
+    private byte[] basicPinSetup = {(byte) SC16REGISTRY.ioDir, (byte) 0x47};
+    //changed via Config;
+    private byte[] basicFcrSetup = {(byte) SC16REGISTRY.fcr, 0};
+    private byte[] basicTlrSetup = {(byte) SC16REGISTRY.tlr, 0};
+
+    //Address of Interrupt --> every set bit --> Change in state will cause interrupt
+    private byte[] basicInterruptConfig = {(byte) SC16REGISTRY.ioIntEna, 0};
+    //Address for InterruptLatching --> change 2nd bit to 1 if you want your interrupts latched.
+    private byte[] basicIoControl = {(byte) SC16REGISTRY.ioControl, 0};
+
+
     private Map<String, Sc16ReadTask> readTasks = new ConcurrentHashMap<>();
     private Map<String, Sc16WriteTask> writeTasks = new ConcurrentHashMap<>();
     private final Logger log = LoggerFactory.getLogger(Sc16IS752Impl.class);
@@ -30,12 +44,37 @@ public class Sc16IS752Impl implements Sc16IS752 {
      * @throws ConfigurationException if the SPI Channel isn't available.
      */
     @Override
-    public void initialize(int spiChannel, int frequency, String id, String versionId) throws ConfigurationException {
+    public void initialize(int spiChannel, int frequency, String id, String versionId, boolean interruptSet, String dataForType, String interruptType) throws ConfigurationException {
         this.spiChannel = spiChannel;
         this.frequency = frequency;
         this.id = id;
-        // this.versionId = versionId;
+        this.interruptSet = interruptSet;
+        // this.versionId = versionId
+        dataForType = String.format("%8s", dataForType).replace(' ', '0');
+        if (interruptSet) {
+            if (validateDataForType(dataForType) == false) {
+                throw new IllegalArgumentException(dataForType + " Contains illegal Arguments only put 0 and 1");
+            }
+            switch (interruptType) {
+                case "FCR":
+                    basicFcrSetup[1] = Byte.parseByte(dataForType);
+                    break;
+                case "TLR":
+                    basicTlrSetup[1] = Byte.parseByte(dataForType);
+                    break;
+            }
+        }
         spiSetup();
+    }
+
+    private boolean validateDataForType(String dataForType) {
+        char[] dataCheck = dataForType.toCharArray();
+        for (char c : dataCheck) {
+            if (c != '0' & c != '1') {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -47,8 +86,12 @@ public class Sc16IS752Impl implements Sc16IS752 {
 
     @Override
     public void shift() throws Throwable {
+
+        if(interruptSet) {
+            isInterrupt();
+        }
         //data[0] == registryAddress; 0x00 ist the init Data
-        byte[] data = {0x0B, 0x00};
+        byte[] data = {(byte) SC16REGISTRY.ioState, 0x00};
         this.writeTasks.values().forEach(task -> {
             //see if LEDs were set to 0 or not
             int valueForGpio = task.getRequest() ? 1 : 0;
@@ -69,6 +112,102 @@ public class Sc16IS752Impl implements Sc16IS752 {
             task.setResponse((response >> task.getPin()) & 1);
         });
 
+    }
+
+    /**
+     * Checks if Interrupt has occurred.
+     */
+
+    private void isInterrupt() {
+
+        byte[] interruptDataIir = {(byte) SC16REGISTRY.iir, 0};
+        byte[] interruptDataLsr = {(byte) SC16REGISTRY.lsr, 0};
+        Spi.wiringPiSPIDataRW(spiChannel, interruptDataIir);
+        Spi.wiringPiSPIDataRW(spiChannel, interruptDataLsr);
+        for (int i = 0; i < Byte.SIZE; i++) {
+            int valueIir = ((interruptDataIir[0] >> i) & 1);
+            int valueLsr = ((interruptDataLsr[0] >> i) & 1);
+            if (valueIir != 0) {
+                getInterruptInformationIir(i);
+            }
+            if (valueLsr != 0) {
+                getInterruptInformationLsr(i);
+            }
+        }
+
+    }
+
+    /**
+     * Get InterruptInformation of Lsr.
+     * ATM Just Temporary
+     *
+     * @param interruptBit current SignalBit.
+     */
+
+    private void getInterruptInformationLsr(int interruptBit) {
+        switch (interruptBit) {
+
+            case 0:
+                System.out.println("Data in Receiver");
+                break;
+            case 1:
+                System.out.println("Overrun Error");
+                break;
+            case 2:
+                System.out.println("Parity Error");
+                break;
+            case 3:
+                System.out.println("Framing Error");
+                break;
+            case 4:
+                System.out.println("Break Interrupt");
+                break;
+            case 5:
+                System.out.println("THR Empty");
+                break;
+            case 6:
+                System.out.println("THR and TSR empty");
+                break;
+            case 7:
+                System.out.println("FIFO Data Error");
+                break;
+        }
+    }
+
+    /**
+     * Get InterruptInformation of IIR communication;
+     * ATM Just temporary with current impl.
+     *
+     * @param interruptBit which bit
+     */
+    private void getInterruptInformationIir(int interruptBit) {
+
+        switch (interruptBit) {
+            case 0:
+                System.out.println("Interrupt was set");
+                break;
+            case 1:
+                System.out.println("Lowest Priority");
+                break;
+            case 2:
+                System.out.println("Low Priority");
+                break;
+            case 3:
+                System.out.println("Mid Priority");
+                break;
+            case 4:
+                System.out.println("High Priority");
+                break;
+            case 5:
+                System.out.println("Highest Priority");
+                break;
+            case 6:
+                System.out.println("FIFO Enable bit 6");
+                break;
+            case 7:
+                System.out.println("FIFO Enable bit 7");
+                break;
+        }
     }
 
     /**
@@ -115,7 +254,16 @@ public class Sc16IS752Impl implements Sc16IS752 {
             log.error("SPI Channel not available " + spiChannel);
             throw new ConfigurationException(Integer.toString(spiChannel), "SpiChannel not available");
         }
-        Spi.wiringPiSPIDataRW(spiChannel, basicSetup);
+        //set Pins
+        Spi.wiringPiSPIDataRW(spiChannel, basicPinSetup);
+        //Setup for Interrupt; Default : 0 (no interrupts when GPIO state changes.)
+        Spi.wiringPiSPIDataRW(spiChannel, basicInterruptConfig);
+        //interrupts is latched or not Default : 0 (no latch)
+        Spi.wiringPiSPIDataRW(spiChannel, basicIoControl);
+
+        Spi.wiringPiSPIDataRW(spiChannel, basicFcrSetup);
+        Spi.wiringPiSPIDataRW(spiChannel, basicTlrSetup);
+
     }
 
     @Override

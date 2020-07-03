@@ -11,7 +11,13 @@ import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.Sc16IS752;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
+import org.osgi.service.metatype.annotations.Designate;
 
+
+@Designate(ocd = Config.class, factory = true)
+@Component(name = "MainModule.Sc16Device",
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        immediate = true)
 public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, DoubleUartDevice {
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY,
@@ -60,28 +66,28 @@ public class DoubleUartDeviceImpl extends AbstractOpenemsComponent implements Op
             case 0:
                 this.isWrite = true;
                 this.getErrorMessage().setNextValue("STATUS-LED-RED");
-                break;
+                return;
             case 1:
                 this.isWrite = true;
                 this.getErrorMessage().setNextValue("STATUS-LED-YELLOW");
-                break;
+                return;
             case 2:
                 this.isWrite = true;
                 this.getErrorMessage().setNextValue("STATUS-LED-GREEN");
-                break;
+                return;
             case 6:
                 this.isWrite = true;
                 this.getErrorMessage().setNextValue("OUTPUT-VOLTAGE-SERVICE-PORTS 5V, 3.3V");
-                break;
+                return;
             case 4:
                 this.getErrorMessage().setNextValue("ERROR-FLAG-HBUS 5V");
-                break;
+                return;
             case 5:
                 this.getErrorMessage().setNextValue("ERROR-FLAG-HBUS 24V");
-                break;
+                return;
             case 7:
                 this.getErrorMessage().setNextValue("OUTPUT-VOLTAGE-SERVICE-PORTS");
-                break;
+                return;
         }
         throw new ConfigurationException("setCorrectGpioAddress", "The Pin " + pinAddress + " is not supported");
     }
