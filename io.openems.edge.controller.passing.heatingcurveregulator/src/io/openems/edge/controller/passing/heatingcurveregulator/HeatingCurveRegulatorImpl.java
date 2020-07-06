@@ -1,14 +1,12 @@
 package io.openems.edge.controller.passing.heatingcurveregulator;
 
-import java.util.Map;
-
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.passing.heatingcurveregulator.api.HeatingCurveRegulatorChannel;
-import io.openems.edge.thermometer.api.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           Thermometer;
+import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;

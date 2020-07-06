@@ -1,7 +1,7 @@
 package io.openems.edge.controller.csvwriter.emv;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.chp.device.api.PowerLevel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -42,7 +42,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
     private List<Thermometer> thermometerList = new ArrayList<>();
     private List<ActuatorRelaysChannel> relaysList = new ArrayList<>();
-    private List<PowerLevel> dacList = new ArrayList<>();
+    private List<ChpPowerPercentage> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
     private List<PcaDevice> pcaDeviceList = new ArrayList<>();
@@ -163,7 +163,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                         }
                         break;
                     case "Dac":
-                        if (cpm.getComponent(string) instanceof PowerLevel) {
+                        if (cpm.getComponent(string) instanceof ChpPowerPercentage) {
                             this.dacList.add(counter.intValue(), cpm.getComponent(string));
                         } else {
                             throw new ConfigurationException("Could not allocate Component: Dac " + string,

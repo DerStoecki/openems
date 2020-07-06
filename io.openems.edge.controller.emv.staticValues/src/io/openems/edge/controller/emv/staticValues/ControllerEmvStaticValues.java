@@ -2,7 +2,7 @@ package io.openems.edge.controller.emv.staticValues;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.chp.device.api.PowerLevel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -36,7 +36,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     private final Logger log = LoggerFactory.getLogger(ControllerEmvStaticValues.class);
 
     private List<ActuatorRelaysChannel> relaysList = new ArrayList<>();
-    private List<PowerLevel> dacList = new ArrayList<>();
+    private List<ChpPowerPercentage> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmList = new ArrayList<>();
     private boolean[] relaysValues;
     private double[] dacValues;
@@ -189,7 +189,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                         }
                         break;
                     case "Dac":
-                        if (cpm.getComponent(string) instanceof PowerLevel) {
+                        if (cpm.getComponent(string) instanceof ChpPowerPercentage) {
                             this.dacList.add(counter.intValue(), cpm.getComponent(string));
                         } else {
                             throw new ConfigurationException("Could not allocate Component: Dac " + string,

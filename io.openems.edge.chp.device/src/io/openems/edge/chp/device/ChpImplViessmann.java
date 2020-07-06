@@ -11,7 +11,6 @@ import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.*;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.chp.device.api.ChpInformationChannel;
-import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.chp.device.task.ChpTaskImpl;
 import io.openems.edge.chp.module.api.ChpModule;
 
@@ -41,7 +40,7 @@ import java.util.List;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)
-public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler, Heater {
+public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements OpenemsComponent, ChpInformationChannel, EventHandler, Heater {
     private Mcp mcp;
     private ChpType chpType;
     private String accessMode;
@@ -142,9 +141,9 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
         super.setModbus(modbus);
     }
 
-    public ChpImpl() {
+    public ChpImplViessmann() {
         super(OpenemsComponent.ChannelId.values(),
-                PowerLevel.ChannelId.values(),
+       // ChpPowerPercentage.ChannelId.values(),
                 ChpInformationChannel.ChannelId.values());
     }
 
@@ -439,8 +438,10 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
 
             if ((errorSummary.size() > 0)) {
                 getErrorChannel().setNextValue(errorSummary.toString());
+                isErrorOccured().setNextValue(true);
             } else {
                 getErrorChannel().setNextValue("No Errors found.");
+                isErrorOccured().setNextValue(false);
             }
 
         }
