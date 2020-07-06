@@ -35,6 +35,8 @@
 	bnd.identity;id='io.openems.edge.bridge.onewire',\
 	bnd.identity;id='io.openems.edge.bridge.rest.communication',\
 	bnd.identity;id='io.openems.edge.bridge.spi',\
+	bnd.identity;id='io.openems.edge.channeltest',\
+	bnd.identity;id='io.openems.edge.channeltest.api',\
 	bnd.identity;id='io.openems.edge.chp.device',\
 	bnd.identity;id='io.openems.edge.chp.device.api',\
 	bnd.identity;id='io.openems.edge.chp.module',\
@@ -212,6 +214,8 @@
 	io.openems.edge.bridge.onewire;version=snapshot,\
 	io.openems.edge.bridge.rest.communcation;version=snapshot,\
 	io.openems.edge.bridge.spi;version=snapshot,\
+	io.openems.edge.channeltest;version=snapshot,\
+	io.openems.edge.channeltest.api;version=snapshot,\
 	io.openems.edge.chp.device;version=snapshot,\
 	io.openems.edge.chp.device.api;version=snapshot,\
 	io.openems.edge.chp.module;version=snapshot,\
