@@ -2,7 +2,7 @@ package io.openems.edge.controller.emvtest;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.chp.device.api.PowerLevel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -45,7 +45,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
     private int cycleRelaysCount;        // Track which relay to turn on or off.
 
 
-    private PowerLevel[] dacArray;
+    private ChpPowerPercentage[] dacArray;
     private boolean rampDac;        // Switch for activating dac ramping.
     private long dacRampStepTime;
     private int dacRampStepValue;
@@ -95,7 +95,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         for (int index = 0; index < config.DacDeviceList().length; index++) {
             this.logDebug(this.log, "DAC array entry " + index + ": " + config.DacDeviceList()[index]);
         }
-        dacArray = new PowerLevel[config.DacDeviceList().length];        // Array is filled with entries in allocate_Component method
+        dacArray = new ChpPowerPercentage[config.DacDeviceList().length];        // Array is filled with entries in allocate_Component method
         rampDac = config.ramp_dac();
         dacRampStepTime = config.dac_ramp_step_time() * 1000;    // Convert from s to ms
         dacRampStepValue = config.dac_ramp_step_value();
@@ -143,7 +143,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         for (ActuatorRelaysChannel entry : relayArray) {       // Turn off all initialized relays.
             controlRelay(false, entry);
         }
-        for (PowerLevel entry : dacArray) {     // Turn off all initialized dac.
+        for (ChpPowerPercentage entry : dacArray) {     // Turn off all initialized dac.
             controlDac(0, entry);
         }
         for (PwmPowerLevelChannel entry : pwmArray) {      // Turn off all initialized pwm.
@@ -222,7 +222,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
             }
         } else {
             // Dac ramping is not switched on, so turn off all dac.
-            for (PowerLevel entry : dacArray) {
+            for (ChpPowerPercentage entry : dacArray) {
                 controlDac(0, entry);
             }
         }
@@ -292,7 +292,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
             case "Dac":
                 for (int index = 0; index < id.length; index++) {
-                    if (cpm.getComponent(id[index]) instanceof PowerLevel) {
+                    if (cpm.getComponent(id[index]) instanceof ChpPowerPercentage) {
                         dacArray[index] = cpm.getComponent(id[index]);
                         // set dac output to 0 upon initialization.
                         dacArray[index].getPowerLevelChannel().setNextWriteValue(0);
@@ -324,7 +324,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         }
     }
 
-    private void controlDac(int value, PowerLevel dac) {
+    private void controlDac(int value, ChpPowerPercentage dac) {
         try {
             dac.getPowerLevelChannel().setNextWriteValue(value);
         } catch (OpenemsError.OpenemsNamedException e) {
