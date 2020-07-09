@@ -1,13 +1,13 @@
-Bundle-Name: OpenEMS Edge Controller Channeltest Channel
+Bundle-Name: OpenEMS Edge Channel Tutorial Channel
 Bundle-Vendor: Consolinno Energy GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 
 Bundle-Description: \
-            The channel for Channeltest.
+            The interface with channels for the Channel Tutorial module.
 
 Export-Package:  \
-	io.openems.edge.channeltest.api,\
+	io.openems.edge.channeltutorial.api,\
 
 -includeresource: {readme.md}
 

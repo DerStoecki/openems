@@ -1,0 +1,1 @@
+The interface with channels for the Channel Tutorial module.
