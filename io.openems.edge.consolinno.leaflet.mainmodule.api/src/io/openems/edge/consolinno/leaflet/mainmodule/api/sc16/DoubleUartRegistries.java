@@ -24,6 +24,5 @@ public enum DoubleUartRegistries {
         this.ioState = ioState;
         this.ioIntEna = ioIntEna;
         this.ioControl = ioControl;
-
     }
 }

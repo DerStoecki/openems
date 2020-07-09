@@ -390,7 +390,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
             try {
                 if (uart.getOnOff().getNextWriteValue().isPresent()) {
-                    pcaString = uart.getOnOff().getNextWriteValue().get().toString();
+                    pcaString = uart.getOnOff().value().get().toString();
                 }
                 csvWriter.append(pcaString);
                 csvWriter.append(",");

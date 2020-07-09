@@ -59,8 +59,12 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.sc16List(), "DoubleUart");
         //contains String --> boolean values --> bc of bug from OSGi / Apache Felix
-        allocateValues(config.relaysValues(), "Relays");
-        allocateValues(config.sc16Values(), "DoubleUart");
+        if (this.relaysList.size() > 0) {
+            allocateValues(config.relaysValues(), "Relays");
+        }
+        if (this.uartList.size() > 0) {
+            allocateValues(config.sc16Values(), "DoubleUart");
+        }
         this.dacValues = config.dacValues();
         this.pwmValues = config.pwmValues();
     }

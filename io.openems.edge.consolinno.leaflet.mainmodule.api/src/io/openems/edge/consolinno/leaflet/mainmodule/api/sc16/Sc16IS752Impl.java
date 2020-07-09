@@ -19,15 +19,19 @@ public class Sc16IS752Impl implements Sc16IS752 {
     //private String versionId;
     //sets 7 5 4 3 to output and 0 1 2 6 to input
     // out == 0; in == 1;
-    private byte[] basicPinSetup = {(byte) SC16REGISTRY.ioDir, (byte) 0x47};
+    //io Dir umgerechnet 0x0A auf 0x50
+    private byte[] basicPinSetup = {calcForAddress(SC16REGISTRY.ioDir, false), (byte) 0x47};
+
+
     //changed via Config;
-    private byte[] basicFcrSetup = {(byte) SC16REGISTRY.fcr, 0};
-    private byte[] basicTlrSetup = {(byte) SC16REGISTRY.tlr, 0};
+    private byte[] basicFcrSetup = {calcForAddress(SC16REGISTRY.fcr, false), 0};
+    private byte[] basicTlrSetup = {calcForAddress(SC16REGISTRY.tlr, false), 0};
+    private byte[] reset = {calcForAddress(SC16REGISTRY.ioControl, false), (byte) 0x09};
 
     //Address of Interrupt --> every set bit --> Change in state will cause interrupt
-    private byte[] basicInterruptConfig = {(byte) SC16REGISTRY.ioIntEna, 0};
+    private byte[] basicInterruptConfig = {calcForAddress(SC16REGISTRY.ioIntEna, false), 0};
     //Address for InterruptLatching --> change 2nd bit to 1 if you want your interrupts latched.
-    private byte[] basicIoControl = {(byte) SC16REGISTRY.ioControl, 0};
+    private byte[] basicIoControl = {calcForAddress(SC16REGISTRY.ioControl, false), 0};
 
 
     private Map<String, Sc16ReadTask> readTasks = new ConcurrentHashMap<>();
@@ -87,11 +91,11 @@ public class Sc16IS752Impl implements Sc16IS752 {
     @Override
     public void shift() throws Throwable {
 
-        if(interruptSet) {
+        if (interruptSet) {
             isInterrupt();
         }
         //data[0] == registryAddress; 0x00 ist the init Data
-        byte[] data = {(byte) SC16REGISTRY.ioState, 0x00};
+        byte[] data = {calcForAddress(SC16REGISTRY.ioState, false), 0x00};
         this.writeTasks.values().forEach(task -> {
             //see if LEDs were set to 0 or not
             int valueForGpio = task.getRequest() ? 1 : 0;
@@ -107,8 +111,10 @@ public class Sc16IS752Impl implements Sc16IS752 {
                 throw new Throwable();
             }
         }
+        byte[] read = {calcForAddress(SC16REGISTRY.ioState, true), 0x00};
+        Spi.wiringPiSPIDataRW(spiChannel, read);
         this.readTasks.values().forEach(task -> {
-            int response = data[0];
+            int response = read[1] & 0xff;
             task.setResponse((response >> task.getPin()) & 1);
         });
 
@@ -254,16 +260,27 @@ public class Sc16IS752Impl implements Sc16IS752 {
             log.error("SPI Channel not available " + spiChannel);
             throw new ConfigurationException(Integer.toString(spiChannel), "SpiChannel not available");
         }
+        // Spi.wiringPiSPIDataRW(spiChannel, reset);
         //set Pins
         Spi.wiringPiSPIDataRW(spiChannel, basicPinSetup);
         //Setup for Interrupt; Default : 0 (no interrupts when GPIO state changes.)
-      //  Spi.wiringPiSPIDataRW(spiChannel, basicInterruptConfig);
+        //  Spi.wiringPiSPIDataRW(spiChannel, basicInterruptConfig);
         //interrupts is latched or not Default : 0 (no latch)
         //Spi.wiringPiSPIDataRW(spiChannel, basicIoControl);
 
         //Spi.wiringPiSPIDataRW(spiChannel, basicFcrSetup);
         //Spi.wiringPiSPIDataRW(spiChannel, basicTlrSetup);
+    }
 
+
+    private byte calcForAddress(int ioDir, boolean isRead) {
+        //7th bit + ioDir Bits + 3 shift
+        ioDir = ioDir << 3;
+        if (isRead) {
+            return (byte) (ioDir | 0x80);
+        } else {
+            return (byte) ioDir;
+        }
     }
 
     @Override
