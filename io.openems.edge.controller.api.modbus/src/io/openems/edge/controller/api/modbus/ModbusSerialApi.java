@@ -1,29 +1,10 @@
 package io.openems.edge.controller.api.modbus;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.metatype.annotations.Designate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
-
-import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import com.ghgande.j2mod.modbus.util.SerialParameters;
 import io.openems.common.channel.Level;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.jsonrpc.base.JsonrpcRequest;
 import io.openems.common.jsonrpc.base.JsonrpcResponseSuccess;
@@ -36,14 +17,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.jsonapi.JsonApi;
 import io.openems.edge.common.meta.Meta;
-import io.openems.edge.common.modbusslave.ModbusRecord;
-import io.openems.edge.common.modbusslave.ModbusRecordChannel;
-import io.openems.edge.common.modbusslave.ModbusRecordString16;
-import io.openems.edge.common.modbusslave.ModbusRecordUint16BlockLength;
-import io.openems.edge.common.modbusslave.ModbusRecordUint16Hash;
-import io.openems.edge.common.modbusslave.ModbusSlave;
-import io.openems.edge.common.modbusslave.ModbusSlaveNatureTable;
-import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.modbusslave.*;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.api.core.ApiWorker;
 import io.openems.edge.controller.api.core.WritePojo;
@@ -52,22 +26,35 @@ import io.openems.edge.controller.api.modbus.jsonrpc.GetModbusProtocolExportXlsx
 import io.openems.edge.controller.api.modbus.jsonrpc.GetModbusProtocolRequest;
 import io.openems.edge.controller.api.modbus.jsonrpc.GetModbusProtocolResponse;
 import io.openems.edge.timedata.api.Timedata;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.*;
+import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Designate(ocd = ConfigTcp.class, factory = true)
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+
+@Designate(ocd = ConfigSerial.class, factory = true)
 @Component(//
-		name = "Controller.Api.ModbusTcp", //
+		name = "Controller.Api.ModbusSerial", //
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller, OpenemsComponent, JsonApi, ModbusSlaveApi {
+public class ModbusSerialApi extends AbstractOpenemsComponent implements Controller, OpenemsComponent, JsonApi, ModbusSlaveApi {
 
 	public static final int UNIT_ID = 1;
 	public static final int DEFAULT_PORT = 502;
 	public static final int DEFAULT_MAX_CONCURRENT_CONNECTIONS = 5;
 
-	private final Logger log = LoggerFactory.getLogger(ModbusTcpApi.class);
+	private final Logger log = LoggerFactory.getLogger(ModbusSerialApi.class);
 
 	private final ApiWorker apiWorker = new ApiWorker();
 	private final MyProcessImage processImage;
+
+	private SerialParameters serialParameters;
 
 	/**
 	 * Holds the link between Modbus address and ModbusRecord.
@@ -96,7 +83,7 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 		UNABLE_TO_START(Doc.of(Level.FAULT) //
-				.text("Unable to start Modbus/TCP-Api Server"));
+				.text("Unable to start Modbus/Serial-Api Server"));
 
 		private final Doc doc;
 
@@ -111,9 +98,9 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 	}
 
 	protected volatile Map<String, ModbusSlave> _components = new HashMap<>();
-	private ConfigTcp config = null;
+	private ConfigSerial config = null;
 
-	public ModbusTcpApi() {
+	public ModbusSerialApi() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				Controller.ChannelId.values(), //
@@ -124,9 +111,12 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 	}
 
 	@Activate
-	void activate(ComponentContext context, ConfigTcp config) throws ModbusException, OpenemsException {
+	void activate(ComponentContext context, ConfigSerial config) throws ModbusException, OpenemsException {
 		super.activate(context, config.id(), config.alias(), config.enabled());
 		this.config = config;
+
+		serialParameters = new SerialParameters(config.portName(), config.baudRate(), config.flowControlIn().getValue(),
+				config.flowControlOut().getValue(), config.databits(), config.stopbits().getValue(), config.parity().getValue(), config.echo());
 
 		// update filter for 'components'
 		if (OpenemsComponent.updateReferenceFilter(this.cm, this.servicePid(), "Component", config.component_ids())) {
@@ -167,32 +157,32 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 
 		@Override
 		protected void forever() {
-			int port = ModbusTcpApi.this.config.port();
+			String port = ModbusSerialApi.this.config.portName();
 			if (this.slave == null) {
 				try {
 					// start new server
-					this.slave = ModbusSlaveFactory.createTCPSlave(port,
-							ModbusTcpApi.this.config.maxConcurrentConnections());
-					slave.addProcessImage(UNIT_ID, ModbusTcpApi.this.processImage);
+					this.slave = ModbusSlaveFactory.createSerialSlave(serialParameters);
+
+					slave.addProcessImage(UNIT_ID, ModbusSerialApi.this.processImage);
 					slave.open();
 
-					ModbusTcpApi.this.logInfo(this.log, "Modbus/TCP Api started on port [" + port + "] with UnitId ["
-							+ ModbusTcpApi.UNIT_ID + "].");
-					ModbusTcpApi.this.channel(ChannelId.UNABLE_TO_START).setNextValue(false);
+					ModbusSerialApi.this.logInfo(this.log, "Modbus/SerialApi started on port [" + port + "] with UnitId ["
+							+ ModbusSerialApi.UNIT_ID + "].");
+					ModbusSerialApi.this.channel(ChannelId.UNABLE_TO_START).setNextValue(false);
 				} catch (ModbusException e) {
 					ModbusSlaveFactory.close();
-					ModbusTcpApi.this.logError(this.log,
-							"Unable to start Modbus/TCP Api on port [" + port + "]: " + e.getMessage());
-					ModbusTcpApi.this.channel(ChannelId.UNABLE_TO_START).setNextValue(true);
+					ModbusSerialApi.this.logError(this.log,
+							"Unable to start Modbus/Serial Api on port [" + port + "]: " + e.getMessage());
+					ModbusSerialApi.this.channel(ChannelId.UNABLE_TO_START).setNextValue(true);
 				}
 
 			} else {
 				// regular check for errors
 				String error = slave.getError();
 				if (error != null) {
-					ModbusTcpApi.this.logError(this.log,
-							"Unable to start Modbus/TCP Api on port [" + port + "]: " + error);
-					ModbusTcpApi.this.channel(ChannelId.UNABLE_TO_START).setNextValue(true);
+					ModbusSerialApi.this.logError(this.log,
+							"Unable to start Modbus/Serial Api on port [" + port + "]: " + error);
+					ModbusSerialApi.this.channel(ChannelId.UNABLE_TO_START).setNextValue(true);
 					this.slave = null;
 					// stop server
 					ModbusSlaveFactory.close();

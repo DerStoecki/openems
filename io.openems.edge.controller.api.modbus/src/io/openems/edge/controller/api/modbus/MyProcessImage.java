@@ -20,15 +20,15 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.modbusslave.ModbusRecord;
 
 /**
- * This implementation answers Modbus-TCP Slave requests.
+ * This implementation answers Modbus-TCP/Modbus-Serial Slave requests.
  */
 public class MyProcessImage implements ProcessImage {
 
 	private final Logger log = LoggerFactory.getLogger(MyProcessImage.class);
 
-	protected final ModbusTcpApi parent;
+	protected final ModbusSlaveApi parent;
 
-	protected MyProcessImage(ModbusTcpApi parent) {
+	protected MyProcessImage(ModbusSlaveApi parent) {
 		this.parent = parent;
 	}
 
@@ -46,7 +46,7 @@ public class MyProcessImage implements ProcessImage {
 	@Override
 	public synchronized Register[] getRegisterRange(int offset, int count) throws MyIllegalAddressException {
 		this.parent.logDebug(this.log, "Reading Registers. Address [" + offset + "] Count [" + count + "].");
-		SortedMap<Integer, ModbusRecord> records = this.parent.records.subMap(offset, offset + count);
+		SortedMap<Integer, ModbusRecord> records = this.parent.getRecords().subMap(offset, offset + count);
 		Register[] result = new Register[count];
 		for (int i = 0; i < count;) {
 			// Get record for modbus address
@@ -77,7 +77,7 @@ public class MyProcessImage implements ProcessImage {
 	@Override
 	public synchronized Register getRegister(int ref) throws MyIllegalAddressException {
 		this.parent.logDebug(this.log, "Get Register. Address [" + ref + "].");
-		ModbusRecord record = this.parent.records.get(ref);
+		ModbusRecord record = this.parent.getRecords().get(ref);
 
 		// Get Registers from Record
 		Register[] registers = this.getRecordValueRegisters(record);
@@ -99,7 +99,7 @@ public class MyProcessImage implements ProcessImage {
 	 */
 	private Register[] getRecordValueRegisters(ModbusRecord record) {
 		MyRegister[] result = new MyRegister[record.getType().getWords()];
-		OpenemsComponent component = this.parent._components.get(record.getComponentId());
+		OpenemsComponent component = this.parent.getComponents().get(record.getComponentId());
 		byte[] value = record.getValue(component);
 		for (int j = 0; j < value.length / 2; j++) {
 			result[j] = new MyRegister(j, value[j * 2], value[j * 2 + 1], //
