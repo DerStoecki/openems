@@ -11,6 +11,10 @@ import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.modbusslave.ModbusSlave;
+import io.openems.edge.common.modbusslave.ModbusSlaveNatureTable;
+import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.modbusslave.ModbusType;
 import io.openems.edge.common.type.CircularTreeMap;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -43,7 +47,7 @@ import java.util.Optional;
 				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE //
 		})
 public class ChannelTutorialImpl extends AbstractOpenemsComponent
-		implements OpenemsComponent, ChannelTutorialChannel, EventHandler {
+		implements OpenemsComponent, ChannelTutorialChannel, EventHandler, ModbusSlave {
 
 
 	private final Logger log = LoggerFactory.getLogger(ChannelTutorialImpl.class);  // Logger that is used to write to console.
@@ -672,4 +676,43 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 
 		this.logInfo(this.log, "");
 	}
+
+	@Override
+	public ModbusSlaveTable getModbusSlaveTable(AccessMode accessMode) {
+		return new ModbusSlaveTable( //
+				// Here is the start of Modbus address 220.
+				OpenemsComponent.getModbusSlaveNatureTable(accessMode), //
+				// Here is the start of Modbus address 300.
+				ModbusSlaveNatureTable.of(ChannelTutorialImpl.class, accessMode, 200) // <- Number here is how many registers
+						.channel(0, ChannelId.TEST1, ModbusType.UINT16) // <- Address 302
+						.channel(1, ChannelId.TEST2, ModbusType.UINT16) // <- Address 303
+						.channel(2, exampleWriteChannel1().channelId(), ModbusType.UINT16) // <- Address 304
+						.channel(3, exampleWriteChannel2().channelId(), ModbusType.UINT16) // <- Address 305
+						.channel(4, exampleWriteChannel3().channelId(), ModbusType.UINT16) // <- Address 306
+						.channel(5, exampleWriteChannel4().channelId(), ModbusType.UINT16) // <- Address 307
+						.build());
+				// Modbus address for another entry here would start with 500.
+	}
+
+	/**
+	 * -- Making channels available for Modbus --
+	 *
+	 * You can make your channels available to be read by Modbus. For the device to act as a Modbus Slave, use the
+	 * "Controller Api Modbus/TCP" or "Controller Api Modbus/Serial" in Apache Felix. In the UI you need to enter
+	 * the Id of your module. For this to work, your module must implement the "ModbusSlave" interface and then contain
+	 * the "getModbusSlaveTable()" method. This method defines which channel is mapped to which Modbus register.
+	 * The channels are mapped to both input and holding registers. Only write channels can accept writes from Modbus.
+	 *
+	 * The register address is dynamic and not static and depends on what modules where added before. The example given
+	 * here assumes no other modules were added to the Modbus API.
+	 *
+	 * After the "OpenemsComponent..." entry, the Modbus address is at 300. The "length" argument in
+	 * "ModbusSlaveNatureTable" defines how many registers this entry reserves.
+	 *
+	 * Declaring entries with "ModbusSlaveNatureTable" adds two entries at the start of the address field that contain
+	 * meta information. The first entry at address 300 is the class name (ChannelTutorialImpl), the second entry at
+	 * address 301 is number of registers reserved for this class (200). At address 302 is then the entry with offset 0,
+	 * which is channel TEST1.
+	 *
+	 */
 }
