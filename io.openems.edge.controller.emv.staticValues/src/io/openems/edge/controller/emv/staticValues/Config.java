@@ -18,46 +18,11 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
     boolean enabled() default true;
 
-    @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices",
-            options = {
-                    @Option(label = "Relays0", value = "Relays0"),
-                    @Option(label = "Relays1", value = "Relays1"),
-                    @Option(label = "Relays2", value = "Relays2"),
-                    @Option(label = "Relays3", value = "Relays3"),
-                    @Option(label = "Relays4", value = "Relays4"),
-                    @Option(label = "Relays5", value = "Relays5"),
-                    @Option(label = "Relays6", value = "Relays6"),
-                    @Option(label = "Relays7", value = "Relays7"),
-                    @Option(label = "Relays8", value = "Relays8"),
-                    @Option(label = "Relays9", value = "Relays9"),
-                    @Option(label = "Relays10", value = "Relays10"),
-                    @Option(label = "Relays11", value = "Relays11"),
-                    @Option(label = "Relays12", value = "Relays12"),
-                    @Option(label = "Relays13", value = "Relays13"),
-                    @Option(label = "Relays14", value = "Relays14"),
-                    @Option(label = "Relays15", value = "Relays15"),
-                    @Option(label = "Relays16", value = "Relays16"),
-                    @Option(label = "Relays17", value = "Relays17"),
-                    @Option(label = "Relays18", value = "Relays18"),
-                    @Option(label = "Relays19", value = "Relays19"),
-                    @Option(label = "Relays20", value = "Relays20"),
-                    @Option(label = "Relays21", value = "Relays21"),
-                    @Option(label = "Relays22", value = "Relays22"),
-                    @Option(label = "Relays23", value = "Relays23"),
-                    @Option(label = "Relays24", value = "Relays24"),
-                    @Option(label = "Relays25", value = "Relays25"),
-                    @Option(label = "Relays26", value = "Relays26"),
-                    @Option(label = "Relays27", value = "Relays27"),
-                    @Option(label = "Relays28", value = "Relays28"),
-                    @Option(label = "Relays29", value = "Relays29"),
-                    @Option(label = "Relays30", value = "Relays30"),
-                    @Option(label = "Relays31", value = "Relays31"),
-
-            })
-    String[] relaysDeviceList();
+    @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices")
+    String[] relaysDeviceList() default {"M6"};
 
     @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changed via 1 and 0 ")
-    String relaysValues() default "1100101011001010";
+    String relaysValues() default "1";
 
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
@@ -71,19 +36,8 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "DacValues in mA", description = "Set the DacValues in mA")
     double[] dacValues() default {7, 15, 20, 10};
 
-    @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices",
-            options = {
-                    @Option(label = "PwmDevice0", value = "PwmDevice0"),
-                    @Option(label = "PwmDevice1", value = "PwmDevice1"),
-                    @Option(label = "PwmDevice2", value = "PwmDevice2"),
-                    @Option(label = "PwmDevice3", value = "PwmDevice3"),
-                    @Option(label = "PwmDevice4", value = "PwmDevice4"),
-                    @Option(label = "PwmDevice5", value = "PwmDevice5"),
-                    @Option(label = "PwmDevice6", value = "PwmDevice6"),
-                    @Option(label = "PwmDevice7", value = "PwmDevice7")
-
-            })
-    String[] PwmDeviceList();
+    @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices")
+    String[] PwmDeviceList()default{"PM6"};
 
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
     float[] pwmValues() default {25, 100, 75, 40, 80, 50, 100, 10};

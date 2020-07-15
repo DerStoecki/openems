@@ -93,9 +93,9 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
             if (this.getRelaysChannel().getNextValue().get()) {
                 onOrOff = "activated";
             }
-            return "Status of " + super.id() + " alias: " + super.alias() + " is " + onOrOff;
+            return "Status of " + super.id() + " alias: " + super.alias() + " is " + onOrOff + "\n";
         } else {
-            return "";
+            return "\n";
         }
     }
 

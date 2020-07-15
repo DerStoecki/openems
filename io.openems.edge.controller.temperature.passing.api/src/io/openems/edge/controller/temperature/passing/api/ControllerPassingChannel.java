@@ -45,7 +45,15 @@ public interface ControllerPassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        NO_ERROR(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
+        NO_ERROR(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
+
+        /**
+         * For ERROR Handling. Will be called by Overseer.
+         * 0 == ValveDefect
+         * 1 == Heat to Low
+         * 2 == HeatNotNeeded
+         */
+        ERROR_CODE(Doc.of(OpenemsType.INTEGER));
 
         private final Doc doc;
 
@@ -75,6 +83,20 @@ public interface ControllerPassingChannel extends OpenemsComponent {
      */
     default WriteChannel<Integer> getMinTemperature() {
         return this.channel(ChannelId.MIN_TEMPERATURE);
+    }
+
+    /**
+     * ErrorCode 0 - 2.
+     * <p>
+     * 0 == Valve Defect
+     * 1 == Heat Too Low
+     * 2 == HeatNotNeeded --> Can be resettet after certain time.
+     * </p>
+     *
+     * @return the Channel
+     */
+    default Channel<Integer> getErrorCode() {
+        return this.channel(ChannelId.ERROR_CODE);
     }
 
     /**

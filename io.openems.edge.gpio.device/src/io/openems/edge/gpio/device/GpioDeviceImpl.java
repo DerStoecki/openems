@@ -124,7 +124,7 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
             return debugInfo + "\n";
 
         } else {
-            return " ";
+            return "\n";
         }
     }
 

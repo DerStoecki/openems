@@ -54,4 +54,9 @@ public class PwmDevice extends AbstractOpenemsComponent implements OpenemsCompon
         super.deactivate();
     }
 
+    @Override
+    public String debugLog() {
+        return "Pwm Device: " + super.id() + " running at: " + this.getPwmPowerLevelChannel().getNextValue().get() + " %";
+    }
+
 }
