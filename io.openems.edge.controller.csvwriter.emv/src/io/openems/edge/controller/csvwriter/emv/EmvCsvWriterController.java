@@ -285,7 +285,9 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             //Sc16/DoubleUart
             this.uartList.forEach(uart -> {
                 try {
-                    String s = uart.id() + "/" + uart.getOnOff().channelId().id();
+                    String s = uart.id() + "/" + uart.getErrorMessage().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = uart.id() + "/" + uart.getOnOff().channelId().id();
                     csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -377,13 +379,17 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      */
     private void writeUartData() {
         this.uartList.forEach(uart -> {
-            String pcaString = "-";
+            String uartString = "-";
 
             try {
+                uartString = uart.getErrorMessage().value().get().toString();
+                csvWriter.append(uartString);
+                csvWriter.append(",");
+                uartString = "-";
                 if (uart.getOnOff().getNextWriteValue().isPresent()) {
-                    pcaString = uart.getOnOff().value().get().toString();
+                    uartString = uart.getOnOff().value().get().toString();
                 }
-                csvWriter.append(pcaString);
+                csvWriter.append(uartString);
                 csvWriter.append(",");
             } catch (Exception e) {
                 e.printStackTrace();
