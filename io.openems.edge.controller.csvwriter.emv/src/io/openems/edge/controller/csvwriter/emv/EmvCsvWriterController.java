@@ -8,6 +8,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.consolinno.leaflet.maindevice.api.doubleuart.DoubleUartDevice;
 import io.openems.edge.controller.api.Controller;
 
+import io.openems.edge.meter.abb.b32.MeterAbbB23Mbus;
 import io.openems.edge.meter.api.SymmetricMeter;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
@@ -36,15 +37,13 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     @Reference
     ComponentManager cpm;
 
-    private double timeInterval;
-    private double timeStamp = 0;
-
     private List<Thermometer> thermometerList = new ArrayList<>();
     private List<ActuatorRelaysChannel> relaysList = new ArrayList<>();
     private List<PowerLevel> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
     private List<DoubleUartDevice> uartList = new ArrayList<>();
+    private MeterAbbB23Mbus meterAbbB23Mbus;
 
     private int dateDay;
     private String fileName;
@@ -67,10 +66,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.meterList(), "meter");
         allocateComponents(config.doubleUartList(), "doubleUart");
-        this.timeInterval = config.timeInterval() * 1000;
-        if (timeInterval <= 0) {
-            this.timeInterval = 1000;
-        }
+
         if (!config.path().equals("")) {
             this.path = config.path();
         }
@@ -99,7 +95,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         String month = String.format("%2s", Integer.toString((calendar.get(Calendar.MONTH) + 1))).replace(" ", "0");
         String day = String.format("%2s", Integer.toString(calendar.get(Calendar.DAY_OF_MONTH))).replace(" ", "0");
         this.fileName = "test" + year + month + day + ".csv";
-        this.dateDay = Calendar.DAY_OF_MONTH;
+        this.dateDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
     }
 
     /**
@@ -180,6 +176,9 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                             if (cpm.getComponent(string) instanceof SymmetricMeter) {
 
                                 this.meterList.add(counter.intValue(), cpm.getComponent(string));
+                                if (cpm.getComponent(string) instanceof MeterAbbB23Mbus) {
+                                    this.meterAbbB23Mbus = cpm.getComponent(string);
+                                }
                             } else {
                                 throw new ConfigurationException("Could not allocate Component: meter " + string,
                                         "Config error; Check your Config --> meter");
@@ -276,6 +275,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                     csvWriterAppendLineForHead(s);
                     s = meter.id() + "/" + meter.getActivePower().channelId().id();
                     csvWriterAppendLineForHead(s);
+                    s = meter.id() + "/" + meterAbbB23Mbus.getTotalConsumedEnergy().channelId().id();
+                    csvWriterAppendLineForHead(s);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -313,15 +314,6 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     }
 
     /**
-     * If the waiting time is over write again.
-     *
-     * @return boolean if ready or not.
-     */
-    private boolean readytoWrite() {
-        return System.currentTimeMillis() - this.timeStamp >= timeInterval;
-    }
-
-    /**
      * Initialize a new FileWriter for a CSV File.
      *
      * @throws IOException if something is happening.
@@ -352,30 +344,29 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 e.printStackTrace();
             }
         }
-        if (readytoWrite()) {
-            // Do Stuff
 
-            try {
-                this.timeStamp = System.currentTimeMillis() - 100;
-                this.csvWriter = new FileWriter(path + fileName, true);
-                //Write Current Time; File Writer maybe broken?
-                Calendar calendar = Calendar.getInstance();
-                String time = calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + ":" + calendar.get(Calendar.SECOND);
-                this.csvWriter.append(time);
-                this.csvWriter.append(",");
-                //For Each Temperature ; For Each Relay / For Each Dac / Pwm / Meter
-                writeTemperatureData();
-                writeRelaysData();
-                writeDacData();
-                writePwmData();
-                writeMeterData();
-                writeUartData();
+        // Do Stuff
 
-                csvWriter.append("\n");
-                csvWriter.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            this.csvWriter = new FileWriter(path + fileName, true);
+            //Write Current Time; File Writer maybe broken?
+            Calendar calendar = Calendar.getInstance();
+            String time = calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE) + ":" + calendar.get(Calendar.SECOND);
+            this.csvWriter.append(time);
+            this.csvWriter.append(",");
+            //For Each Temperature ; For Each Relay / For Each Dac / Pwm / Meter
+            writeTemperatureData();
+            writeRelaysData();
+            writeDacData();
+            writePwmData();
+            writeMeterData();
+            writeUartData();
+
+            csvWriter.append("\n");
+            csvWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+
         }
 
     }
@@ -405,7 +396,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      */
     private void writeMeterData() {
         this.meterList.forEach(meter -> {
-            String csvString = "-";
+            String defaultString = "-";
+            String csvString = defaultString;
 
             try {
                 //Prod, Consump, ActivePower
@@ -415,20 +407,32 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
-                csvString = "-";
+                csvString = defaultString;
                 if (meter.getActiveConsumptionEnergy().getNextValue().isDefined()) {
                     csvString = meter.getActiveConsumptionEnergy().getNextValue().get().toString() + " "
                             + meter.getActiveConsumptionEnergy().channelDoc().getUnit().getSymbol();
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
-                csvString = ",";
+                csvString = defaultString;
                 if (meter.getActivePower().getNextValue().isDefined()) {
                     csvString = meter.getActivePower().getNextValue().get().toString() + " "
                             + meter.getActivePower().channelDoc().getUnit().getSymbol();
                 }
+
                 csvWriter.append(csvString);
                 csvWriter.append(",");
+                csvString = defaultString;
+                if (meter instanceof MeterAbbB23Mbus) {
+                    if (meterAbbB23Mbus.getTotalConsumedEnergy().value().isDefined()) {
+                        csvString = meterAbbB23Mbus.getTotalConsumedEnergy().getNextValue().get().toString() + " "
+                                + meterAbbB23Mbus.getTotalConsumedEnergy().channelDoc().getUnit().getSymbol();
+                    }
+
+                }
+                csvWriter.append(csvString);
+                csvWriter.append(",");
+
             } catch (IOException e) {
                 e.printStackTrace();
             }

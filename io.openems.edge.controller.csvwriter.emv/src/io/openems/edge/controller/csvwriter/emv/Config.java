@@ -156,15 +156,12 @@ import org.osgi.service.metatype.annotations.Option;
             options = {
                     @Option(label = "meter0", value = "meter0"),
                     @Option(label = "meter1", value = "meter1"),
+                    @Option(label = "meterABB", value = "meterABB")
             })
     String[] meterList();
 
     @AttributeDefinition(name = "Sc16Devices", description = "Select Sc16Device")
     String[] doubleUartList()default {"Gpio0"};
-
-
-    @AttributeDefinition(name = "Time Interval", description = "Interval of Time in seconds")
-    double timeInterval() default 1;
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Csv Writer [{id}]";
 
