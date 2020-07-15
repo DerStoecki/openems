@@ -2,7 +2,7 @@ package io.openems.edge.heatpump.alphainnotec.api;
 
 import io.openems.common.types.OptionsEnum;
 
-enum Clearance implements OptionsEnum {
+public enum Clearance implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
 	SPERRE(0, "Sperre"), //
 	FREIGABE_1_VERDICHTER(1, "Freigabe 1 Verdichter"), //

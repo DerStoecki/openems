@@ -234,6 +234,11 @@ public enum Unit {
     SECONDS("sec"),
 
     /**
+     * Unit of Time [cs]
+     */
+    CENTISECONDS("cs", SECONDS, -2),
+
+    /**
      * Unit of Time [ms]
      */
     MILLISECONDS("ms", SECONDS, -3),

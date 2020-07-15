@@ -548,7 +548,7 @@ public interface HeatpumpAlphaInnotecChannel extends HeatpumpSmartGridGeneralize
          *      <li> State 4: Off
          * </ul>
          */
-        HR_13_POOLRUNSTATE(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE)),
+        HR_13_POOLRUNSTATE(Doc.of(PoolMode.values()).accessMode(AccessMode.READ_WRITE)),
 
         // HR_14 = Smart Grid, use channel of parent interface.
 

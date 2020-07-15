@@ -1,16 +1,16 @@
-package io.openems.edge.heatpump.alphainnotec.api;
+package io.openems.edge.apartmentmodule.api;
 
 import io.openems.common.types.OptionsEnum;
 
-public enum CoolingMode implements OptionsEnum {
+public enum ExternalRequest implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
-	Off(0, "Off"), //
-	AUTOMATIK(1, "Automatik"); //
+	NO_REQUEST(0, "No request has occurred"), //
+	EXTERNAL_REQUEST(1, "External request has occurred"); //
 
 	private int value;
 	private String name;
 
-	private CoolingMode(int value, String name) {
+	private ExternalRequest(int value, String name) {
 		this.value = value;
 		this.name = name;
 	}

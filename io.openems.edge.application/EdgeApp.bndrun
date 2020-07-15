@@ -20,6 +20,8 @@
 	bnd.identity;id='org.ops4j.pax.logging.pax-logging-service',\
 	bnd.identity;id='org.ops4j.pax.logging.pax-logging-api',\
 	bnd.identity;id='io.openems.common',\
+	bnd.identity;id='io.openems.edge.apartmentmodule',\
+	bnd.identity;id='io.openems.edge.apartmentmodule.api',\
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
 	bnd.identity;id='io.openems.edge.biomassheater',\
@@ -202,6 +204,8 @@
 	com.google.guava;version='[28.1.0,28.1.1)',\
 	com.google.guava.failureaccess;version='[1.0.1,1.0.2)',\
 	io.openems.common;version=snapshot,\
+	io.openems.edge.apartmentmodule;version=snapshot,\
+	io.openems.edge.apartmentmodule.api;version=snapshot,\
 	io.openems.edge.application;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
 	io.openems.edge.biomassheater;version=snapshot,\

@@ -1,16 +1,16 @@
-package io.openems.edge.heatpump.alphainnotec.api;
+package io.openems.edge.apartmentmodule.api;
 
 import io.openems.common.types.OptionsEnum;
 
-public enum CoolingMode implements OptionsEnum {
+public enum OnOff implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
-	Off(0, "Off"), //
-	AUTOMATIK(1, "Automatik"); //
+	OFF(0, "Off"), //
+	ON(1, "On"); //
 
 	private int value;
 	private String name;
 
-	private CoolingMode(int value, String name) {
+	private OnOff(int value, String name) {
 		this.value = value;
 		this.name = name;
 	}

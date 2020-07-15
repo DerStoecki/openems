@@ -2,7 +2,7 @@ package io.openems.edge.heatpump.alphainnotec.api;
 
 import io.openems.common.types.OptionsEnum;
 
-enum VentilationMode implements OptionsEnum {
+public enum VentilationMode implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
 	AUTOMATIK(0, "Automatik"), //
 	PARTY(1, "Party"), //

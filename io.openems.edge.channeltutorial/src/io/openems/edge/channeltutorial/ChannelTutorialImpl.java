@@ -466,25 +466,35 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 
 		if (runonce) {
 
-			// The channel is of type integer. The compiler won't let you do this:
+			// The channel is of type integer. The compiler won't let you put a boolean in [write] that is an Optional<Integer>.
+			// The following line would cause a compiler error:
 			// this.exampleWriteChannel1().setNextWriteValue(true);
 
-			// But this is ok:
+			// But you can put a boolean in [next] of the same channel, because that is a Value<Integer> and Value<T> has
+			// a data converter:
 			this.exampleWriteChannel1().setNextValue(true);
+			// true is converted to 1
 			this.logInfo(this.log, "Writing true into [next] of channel Write1.");
 			this.logInfo(this.log, "Channel Write1 [next]: " + this.exampleWriteChannel1().getNextValue().get());
 			this.exampleWriteChannel1().setNextValue(false);
+			// false is converted to 0
 			this.logInfo(this.log, "Writing false into [next] of channel Write1.");
 			this.logInfo(this.log, "Channel Write1 [next]: " + this.exampleWriteChannel1().getNextValue().get());
 			this.exampleWriteChannel1().setNextValue(10.9);
+			// A float is converted to an integer and rounded correctly. 10.9 is rounded up to integer 11
 			this.logInfo(this.log, "Writing 10.9 into [next] of channel Write1.");
 			this.logInfo(this.log, "Channel Write1 [next]: " + this.exampleWriteChannel1().getNextValue().get());
 			this.exampleWriteChannel1().setNextValue(10.3);
+			// 10.3 is rounded down to integer 10
 			this.logInfo(this.log, "Writing 10.3 into [next] of channel Write1.");
 			this.logInfo(this.log, "Channel Write1 [next]: " + this.exampleWriteChannel1().getNextValue().get());
 			this.logInfo(this.log, "");
-			// true is converted to 1, false is converted to 0, a float is converted to integer and rounded up or down.
 
+
+			// Because Value<T> has a data converter, the compiler won't throw an error when non-fitting data is put in
+			// a Value<T>. More precisely, the input for Value<T> accepts type "object" and the object is then converted.
+			// If it can not be converted, you will get an error on runtime. Since everything is an object, the compiler
+			// will allow anything as an input for Value<T>.
 			// This would compile, but will throw an error when running:
 			// this.exampleWriteChannel1().setNextValue('a');
 			// this.exampleWriteChannel1().setNextValue("string");
@@ -501,6 +511,14 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 		 *
 		 * Note that null is a valid format for all channels and will not cause an error when it is written into
 		 * a channel. So when reading a channel data container, we have to be careful that it might contain null.
+		 *
+		 * Pretty much any operation on channel data is prone to a null pointer exception!
+		 * Things such as:
+		 * - Using a channel in an if statement.
+		 * - Putting channel data in a variable.
+		 * - Doing math with channel data
+		 *
+		 * When you do any of these things, deploy safety measures to prevent a null pointer exception!
 		 *
 		 */
 

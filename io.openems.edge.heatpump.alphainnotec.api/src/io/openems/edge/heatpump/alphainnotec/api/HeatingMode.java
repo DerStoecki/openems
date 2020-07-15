@@ -2,7 +2,7 @@ package io.openems.edge.heatpump.alphainnotec.api;
 
 import io.openems.common.types.OptionsEnum;
 
-enum HeatingMode implements OptionsEnum {
+public enum HeatingMode implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
 	AUTOMATIK(0, "Automatik"), //
 	ZUSAETZLICHER_WAERMEERZEUGER(1, "Zusätzlicher Wärmeerzeuger"), //

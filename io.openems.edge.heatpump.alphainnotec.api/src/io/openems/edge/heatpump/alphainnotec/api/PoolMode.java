@@ -2,7 +2,7 @@ package io.openems.edge.heatpump.alphainnotec.api;
 
 import io.openems.common.types.OptionsEnum;
 
-enum PoolMode implements OptionsEnum {
+public enum PoolMode implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
 	AUTOMATIK(0, "Automatik"), //
 	WERT_NICHT_BENUTZT(1, "Wert nicht benutzt"), //
