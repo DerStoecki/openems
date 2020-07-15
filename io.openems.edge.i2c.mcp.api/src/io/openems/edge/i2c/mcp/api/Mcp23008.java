@@ -32,12 +32,11 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
         }
         this.address = address;
         this.i2CBus = device;
-        getPhysicalDevice();
-        int data = 0x00;
-            this.device.write(0x00, (byte) data);
+        getPhysicalDeviceAndSetBasicOperationMode();
+
     }
 
-    private boolean getPhysicalDevice() throws IOException {
+    private boolean getPhysicalDeviceAndSetBasicOperationMode() throws IOException {
 
         switch (address) {
             case "0x22":
@@ -53,6 +52,8 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
                 this.device = i2CBus.getDevice(0x20);
                 break;
         }
+        int data = 0x00;
+        this.device.write(0x00, (byte) data);
         return true;
     }
 
@@ -73,9 +74,9 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
      * </p>
      */
     @Override
-    public void shift(){
+    public void shift() {
 
-            for (RelaysTask task : tasks.values()) {
+        for (RelaysTask task : tasks.values()) {
 
             task.getWriteChannel().getNextWriteValueAndReset()
                     .ifPresent(aboolean -> {
@@ -92,14 +93,13 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
             }
         }
         try {
-            if(wasRemoved) {
+            if (wasRemoved) {
                 try {
                     this.i2CBus = I2CFactory.getInstance(I2CBus.BUS_1);
                 } catch (I2CFactory.UnsupportedBusNumberException e) {
                     e.printStackTrace();
                 }
-                getPhysicalDevice();
-                this.device.write(0x00, (byte)0x00);
+                getPhysicalDeviceAndSetBasicOperationMode();
             }
             device.write(0x09, data);
             wasRemoved = false;
@@ -112,6 +112,7 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
 
     /**
      * Gets a position and default status for deactivation method.
+     *
      * @param position position of the task.
      * @param activate is default position true or false (Opener is closed; Closer is open)
      */
@@ -132,13 +133,13 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
 
     /**
      * Resets the values to default (setPosition for shifters); and then shifts them.
-     * */
+     */
     @Override
     public void deactivate() {
         for (Map.Entry<Integer, Boolean> entry : getValuesPerDefault().entrySet()) {
             setPosition(entry.getKey(), entry.getValue());
         }
-            shift();
+        shift();
     }
 
     @Override

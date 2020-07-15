@@ -156,17 +156,12 @@ import org.osgi.service.metatype.annotations.Option;
             options = {
                     @Option(label = "meter0", value = "meter0"),
                     @Option(label = "meter1", value = "meter1"),
+                    @Option(label = "meterABB", value = "meterABB")
             })
     String[] meterList();
 
-    @AttributeDefinition(name = "Pca", description = "Select Pca from Main module")
-    String[] pcaList()default {"IO0"};
-
-    @AttributeDefinition(name = "Gpio", description = "Selects the remapped Gpios")
-    String [] gpioList() default {"ChpOnOffStatus0"};
-
-    @AttributeDefinition(name = "Time Interval", description = "Interval of Time in seconds")
-    double timeInterval() default 1;
+    @AttributeDefinition(name = "Sc16Devices", description = "Select Sc16Device")
+    String[] doubleUartList()default {"Gpio0"};
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Csv Writer [{id}]";
 

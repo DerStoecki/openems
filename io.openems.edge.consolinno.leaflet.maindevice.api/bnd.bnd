@@ -6,7 +6,8 @@ Bundle-Description: \
     Provides the Nature for the special devices build in/on the main module. Excluding Remapping of GPIOs.
 
 Export-Package:  \
-	io.openems.edge.consolinno.leaflet.maindevice.api
+	io.openems.edge.consolinno.leaflet.maindevice.api,\
+	io.openems.edge.consolinno.leaflet.maindevice.api.doubleuart
 
 -includeresource: {readme.md}
 
