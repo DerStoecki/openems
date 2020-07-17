@@ -8,6 +8,7 @@ Bundle-Description: \
 Private-Package:  \
 	io.openems.edge.consolinno.leaflet.mainmodule.pcaGpioExpansion,\
 	io.openems.edge.consolinno.leaflet.mainmodule.sc16,\
+	io.openems.edge.consolinno.leaflet.mainmodule.sc16.tasks,\
 
 -includeresource: {readme.md}
 

@@ -8,6 +8,7 @@ Bundle-Description: \
 Export-Package:  \
 	io.openems.edge.consolinno.leaflet.mainmodule.api,\
 	io.openems.edge.consolinno.leaflet.mainmodule.api.sc16,\
+	io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature,\
 
 
 -includeresource: {readme.md}

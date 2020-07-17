@@ -5,8 +5,9 @@ import org.osgi.service.cm.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class Sc16IS752Impl implements Sc16IS752 {
     private int spiChannel;
@@ -33,9 +34,8 @@ public class Sc16IS752Impl implements Sc16IS752 {
     //Address for InterruptLatching --> change 2nd bit to 1 if you want your interrupts latched.
     private byte[] basicIoControl = {calcForAddress(SC16REGISTRY.ioControl, false), 0};
 
-
-    private Map<String, Sc16ReadTask> readTasks = new ConcurrentHashMap<>();
-    private Map<String, Sc16WriteTask> writeTasks = new ConcurrentHashMap<>();
+    private List<Sc16ReadTask> readTasks = new ArrayList<>();
+    private List<Sc16WriteTask> writeTasks = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(Sc16IS752Impl.class);
 
     /**
@@ -96,7 +96,7 @@ public class Sc16IS752Impl implements Sc16IS752 {
         }
         //data[0] == registryAddress; 0x00 ist the init Data
         byte[] data = {calcForAddress(SC16REGISTRY.ioState, false), 0x00};
-        this.writeTasks.values().forEach(task -> {
+        this.writeTasks.forEach(task -> {
             //see if LEDs were set to 0 or not
             int valueForGpio = task.getRequest() ? 1 : 0;
             data[1] |= (valueForGpio << task.getPin());
@@ -113,7 +113,7 @@ public class Sc16IS752Impl implements Sc16IS752 {
         }
         byte[] read = {calcForAddress(SC16REGISTRY.ioState, true), 0x00};
         Spi.wiringPiSPIDataRW(spiChannel, read);
-        this.readTasks.values().forEach(task -> {
+        this.readTasks.forEach(task -> {
             int response = read[1] & 0xff;
             task.setResponse((response >> task.getPin()) & 1);
         });
@@ -219,35 +219,19 @@ public class Sc16IS752Impl implements Sc16IS752 {
     /**
      * Add a Sc16Task. In Future it will add a UArtTask; But for now Sc16Task is enough.
      *
-     * @param id   Unique Id of this task, usually from the DoubleUArtDevice you activate in Config.
+
      * @param task Task created by the DoubleUARTDevice. Either Read or Write.
      * @throws ConfigurationException if the Id is already in tasks list --> Not Unique Id.
      */
 
     @Override
-    public void addTask(String id, Sc16Task task) throws ConfigurationException {
-
-        if (this.readTasks.containsKey(id) || this.writeTasks.containsKey(id)) {
-            throw new ConfigurationException("ID Already in Tasks", id + " already used; please change Unique id");
-        } else {
+    public void addTask(Sc16Task task) throws ConfigurationException {
             if (task instanceof Sc16ReadTask) {
-                this.readTasks.put(id, (Sc16ReadTask) task);
+                this.readTasks.add((Sc16ReadTask) task);
             } else {
-                this.writeTasks.put(id, (Sc16WriteTask) task);
+                this.writeTasks.add((Sc16WriteTask) task);
             }
         }
-    }
-
-    /**
-     * Removes the Task given previously by the DobuleUARTDevice.
-     *
-     * @param id unique ID of the Task.
-     */
-
-    @Override
-    public void removeTask(String id) {
-        this.readTasks.remove(id);
-    }
 
     /**
      * Setup connection with SPI. Using spichannel and frequency.

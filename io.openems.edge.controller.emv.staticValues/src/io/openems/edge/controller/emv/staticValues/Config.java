@@ -37,16 +37,24 @@ import org.osgi.service.metatype.annotations.Option;
     double[] dacValues() default {7, 15, 20, 10};
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices")
-    String[] PwmDeviceList()default{"PM6"};
+    String[] PwmDeviceList() default {"PM6"};
 
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
     float[] pwmValues() default {25, 100, 75, 40, 80, 50, 100, 10};
 
-    @AttributeDefinition (name = "SC16DeviceList", description = "What Sc16 should be in the List")
-    String[] sc16List() default {"Status4"};
+    @AttributeDefinition(name = "Sc16Id", description = "Id of the Mainmodule for the Sc16")
+    String mainModuleId() default "LeafletSc16";
+
+    @AttributeDefinition(name = "Sc16States", description = "What Sc16 states you want to control",
+            options = {
+                    @Option(label = "LED-RED", value = "LED-RED"),
+                    @Option(label = "LED-YELLOW", value = "LED-YELLOW"),
+                    @Option(label = "ENABLE-OUTPUT", value = "ENABLE-OUTPUT")}
+    )
+    String[] sc16ChoiceList() default {};
 
     @AttributeDefinition(name = "Sc16Values", description = "Values for the Statuses")
-    String sc16Values() default "1";
+    String sc16Values() default "101";
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Static Values [{id}]";
 
