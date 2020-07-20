@@ -6,10 +6,9 @@ import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
-import io.openems.edge.consolinno.leaflet.maindevice.api.doubleuart.DoubleUartDevice;
+
+import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature.Sc16Nature;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.gpio.device.api.GpioDevice;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import org.osgi.service.cm.ConfigurationException;
@@ -42,7 +41,10 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     private boolean[] relaysValues;
     private double[] dacValues;
     private float[] pwmValues;
-    private List<DoubleUartDevice> uartList = new ArrayList<>();
+
+
+    private List<Sc16Nature> uartList = new ArrayList<>();
+    private List<Integer> gpioList = new ArrayList<>();
     private boolean[] uartValues;
 
     public ControllerEmvStaticValues() {
@@ -57,16 +59,34 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         allocateComponents(config.relaysDeviceList(), "Relays");
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
-        allocateComponents(config.sc16List(), "DoubleUart");
+        allocateComponents(config.mainModuleId(), "DoubleUart");
         //contains String --> boolean values --> bc of bug from OSGi / Apache Felix
         if (this.relaysList.size() > 0) {
             allocateValues(config.relaysValues(), "Relays");
         }
         if (this.uartList.size() > 0) {
-            allocateValues(config.sc16Values(), "DoubleUart");
+            allocateUart(config.sc16ChoiceList(), config.sc16Values());
         }
         this.dacValues = config.dacValues();
         this.pwmValues = config.pwmValues();
+    }
+
+    private void allocateUart(String[] sc16ChoiceList, String sc16Values) {
+        for (String s : sc16ChoiceList) {
+            switch (s) {
+                case "LED-RED":
+                    this.gpioList.add(0);
+                    break;
+                case "LED-YELLOW":
+                    this.gpioList.add(1);
+                    break;
+                case "ENABLE-OUTPUT":
+                    this.gpioList.add(6);
+                    break;
+            }
+
+        }
+        allocateValues(sc16Values, "DoubleUart");
     }
 
     /**
@@ -88,7 +108,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
             case "DoubleUart":
             default:
-                tempTrueValues = new boolean[this.uartList.size()];
+                tempTrueValues = new boolean[this.gpioList.size()];
                 break;
         }
 
@@ -161,7 +181,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                             break;
 
                         case "DoubleUart":
-                            if (cpm.getComponent(string) instanceof DoubleUartDevice) {
+                            if (cpm.getComponent(string) instanceof Sc16Nature) {
                                 this.uartList.add(counter.intValue(), cpm.getComponent(string));
                             } else {
                                 throw new ConfigurationException("Could not allocate Component: Dac " + string,
@@ -228,7 +248,18 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         });
         this.uartList.forEach(uart -> {
             try {
-                uart.getOnOff().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                switch (this.gpioList.get(counter.intValue())) {
+                    case 0:
+                        uart.ledRedStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                        break;
+                    case 1:
+                        uart.ledYellowStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                        break;
+                    case 6:
+                        uart.enableOutput().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                        break;
+                }
+
             } catch (OpenemsError.OpenemsNamedException e) {
                 e.printStackTrace();
             }

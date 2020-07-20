@@ -161,7 +161,7 @@ import org.osgi.service.metatype.annotations.Option;
     String[] meterList();
 
     @AttributeDefinition(name = "Sc16Devices", description = "Select Sc16Device")
-    String[] doubleUartList()default {"Gpio0"};
+    String[] doubleUartList()default {"LeafletSc16"};
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Csv Writer [{id}]";
 

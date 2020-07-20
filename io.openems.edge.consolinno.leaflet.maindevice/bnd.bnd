@@ -8,8 +8,6 @@ Bundle-Description: \
 Private-Package:  \
 	io.openems.edge.consolinno.leaflet.maindevice.pca,\
 	io.openems.edge.consolinno.leaflet.maindevice.pca.task,\
-	io.openems.edge.consolinno.leaflet.maindevice.doubleuart,\
-	io.openems.edge.consolinno.leaflet.maindevice.doubleuart.task,\
 
 -includeresource: {readme.md}
 

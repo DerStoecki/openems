@@ -5,7 +5,7 @@ import io.openems.edge.chp.device.api.PowerLevel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.consolinno.leaflet.maindevice.api.doubleuart.DoubleUartDevice;
+import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature.Sc16Nature;
 import io.openems.edge.controller.api.Controller;
 
 import io.openems.edge.meter.abb.b32.MeterAbbB23Mbus;
@@ -42,7 +42,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<PowerLevel> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
-    private List<DoubleUartDevice> uartList = new ArrayList<>();
+    private List<Sc16Nature> uartList = new ArrayList<>();
     private MeterAbbB23Mbus meterAbbB23Mbus;
 
     private int dateDay;
@@ -81,6 +81,14 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             this.csvWriter = new FileWriter(path + fileName, true);
         }
         initializeCsvHead();
+        this.uartList.forEach(uart -> {
+            try {
+                uart.ledGreenStatus().setNextWriteValue(true);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+            }
+        });
+
     }
 
     /**
@@ -185,7 +193,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                             }
                             break;
                         case "doubleUart":
-                            if (cpm.getComponent(string) instanceof DoubleUartDevice) {
+                            if (cpm.getComponent(string) instanceof Sc16Nature) {
                                 this.uartList.add(counter.intValue(), cpm.getComponent(string));
                             } else {
                                 throw new ConfigurationException("Could not allocate Component: DoubleUArt Device " + string,
@@ -285,10 +293,21 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             //Sc16/DoubleUart
             this.uartList.forEach(uart -> {
                 try {
-                    String s = uart.id() + "/" + uart.getErrorMessage().channelId().id();
+                    String s = uart.id() + "/" + uart.ledRedStatus().channelId().id();
                     csvWriterAppendLineForHead(s);
-                    s = uart.id() + "/" + uart.getOnOff().channelId().id();
+                    s = uart.id() + "/" + uart.ledYellowStatus().channelId().id();
                     csvWriterAppendLineForHead(s);
+                    s = uart.id() + "/" + uart.ledGreenStatus().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = uart.id() + "/" + uart.enableOutput().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = uart.id() + "/" + uart.hBus5V().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = uart.id() + "/" + uart.hBus24V().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                    s = uart.id() + "/" + uart.outputVoltageFlag().channelId().id();
+                    csvWriterAppendLineForHead(s);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -379,15 +398,53 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
      */
     private void writeUartData() {
         this.uartList.forEach(uart -> {
-            String uartString = "-";
+            String defaultString = "-";
+            String uartString = defaultString;
 
             try {
-                uartString = uart.getErrorMessage().value().get().toString();
+                if (uart.ledRedStatus().value().isDefined()) {
+                    uartString = uart.ledRedStatus().value().get().toString();
+                }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
-                uartString = "-";
-                if (uart.getOnOff().getNextWriteValue().isPresent()) {
-                    uartString = uart.getOnOff().value().get().toString();
+                uartString = defaultString;
+                if (uart.ledYellowStatus().value().isDefined()) {
+                    uartString = uart.ledYellowStatus().value().get().toString();
+                }
+                csvWriter.append(uartString);
+                csvWriter.append(",");
+                uartString = defaultString;
+
+                if (uart.ledGreenStatus().value().isDefined()) {
+                    uartString = uart.ledGreenStatus().value().get().toString();
+                }
+                csvWriter.append(uartString);
+                csvWriter.append(",");
+                uartString = defaultString;
+
+                if (uart.enableOutput().value().isDefined()) {
+                    uartString = uart.enableOutput().value().get().toString();
+                }
+                csvWriter.append(uartString);
+                csvWriter.append(",");
+                uartString = defaultString;
+
+                if (uart.hBus5V().value().isDefined()) {
+                    uartString = uart.hBus5V().value().get().toString();
+                }
+                csvWriter.append(uartString);
+                csvWriter.append(",");
+                uartString = defaultString;
+
+                if (uart.hBus24V().value().isDefined()) {
+                    uartString = uart.hBus24V().value().get().toString();
+                }
+                csvWriter.append(uartString);
+                csvWriter.append(",");
+                uartString = defaultString;
+
+                if (uart.outputVoltageFlag().value().isDefined()) {
+                    uartString = uart.outputVoltageFlag().value().get().toString();
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
@@ -535,6 +592,13 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     public void deactivate() {
         try {
             csvWriter.close();
+            this.uartList.forEach(uart -> {
+                try {
+                    uart.ledGreenStatus().setNextWriteValue(false);
+                } catch (OpenemsError.OpenemsNamedException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }

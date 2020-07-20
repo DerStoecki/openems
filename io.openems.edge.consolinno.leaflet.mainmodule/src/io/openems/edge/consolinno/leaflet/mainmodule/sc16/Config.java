@@ -27,7 +27,7 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Frequency", description = "SPI Clock Frequency for this Device")
             int frequency() default 40000;
 
-    @AttributeDefinition(name = "InterruptActivate", description = "Tick on if you want Interrupt Settings.")
+    /*@AttributeDefinition(name = "InterruptActivate", description = "Tick on if you want Interrupt Settings.")
     boolean interruptActivate() default false;
 
     @AttributeDefinition(name = "InterruptSet", description = "What Type of Interrupt do you want",
@@ -39,7 +39,7 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "InterruptData", description = "Set Write Flags with 0 and 1; max 8bit")
             String interruptData() default "00000000";
-
+       */
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Consolinno Leaflet Module Sc16 [{id}]";
