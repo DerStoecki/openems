@@ -134,10 +134,10 @@ public class LMNWiredTask {
                             continue;
                         }
 
-                        float deltaT = System.currentTimeMillis() - channelLastTimeStamp.get(tmpString[0]);
+                        //float deltaT = System.currentTimeMillis() - channelLastTimeStamp.get(tmpString[0]);
 
-                        val = (fData - channelLastValue.get(tmpString[0])) / (deltaT / 1000);
-
+                        //val = (fData - channelLastValue.get(tmpString[0])) / (deltaT / 1000);
+                        val = fData;
                         //Save current value and timestamp for next run
                         channelLastTimeStamp.put(tmpString[0], System.currentTimeMillis());
                         channelLastValue.put(tmpString[0], fData);
