@@ -19,10 +19,10 @@ import org.osgi.service.metatype.annotations.Option;
     boolean enabled() default true;
 
     @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices")
-    String[] relaysDeviceList() default {"M6"};
+    String[] relaysDeviceList() default {"Relays0", "Relays1","Relays2","Relays3","Relays4","Relays5","Relays6","Relays7"};
 
     @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changed via 1 and 0 ")
-    String relaysValues() default "1";
+    String relaysValues() default "10011010";
 
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
@@ -37,13 +37,13 @@ import org.osgi.service.metatype.annotations.Option;
     double[] dacValues() default {7, 15, 20, 10};
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices")
-    String[] PwmDeviceList() default {"PM6"};
+    String[] PwmDeviceList() default {"PwmDevice1", "PwmDevice2", "PwmDevice3, PwmDevice4"};
 
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
-    float[] pwmValues() default {25, 100, 75, 40, 80, 50, 100, 10};
+    float[] pwmValues() default {25, 100, 75, 40};
 
     @AttributeDefinition(name = "Sc16Id", description = "Id of the Mainmodule for the Sc16")
-    String mainModuleId() default "LeafletSc16";
+    String[] mainModuleId() default "LeafletSc16";
 
     @AttributeDefinition(name = "Sc16States", description = "What Sc16 states you want to control",
             options = {

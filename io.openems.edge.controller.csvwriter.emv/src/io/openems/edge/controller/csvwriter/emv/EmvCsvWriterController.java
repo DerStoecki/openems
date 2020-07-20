@@ -88,6 +88,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 e.printStackTrace();
             }
         });
+
     }
 
     /**
@@ -591,6 +592,13 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     public void deactivate() {
         try {
             csvWriter.close();
+            this.uartList.forEach(uart -> {
+                try {
+                    uart.ledGreenStatus().setNextWriteValue(false);
+                } catch (OpenemsError.OpenemsNamedException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }

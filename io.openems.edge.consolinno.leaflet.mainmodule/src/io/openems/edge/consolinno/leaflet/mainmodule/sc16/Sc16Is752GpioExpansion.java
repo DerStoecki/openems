@@ -25,7 +25,8 @@ public class Sc16Is752GpioExpansion extends AbstractOpenemsComponent implements 
     private Sc16IS752 sc16;
 
     public Sc16Is752GpioExpansion() {
-        super(OpenemsComponent.ChannelId.values());
+        super(OpenemsComponent.ChannelId.values(),
+                Sc16Nature.ChannelId.values());
     }
 
     @Activate
