@@ -246,18 +246,22 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                 e.printStackTrace();
             }
         });
+        counter.set(0);
         this.uartList.forEach(uart -> {
+            counter.set(0);
             try {
-                switch (this.gpioList.get(counter.intValue())) {
-                    case 0:
-                        uart.ledRedStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
-                        break;
-                    case 1:
-                        uart.ledYellowStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
-                        break;
-                    case 6:
-                        uart.enableOutput().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
-                        break;
+                while (counter.get() < 3) {
+                    switch (this.gpioList.get(counter.intValue())) {
+                        case 0:
+                            uart.ledRedStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                            break;
+                        case 1:
+                            uart.ledYellowStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                            break;
+                        case 6:
+                            uart.enableOutput().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                            break;
+                    }
                 }
 
             } catch (OpenemsError.OpenemsNamedException e) {
