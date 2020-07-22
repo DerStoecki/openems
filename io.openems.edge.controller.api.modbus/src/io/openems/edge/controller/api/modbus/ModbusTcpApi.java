@@ -110,7 +110,7 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 		}
 	}
 
-	protected volatile Map<String, ModbusSlave> _components = new HashMap<>();
+	protected volatile Map<String, OpenemsComponent> _components = new HashMap<>();
 	private ConfigTcp config = null;
 
 	public ModbusTcpApi() {
@@ -218,7 +218,7 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 		// add remaining components; sorted by configured componentIds
 		for (String id : this.config.component_ids()) {
 			// find next component in order
-			ModbusSlave component = this._components.get(id);
+			ModbusSlave component = (ModbusSlave) this._components.get(id);
 			if (component == null) {
 				this.logWarn(this.log, "Required Component [" + id + "] is not available.");
 				continue;
@@ -361,7 +361,7 @@ public class ModbusTcpApi extends AbstractOpenemsComponent implements Controller
 	}
 
 	@Override
-	public Map<String, ModbusSlave> getComponents() {
+	public Map<String, OpenemsComponent> getComponents() {
 		return _components;
 	}
 }

@@ -46,8 +46,6 @@ import java.util.concurrent.CompletableFuture;
 public class ModbusSerialApi extends AbstractOpenemsComponent implements Controller, OpenemsComponent, JsonApi, ModbusSlaveApi {
 
 	public static final int UNIT_ID = 1;
-	public static final int DEFAULT_PORT = 502;
-	public static final int DEFAULT_MAX_CONCURRENT_CONNECTIONS = 5;
 
 	private final Logger log = LoggerFactory.getLogger(ModbusSerialApi.class);
 
@@ -71,9 +69,7 @@ public class ModbusSerialApi extends AbstractOpenemsComponent implements Control
 	protected Meta metaComponent = null;
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MULTIPLE)
-	protected void addComponent(ModbusSlave component) {
-		this._components.put(component.id(), component);
-	}
+	protected void addComponent(ModbusSlave component) { this._components.put(component.id(), component); }
 
 	@Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
 	protected volatile Timedata timedataService = null;
@@ -97,7 +93,7 @@ public class ModbusSerialApi extends AbstractOpenemsComponent implements Control
 		}
 	}
 
-	protected volatile Map<String, ModbusSlave> _components = new HashMap<>();
+	protected volatile Map<String, OpenemsComponent> _components = new HashMap<>();
 	private ConfigSerial config = null;
 
 	public ModbusSerialApi() {
@@ -208,7 +204,7 @@ public class ModbusSerialApi extends AbstractOpenemsComponent implements Control
 		// add remaining components; sorted by configured componentIds
 		for (String id : this.config.component_ids()) {
 			// find next component in order
-			ModbusSlave component = this._components.get(id);
+			ModbusSlave component = (ModbusSlave) this._components.get(id);
 			if (component == null) {
 				this.logWarn(this.log, "Required Component [" + id + "] is not available.");
 				continue;
@@ -351,7 +347,7 @@ public class ModbusSerialApi extends AbstractOpenemsComponent implements Control
 	}
 
 	@Override
-	public Map<String, ModbusSlave> getComponents() {
+	public Map<String, OpenemsComponent> getComponents() {
 		return _components;
 	}
 }

@@ -21,6 +21,6 @@ public interface ModbusSlaveApi extends OpenemsComponent {
 
 	TreeMap<Integer, ModbusRecord> getRecords();
 
-	Map<String, ModbusSlave> getComponents();
+	Map<String, OpenemsComponent> getComponents();
 
 }
