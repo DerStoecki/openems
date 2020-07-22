@@ -43,37 +43,23 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
     private int periodDurationMicros;
     private int maxPinPos = 7;
     private boolean wasRemoved = false;
-    private String address;
+    private int address;
 
-    public Pca9685GpioProvider(I2CBus bus, String address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
+    public Pca9685GpioProvider(I2CBus bus, int address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
         this.i2cBusOwner = false;
         this.bus = bus;
         basicSetup(address, targetFrequency, frequencyCorrectionFactor);
     }
 
-    private void basicSetup(String address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
-        allocateAddress(address);
+    private void basicSetup(int address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
+        this.address = address;
+        this.device = this.bus.getDevice(address);
         this.device.write(PCA9685A_MODE1, (byte) 0);
         this.frequency = targetFrequency;
         this.frequencyCorrectionFactor = frequencyCorrectionFactor;
-        this.address = address;
         //if not working try (PCA9685A_MODE1, (byte) 5);
         this.setFrequency(targetFrequency, frequencyCorrectionFactor);
 
-    }
-
-    private void allocateAddress(String address) {
-        try {
-            //more to come with further versions of PWM module
-            switch (address) {
-                default:
-                case "0x55":
-                    this.device = bus.getDevice(0x55);
-                    break;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
