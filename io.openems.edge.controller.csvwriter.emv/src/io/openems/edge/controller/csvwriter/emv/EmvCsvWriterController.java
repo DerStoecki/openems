@@ -44,6 +44,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<SymmetricMeter> meterList = new ArrayList<>();
     private List<Sc16Nature> uartList = new ArrayList<>();
     private MeterAbbB23Mbus meterAbbB23Mbus;
+    private boolean yellowLedStatus;
+    private boolean redLedStatus;
 
     private int dateDay;
     private String fileName;
@@ -283,7 +285,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                     csvWriterAppendLineForHead(s);
                     s = meter.id() + "/" + meter.getActivePower().channelId().id();
                     csvWriterAppendLineForHead(s);
-                    if(meter instanceof MeterAbbB23Mbus) {
+                    if (meter instanceof MeterAbbB23Mbus) {
                         s = meter.id() + "/" + meterAbbB23Mbus.getTotalConsumedEnergy().channelId().id();
                         csvWriterAppendLineForHead(s);
                     }
@@ -405,48 +407,77 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
             try {
                 if (uart.ledRedStatus().value().isDefined()) {
-                    uartString = uart.ledRedStatus().value().get().toString();
+                    if (uart.ledRedStatus().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
                 uartString = defaultString;
                 if (uart.ledYellowStatus().value().isDefined()) {
-                    uartString = uart.ledYellowStatus().value().get().toString();
+                    if (uart.ledYellowStatus().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
                 uartString = defaultString;
 
                 if (uart.ledGreenStatus().value().isDefined()) {
-                    uartString = uart.ledGreenStatus().value().get().toString();
+                    if (uart.ledGreenStatus().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
                 uartString = defaultString;
 
                 if (uart.enableOutput().value().isDefined()) {
-                    uartString = uart.enableOutput().value().get().toString();
+                    if (uart.enableOutput().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
+
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
                 uartString = defaultString;
 
                 if (uart.hBus5V().value().isDefined()) {
-                    uartString = uart.hBus5V().value().get().toString();
+                    if (uart.hBus5V().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
                 uartString = defaultString;
 
                 if (uart.hBus24V().value().isDefined()) {
-                    uartString = uart.hBus24V().value().get().toString();
+                    if (uart.hBus24V().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
                 uartString = defaultString;
 
                 if (uart.outputVoltageFlag().value().isDefined()) {
-                    uartString = uart.outputVoltageFlag().value().get().toString();
+                    if (uart.outputVoltageFlag().value().get()) {
+                        uartString = "ON";
+                    } else {
+                        uartString = "OFF";
+                    }
                 }
                 csvWriter.append(uartString);
                 csvWriter.append(",");
@@ -469,6 +500,10 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 if (meter.getActiveProductionEnergy().getNextValue().isDefined()) {
                     csvString = meter.getActiveProductionEnergy().getNextValue().get().toString() + " "
                             + meter.getActiveProductionEnergy().channelDoc().getUnit().getSymbol();
+                    if (!(meter instanceof MeterAbbB23Mbus) && meter.getActiveProductionEnergy().value().get() != 400) {
+                        this.redLedStatus = true;
+                    }
+
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
@@ -476,6 +511,10 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 if (meter.getActiveConsumptionEnergy().getNextValue().isDefined()) {
                     csvString = meter.getActiveConsumptionEnergy().getNextValue().get().toString() + " "
                             + meter.getActiveConsumptionEnergy().channelDoc().getUnit().getSymbol();
+
+                    if (!(meter instanceof MeterAbbB23Mbus) && meter.getActiveConsumptionEnergy().getNextValue().get() != 1100) {
+                        this.redLedStatus = true;
+                    }
                 }
                 csvWriter.append(csvString);
                 csvWriter.append(",");
@@ -483,6 +522,9 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 if (meter.getActivePower().getNextValue().isDefined()) {
                     csvString = meter.getActivePower().getNextValue().get().toString() + " "
                             + meter.getActivePower().channelDoc().getUnit().getSymbol();
+                    if (!(meter instanceof MeterAbbB23Mbus) && meter.getActivePower().getNextValue().get() != 1500) {
+                        this.redLedStatus = true;
+                    }
                 }
 
                 csvWriter.append(csvString);
@@ -502,8 +544,14 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                 e.printStackTrace();
             }
         });
-
-
+        this.uartList.forEach(uart -> {
+            try {
+                uart.ledRedStatus().setNextWriteValue(this.redLedStatus);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+            }
+        });
+        this.redLedStatus = false;
     }
 
     /**
@@ -577,6 +625,9 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             if (thermometer.getTemperature().getNextValue().isDefined() && (thermometer.getTemperature().getNextValue().get() != 1128)) {
                 csvString = thermometer.getTemperature().getNextValue().get().toString()
                         + thermometer.getTemperature().channelDoc().getUnit().getSymbol();
+                if (thermometer.getTemperature().getNextValue().get() > 400 || thermometer.getTemperature().getNextValue().get() < 100) {
+                    this.yellowLedStatus = true;
+                }
             }
 
             try {
@@ -588,6 +639,14 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
 
         });
+        this.uartList.forEach(uart -> {
+            try {
+                uart.ledYellowStatus().setNextWriteValue(this.yellowLedStatus);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+            }
+        });
+        this.yellowLedStatus = false;
     }
 
     @Deactivate

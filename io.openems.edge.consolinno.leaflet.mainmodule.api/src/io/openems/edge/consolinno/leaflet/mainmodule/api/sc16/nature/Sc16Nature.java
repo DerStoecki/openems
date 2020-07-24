@@ -1,6 +1,7 @@
 package io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature;
 
 import io.openems.common.channel.AccessMode;
+import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
@@ -12,25 +13,25 @@ public interface Sc16Nature extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        LED_RED_STATUS(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(
+        LED_RED_STATUS(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE).onInit(
                 channel -> { //
                     ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
-        LED_YELLOW_STATUS(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(
+        LED_YELLOW_STATUS(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE).onInit(
                 channel -> { //
                     ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
-        LED_GREEN_STATUS(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(
+        LED_GREEN_STATUS(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE).onInit(
                 channel -> { //
                     ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
-        ENABLE_OUTPUT(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(
+        ENABLE_OUTPUT(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE).onInit(
                 channel -> { //
                     ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
-        H_BUS_IN_5V_ERROR_FLAG_STATUS(Doc.of(OpenemsType.BOOLEAN)),
-        H_BUS_IN_24V_ERROR_FLAG_STATUS(Doc.of(OpenemsType.BOOLEAN)),
-        OUTPUT_VOLTAGE_FLAG(Doc.of(OpenemsType.BOOLEAN));
+        H_BUS_IN_5V_ERROR_FLAG_STATUS(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF)),
+        H_BUS_IN_24V_ERROR_FLAG_STATUS(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF)),
+        OUTPUT_VOLTAGE_FLAG(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF));
         private final Doc doc;
 
 

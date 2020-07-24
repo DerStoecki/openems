@@ -105,4 +105,30 @@ public class MeterAbbB23Mbus extends AbstractOpenemsMbusComponent
         return this.channel(ChannelId.TOTAL_CONSUMED_ENERGY);
     }
 
+    @Override
+    public String debugLog() {
+        String debug = "";
+        if (this.getActivePower().value().isDefined()) {
+            debug += this.getActivePower().channelId().id() + " "
+                    + this.getActivePower().value().toString()
+                    + "\n";
+        }
+        if (this.getActiveConsumptionEnergy().value().isDefined()) {
+            debug += this.getActiveConsumptionEnergy().channelId().id()
+                    + " " + getActiveConsumptionEnergy().value().toString()
+                    + "\n";
+        }
+        if (this.getActiveProductionEnergy().value().isDefined()) {
+            debug += this.getActiveProductionEnergy().channelId().id()
+                    + " " + getActiveProductionEnergy().value().toString()
+                    + "\n";
+        }
+        if (this.getTotalConsumedEnergy().value().isDefined()) {
+            debug += this.getTotalConsumedEnergy().channelId().id()
+                    + " " + this.getTotalConsumedEnergy().value().toString()
+                    + "\n";
+        }
+        return debug;
+    }
+
 }
