@@ -283,8 +283,10 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                     csvWriterAppendLineForHead(s);
                     s = meter.id() + "/" + meter.getActivePower().channelId().id();
                     csvWriterAppendLineForHead(s);
-                    s = meter.id() + "/" + meterAbbB23Mbus.getTotalConsumedEnergy().channelId().id();
-                    csvWriterAppendLineForHead(s);
+                    if(meter instanceof MeterAbbB23Mbus) {
+                        s = meter.id() + "/" + meterAbbB23Mbus.getTotalConsumedEnergy().channelId().id();
+                        csvWriterAppendLineForHead(s);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

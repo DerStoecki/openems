@@ -55,8 +55,8 @@ public class Sc16Is752GpioExpansion extends AbstractOpenemsComponent implements 
 
     @Deactivate
     public void deactivate() {
-        bridgeSpi.removeDoubleUart(this.sc16);
         super.deactivate();
+        bridgeSpi.removeDoubleUart(this.sc16);
     }
 
     public Sc16IS752 getSc16() {
