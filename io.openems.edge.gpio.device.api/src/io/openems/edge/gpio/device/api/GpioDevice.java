@@ -2,6 +2,7 @@ package io.openems.edge.gpio.device.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
@@ -18,9 +19,7 @@ public interface GpioDevice extends OpenemsComponent {
          * <li>Type: Boolean
          * </ul>
          */
-        READ_ERROR(Doc.of(OpenemsType.BOOLEAN)),
-
-        WRITE_ERROR(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
+        READ_ERROR(Doc.of(OpenemsType.BOOLEAN));
 
         private final Doc doc;
 
@@ -37,10 +36,5 @@ public interface GpioDevice extends OpenemsComponent {
     default Channel<Boolean> getReadError() {
         return this.channel(ChannelId.READ_ERROR);
     }
-
-    default WriteChannel<Boolean> getWriteError() {
-        return this.channel(ChannelId.WRITE_ERROR);
-    }
-
 
 }
