@@ -20,7 +20,7 @@ public class Sc16IS752Impl implements Sc16IS752 {
     //private String versionId;
     //sets 7 5 4 3 to output and 0 1 2 6 to input
     // out == 0; in == 1;
-    //io Dir umgerechnet 0x0A auf 0x50
+    //io Dir recalculated 0x0A to 0x50
     private byte[] basicPinSetup = {calcForAddress(SC16REGISTRY.ioDir, false), (byte) 0x47};
 
 

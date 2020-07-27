@@ -74,14 +74,8 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
      */
     @Override
     public void setPwm(int pinPos, int onPos, int offPos) {
-        if (this.wasRemoved) {
-            try {
-                basicSetup(this.address, this.frequency, this.frequencyCorrectionFactor);
-                this.wasRemoved = false;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        checkForRemoval();
+
         if (pinPos > maxPinPos) {
             throw new IllegalArgumentException("pinPosition too Large, Check: Max Pin Value is: " + this.maxPinPos);
         }
@@ -103,6 +97,17 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
 
         }
 
+    }
+
+    private void checkForRemoval() {
+        if (this.wasRemoved) {
+            try {
+                basicSetup(this.address, this.frequency, this.frequencyCorrectionFactor);
+                this.wasRemoved = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -127,13 +132,14 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
      */
     @Override
     public void setAlwaysOn(int pinPos) {
+        checkForRemoval();
         try {
-
             this.device.write(6 + 4 * pinPos, (byte) 0);
             this.device.write(7 + 4 * pinPos, (byte) 16);
             this.device.write(8 + 4 * pinPos, (byte) 0);
             this.device.write(9 + 4 * pinPos, (byte) 0);
         } catch (IOException var6) {
+            this.wasRemoved = true;
             throw new RuntimeException("Error while trying to set channel [" + pinPos + "] always ON.", var6);
         }
     }
@@ -145,12 +151,14 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
      */
     @Override
     public void setAlwaysOff(int pinPos) {
+        checkForRemoval();
         try {
             this.device.write(6 + 4 * pinPos, (byte) 0);
             this.device.write(7 + 4 * pinPos, (byte) 0);
             this.device.write(8 + 4 * pinPos, (byte) 0);
             this.device.write(9 + 4 * pinPos, (byte) 16);
         } catch (IOException var6) {
+            this.wasRemoved = true;
             throw new RuntimeException("Error while trying to set channel [" + pinPos + "] always OFF.", var6);
         }
     }
