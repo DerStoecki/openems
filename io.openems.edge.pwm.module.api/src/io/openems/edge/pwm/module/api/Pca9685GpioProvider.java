@@ -39,31 +39,27 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
     private I2CBus bus;
     private I2CDevice device;
     private BigDecimal frequency;
+    private BigDecimal frequencyCorrectionFactor;
     private int periodDurationMicros;
     private int maxPinPos = 7;
+    private boolean wasRemoved = false;
+    private int address;
 
-
-    public Pca9685GpioProvider(I2CBus bus, String address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
+    public Pca9685GpioProvider(I2CBus bus, int address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
         this.i2cBusOwner = false;
         this.bus = bus;
-        allocateAddress(address);
-        this.device.write(PCA9685A_MODE1, (byte) 0);
-        //if not working try (PCA9685A_MODE1, (byte) 5);
-        this.setFrequency(targetFrequency, frequencyCorrectionFactor);
+        basicSetup(address, targetFrequency, frequencyCorrectionFactor);
     }
 
-    private void allocateAddress(String address) {
-        try {
-            //more to come with further versions of PWM module
-            switch (address) {
-                default:
-                case "0x55":
-                    this.device = bus.getDevice(0x55);
-                    break;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void basicSetup(int address, BigDecimal targetFrequency, BigDecimal frequencyCorrectionFactor) throws IOException {
+        this.address = address;
+        this.device = this.bus.getDevice(address);
+        this.device.write(PCA9685A_MODE1, (byte) 0);
+        this.frequency = targetFrequency;
+        this.frequencyCorrectionFactor = frequencyCorrectionFactor;
+        //if not working try (PCA9685A_MODE1, (byte) 5);
+        this.setFrequency(targetFrequency, frequencyCorrectionFactor);
+
     }
 
     /**
@@ -78,6 +74,14 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
      */
     @Override
     public void setPwm(int pinPos, int onPos, int offPos) {
+        if (this.wasRemoved) {
+            try {
+                basicSetup(this.address, this.frequency, this.frequencyCorrectionFactor);
+                this.wasRemoved = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         if (pinPos > maxPinPos) {
             throw new IllegalArgumentException("pinPosition too Large, Check: Max Pin Value is: " + this.maxPinPos);
         }
@@ -93,6 +97,7 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
                 this.device.write(8 + 4 * pinPos, (byte) (offPos & 0xFF));
                 this.device.write(9 + 4 * pinPos, (byte) (offPos >> 8));
             } catch (IOException var6) {
+                this.wasRemoved = true;
                 throw new RuntimeException("Unable to write to PWM channel [" + pinPos + "] values for ON [" + onPos + "] and OFF [" + offPos + "] position.", var6);
             }
 

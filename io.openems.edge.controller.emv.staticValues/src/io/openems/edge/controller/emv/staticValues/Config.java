@@ -37,7 +37,7 @@ import org.osgi.service.metatype.annotations.Option;
     double[] dacValues() default {7, 15, 20, 10};
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices")
-    String[] PwmDeviceList() default {"PwmDevice1", "PwmDevice2", "PwmDevice3, PwmDevice4"};
+    String[] PwmDeviceList() default {"PwmDevice1", "PwmDevice2", "PwmDevice3", "PwmDevice4"};
 
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
     float[] pwmValues() default {25, 100, 75, 40};

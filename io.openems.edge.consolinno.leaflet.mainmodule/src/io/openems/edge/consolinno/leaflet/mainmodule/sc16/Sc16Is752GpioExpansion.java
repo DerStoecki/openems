@@ -1,5 +1,6 @@
 package io.openems.edge.consolinno.leaflet.mainmodule.sc16;
 
+import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.bridge.spi.api.BridgeSpi;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -39,7 +40,7 @@ public class Sc16Is752GpioExpansion extends AbstractOpenemsComponent implements 
         //      config.interruptActivate(), config.interruptSetting(), config.interruptData());
         this.bridgeSpi.addDoubleUart(this.sc16);
         addTasksToSc16();
-
+        this.enableOutput().setNextValue(true);
     }
 
     private void addTasksToSc16() throws ConfigurationException {
@@ -55,8 +56,8 @@ public class Sc16Is752GpioExpansion extends AbstractOpenemsComponent implements 
 
     @Deactivate
     public void deactivate() {
-        bridgeSpi.removeDoubleUart(this.sc16);
         super.deactivate();
+        bridgeSpi.removeDoubleUart(this.sc16);
     }
 
     public Sc16IS752 getSc16() {
