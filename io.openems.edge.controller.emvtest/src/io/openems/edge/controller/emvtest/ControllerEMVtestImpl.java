@@ -82,7 +82,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
         relayArray = new ActuatorRelaysChannel[config.relaysDeviceList().length];        //array is filled with entries in allocate_Component method
         cycleRelays = config.cycle_relays();
-        relaysCycleOnTime = config.relays_cycle_on_time() * 1000;  //convert from s to ms
+        relaysCycleOnTime = config.relays_cycle_on_time() * 1000 - 500;  //convert from s to ms
         relaysCycleBreakTime = config.relays_cycle_break_time() * 1000;  //convert from s to ms
         relayIsOpenerInversion = config.relays_isopener_inversion();
         timestampRelaysCycling = System.currentTimeMillis() - relaysCycleBreakTime;
@@ -122,7 +122,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
         pwmArray = new PwmPowerLevelChannel[config.PwmDeviceList().length];        //array is filled with entries in allocate_Component method
         rampPwm = config.ramp_pwm();
-        pwmRampStepTime = config.pwm_ramp_step_time() * 1000;    //convert from s to ms
+        pwmRampStepTime = config.pwm_ramp_step_time() * 1000 - 500;    //convert from s to ms
         pwmRampStepValue = config.pwm_ramp_step_value();
 
         timestampPwmRamping = System.currentTimeMillis() - pwmRampStepTime;        //subtract pwmRampStepTime so ramping starts immediately

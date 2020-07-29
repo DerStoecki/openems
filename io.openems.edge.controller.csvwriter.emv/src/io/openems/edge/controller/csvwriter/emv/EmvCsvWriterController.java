@@ -8,6 +8,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature.Sc16Nature;
 import io.openems.edge.controller.api.Controller;
 
+import io.openems.edge.gpio.device.api.GpioDevice;
 import io.openems.edge.meter.abb.b32.MeterAbbB23Mbus;
 import io.openems.edge.meter.api.SymmetricMeter;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
@@ -43,6 +44,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
     private List<PwmPowerLevelChannel> pwmDeviceList = new ArrayList<>();
     private List<SymmetricMeter> meterList = new ArrayList<>();
     private List<Sc16Nature> uartList = new ArrayList<>();
+    private List<GpioDevice> gpioDeviceList = new ArrayList<>();
     private MeterAbbB23Mbus meterAbbB23Mbus;
     private boolean yellowLedStatus;
     private boolean redLedStatus;
@@ -64,7 +66,8 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponents(config.temperaturSensorList(), "Thermometer");
         allocateComponents(config.relaysDeviceList(), "Relays");
-        allocateComponents(config.DacDeviceList(), "Dac");
+        //allocateComponents(config.DacDeviceList(), "Dac");
+        allocateComponents(config.GpioDeviceList(), "Gpio");
         allocateComponents(config.PwmDeviceList(), "Pwm");
         allocateComponents(config.meterList(), "meter");
         allocateComponents(config.doubleUartList(), "doubleUart");
@@ -202,6 +205,14 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                                         "Config error; Check your Config --> Sc16 Device");
                             }
                             break;
+                        case "Gpio":
+                            if (cpm.getComponent(string) instanceof GpioDevice) {
+                                this.gpioDeviceList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate GPIO: " + string, "Config Error!"
+                                        + "Check your Config");
+                            }
+                            break;
                     }
                 }
                 counter.getAndIncrement();
@@ -316,6 +327,15 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
                     e.printStackTrace();
                 }
             });
+            // GPIO
+            this.gpioDeviceList.forEach(gpio -> {
+                try {
+                    String s = gpio.id() + gpio.getReadError().channelId().id();
+                    csvWriterAppendLineForHead(s);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             csvWriter.append("\n");
             csvWriter.flush();
         } catch (IOException e) {
@@ -386,6 +406,7 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
             writePwmData();
             writeMeterData();
             writeUartData();
+            writeGpioData();
 
             csvWriter.append("\n");
             csvWriter.flush();
@@ -394,6 +415,23 @@ public class EmvCsvWriterController extends AbstractOpenemsComponent implements 
 
         }
 
+    }
+
+    private void writeGpioData() {
+        this.gpioDeviceList.forEach(device->{
+            String gpioString = "-";
+            try {
+                if(device.getReadError().getNextValue().get()){
+                    gpioString = "ON";
+                } else {
+                    gpioString = "OFF";
+                }
+                csvWriter.append(gpioString);
+                csvWriter.append(",");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 
