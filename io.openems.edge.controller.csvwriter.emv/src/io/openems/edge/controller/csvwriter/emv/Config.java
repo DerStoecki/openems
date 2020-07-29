@@ -129,14 +129,8 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String[] relaysDeviceList();
 
-    @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
-            options = {
-                    @Option(label = "DacDevice0", value = "DacDevice0"),
-                    @Option(label = "DacDevice1", value = "DacDevice1"),
-                    @Option(label = "DacDevice2", value = "DacDevice2"),
-                    @Option(label = "DacDevice3", value = "DacDevice3")
-            })
-    String[] DacDeviceList();
+    @AttributeDefinition(name = "GPIO Pi INPUT", description = "Select Gpios on Raspberry PI")
+    String [] GpioDeviceList();
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices",
             options = {

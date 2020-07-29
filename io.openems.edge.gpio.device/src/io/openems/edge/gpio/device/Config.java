@@ -19,13 +19,21 @@ import org.osgi.service.metatype.annotations.Option;
     String alias() default "";
 
     @AttributeDefinition(name = "Gpio Information Type.", description = "Information Type of gpio.",
-    options = {
-            @Option(label = "Error", value = "Error"),
-            @Option(label = "OnOff", value = "OnOff")
-    })
+            options = {
+                    @Option(label = "Error", value = "Error"),
+                    @Option(label = "OnOff", value = "OnOff")
+            })
     String informationType() default "OnOff";
 
-    @AttributeDefinition(name = "Pin Position", description = "Position of the Gpio Device on Raspberry Pi.")
+    @AttributeDefinition(name = "Pin Position", description = "Position of the Gpio Device on Raspberry Pi.",
+            options = {
+                    @Option(label = "1.1", value = "1.1"),
+                    @Option(label = "1.2", value = "1.2"),
+                    @Option(label = "1.3", value = "1.3"),
+                    @Option(label = "1.4", value = "1.4"),
+                    @Option(label = "2.1", value = "2.1"),
+                    @Option(label = "2.2", value = "2.2"),
+            })
     String pinPosition() default "1.1";
 
     boolean enabled() default true;

@@ -250,7 +250,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         this.uartList.forEach(uart -> {
             counter.set(0);
             try {
-                while (counter.get() < 3) {
+                while (counter.get() < gpioList.size()) {
                     switch (this.gpioList.get(counter.intValue())) {
                         case 0:
                             uart.ledRedStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
