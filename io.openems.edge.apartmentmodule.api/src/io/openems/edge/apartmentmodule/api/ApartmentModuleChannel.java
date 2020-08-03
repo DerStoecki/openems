@@ -2,59 +2,87 @@ package io.openems.edge.apartmentmodule.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
+import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.*;
+import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface ApartmentModuleChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+        // Input Registers
+
         /**
-         * External request.
+         * Version number.
          * <ul>
          *      <li> Type: Integer
-         *      <li> Possible values: 0, 1
-         *      <li> State 0: No request has occurred
-         *      <li> State 1: external request has occurred
          * </ul>
          */
 
-        HR_1_EXTERNAL_REQUEST(Doc.of(ExternalRequest.values()).accessMode(AccessMode.READ_WRITE)),
+        IR_0_VERSION(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY)),
 
         /**
-         * Error.
+         * Configuration of the Apartment Module. 0 for bottom, 1 for top.
          * <ul>
          *      <li> Type: Integer
-         *      <li> Possible values: 0, 1
-         *      <li> State 0: No error
-         *      <li> State 1: Error
          * </ul>
          */
 
-        HR_2_ERROR(Doc.of(Error.values()).accessMode(AccessMode.READ_ONLY)),
+        IR_1_APARTMENT_MODULE_CONFIGURATION(Doc.of(AMconfiguration.values()).accessMode(AccessMode.READ_ONLY)),
 
         /**
-         * Communication.
+         * Error code. Three error bits transmitted as an integer. 0 means no error.
          * <ul>
          *      <li> Type: Integer
-         *      <li> Possible values: 0, 1
-         *      <li> State 0: Slave is awaiting communication
-         *      <li> State 1: Slave has not processed the last command
+         *      <li> Possible values: 0 - 7
          * </ul>
          */
 
-        HR_3_COMMUNICATION(Doc.of(Ready.values()).accessMode(AccessMode.READ_WRITE)),
+        IR_2_ERROR(Doc.of(Error.values()).accessMode(AccessMode.READ_ONLY)),
+
+        /**
+         * Loop time. How long it takes the Apartment Module to execute the main software loop. This is the rate at
+         * which the Apartment Module updates it’s values.
+         * <ul>
+         *      <li> Type: Integer
+         *      <li> Unit: milliseconds
+         * </ul>
+         */
+
+        IR_3_LOOP_TIME(Doc.of(OpenemsType.INTEGER).unit(Unit.MILLISECONDS).accessMode(AccessMode.READ_ONLY)),
+
+        /**
+         * Is an external request currently active?
+         * <ul>
+         *      <li> Type: boolean
+         * </ul>
+         */
+
+        IR_4_EXTERNAL_REQUEST_ACTIVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
+
+        /**
+         * Duration of the last detected external request in ms. If the request is still active, this counter will
+         * continue to go up. If the request is not active anymore, it will keep the value until reset. Will reset when
+         * “External request flag” is reset.
+         * <ul>
+         *      <li> Type: Integer
+         *      <li> Unit: milliseconds
+         * </ul>
+         */
+
+        IR_5_REQUEST_SIGNAL_TIME(Doc.of(OpenemsType.INTEGER).unit(Unit.MILLISECONDS).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Temperature.
          * <li>
-         * <li>Type: Integer
-         * <li>Unit: dezidegree celsius
+         *      <li> Type: Integer
+         *      <li> Unit: dezidegree celsius
          * </ul>
          */
 
-        HR_10_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_ONLY)),
+        IR_6_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * State of relay 1.
@@ -66,7 +94,18 @@ public interface ApartmentModuleChannel extends OpenemsComponent {
          * </ul>
          */
 
-        HR_21_STATE_RELAY1(Doc.of(OnOff.values()).accessMode(AccessMode.READ_ONLY)),
+        IR_10_STATE_RELAY1(Doc.of(OnOff.values()).accessMode(AccessMode.READ_ONLY)),
+
+        /**
+         * If relay 1 has been switched on or off with a timer, this is the remaining time before it switches back.
+         * Unit is 1/100 s, so 100 is 1 second.
+         * <ul>
+         *      <li> Type: Integer
+         *      <li> Unit: centiseconds = milliseconds *10
+         * </ul>
+         */
+
+        IR_11_RELAY1_REMAINING_TIME(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * State of relay 2.
@@ -78,71 +117,99 @@ public interface ApartmentModuleChannel extends OpenemsComponent {
          * </ul>
          */
 
-        HR_22_STATE_RELAY2(Doc.of(OnOff.values()).accessMode(AccessMode.READ_ONLY)),
+        IR_20_STATE_RELAY2(Doc.of(OnOff.values()).accessMode(AccessMode.READ_ONLY)),
+
+        /**
+         * If relay 2 has been switched on or off with a timer, this is the remaining time before it switches back.
+         * Unit is 1/100 s, so 100 is 1 second.
+         * <ul>
+         *      <li> Type: Integer
+         *      <li> Unit: centi seconds = milliseconds *10
+         * </ul>
+         */
+
+        IR_21_RELAY2_REMAINING_TIME(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_ONLY)),
+
+
+        // Holding Registers
+
+        /**
+         * Modbus communication check. The master should continuously write 1 in this register. If this does not happen
+         * for 2 minutes, the Apartment Module will restart. The Apartment Module will reset this to 0 every 5 seconds.
+         * <ul>
+         *      <li> Type: Integer
+         *      <li> Possible values: 0, 1
+         *      <li> State 0: Slave is waiting for signal
+         *      <li> State 1: Signal has been set.
+         * </ul>
+         */
+
+        HR_0_COMMUNICATION_CHECK(Doc.of(CommunicationCheck.values()).accessMode(AccessMode.READ_WRITE)),
+
+        /**
+         * External request flag. If an external request has been detected. Will stay true until the master resets this
+         * to false by writing false in this register.
+         * <ul>
+         *      <li> Type: Boolean
+         * </ul>
+         */
+
+        HR_1_EXTERNAL_REQUEST_FLAG(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+
+        /**
+         * Temperature calibration. Value to calibrate the PT1000 sensor.
+         * <li>
+         *      <li> Type: Integer
+         * </ul>
+         */
+
+        HR_2_TEMPERATURE_CALIBRATION(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE)),
 
         /**
          * Command for relay 1.
          * <ul>
          *      <li> Type: Integer
-         *      <li> Possible values: 0, 1
+         *      <li> Possible values: 0, 1, -1 (undefined)
          *      <li> State 0: Off
          *      <li> State 1: On
+         *      <li> State -1: default state, waiting for next command.
          * </ul>
          */
 
-        HR_31_COMMAND_RELAY1(Doc.of(OnOff.values()).accessMode(AccessMode.READ_WRITE)),
+        HR_10_COMMAND_RELAY1(Doc.of(OnOff.values()).accessMode(AccessMode.READ_WRITE)),
+
+        /**
+         * Timing for relay 1. Unit is 1/100 s, so 100 is 1 second.
+         * <li>
+         * <li>Type: Integer
+         * <li>Unit: centi seconds = milliseconds *10
+         * </ul>
+         */
+
+        HR_11_TIMING_RELAY1(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_WRITE)),
 
         /**
          * Command for relay 2.
          * <ul>
          *      <li> Type: Integer
-         *      <li> Possible values: 0, 1
+         *      <li> Possible values: 0, 1, -1 (undefined)
          *      <li> State 0: Off
          *      <li> State 1: On
+         *      <li> State -1: default state, waiting for next command.
          * </ul>
          */
 
-        HR_32_COMMAND_RELAY2(Doc.of(OnOff.values()).accessMode(AccessMode.READ_WRITE)),
+        HR_20_COMMAND_RELAY2(Doc.of(OnOff.values()).accessMode(AccessMode.READ_WRITE)),
 
         /**
-         * Timing for relay 1.
+         * Timing for relay 2. Unit is 1/100 s, so 100 is 1 second.
          * <li>
          * <li>Type: Integer
-         * <li>Unit: centi seconds (= seconds * 10E-2)
+         * <li>Unit: centi seconds = milliseconds *10
          * </ul>
          */
 
-        HR_41_TIMING_RELAY1(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_WRITE)),
-
-        /**
-         * Timing for relay 2.
-         * <li>
-         * <li>Type: Integer
-         * <li>Unit: centi seconds (= seconds * 10E-2)
-         * </ul>
-         */
-
-        HR_42_TIMING_RELAY2(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_WRITE)),
-
-        /**
-         * Time remaining for relay 1.
-         * <li>
-         * <li>Type: Integer
-         * <li>Unit: centi seconds (= seconds * 10E-2)
-         * </ul>
-         */
-
-        HR_51_TIME_REMAINING_RELAY1(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_ONLY)),
-
-        /**
-         * Time remaining for relay 2.
-         * <li>
-         * <li>Type: Integer
-         * <li>Unit: centi seconds (= seconds * 10E-2)
-         * </ul>
-         */
-
-        HR_52_TIME_REMAINING_RELAY2(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_ONLY));
+        HR_21_TIMING_RELAY2(Doc.of(OpenemsType.INTEGER).unit(Unit.CENTISECONDS).accessMode(AccessMode.READ_WRITE));
 
 
         private final Doc doc;
@@ -159,137 +226,276 @@ public interface ApartmentModuleChannel extends OpenemsComponent {
 
 
     /**
-     * External request.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: No request has occurred
-     *      <li> State 1: external request has occurred
-     * </ul>
+     * Gets the Channel for {@link ChannelId#IR_0_VERSION}.
+     *
+     * @return the Channel
      */
-
-    default WriteChannel<Integer> getSetExternalRequest() { return this.channel(ChannelId.HR_1_EXTERNAL_REQUEST); }
+    public default IntegerReadChannel getVersionChannel() {
+        return this.channel(ChannelId.IR_0_VERSION);
+    }
 
     /**
-     * Error.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: No error
-     *      <li> State 1: Error
-     * </ul>
+     * Gets the version number of the software running on the Apartment module.
+     *
+     * @return the Channel {@link Value}
      */
+    public default Value<Integer> getVersionNumber() { return this.getVersionChannel().value(); }
 
-    default Channel<Integer> getError() { return this.channel(ChannelId.HR_2_ERROR); }
 
     /**
-     * Communication.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: Slave is awaiting communication
-     *      <li> State 1: Slave has not processed the last command
-     * </ul>
+     * Gets the Channel for {@link ChannelId#IR_1_APARTMENT_MODULE_CONFIGURATION}.
+     *
+     * @return the Channel
      */
-
-    default WriteChannel<Integer> getSetCommunication() { return this.channel(ChannelId.HR_3_COMMUNICATION); }
+    public default Channel<AMconfiguration> getAmConfigurationChannel() {
+        return this.channel(ChannelId.IR_1_APARTMENT_MODULE_CONFIGURATION);
+    }
 
     /**
-     * Temperature.
-     * <li>
-     * <li>Type: Integer
-     * <li>Unit: dezidegree celsius
-     * </ul>
+     * Gets the configuration of the Apartment Module.
+     *
+     * @return the Channel {@link Value}
      */
-
-    default Channel<Integer> getTemperature() { return this.channel(ChannelId.HR_10_TEMPERATURE); }
+    public default AMconfiguration getAmConfiguration() {
+        return this.getAmConfigurationChannel().value().asEnum();
+    }
 
     /**
-     * State of relay 1.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: Off
-     *      <li> State 1: On
-     * </ul>
+     * Gets the Channel for {@link ChannelId#IR_2_ERROR}.
+     *
+     * @return the Channel
      */
-
-    default Channel<Integer> getStateRelay1() { return this.channel(ChannelId.HR_21_STATE_RELAY1); }
+    public default Channel<Error> getErrorChannel() {
+        return this.channel(ChannelId.IR_2_ERROR);
+    }
 
     /**
-     * State of relay 2.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: Off
-     *      <li> State 1: On
-     * </ul>
+     * Returns the error message of the Apartment Module.
+     *
+     * @return the Channel {@link Value}
      */
-
-    default Channel<Integer> getStateRelay2() { return this.channel(ChannelId.HR_22_STATE_RELAY2); }
+    public default Error getError() {
+        return this.getErrorChannel().value().asEnum();
+    }
 
     /**
-     * Command for relay 1.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: Off
-     *      <li> State 1: On
-     * </ul>
+     * Gets the Channel for {@link ChannelId#IR_3_LOOP_TIME}.
+     *
+     * @return the Channel
      */
-
-    default WriteChannel<Integer> getSetCommandRelay1() { return this.channel(ChannelId.HR_31_COMMAND_RELAY1); }
+    public default IntegerReadChannel getLoopTimeChannel() {
+        return this.channel(ChannelId.IR_3_LOOP_TIME);
+    }
 
     /**
-     * Command for relay 2.
-     * <ul>
-     *      <li> Type: Integer
-     *      <li> Possible values: 0, 1
-     *      <li> State 0: Off
-     *      <li> State 1: On
-     * </ul>
+     * Gets the execution time of the main software loop in ms. This is the rate at which the Apartment Module updates
+     * it’s values.
+     *
+     * @return the Channel {@link Value}
      */
-
-    default WriteChannel<Integer> getSetCommandRelay2() { return this.channel(ChannelId.HR_32_COMMAND_RELAY2); }
+    public default Value<Integer> getLoopTime() { return this.getLoopTimeChannel().value(); }
 
     /**
-     * Timing for relay 1.
-     * <li>
-     * <li>Type: Integer
-     * <li>Unit: centi seconds (= seconds * 10E-2)
-     * </ul>
+     * Gets the Channel for {@link ChannelId#IR_4_EXTERNAL_REQUEST_ACTIVE}.
+     *
+     * @return the Channel
      */
-
-    default WriteChannel<Integer> getSetTimingRelay1() { return this.channel(ChannelId.HR_41_TIMING_RELAY1); }
+    public default BooleanReadChannel getExternalRequestCurrentChannel() {
+        return this.channel(ChannelId.IR_4_EXTERNAL_REQUEST_ACTIVE);
+    }
 
     /**
-     * Timing for relay 2.
-     * <li>
-     * <li>Type: Integer
-     * <li>Unit: centi seconds (= seconds * 10E-2)
-     * </ul>
+     * Returns if the external request is currently active.
+     *
+     * @return the Channel {@link Value}
      */
-
-    default WriteChannel<Integer> getSetTimingRelay2() { return this.channel(ChannelId.HR_42_TIMING_RELAY2); }
+    public default Value<Boolean> getExternalRequestCurrent() {
+        return this.getExternalRequestCurrentChannel().value();
+    }
 
     /**
-     * Time remaining for relay 1.
-     * <li>
-     * <li>Type: Integer
-     * <li>Unit: centi seconds (= seconds * 10E-2)
-     * </ul>
+     * Gets the Channel for {@link ChannelId#IR_5_REQUEST_SIGNAL_TIME}.
+     *
+     * @return the Channel
      */
-
-    default Channel<Integer> getCountdownRelay1() { return this.channel(ChannelId.HR_51_TIME_REMAINING_RELAY1); }
+    public default IntegerReadChannel getRequestSignalTimeChannel() {
+        return this.channel(ChannelId.IR_5_REQUEST_SIGNAL_TIME);
+    }
 
     /**
-     * Time remaining for relay 2.
-     * <li>
-     * <li>Type: Integer
-     * <li>Unit: centi seconds (= seconds * 10E-2)
-     * </ul>
+     * Gets the duration of the last detected external request in ms. Will reset when “External request flag” is reset.
+     *
+     * @return the Channel {@link Value}
      */
+    public default Value<Integer> getRequestSignalTime() { return this.getRequestSignalTimeChannel().value(); }
 
-    default Channel<Integer> getCountdownRelay2() { return this.channel(ChannelId.HR_52_TIME_REMAINING_RELAY2); }
+    /**
+     * Gets the Channel for {@link ChannelId#IR_6_TEMPERATURE}.
+     *
+     * @return the Channel
+     */
+    public default IntegerReadChannel getTemperatureChannel() {
+        return this.channel(ChannelId.IR_6_TEMPERATURE);
+    }
+
+    /**
+     * Gets the value of the temperature sensor in dezidegree Celsius. (1/10 °C)
+     *
+     * @return the Channel {@link Value}
+     */
+    public default Value<Integer> getTemperature() { return this.getTemperatureChannel().value(); }
+
+    /**
+     * Gets the Channel for {@link ChannelId#IR_10_STATE_RELAY1}.
+     *
+     * @return the Channel
+     */
+    public default Channel<OnOff> getStateRelay1Channel() {
+        return this.channel(ChannelId.IR_10_STATE_RELAY1);
+    }
+
+    /**
+     * Returns the state of relay 1.
+     *
+     * @return the Channel {@link Value}
+     */
+    public default OnOff getStateRelay1() {
+        return this.getStateRelay1Channel().value().asEnum();
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#IR_11_RELAY1_REMAINING_TIME}.
+     *
+     * @return the Channel
+     */
+    public default IntegerReadChannel getRelay1RemainingTimeChannel() {
+        return this.channel(ChannelId.IR_11_RELAY1_REMAINING_TIME);
+    }
+
+    /**
+     * If relay 1 has been switched on or off with a timer, this is the remaining time before it switches back.
+     * Unit is 1/100 s, so 100 is 1 second.
+     *
+     * @return the Channel {@link Value}
+     */
+    public default Value<Integer> getRelay1RemainingTime() { return this.getRelay1RemainingTimeChannel().value(); }
+
+    /**
+     * Gets the Channel for {@link ChannelId#IR_20_STATE_RELAY2}.
+     *
+     * @return the Channel
+     */
+    public default Channel<OnOff> getStateRelay2Channel() {
+        return this.channel(ChannelId.IR_20_STATE_RELAY2);
+    }
+
+    /**
+     * Returns the state of relay 2.
+     *
+     * @return the Channel {@link Value}
+     */
+    public default OnOff getStateRelay2() {
+        return this.getStateRelay2Channel().value().asEnum();
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#IR_21_RELAY2_REMAINING_TIME}.
+     *
+     * @return the Channel
+     */
+    public default IntegerReadChannel getRelay2RemainingTimeChannel() {
+        return this.channel(ChannelId.IR_21_RELAY2_REMAINING_TIME);
+    }
+
+    /**
+     * If relay 2 has been switched on or off with a timer, this is the remaining time before it switches back.
+     * Unit is 1/100 s, so 100 is 1 second.
+     *
+     * @return the Channel {@link Value}
+     */
+    public default Value<Integer> getRelay2RemainingTime() { return this.getRelay2RemainingTimeChannel().value(); }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_0_COMMUNICATION_CHECK}.
+     *
+     * @return the Channel
+     */
+    public default WriteChannel<CommunicationCheck> getSetCommunicationCheckChannel() {
+        return this.channel(ChannelId.HR_0_COMMUNICATION_CHECK);
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_1_EXTERNAL_REQUEST_FLAG}.
+     *
+     * @return the Channel
+     */
+    public default BooleanWriteChannel getSetExternalRequestFlagChannel() {
+        return this.channel(ChannelId.HR_1_EXTERNAL_REQUEST_FLAG);
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_2_TEMPERATURE_CALIBRATION}.
+     *
+     * @return the Channel
+     */
+    public default IntegerWriteChannel setTemperatureCalibrationChannel() {
+        return this.channel(ChannelId.HR_2_TEMPERATURE_CALIBRATION);
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_10_COMMAND_RELAY1}.
+     *
+     * @return the Channel
+     */
+    public default WriteChannel<OnOff> setCommandRelay1Channel() {
+        return this.channel(ChannelId.HR_10_COMMAND_RELAY1);
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_11_TIMING_RELAY1}.
+     *
+     * @return the Channel
+     */
+    public default IntegerWriteChannel setTimeRelay1Channel() {
+        return this.channel(ChannelId.HR_11_TIMING_RELAY1);
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_20_COMMAND_RELAY2}.
+     *
+     * @return the Channel
+     */
+    public default WriteChannel<OnOff> setCommandRelay2Channel() {
+        return this.channel(ChannelId.HR_20_COMMAND_RELAY2);
+    }
+
+    /**
+     * Gets the Channel for {@link ChannelId#HR_21_TIMING_RELAY2}.
+     *
+     * @return the Channel
+     */
+    public default IntegerWriteChannel setTimeRelay2Channel() {
+        return this.channel(ChannelId.HR_21_TIMING_RELAY2);
+    }
+
+    public default boolean setRelay1(OnOff state, int time) {
+        try {
+            this.setCommandRelay1Channel().setNextWriteValue(state);
+            this.setTimeRelay1Channel().setNextWriteValue(time);
+        } catch (OpenemsError.OpenemsNamedException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public default boolean setRelay2(OnOff state, int time) {
+        try {
+            this.setCommandRelay2Channel().setNextWriteValue(state);
+            this.setTimeRelay2Channel().setNextWriteValue(time);
+        } catch (OpenemsError.OpenemsNamedException e) {
+            return false;
+        }
+        return true;
+    }
 
 }

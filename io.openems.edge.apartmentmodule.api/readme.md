@@ -1,8 +1,3 @@
-# io.openems.edge.apartmentmodule.api Provider
+API for the Consolinno Apartment Module over Modbus.
 
-${Bundle-Description}
-
-## Example
-
-## References
-
+This package contains the getters and setters to communicate with the Apartment Module.

@@ -1,8 +1,3 @@
-# io.openems.edge.apartmentmodule Provider
+Consolinno Apartment Module over Modbus
 
-${Bundle-Description}
-
-## Example
-
-## References
-
+This module maps Modbus calls to OpenEMS channels for a Consolinno Apartment Module.

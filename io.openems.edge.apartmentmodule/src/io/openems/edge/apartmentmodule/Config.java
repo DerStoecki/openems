@@ -21,8 +21,27 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "alias", description = "Human readable name of the Apartment Module.")
     String alias() default "";
 
-    @AttributeDefinition(name = "ModBus-Unit Id", description = "Integer Unit Id of the Component.")
-    int modbusUnitId() default 1;
+    @AttributeDefinition(name = "ModBus-Unit Id", description = "Unit Id of the Component. Decides if the Apartment module is in top or bottom configuration.")
+    ModbusId modbusUnitId() default ModbusId.ID_2;
+
+    @AttributeDefinition(name = "Temperature sensor calibration", description = "Calibration value for the PT1000 temperature sensor.")
+    int tempCal() default 70;
+
+    // Debug options.
+    @AttributeDefinition(name = "Debug", description = "Debug.")
+    boolean debug() default false;
+
+    @AttributeDefinition(name = "Turn on relay 1", description = "Turn on relay 1.")
+    boolean turnOnRelay1() default false;
+
+    @AttributeDefinition(name = "Turn on relay 2", description = "Turn on relay 2.")
+    boolean turnOnRelay2() default false;
+
+    @AttributeDefinition(name = "Relay time.", description = "Relay time.")
+    int relayTime() default 0;
+
+    @AttributeDefinition(name = "Reset External Request Flag", description = "Writes 0 in Holding Register 1.")
+    boolean resetRequestFlag() default false;
 
     boolean enabled() default true;
 

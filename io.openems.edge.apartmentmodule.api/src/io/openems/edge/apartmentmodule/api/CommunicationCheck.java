@@ -2,15 +2,15 @@ package io.openems.edge.apartmentmodule.api;
 
 import io.openems.common.types.OptionsEnum;
 
-public enum ExternalRequest implements OptionsEnum {
+public enum CommunicationCheck implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
-	NO_REQUEST(0, "No request has occurred"), //
-	EXTERNAL_REQUEST(1, "External request has occurred"); //
+	WAITING(0, "Waiting for signal"), //
+	RECEIVED(1, "Signal received"); //
 
 	private int value;
 	private String name;
 
-	private ExternalRequest(int value, String name) {
+	private CommunicationCheck(int value, String name) {
 		this.value = value;
 		this.name = name;
 	}

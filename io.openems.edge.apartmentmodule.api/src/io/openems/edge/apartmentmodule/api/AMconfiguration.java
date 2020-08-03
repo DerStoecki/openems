@@ -2,15 +2,15 @@ package io.openems.edge.apartmentmodule.api;
 
 import io.openems.common.types.OptionsEnum;
 
-public enum Ready implements OptionsEnum {
+public enum AMconfiguration implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
-	READY(0, "Ready"), //
-	STILL_PROCESSING(1, "Still processing last command"); //
+	BOTTOM(0, "Bottom"), //
+	TOP(1, "Top"); //
 
 	private int value;
 	private String name;
 
-	private Ready(int value, String name) {
+	private AMconfiguration(int value, String name) {
 		this.value = value;
 		this.name = name;
 	}
