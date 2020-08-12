@@ -3,21 +3,25 @@ package io.openems.edge.biomassheater;
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.biomassheater.api.BioMassHeater;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
+import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.CoilElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
-import io.openems.edge.bridge.modbus.api.task.FC1ReadCoilsTask;
-import io.openems.edge.bridge.modbus.api.task.FC4ReadInputRegistersTask;
-import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
+import io.openems.edge.bridge.modbus.api.task.*;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.heater.api.Heater;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
-import org.osgi.service.event.EventConstants;
 import org.osgi.service.metatype.annotations.Designate;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "WoodChipHeater",
@@ -26,8 +30,15 @@ import org.osgi.service.metatype.annotations.Designate;
 public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implements OpenemsComponent, BioMassHeater, Heater {
     @Reference
     protected ConfigurationAdmin cm;
+
+    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    protected void setModbus(BridgeModbus modbus) {
+        super.setModbus(modbus);
+    }
     //in kW
     private int maxThermicPerformance = 160;
+
+    private Config config;
 
     public MassHeaterWoodChips() {
         super(OpenemsComponent.ChannelId.values(),
@@ -35,8 +46,10 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
-        super.activate(context, config.id(), config.alias(), config.enabled(), config.modBusUnitId(), cm, "Modbus", config.modBusBridgeId());
+    public void activate(ComponentContext context, Config config) throws ConfigurationException {
+        this.config = config;
+        super.activate(context, config.id(), config.alias(), config.enabled(), config.modBusUnitId(), this.cm, "Modbus", config.modBusBridgeId());
+
         if (config.maxThermicalOutput() != 0) {
             this.maxThermicPerformance = config.maxThermicalOutput();
         }
@@ -52,7 +65,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
 
         return new ModbusProtocol(this,
 
-                new FC1ReadCoilsTask(10000, Priority.LOW,
+                new FC2ReadInputsTask(10000, Priority.HIGH,
                         m(BioMassHeater.ChannelId.DISTURBANCE, new CoilElement(10000)),
                         m(BioMassHeater.ChannelId.WARNING, new CoilElement(10001)),
                         m(BioMassHeater.ChannelId.CLEARING_ACTIVE, new CoilElement(10002)),
@@ -81,7 +94,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                         m(BioMassHeater.ChannelId.SIGNAL_CONTACT_2, new CoilElement(10025))
 
                 ),
-                new FC4ReadInputRegistersTask(20000, Priority.LOW,
+                new FC4ReadInputRegistersTask(20000, Priority.HIGH,
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE, new UnsignedWordElement(20000)),
                         m(BioMassHeater.ChannelId.REWIND_TEMPERATURE, new UnsignedWordElement(20001)),
                         m(BioMassHeater.ChannelId.EXHAUST_TEMPERATURE, new UnsignedWordElement(20002)),
@@ -119,7 +132,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                         m(BioMassHeater.ChannelId.SLIDE_IN_MIN_READ_ONLY, new UnsignedWordElement(20034)),
                         m(BioMassHeater.ChannelId.SLIDE_IN_MAX_READ_ONLY, new UnsignedWordElement(20035))
                 ),
-                new FC4ReadInputRegistersTask(24576, Priority.HIGH,
+                new FC3ReadRegistersTask(24576, Priority.HIGH,
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE_SET_POINT, new UnsignedWordElement(24576)),
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE_MINIMAL_FORWARD, new UnsignedWordElement(24577)),
                         m(BioMassHeater.ChannelId.SLIDE_IN_PERCENTAGE_VALUE, new UnsignedWordElement(24578)),
@@ -158,10 +171,10 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
             powerValue = maxThermicPerformance;
             getSlideInPercentageValue().setNextWriteValue(100);
         } else {
-            getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / (float)maxThermicPerformance) * 100));
+            getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / (float) maxThermicPerformance) * 100));
         }
 
-        return (int)powerValue;
+        return (int) powerValue;
     }
 
     @Override
@@ -173,4 +186,15 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     public void setOffline() throws OpenemsError.OpenemsNamedException {
         getSlideInPercentageValue().setNextWriteValue(0);
     }
+
+    @Override
+    public String debugLog() {
+        List<Channel<?>> all = new ArrayList<>();
+        Arrays.stream(BioMassHeater.ChannelId.values()).forEach(consumer -> {
+            all.add(this.channel(consumer));
+        });
+        all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
+        return "";
+    }
+
 }

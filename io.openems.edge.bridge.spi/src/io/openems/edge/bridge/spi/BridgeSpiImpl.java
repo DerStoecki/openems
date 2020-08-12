@@ -145,13 +145,6 @@ public class BridgeSpiImpl extends AbstractOpenemsComponent implements BridgeSpi
             });
             for (DoubleUart doubleUart : uartSet) {
                 doubleUart.shift();
-               /* byte[] dummyData = {0x58, 0x47};
-                Spi.wiringPiSPIDataRW(8, dummyData);
-                byte[] readData = {(byte)0xD8, 0,0};
-                Spi.wiringPiSPIDataRW(8, readData);
-                System.out.println(Arrays.toString(readData));
-                */
-
             }
 
         }
