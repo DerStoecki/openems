@@ -43,6 +43,8 @@
 	bnd.identity;id='io.openems.edge.chp.device.api',\
 	bnd.identity;id='io.openems.edge.chp.module',\
 	bnd.identity;id='io.openems.edge.chp.module.api',\
+	bnd.identity;id='io.openems.edge.chp.wolf',\
+	bnd.identity;id='io.openems.edge.chp.wolf.api',\
 	bnd.identity;id='io.openems.edge.common',\
 	bnd.identitiy;id='io.openems.edge.consolinno.leaflet.maindevice',\
 	bnd.identitiy;id='io.openems.edge.consolinno.leaflet.maindevice.api',\
@@ -226,6 +228,8 @@
 	io.openems.edge.chp.device.api;version=snapshot,\
 	io.openems.edge.chp.module;version=snapshot,\
 	io.openems.edge.chp.module.api;version=snapshot,\
+	io.openems.edge.chp.wolf;version=snapshot,\
+	io.openems.edge.chp.wolf.api;version=snapshot,\
 	io.openems.edge.common;version=snapshot,\
 	io.openems.edge.consolinno.leaflet.maindevice;version=snapshot,\
     io.openems.edge.consolinno.leaflet.maindevice.api;version=snapshot,\

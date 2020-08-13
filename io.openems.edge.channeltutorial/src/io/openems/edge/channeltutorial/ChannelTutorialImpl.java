@@ -347,7 +347,7 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 		 * Channel TEST1 and TEST2 are integer read channels. The standard method to put a value xxx in a channel is
 		 * the ".setNextValue(xxx)" command. Before the command, you need to put the ChannelId.
 		 * Usually, a channel has a method to shorten the Id call. This example uses the short call for channel TEST1.
-		 * For channel TEST2, the full Id call is used. Both do exactly the same.
+		 * For channel TEST2, the full Id call is used. Both do nearly the same. The difference is discussed further below.
 		 * The "this." in front is optional and used to emphasize that it is the channel of this module.
 		 *
 		 */
@@ -391,6 +391,12 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 		 * - We have called ".nextProcessImage()" on channel Test1. This demonstrates the effects of manually calling
 		 *   "switch process image". Notice how Test2 is not affected by this.
 		 * - Remember, the recommended method to read a channel is ".value().get()".
+		 *
+		 * Difference between full and shortened Id call:
+		 * When using "orElse()" to get a value, the shortened Id call needs to be used. The reason is that the
+		 * shortened Id call has a defined type (the return type). The method "orElse(xxx)" uses generics, so a type needs
+		 * to be defined for the IDE to know what is the correct type of the argument xxx. The full Id call does not
+		 * define a type and then "orElse()" will remain generic, which the IDE will complain about.
 		 *
 		 */
 	}
