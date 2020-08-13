@@ -4,6 +4,7 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.biomassheater.api.BioMassHeater;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
+import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.CoilElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
@@ -35,6 +36,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     protected void setModbus(BridgeModbus modbus) {
         super.setModbus(modbus);
     }
+
     //in kW
     private int maxThermicPerformance = 160;
 
@@ -189,12 +191,30 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
 
     @Override
     public String debugLog() {
+        String out = "";
         List<Channel<?>> all = new ArrayList<>();
         Arrays.stream(BioMassHeater.ChannelId.values()).forEach(consumer -> {
             all.add(this.channel(consumer));
         });
         all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
-        return "";
+
+        if (this.getWarning().value().isDefined()) {
+            if (this.getWarning().value().get()) {
+                out = "WARNING ";
+            }
+        }
+        if (this.getDisturbance().value().isDefined()) {
+            if (this.getDisturbance().value().get()) {
+                out += "DISTURBANCE";
+            }
+        }
+        if (out.equals("")) {
+            return "OK";
+        } else {
+            return out;
+        }
+
     }
 
 }
+
