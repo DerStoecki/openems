@@ -30,17 +30,28 @@ public enum Unit {
     ON_OFF(""),
 
     // ##########
-    // Perculation Q
+    // Percolation Q
     // ##########
+
     /**
-     *
-     * Unit of Perculation [m³/s]
+     * Unit of Percolation [m³/s]
      * */
     CUBICMETER_PER_SECOND("m³/s"),
+
     /**
-     * Unit of Perculation[m³/h].
+     * Unit of Percolation [m³/h].
      * */
     CUBICMETER_PER_HOUR("m³/h"),
+
+    /**
+     * Unit of Percolation [l/min].
+     * */
+    LITER_PER_MINUTE("l/min"),
+
+    /**
+     * Unit of Percolation [dl/min].
+     * */
+    DECILITER_PER_MINUTE("dl/min", LITER_PER_MINUTE, -1),
 
     // ##########
     // Power
@@ -161,6 +172,11 @@ public enum Unit {
      * Unit of Energy [kWh]
      */
     KILOWATT_HOURS("kWh", WATT_HOURS, 3),
+
+    /**
+     * Unit of Energy [MWh]
+     */
+    MEGAWATT_HOURS("MWh", WATT_HOURS, 6),
 
     /**
      * Unit of Reactive Energy [varh]
@@ -295,6 +311,12 @@ public enum Unit {
      * Unit of Pressure [dbar]
      */
     DECI_BAR("dbar", BAR, -1),
+
+    /**
+     * Unit of Pressure [cbar]
+     */
+    CENTI_BAR("cbar", BAR, -2),
+
     // ##########
     // Rotation
     // ##########
