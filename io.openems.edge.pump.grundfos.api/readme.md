@@ -1,0 +1,1 @@
+This bundle provides all main Channels for a Grundfos pump.
