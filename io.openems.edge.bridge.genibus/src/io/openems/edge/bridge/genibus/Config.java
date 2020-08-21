@@ -20,5 +20,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Port-Name", description = "The name of the serial port - e.g. '/dev/ttyUSB0'")
     String portName() default "/dev/ttyUSB0";
 
+    @AttributeDefinition(name = "Debug", description = "Enable debug mode.")
+    boolean debug() default false;
+
     String webconsole_configurationFactory_nameHint() default "Bridge GeniBus [{id}]";
 }

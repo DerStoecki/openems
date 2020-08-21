@@ -18,7 +18,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     boolean enabled() default true;
 
     @AttributeDefinition(name = "PumpAddress", description = "Address of the Pump.")
-    int heatPumpAddress() default 0x20;
+    int heatPumpAddress() default 231;
 
     @AttributeDefinition(name = "PumpType", description = "Denotation of the Pump.")
     String pumpType() default "Magna3";

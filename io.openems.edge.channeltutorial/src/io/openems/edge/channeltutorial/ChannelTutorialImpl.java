@@ -44,7 +44,7 @@ import java.util.Optional;
 @Component(name = "Channel.Tutorial", immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = { //
-				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE //
+				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE // This is needed when you use the "handleEvent()" method.
 		})
 public class ChannelTutorialImpl extends AbstractOpenemsComponent
 		implements OpenemsComponent, ChannelTutorialChannel, EventHandler, ModbusSlave {
@@ -278,7 +278,7 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 	 *
 	 */
 	@Override
-	public void handleEvent(Event event) {
+	public void handleEvent(Event event) {	// You need the right definitions in "@Component" (top of file) for this to work!
 		switch (event.getTopic()) {
 			case EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE:
 				try {
@@ -556,7 +556,10 @@ public class ChannelTutorialImpl extends AbstractOpenemsComponent
 		int wontThrowError = this.exampleWriteChannel2().getNextWriteValue().orElse(0);
 		this.exampleWriteChannel2().setNextValue(wontThrowError);
 
-		// The code that copies values from [write] to [next] for channel Write3 is in ChanneltestChannel.java
+
+		// ---- Now where is the code for exampleWriteChannel3??? ---
+		// The code that copies values from [write] to [next] for channel Write3 is in the interface,
+		// "ChannelTutorialChannel.java" in "io.openems.edge.channeltutorial.api". Yes, code can also be in the interface.
 		// That code also copies null, so [next] can be null.
 
 

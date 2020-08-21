@@ -50,7 +50,10 @@ public class HeatPumpWarnBitsTask extends AbstractHeatPumpTask {
                 errorValue = this.warnBits.getErrorBits4();
                 break;
         }
-        for (int x = 0; x < warnChars.length; x++) {
+        // ToDo : proper warnBit handling.
+        //  Limited warnChars evaluation to 8 chars right now, as errorValue has just 8 entries.
+        //
+        for (int x = 0; x < (Math.min(warnChars.length, 8)); x++) {
             if (warnChars[x] == '1') {
                 allErrors.append(errorValue.get(x));
 

@@ -305,7 +305,7 @@ public interface HeatPump extends OpenemsComponent {
          * <ul>
          *       <li> Interface: HeatPump
          *       <li> Type: Boolean
-         *       <li> Magna3: Commands: 3, 23 CONST_PRESS
+         *       <li> Magna3: Commands: 3, 24 CONST_PRESS
          * </ul>
          * */
         CONST_PRESSURE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),

@@ -12,6 +12,8 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
@@ -22,11 +24,15 @@ public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements 
 
     @Reference(policy = ReferencePolicy.STATIC,
             policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    HeatPump needsThisToBeActive;
+
     GenibusChannel genibus;
 
 
     @Reference
     ComponentManager cpm;
+
+    private final Logger log = LoggerFactory.getLogger(HeatPumpControllerImpl.class);
 
     private double hRefMin;
     private double hRefMax;
@@ -150,6 +156,8 @@ public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements 
         //     this.genibus.getApduReferenceValues().setNextValue(2);
         // }
 
+        channelOutput();
+
     }
 
     private Double calculateRefRem(Double refValue) {
@@ -162,5 +170,20 @@ public class HeatPumpControllerImpl extends AbstractOpenemsComponent implements 
 
     private double calculateByteValue(Double refValue) {
         return ((refValue * range) / this.getMaxPressure().getNextValue().get());
+    }
+
+    private void channelOutput() {
+        this.logInfo(this.log, "--Magna3 Channels--");
+        this.logInfo(this.log, "Control mode: " + heatpump.getActualControlMode().value().get());
+        this.logInfo(this.log, "Power consumption: " + heatpump.getPowerConsumption().value().get());
+        this.logInfo(this.log, "Pump flow: " + heatpump.getCurrentPumpFlow().value().get());
+        this.logInfo(this.log, "Pump pressure: " + heatpump.getCurrentPressure().value().get());
+        this.logInfo(this.log, "Pump diff. pressure head: " + heatpump.getDiffPressureHead().value().get());
+        this.logInfo(this.log, "R min: " + heatpump.getRmin().value().get());
+        this.logInfo(this.log, "R max: " + heatpump.getRmax().value().get());
+        this.logInfo(this.log, "");
+        this.logInfo(this.log, "Ref sent, raw: " + heatpump.setRefRem().getNextWriteValue().get());
+        this.logInfo(this.log, "");
+
     }
 }
