@@ -29,6 +29,7 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
         this.getLastPowerLevel().setNextValue(0);
         this.getPowerLevel().setNextValue(0);
         this.getTimeNeeded().setNextValue(0);
+        this.getIsBusy().setNextValue(false);
     }
 
 

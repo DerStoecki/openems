@@ -61,23 +61,13 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
                 mcp.shift();
                 mcp.addTask(config.id(), new RelaysActuatorTask(config.position(),
                         this.getRelaysChannel(),
-                        config.relaysBoard_id()));
+                        config.relaysBoard_id(), !relaysValue));
             }
         }
     }
 
     private void allocateRelaysValue(String relaysType) {
-        switch (relaysType) {
-
-            case "Closer":
-            case "Reverse":
-                this.relaysValue = true;
-                break;
-
-            default:
-                this.relaysValue = false;
-
-        }
+        this.relaysValue = "Closer".equals(relaysType);
     }
 
     @Deactivate

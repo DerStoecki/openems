@@ -124,6 +124,9 @@ public class ControllerPassingImplTest {
     private ChannelAddress vCc;
     private Valve valve;
     private Pump pump;
+    private ChannelAddress noError;
+    private ChannelAddress minTemperature;
+    private ChannelAddress mainActivate;
 
     @Before
     public void setUp() throws Exception {
@@ -167,6 +170,12 @@ public class ControllerPassingImplTest {
         //PumpRelays channel
         p = new ChannelAddress(pumpRelays.id(), "OnOff");
         pO = new ChannelAddress(pumpRelays.id(), "IsCloser");
+
+        //
+        //PassingStation
+        noError = new ChannelAddress(config.id(), "NoError");
+        minTemperature = new ChannelAddress(config.id(), "MinTemperature");
+        mainActivate = new ChannelAddress(config.id(), "OnOff");
 
 
         cpm.addComponent(primaryForward);
@@ -224,7 +233,11 @@ public class ControllerPassingImplTest {
                             .input(vCc, true)
                             .input(p, false)
                             .input(pO, true)
+                            .input(noError, true)
+                            .input(mainActivate, true)
+                            .input(minTemperature, 500)
             );
+            passing.activate(null, config);
             int count = 0;
             while (count < 2) {
                 controllerTest.run();
@@ -269,7 +282,11 @@ public class ControllerPassingImplTest {
                             .input(vCc, false)
                             .input(p, false)
                             .input(pO, false)
+                            .input(noError, true)
+                            .input(mainActivate, true)
+                            .input(minTemperature, 500)
             );
+            passing.activate(null, config);
             int count = 0;
             while (count < 2) {
                 controllerTest.run();
@@ -313,7 +330,11 @@ public class ControllerPassingImplTest {
                             .input(vCc, true)
                             .input(p, false)
                             .input(pO, true)
+                            .input(noError, true)
+                            .input(mainActivate, true)
+                            .input(minTemperature, 500)
             );
+            passing.activate(null, config);
             int count = 0;
             while (count < 20) {
                 controllerTest.run();
@@ -357,7 +378,11 @@ public class ControllerPassingImplTest {
                             .input(vCc, true)
                             .input(p, false)
                             .input(pO, true)
+                            .input(noError, true)
+                            .input(mainActivate, true)
+                            .input(minTemperature, 500)
             );
+            passing.activate(null, config);
             controllerTest.run();
             passing.getOnOff_PassingController().setNextWriteValue(false);
             valve.getIsBusy().setNextValue(false);
@@ -400,11 +425,15 @@ public class ControllerPassingImplTest {
                         .input(vCc, true)
                         .input(p, false)
                         .input(pO, true)
+                        .input(noError, true)
+                        .input(mainActivate, true)
+                        .input(minTemperature, 500)
         );
+        passing.activate(null, config);
         int count = 0;
-        while (count < 6) {
+        while (count < 12) {
             controllerTest.run();
-            Thread.sleep(1000);
+            Thread.sleep(10000);
             count++;
         }
 
@@ -434,11 +463,15 @@ public class ControllerPassingImplTest {
                         .input(vCc, true)
                         .input(p, false)
                         .input(pO, false)
+                        .input(noError, true)
+                        .input(mainActivate, true)
+                        .input(minTemperature, 500)
         );
+        passing.activate(null, config);
         int count = 0;
-        while (count < 6) {
+        while (count < 15) {
             controllerTest.run();
-            Thread.sleep(1000);
+            Thread.sleep(10000);
             count++;
         }
 
@@ -468,11 +501,15 @@ public class ControllerPassingImplTest {
                         .input(vCc, true)
                         .input(p, false)
                         .input(pO, true)
+                        .input(noError, true)
+                        .input(mainActivate, true)
+                        .input(minTemperature, 500)
         );
+        passing.activate(null, config);
         int count = 0;
-        while (count < 8) {
+        while (count < 15) {
             controllerTest.run();
-            Thread.sleep(1000);
+            Thread.sleep(10000);
             count++;
         }
     }
@@ -502,11 +539,15 @@ public class ControllerPassingImplTest {
                         .input(vCc, true)
                         .input(p, false)
                         .input(pO, true)
+                        .input(noError, true)
+                        .input(mainActivate, true)
+                        .input(minTemperature, 500)
         );
+        passing.activate(null, config);
         int count = 0;
-        while (count < 9) {
+        while (count < 15) {
             controllerTest.run();
-            Thread.sleep(1000);
+            Thread.sleep(10000);
             count++;
         }
 
@@ -537,7 +578,11 @@ public class ControllerPassingImplTest {
                         .input(vCc, true)
                         .input(p, false)
                         .input(pO, true)
+                        .input(noError, true)
+                        .input(mainActivate, true)
+                        .input(minTemperature, 500)
         );
+        passing.activate(null, config);
         int count = 0;
         while (count < 8) {
             controllerTest.run();
@@ -571,7 +616,11 @@ public class ControllerPassingImplTest {
                         .input(vCc, true)
                         .input(p, false)
                         .input(pO, true)
+                        .input(noError, true)
+                        .input(mainActivate, true)
+                        .input(minTemperature, 500)
         );
+        passing.activate(null, config);
         int count = 0;
         while (count < 8) {
             controllerTest.run();
@@ -639,7 +688,11 @@ public class ControllerPassingImplTest {
                             .input(vCc, true)
                             .input(p, false)
                             .input(pO, true)
+                            .input(noError, true)
+                            .input(mainActivate, true)
+                            .input(minTemperature, 500)
             );
+            passing.activate(null, config);
             int count = 0;
             while (count < 2) {
                 controllerTest.run();
@@ -682,7 +735,11 @@ public class ControllerPassingImplTest {
                             .input(vCc, true)
                             .input(p, false)
                             .input(pO, true)
+                            .input(noError, true)
+                            .input(mainActivate, true)
+                            .input(minTemperature, 500)
             );
+            passing.activate(null, config);
             int count = 0;
             while (count < 2) {
                 controllerTest.run();

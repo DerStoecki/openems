@@ -53,7 +53,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private int startingTemperature;
     //T in dC
     private static int ROUND_ABOUT_TEMP = 20;
-    private static int WAITING_FOR_TOO_HOT = 100 * 1000;
+    private static int WAITING_FOR_TOO_HOT = 30 * 1000;
     //ty
     private long timeStampHeating;
 
@@ -91,8 +91,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     }
 
     private void defaultOptions() {
-
-        this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
+        if (this.primaryRewind.getTemperature().getNextValue().isDefined()) {
+            this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
+        } else {
+            this.startingTemperature = 0;
+        }
         valve.changeByPercentage(-100);
         this.pump.controlRelays(false, "");
     }
@@ -154,25 +157,27 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         throw new NoHeatNeededException("Heat is not needed;"
                                 + "Shutting down pump and Valves");
                     } else { //Check if there's something wrong with Valve or Heat to low
-                        if (isOpen && !timeSetHeating) {
-                            timeStampHeating = System.currentTimeMillis();
-                            timeSetHeating = true;
-                            return;
-                        }
-                        if (shouldBeHeatingByNow()) {
+                        if (primaryForwardReadyToHeat() == false) {
+                            if (isOpen && !timeSetHeating) {
+                                timeStampHeating = System.currentTimeMillis();
+                                timeSetHeating = true;
+                                return;
+                            }
+                            if (shouldBeHeatingByNow()) {
 
-                            this.noError().setNextValue(false);
+                                this.noError().setNextValue(false);
 
-                            if (Math.abs(primaryRewind.getTemperature().getNextValue().get()
-                                    - startingTemperature) <= ROUND_ABOUT_TEMP) {
-                                getErrorCode().setNextValue(0);
-                                throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
+                                if (Math.abs(primaryRewind.getTemperature().getNextValue().get()
+                                        - startingTemperature) <= ROUND_ABOUT_TEMP) {
+                                    getErrorCode().setNextValue(0);
+                                    throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
 
-                            } else {
-                                getErrorCode().setNextValue(1);
-                                throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; "
-                                        + "Closing Valve");
+                                } else {
+                                    getErrorCode().setNextValue(1);
+                                    throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; "
+                                            + "Closing Valve");
 
+                                }
                             }
                         }
                     }
@@ -281,9 +286,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      */
     private boolean tooHot() {
         if (System.currentTimeMillis() - this.timeStampWarmthPump > WAITING_FOR_TOO_HOT) {
-            if (this.secondaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
-                return this.secondaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
-                        > this.secondaryForward.getTemperature().getNextValue().get();
+            if (this.secondaryForward.getTemperature().value().get() >= this.getMinTemperature().value().get()) {
+                return this.secondaryRewind.getTemperature().value().get() + TOLERANCE_TEMPERATURE
+                        > this.secondaryForward.getTemperature().value().get();
             }
             return false;
         }

@@ -80,7 +80,11 @@ public class Mcp23008 extends Mcp implements McpChannelRegister {
 
             task.getWriteChannel().getNextWriteValueAndReset()
                     .ifPresent(aboolean -> {
-                        setPosition(task.getPosition(), aboolean);
+                        if (task.isInverse()) {
+                            setPosition(task.getPosition(), !aboolean);
+                        } else {
+                            setPosition(task.getPosition(), aboolean);
+                        }
                         task.getWriteChannel().setNextValue(aboolean);
                     });
         }

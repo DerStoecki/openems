@@ -10,8 +10,8 @@ public class RelaysActuatorTask extends RelaysTask {
     private WriteChannel<Boolean> writeOnOrOff;
 
 
-    public RelaysActuatorTask(int position, WriteChannel<Boolean> writeOnOrOff, String relaysBoard) {
-        super(relaysBoard);
+    public RelaysActuatorTask(int position, WriteChannel<Boolean> writeOnOrOff, String relaysBoard, boolean isInverse) {
+        super(relaysBoard, isInverse);
         this.position = position;
         this.writeOnOrOff = writeOnOrOff;
     }
