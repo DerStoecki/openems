@@ -134,21 +134,21 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
 
     @Override
     public String getValue() {
-        if (this.getTypeSet().getNextValue().get().equals("Write")) {
-            if (this.getWriteValue().getNextValue().isDefined()) {
-                return this.getWriteValue().getNextValue().get() + " " + this.getUnit().getNextValue().get();
+        if (this.getTypeSet().value().get().equals("Write")) {
+            if (this.getWriteValue().value().isDefined()) {
+                return this.getWriteValue().value().get() + " " + this.getUnit().value().get();
             } else {
                 return "Value not available yet!";
             }
-        } else if (this.getReadValue().getNextValue().isDefined()) {
-            return this.getReadValue().getNextValue().get() + " " + this.getUnit().getNextValue().get();
+        } else if (this.getReadValue().value().isDefined()) {
+            return this.getReadValue().value().get() + " " + this.getUnit().value().get();
         }
         return "Read Value not available yet";
     }
 
     @Override
     public String getType() {
-        return this.getTypeSet().getNextValue().get();
+        return this.getTypeSet().value().get();
     }
 
     @Override

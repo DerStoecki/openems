@@ -28,11 +28,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Password", description = "Password for authorization")
     String password() default "";
 
-    @AttributeDefinition(name = "IsMaster", description = "Only Tick true if your Device is a Slave and you want "
-            + "to Communicate with Master.")
-
-    boolean isMaster() default false;
-
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Rest Bridge [{id}]";

@@ -83,7 +83,7 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
 
     @Override
     public boolean readyToWrite() {
-        return this.allowRequest.getNextValue().get();
+        return this.allowRequest.value().get();
     }
 
     @Override
