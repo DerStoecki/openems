@@ -68,8 +68,8 @@
 	bnd.identity;id='io.openems.edge.controller.evcs',\
 	bnd.identity;id='io.openems.edge.controller.evcs.fixactivepower',\
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
-	bnd.identity;id='io.openems.edge.controller.heatpump.device',\
-	bnd.identity;id='io.openems.edge.controller.heatpump.device.api',\
+	bnd.identity;id='io.openems.edge.controller.pump.grundfos',\
+	bnd.identity;id='io.openems.edge.controller.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
 	bnd.identity;id='io.openems.edge.controller.pid.passing,\
@@ -110,8 +110,8 @@
 	bnd.identity;id='io.openems.edge.gpio.device',\
 	bnd.identity;id='io.openems.edge.gpio.device.api',\
 	bnd.identity;id='io.openems.edge.heater.api',\
-	bnd.identity;id='io.openems.edge.heatpump.device',\
-	bnd.identity;id='io.openems.edge.heatpump.device.api',\
+	bnd.identity;id='io.openems.edge.pump.grundfos',\
+	bnd.identity;id='io.openems.edge.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\
@@ -231,8 +231,8 @@
 	io.openems.edge.controller.ess.onefullcycle;version=snapshot,\
 	io.openems.edge.controller.evcs;version=snapshot,\
 	io.openems.edge.controller.evcs.fixactivepower;version=snapshot,\
-	io.openems.edge.controller.heatpump.device;version=snapshot,\
-	io.openems.edge.controller.heatpump.device.api;version=snapshot,\
+	io.openems.edge.controller.pump.grundfos;version=snapshot,\
+	io.openems.edge.controller.pump.grundfos.api;version=snapshot,\
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
@@ -274,8 +274,8 @@
 	io.openems.edge.gpio.device;version=snapshot,\
 	io.openems.edge.gpio.device.api;version=snapshot,\
 	io.openems.edge.heater.api;version=snapshot,\
-	io.openems.edge.heatpump.device;version=snapshot,\
-	io.openems.edge.heatpump.device.api;version=snapshot,\
+	io.openems.edge.pump.grundfos;version=snapshot,\
+	io.openems.edge.pump.grundfos.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.device;version=snapshot,\
 	io.openems.edge.lucidcontrol.device.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.module;version=snapshot,\
