@@ -107,7 +107,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
          * Depending on the added tasks, they will be put together. Information Values will be gathered
          * as well as values.
          * APDUs for each case will be created and put to the telegram if information/tasks are available.
-         * Disclaimer: ATM only 6 APDU Frames are possible to read
+         * Disclaimer: ATM the amount of bytes that is possible to send and receive is limited. If that limit is
+         * exceeded, no data can be received.
          */
         @Override
         protected void forever() {
@@ -162,6 +163,11 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                     getTasks().get(pumpDevice).forEach((key, value) -> {
                         //ATTENTION! ATM only 6 Apdu frames are possible to read --> current implementation --> case 2, 3, 4
                         //and 5 are only needed.
+                        //-----------------------------------
+                        // Nope, that is not the problem. There is a timing problem, and if the Telegram gets too long
+                        // the data cannot be read anymore. Not the number of Apdu frames is the problem but the total
+                        // number of bits in the telegram. Send 504 bits and received 768 bits works. More than that
+                        // and problems will start.
                         switch (key) {
                             case 2:
                                 addData(apduMeasuredDataInfo, value, telegram);
@@ -175,6 +181,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                                 addData(apduConfigurationParameters, value, telegram);
                                 break;
                             case 5:
+                                // When info is disabled, you need to manually call "setFourByteInformation()" for the
+                                // task or the write won't work. Currently this is only done for ref_rem.
                                 //addData(apduReferenceValuesInfo, value, telegram);
                                 addData(apduReferenceValues, value, telegram);
                                 break;

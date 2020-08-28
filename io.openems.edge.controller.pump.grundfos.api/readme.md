@@ -1,8 +1,1 @@
-# io.openems.edge.controller.pump.grundfos.api Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
-
+This bundle provides the channels for the Grundfos pump controller.

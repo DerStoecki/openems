@@ -30,7 +30,13 @@ public class PumpWarnBitsTask extends AbstractPumpTask {
     @Override
     public void setResponse(byte data) {
 
-        char[] warnChars = String.format("%8s", Integer.toBinaryString(data)).replace("", "0").toCharArray();
+        // When vi == 0 (false), then 0xFF means "data not available". Then there is no error and no error bit whose
+        // string needs to be looked up. -> Exit method.
+        if (super.vi == false) {
+            if ((data & 0xFF) == 0xFF) {
+                return;
+            }
+        }
 
         List<String> errorValue;
         StringBuilder allErrors = new StringBuilder();
@@ -44,19 +50,16 @@ public class PumpWarnBitsTask extends AbstractPumpTask {
             case "WarnBits3":
                 errorValue = this.warnBits.getErrorBits3();
                 break;
-
             case "WarnBits4":
             default:
                 errorValue = this.warnBits.getErrorBits4();
                 break;
         }
-        // ToDo : proper warnBit handling.
-        //  Limited warnChars evaluation to 8 chars right now, as errorValue has just 8 entries.
-        //
-        for (int x = 0; x < (Math.min(warnChars.length, 8)); x++) {
-            if (warnChars[x] == '1') {
-                allErrors.append(errorValue.get(x));
 
+        for (int x = 0; x < 8; x++) {
+            if ((data & (1 << x)) == (1 << x)) {
+                System.out.println("Bit: " + x + ", message: " + errorValue.get(x));
+                allErrors.append(errorValue.get(x));
             }
         }
         this.channel.setNextValue(allErrors);

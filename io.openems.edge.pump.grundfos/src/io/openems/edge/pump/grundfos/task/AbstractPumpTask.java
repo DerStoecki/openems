@@ -102,21 +102,51 @@ public abstract class AbstractPumpTask implements GenibusTask {
 
                     case "Celsius/10":
                     case "bar/10":
+                    case "Ampere*0.1":
+                    case "0.1*m³/h":
+                    case "10%":
                         unitCalc = 0.1;
                         break;
 
                     case "Kelvin/100":
                     case "bar/100":
+                    case "kPa":
+                    case "0.01*Hz":
+                    case "1%":
                         unitCalc = 0.01;
                         break;
 
                     case "bar/1000":
+                    case "0.1%":
                         unitCalc = 0.001;
                         break;
 
-                    case "Watt*10":
-                    case "kW*10":
+                    case "0.01%":
+                        unitCalc = 0.0001;
+                        break;
+
+                    case "ppm":
+                        unitCalc = 0.000001;
+                        break;
+
+                    case "psi":
+                        unitCalc = 0.06895; // convert to bar since channel unit is bar
+                        break;
+
                     case "psi*10":
+                        unitCalc = 0.6895; // convert to bar
+                        break;
+
+                    case "2.5*Hz":
+                        unitCalc = 2.5;
+                        break;
+
+                    case "5*m³/h":
+                        unitCalc = 5;
+                        break;
+
+                    case "Watt*10":
+                    case "10*m³/h":
                         unitCalc = 10;
                         break;
 
@@ -124,14 +154,22 @@ public abstract class AbstractPumpTask implements GenibusTask {
                         unitCalc = 100;
                         break;
 
-                    case "Celsius":
-                    case "Fahrenheit":
-                    case "Kelvin":
-                    case "Watt":
                     case "kW":
+                        unitCalc = 1000;
+                        break;
+
+                    case "kW*10":
+                        unitCalc = 10000;
+                        break;
+
+                    case "Celsius":
+                    case "Fahrenheit":  // <- conversion to °C in PumpReadTask.java
+                    case "Kelvin":      // <- conversion to °C in PumpReadTask.java
+                    case "Watt":
                     case "bar":
-                    case "kPa":
-                    case "psi":
+                    case "m³/h":
+                    case "Hz":
+                    case "2*Hz":    // <- fix for Magna3. Might be different for other pumps.
                     default:
                         unitCalc = 1;
                 }

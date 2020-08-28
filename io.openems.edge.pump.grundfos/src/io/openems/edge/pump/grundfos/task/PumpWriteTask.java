@@ -12,6 +12,13 @@ public class PumpWriteTask extends AbstractPumpTask implements PumpTask {
     public PumpWriteTask(int address, int headerNumber, WriteChannel<Double> channel, String unitString) {
         super(address, headerNumber, unitString);
         this.channel = channel;
+        // The method "getRequest()" does not work without first calling "setFourByteInformation()". Normally
+        // "setFourByteInformation()" is executed when an info response APDU is processed. For ref_rem (5, 1) we can call
+        // "setFourByteInformation()" manually since the parameters are fix and don't change. This way we do not need
+        // to send an info APDU for ref_rem to be able to use "getRequest()".
+        if (headerNumber == 5 && address == 1) {
+            super.setFourByteInformation(0,0,3, (byte)0b11110, (byte)0, (byte)0b1100100);
+        }
     }
 
     @Override

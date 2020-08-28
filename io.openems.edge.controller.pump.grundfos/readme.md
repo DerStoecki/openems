@@ -1,8 +1,1 @@
-# io.openems.edge.controller.pump.grundfos Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
-
+This bundle provides a controller to operate a Grundfos pump in constant pressure mode over GENIbus.

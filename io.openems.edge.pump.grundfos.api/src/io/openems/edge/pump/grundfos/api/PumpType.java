@@ -8,8 +8,8 @@ public enum PumpType {
      * Below is listet the Magna3 with some ids and headclasses. Only supporting current pump channels.
      * */
     MAGNA_3(23, 2, 28, 2, 30, 2, 34, 2, 37,
-            2, 39, 2, 58, 2, 112, 2,
-            154, 2, 156, 2, 158,
+            2, 39, 2, 58, 2, 32, 2, 112,
+            2, 154, 2, 156, 2, 158,
             2, 159, 2, 160, 2, 161,
             2, 162, 2, 105, 4, 106,
             4, 101, 4, 103, 4, 104,
@@ -41,6 +41,9 @@ public enum PumpType {
     //pumped Water medium temperature
     private int tW;
     private int tWHeadClass;
+    //motor frequency
+    private int fAct;
+    private int fActHeadClass;
     //control Mode
     private int controlMode;
     private int controlModeHeadClass;
@@ -115,8 +118,8 @@ public enum PumpType {
 
 
     PumpType(int hDiff, int hDiffHeadClass, int tE, int tEheadClass, int iMo, int imoHeadClass, int plo,
-             int ploHeadClass, int h, int hHeadClass, int q, int qHeadClass, int tW, int tWHeadClass,
-             int controlMode, int controlModeHeadClass, int alarmCodePump,
+             int ploHeadClass, int h, int hHeadClass, int q, int qHeadClass, int tW, int tWHeadClass, int fAct,
+             int fActHeadClass, int controlMode, int controlModeHeadClass, int alarmCodePump,
              int alarmCodePumpHeadClass, int warnCode, int warnCodeHeadClass, int alarmCode, int alarmCodeHeadClass,
              int warnBits1, int warnBits1HeadClass, int warnBits2, int warnBits2HeadClass, int warnBits3,
              int warnBits3HeadClass, int warnBits4, int warnBits4HeadClass, int qMaxHi, int qMaxHiHeadClass,
@@ -141,6 +144,8 @@ public enum PumpType {
         this.qHeadClass = qHeadClass;
         this.tW = tW;
         this.tWHeadClass = tWHeadClass;
+        this.fAct = fAct;
+        this.fActHeadClass = fActHeadClass;
         this.controlMode = controlMode;
         this.controlModeHeadClass = controlModeHeadClass;
         this.alarmCodePump = alarmCodePump;
@@ -250,6 +255,10 @@ public enum PumpType {
     public int gettWHeadClass() {
         return tWHeadClass;
     }
+
+    public int getfAct() { return fAct; }
+
+    public int getfActHeadClass() { return fActHeadClass; }
 
     public int getControlMode() {
         return controlMode;

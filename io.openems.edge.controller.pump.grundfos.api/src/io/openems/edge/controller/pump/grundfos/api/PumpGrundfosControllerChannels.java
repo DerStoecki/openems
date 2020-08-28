@@ -12,7 +12,6 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface PumpGrundfosControllerChannels extends OpenemsComponent {
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR)),
         H_REF_MAX(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
         H_REF_MIN(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
         R_REM(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE));
@@ -31,19 +30,15 @@ public interface PumpGrundfosControllerChannels extends OpenemsComponent {
 
     }
 
-    default Channel<Double> getMaxPressure() {
-        return channel(ChannelId.MAX_PRESSURE);
-    }
-
-    default WriteChannel<Double> setHrefMax() {
+    default WriteChannel<Double> sethIntervalMax() {
         return channel(ChannelId.H_REF_MAX);
     }
 
-    default WriteChannel<Double> setHrefMin() {
+    default WriteChannel<Double> sethIntervalMin() {
         return channel(ChannelId.H_REF_MIN);
     }
 
-    default WriteChannel<Double> setRrem() {
+    default WriteChannel<Double> setPumpingHead() {
         return channel(ChannelId.R_REM);
     }
 }

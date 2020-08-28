@@ -3,9 +3,7 @@ package io.openems.edge.pump.grundfos.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PumpGrundfosChannels extends OpenemsComponent {
@@ -27,6 +25,35 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         //GET//
 
         // Measured Data //
+        /**
+         * Currently used setpoint.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 48 ref_act
+         * </ul>
+         * */
+        REF_ACT(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Control source bits.
+         * Currently active control source. From which source the pump is currently taking commands.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 90  contr_source
+         * </ul>
+         * */
+        CONTR_SOURCE(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Currently active control source. From which source the pump is currently taking commands.
+         * The control source bits parsed to a text message.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 90  contr_source
+         * </ul>
+         * */
+        CONTR_SOURCE_STRING(Doc.of(OpenemsType.STRING)),
         /**
          * Differential Pressure Head.
          * <ul>
@@ -98,7 +125,17 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * */
         PUMPED_WATER_MEDIUM_TEMPERATURE(Doc.of(OpenemsType.DOUBLE).unit(Unit.DEZIDEGREE_CELSIUS)),
         /**
-         * Actual Control Mode.
+         * Relative speed/frequency applied to motor.
+         * <ul>
+         *      <li> Interface: PumpGrundfosChannels
+         *      <li> Type: Double
+         *      <li> Unit: Hz
+         *      <li> Magna3: 8 bit Measured Data: 2, 32 f_act
+         * </ul>
+         * */
+        MOTOR_FREQUENCY(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ)),
+        /**
+         * Actual Control Mode bits.
          * <ul>
          *      <li> Interface: PumpGrundfosChannels
          *      <li> Type: Double
@@ -107,9 +144,18 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          *
          * */
         ACTUAL_CONTROL_MODE(Doc.of(OpenemsType.DOUBLE)),
-
         /**
-         * Alarm Code Pump.
+         * The Actual Control Mode bits parsed to a text message.
+         * <ul>
+         *      <li> Interface: PumpGrundfosChannels
+         *      <li> Type: Double
+         *      <li> Magna3: 8 bit Measured Data: 2,112, control_mode
+         * </ul>
+         *
+         * */
+        ACTUAL_CONTROL_MODE_ENUM(Doc.of(ControlMode.values())),
+        /**
+         * Alarm Code Pump. Manual says this is just for setups with multiple pumps.
          * <ul>
          *       <li> Interface: PumpGrundfosChannels
          *       <li> Type: Double
@@ -136,18 +182,38 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * */
         ALARM_CODE(Doc.of(OpenemsType.DOUBLE)),
         /**
-         * Warn Bits. See "Warn Bits" For Further Information
+         * Warn Bits 1-4. See "Warn Bits" For Further Information
          * <ul>
          *       <li> Interface: PumpGrundfosChannels
-         *       <li> Type: Double
-         *       <li> Magna3: 8 bit Measured Data: 2,159-162
-         *       warn_bits1,2,3,4
+         *       <li> Type: String
+         *       <li> Magna3: 8 bit Measured Data: 2, 159-162 warn_bits1,2,3,4
          * </ul>
          * */
         WARN_BITS_1(Doc.of(OpenemsType.STRING)),
         WARN_BITS_2(Doc.of(OpenemsType.STRING)),
         WARN_BITS_3(Doc.of(OpenemsType.STRING)),
         WARN_BITS_4(Doc.of(OpenemsType.STRING)),
+        /**
+         * Warn message. Warn Bits cumulative channel. Contains the messages from all warn bits.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: String
+         * </ul>
+         * */
+        WARN_MESSAGE(Doc.of(OpenemsType.STRING)),
+        /**
+         * Alarm log 1-5. Contains the code for the last 5 logged alarms. Newest is in 1.
+         *  <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Measured Data: 2, 163-167 alarm_log_1 to alarm_log_5
+         *  </ul>
+         * */
+        ALARM_LOG_1(Doc.of(OpenemsType.DOUBLE)),
+        ALARM_LOG_2(Doc.of(OpenemsType.DOUBLE)),
+        ALARM_LOG_3(Doc.of(OpenemsType.DOUBLE)),
+        ALARM_LOG_4(Doc.of(OpenemsType.DOUBLE)),
+        ALARM_LOG_5(Doc.of(OpenemsType.DOUBLE)),
 
         // reference Values //
         /**
@@ -242,6 +308,42 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * </ul>
          * */
         H_CONST_REF_MAX(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Pump rotation frequency f_upper. Maximum frequency, hardware limit.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 30 f_upper
+         * </ul>
+         * */
+        FREQUENCY_F_UPPER(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Pump rotation frequency f_nom.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 31 f_nom
+         * </ul>
+         * */
+        FREQUENCY_F_NOM(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Pump rotation frequency f_min.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 34 f_min
+         * </ul>
+         * */
+        FREQUENCY_F_MIN(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Pump rotation frequency f_max.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 35 f_max
+         * </ul>
+         * */
+        FREQUENCY_F_MAX(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ).accessMode(AccessMode.READ_WRITE)),
 
         // commands //
         /**
@@ -344,6 +446,20 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     }
 
 
+    default Channel<Double> getRefAct() {
+        return this.channel(ChannelId.REF_ACT);
+    }
+
+    default Channel<Double> getControlSourceBits() {
+        return this.channel(ChannelId.CONTR_SOURCE);
+    }
+
+    default Channel<String> getControlSource() {
+        return this.channel(ChannelId.CONTR_SOURCE_STRING);
+    }
+
+    // currently disabled
+    /*
     default Channel<Double> getDiffPressureHead() {
         return this.channel(ChannelId.DIFFERENTIAL_PRESSURE_HEAD);
     }
@@ -353,9 +469,9 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     }
 
     default Channel<Double> getCurrentMotor() {
-
         return this.channel(ChannelId.CURRENT_MOTOR);
     }
+    */
 
     default Channel<Double> getPowerConsumption() {
         return this.channel(ChannelId.POWER_CONSUMPTION);
@@ -373,8 +489,16 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.PUMPED_WATER_MEDIUM_TEMPERATURE);
     }
 
-    default Channel<Double> getActualControlMode() {
+    default Channel<Double> getMotorFrequency() {
+        return this.channel(ChannelId.MOTOR_FREQUENCY);
+    }
+
+    default Channel<Double> getActualControlModeBits() {
         return this.channel(ChannelId.ACTUAL_CONTROL_MODE);
+    }
+
+    default Channel<String> getActualControlMode() {
+        return this.channel(ChannelId.ACTUAL_CONTROL_MODE_ENUM);
     }
 
     default Channel<Double> getAlarmCodePump() {
@@ -405,6 +529,30 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.WARN_BITS_4);
     }
 
+    default Channel<String> getWarnMessage() {
+        return this.channel(ChannelId.WARN_MESSAGE);
+    }
+
+    default Channel<Double> getAlarmLog1() {
+        return this.channel(ChannelId.ALARM_LOG_1);
+    }
+
+    default Channel<Double> getAlarmLog2() {
+        return this.channel(ChannelId.ALARM_LOG_2);
+    }
+
+    default Channel<Double> getAlarmLog3() {
+        return this.channel(ChannelId.ALARM_LOG_3);
+    }
+
+    default Channel<Double> getAlarmLog4() {
+        return this.channel(ChannelId.ALARM_LOG_4);
+    }
+
+    default Channel<Double> getAlarmLog5() {
+        return this.channel(ChannelId.ALARM_LOG_5);
+    }
+
     default Channel<Double> getRmin() {
         return this.channel(ChannelId.R_MIN);
     }
@@ -415,6 +563,8 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
 
     //Write Tasks
 
+    // currently disabled
+    /*
     default WriteChannel<Double> setPumpFlowHi() {
         return this.channel(ChannelId.SET_PUMP_FLOW_HI);
     }
@@ -434,6 +584,7 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     default WriteChannel<Double> setMaxPressureLo() {
         return this.channel(ChannelId.SET_MAX_PRESSURE_LO);
     }
+    */
 
     default WriteChannel<Double> setConstRefMinH() {
         return this.channel(ChannelId.H_CONST_REF_MIN);
@@ -480,6 +631,26 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     default WriteChannel<Double> setRefRem() {
         return this.channel(ChannelId.REF_REM);
     }
+
+    // currently disabled
+    /*
+    //frequency
+    default WriteChannel<Double> setFupper() {
+        return this.channel(ChannelId.FREQUENCY_F_UPPER);
+    }
+
+    default WriteChannel<Double> setFnom() {
+        return this.channel(ChannelId.FREQUENCY_F_NOM);
+    }
+
+    default WriteChannel<Double> setFmin() {
+        return this.channel(ChannelId.FREQUENCY_F_MIN);
+    }
+
+    default WriteChannel<Double> setFmax() {
+        return this.channel(ChannelId.FREQUENCY_F_MAX);
+    }
+    */
 
 }
 

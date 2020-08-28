@@ -186,7 +186,8 @@ public class Handler {
             os.write(bytes);
             if (debug) {
                 // Debug output data hex values
-                this.parent.logInfo(this.log, "Bytes send: " + bytesToHex(bytes));
+                //this.parent.logInfo(this.log, "Bytes send: " + bytesToHex(bytes));
+                this.parent.logInfo(this.log, "Bytes send: " + bytesToInt(bytes));
             }
 
             // Save return function/Task
@@ -213,7 +214,8 @@ public class Handler {
                 byte[] receivedData = bytesRelevant.toByteArray();
                 if (debug) {
                     // Debug return data hex values
-                    this.parent.logInfo(this.log, "Data received: " + bytesToHex(receivedData));
+                    //this.parent.logInfo(this.log, "Data received: " + bytesToHex(receivedData));
+                    this.parent.logInfo(this.log, "Data received: " + bytesToInt(receivedData));
                 }
 
                 if (packageOK(receivedData)) {
@@ -240,6 +242,17 @@ public class Handler {
         StringBuilder sb = new StringBuilder();
         for (byte b : hashInBytes) {
             sb.append(String.format("0x%02x ", b));
+        }
+        return sb.toString();
+
+    }
+
+    private static String bytesToInt(byte[] hashInBytes) {
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashInBytes) {
+            int convert = Byte.toUnsignedInt(b);
+            sb.append(String.format("%d ", convert));
         }
         return sb.toString();
 
