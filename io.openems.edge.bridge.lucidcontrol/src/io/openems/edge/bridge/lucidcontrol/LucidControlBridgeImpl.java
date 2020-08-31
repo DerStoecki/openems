@@ -143,21 +143,25 @@ public class LucidControlBridgeImpl extends AbstractOpenemsComponent implements 
          */
         @Override
         protected void forever() throws Throwable {
+
             tasks.values().forEach(task -> {
+                if (task.isRead() || task.writeTaskDefined()) {
 
-                String[] command = {"bash", "-c", "sudo " + lucidIoPath + " -d" + task.getPath() + " -tV -c" + task.getPinPos() + " -r"};
+                    String[] command = {"bash", "-c", "sudo " + lucidIoPath + " -d" + task.getPath() + task.getRequest()};
 
-                String value = execCmd(command);
-                if (value.contains(":")) {
-                    if (value.contains("\t") && value.contains("\n")) {
-                        value = value.replace("\t", "");
-                        value = value.replace("\n", "");
+                    String value = execCmd(command);
+                    if (task.isRead()) {
+                        if (value.contains(":")) {
+                            if (value.contains("\t") && value.contains("\n")) {
+                                value = value.replace("\t", "");
+                                value = value.replace("\n", "");
+                            }
+                            String[] parts = value.split(":");
+                            value = parts[1];
+                        }
+                        task.setResponse(Double.parseDouble(value));
                     }
-                    String[] parts = value.split(":");
-                    value = parts[1];
                 }
-                task.setResponse(Double.parseDouble(value));
-
             });
         }
 
@@ -183,13 +187,14 @@ public class LucidControlBridgeImpl extends AbstractOpenemsComponent implements 
                     new InputStreamReader(process.getInputStream()));
 
             String line;
-
-            while (true) {
+            int counter = 0;
+            while (counter < 5) {
                 line = reader.readLine();
                 if (line != null) {
                     output.append(line).append("\n");
                     break;
                 }
+                counter++;
             }
             return output.toString();
 

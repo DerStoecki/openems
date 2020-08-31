@@ -3,8 +3,8 @@ package io.openems.edge.lucidcontrol.device;
 import io.openems.edge.bridge.lucidcontrol.api.LucidControlBridge;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.lucidcontrol.device.api.LucidControlDevice;
-import io.openems.edge.lucidcontrol.device.task.LucidControlReadTask;
+import io.openems.edge.lucidcontrol.device.api.LucidControlDeviceInput;
+import io.openems.edge.lucidcontrol.device.task.LucidControlInputTask;
 
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -18,29 +18,29 @@ import org.osgi.service.metatype.annotations.Designate;
 
 
 
-@Designate(ocd = Config.class, factory = true)
-@Component(name = "Device.LucidControl")
-public class LucidControlDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, LucidControlDevice {
+@Designate(ocd = InputConfig.class, factory = true)
+@Component(name = "Device.LucidControl.Output")
+public class LucidControlInputDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, LucidControlDeviceInput {
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     LucidControlBridge lucidControlBridge;
 
 
-    public LucidControlDeviceImpl() {
+    public LucidControlInputDeviceImpl() {
         super(OpenemsComponent.ChannelId.values(),
-                LucidControlDevice.ChannelId.values());
+                LucidControlDeviceInput.ChannelId.values());
     }
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, InputConfig config) {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
         lucidControlBridge.addLucidControlTask(config.id(),
-                new LucidControlReadTask(config.moduleId(), config.id(),
+                new LucidControlInputTask(config.moduleId(), config.id(),
                         lucidControlBridge.getPath(config.moduleId()),
                         lucidControlBridge.getVoltage(config.moduleId()),config.pinPos(), config.maxPressure(),
-                        this.getPressure()));
+                        this.getPressureChannel()));
     }
 
     @Deactivate
@@ -51,8 +51,8 @@ public class LucidControlDeviceImpl extends AbstractOpenemsComponent implements 
 
     @Override
     public String debugLog() {
-        if (getPressure().getNextValue().isDefined()) {
-            return "The pressure of " + super.id() + " is: " + getPressure().getNextValue().get();
+        if (getPressure().isDefined()) {
+            return "The pressure of " + super.id() + " is: " + this.getPressure().get();
         } else {
             return "The pressure of " + super.id() + " is not defined yet.";
         }
