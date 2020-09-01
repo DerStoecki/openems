@@ -38,12 +38,14 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
 
     private final Logger log = LoggerFactory.getLogger(GenibusImpl.class);
+    private boolean debug;
 
     private final Worker worker = new Worker();
 
     private String portName;
+    boolean connectionOk;
 
-    private Handler handler = new Handler();
+    private Handler handler;
     //PumpDevice and their Address
     private Map<String, Integer> devices = new HashMap<>();
     //PumpDevice and their Genibustasks
@@ -53,18 +55,16 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     public GenibusImpl() {
         super(OpenemsComponent.ChannelId.values(),
                 GenibusChannel.ChannelId.values());
+        handler = new Handler(this);
     }
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsException {
         super.activate(context, config.id(), config.alias(), config.enabled());
+        debug = config.debug();
         applyDefaultApduHeaderOperation();
-        try {
-            handler.start(config.portName());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new OpenemsException("Busy Port!");
-        }
+        portName = config.portName();
+        connectionOk = handler.start(portName);
         this.worker.activate(config.id());
 
         //default
@@ -107,89 +107,95 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
          * Depending on the added tasks, they will be put together. Information Values will be gathered
          * as well as values.
          * APDUs for each case will be created and put to the telegram if information/tasks are available.
-         * Disclaimer: ATM only 6 APDU Frames are possible to read
+         * Disclaimer: ATM the amount of bytes that is possible to send and receive is limited. If that limit is
+         * exceeded, no data can be received.
          */
         @Override
         protected void forever() {
 
+            // Check connection.
             if (!handler.checkStatus()) {
-                //try to reconnect
-                try {
-                    handler.start(portName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
-                return;
+                // If checkStatus() returns false, the connection is lost. Try to reconnect
+                connectionOk = handler.start(portName);
             }
 
-            getTasks().keySet().forEach(pumpDevice -> {
+            if (connectionOk) {
+                getTasks().keySet().forEach(pumpDevice -> {
 
-                Telegram telegram = new Telegram();
-                telegram.setStartDelimiterDataRequest();
-                //get the Address via Id
-                telegram.setDestinationAddress(devices.get(pumpDevice));
-                telegram.setSourceAddress(0x01);
+                    Telegram telegram = new Telegram();
+                    telegram.setStartDelimiterDataRequest();
+                    //get the Address via Id
+                    telegram.setDestinationAddress(devices.get(pumpDevice));
+                    telegram.setSourceAddress(0x01);
 
-                ApplicationProgramDataUnit apduMeasuredDataInfo = new ApplicationProgramDataUnit();
-                apduMeasuredDataInfo.setHeadClassMeasuredData();
-                apduMeasuredDataInfo.setOSInfo();
+                    ApplicationProgramDataUnit apduMeasuredDataInfo = new ApplicationProgramDataUnit();
+                    apduMeasuredDataInfo.setHeadClassMeasuredData();
+                    apduMeasuredDataInfo.setOSInfo();
 
-                ApplicationProgramDataUnit apduMeasuredData = new ApplicationProgramDataUnit();
-                apduMeasuredData.setHeadClassMeasuredData();
-                apduMeasuredData.setHeadOSACK(getApduMeasuredData().getNextValue().get());
+                    ApplicationProgramDataUnit apduMeasuredData = new ApplicationProgramDataUnit();
+                    apduMeasuredData.setHeadClassMeasuredData();
+                    apduMeasuredData.setHeadOSACK(getApduMeasuredData().getNextValue().get());
 
-                ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
-                apduCommands.setHeadClassCommands();
-                apduCommands.setOSSet();
+                    ApplicationProgramDataUnit apduCommands = new ApplicationProgramDataUnit();
+                    apduCommands.setHeadClassCommands();
+                    apduCommands.setOSSet();
 
-                ApplicationProgramDataUnit apduConfigurationParametersInfo = new ApplicationProgramDataUnit();
-                apduConfigurationParametersInfo.setHeadClassConfigurationParameters();
-                apduConfigurationParametersInfo.setOSInfo();
+                    ApplicationProgramDataUnit apduConfigurationParametersInfo = new ApplicationProgramDataUnit();
+                    apduConfigurationParametersInfo.setHeadClassConfigurationParameters();
+                    apduConfigurationParametersInfo.setOSInfo();
 
-                ApplicationProgramDataUnit apduConfigurationParameters = new ApplicationProgramDataUnit();
-                apduConfigurationParameters.setHeadClassConfigurationParameters();
-                apduConfigurationParameters.setHeadOSACK(getApduConfigurationParameters().getNextValue().get());
+                    ApplicationProgramDataUnit apduConfigurationParameters = new ApplicationProgramDataUnit();
+                    apduConfigurationParameters.setHeadClassConfigurationParameters();
+                    apduConfigurationParameters.setHeadOSACK(getApduConfigurationParameters().getNextValue().get());
 
-                ApplicationProgramDataUnit apduReferenceValuesInfo = new ApplicationProgramDataUnit();
-                apduReferenceValuesInfo.setHeadClassReferenceValues();
-                apduReferenceValuesInfo.setHeadOSACK(3);
+                    ApplicationProgramDataUnit apduReferenceValuesInfo = new ApplicationProgramDataUnit();
+                    apduReferenceValuesInfo.setHeadClassReferenceValues();
+                    apduReferenceValuesInfo.setHeadOSACK(3);
 
-                ApplicationProgramDataUnit apduReferenceValues = new ApplicationProgramDataUnit();
-                apduReferenceValues.setHeadClassReferenceValues();
-                apduReferenceValues.setHeadOSACK(getApduReferenceValues().getNextValue().get());
+                    ApplicationProgramDataUnit apduReferenceValues = new ApplicationProgramDataUnit();
+                    apduReferenceValues.setHeadClassReferenceValues();
+                    apduReferenceValues.setHeadOSACK(getApduReferenceValues().getNextValue().get());
 
-                ApplicationProgramDataUnit apduAsciiStrings = new ApplicationProgramDataUnit();
-                apduAsciiStrings.setHeadClassASCIIStrings();
-                apduAsciiStrings.setHeadOSACK(getAsciiStrings().getNextValue().get());
+                    ApplicationProgramDataUnit apduAsciiStrings = new ApplicationProgramDataUnit();
+                    apduAsciiStrings.setHeadClassASCIIStrings();
+                    apduAsciiStrings.setHeadOSACK(getAsciiStrings().getNextValue().get());
 
-                getTasks().get(pumpDevice).forEach((key, value) -> {
-                    //ATTENTION! ATM only 6 Apdu frames are possible to read --> current implementation --> case 2, 3, 4
-                    //and 5 are only needed.
-                    switch (key) {
-                        case 2:
-                            addData(apduMeasuredDataInfo, value, telegram);
-                            addData(apduMeasuredData, value, telegram);
-                            break;
-                        case 3:
-                            addData(apduCommands, value, telegram);
-                            break;
-                        case 4:
-                            addData(apduConfigurationParametersInfo, value, telegram);
-                            addData(apduConfigurationParameters, value, telegram);
-                            break;
-                        case 5:
-                            //addData(apduReferenceValuesInfo, value, telegram);
-                            addData(apduReferenceValues, value, telegram);
-                            break;
-                        case 7:
-                            addData(apduAsciiStrings, value, telegram);
-                            break;
-                    }
+                    getTasks().get(pumpDevice).forEach((key, value) -> {
+                        //ATTENTION! ATM only 6 Apdu frames are possible to read --> current implementation --> case 2, 3, 4
+                        //and 5 are only needed.
+                        //-----------------------------------
+                        // Nope, that is not the problem. There is a timing problem, and if the Telegram gets too long
+                        // the data cannot be read anymore. Not the number of Apdu frames is the problem but the total
+                        // number of bits in the telegram. Send 504 bits and received 768 bits works. More than that
+                        // and problems will start.
+                        switch (key) {
+                            case 2:
+                                addData(apduMeasuredDataInfo, value, telegram);
+                                addData(apduMeasuredData, value, telegram);
+                                break;
+                            case 3:
+                                addData(apduCommands, value, telegram);
+                                break;
+                            case 4:
+                                addData(apduConfigurationParametersInfo, value, telegram);
+                                addData(apduConfigurationParameters, value, telegram);
+                                break;
+                            case 5:
+                                // When info is disabled, you need to manually call "setFourByteInformation()" for the
+                                // task or the write won't work. Currently this is only done for ref_rem.
+                                //addData(apduReferenceValuesInfo, value, telegram);
+                                addData(apduReferenceValues, value, telegram);
+                                break;
+                            case 7:
+                                addData(apduAsciiStrings, value, telegram);
+                                break;
+                        }
+                    });
+
+                    handleTelegram(pumpDevice, telegram);
                 });
+            }
 
-                handleTelegram(pumpDevice, telegram);
-            });
 
         }
     }
@@ -244,15 +250,15 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
      *                   not carry any identification.
      *                   The Way the Request Telegram is send, the information/data will be returned.
      *                   Every Head needs a certain treatment, so every head needs to be checked of the request Apdu.
-     *                   if you have a look at the if(osAck == 2) there are 2 possible cases causing, that the information
-     *                   data length is either 1 or 4 byte long. depending on that, the task method
+     *                   If you have a look at the if(osAck == 2) there are 2 possible cases since the information
+     *                   data length is either 1 or 4 byte long. Depending on that, the task method
      *                   setOneByteInformation or setFourByteInformation is called.
      *                   </p>
      */
     private void handleTelegram(String pumpDevice, Telegram telegram) {
         //check OSACK --> infomration, request, data
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
-        Telegram responseTelegram = handler.writeTelegram(400, telegram);
+        Telegram responseTelegram = handler.writeTelegram(400, telegram, debug);
         if (responseTelegram == null) {
             return;
         }
@@ -294,7 +300,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                             //only 4byte data
                         } else {
                             if (byteCounter >= data.length - 3) {
-                                System.out.println("Incorrect Data Length to SIF-->prevented Out of Bounce Exception");
+                                this.logWarn(this.log, "Incorrect Data Length to SIF-->prevented Out of Bounds Exception");
                                 break;
                             }
                             geniTask.setFourByteInformation(vi, bo, sif,
@@ -383,5 +389,25 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
     private Map<String, Map<Integer, List<GenibusTask>>> getTasks() {
         return tasks;
+    }
+
+    @Override
+    public void logDebug(Logger log, String message) {
+        super.logDebug(log, message);
+    }
+
+    @Override
+    public void logInfo(Logger log, String message) {
+        super.logInfo(log, message);
+    }
+
+    @Override
+    public void logWarn(Logger log, String message) {
+        super.logWarn(log, message);
+    }
+
+    @Override
+    public void logError(Logger log, String message) {
+        super.logError(log, message);
     }
 }
