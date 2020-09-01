@@ -4,57 +4,36 @@ import io.openems.edge.bridge.lucidcontrol.task.AbstractLucidControlBridgeTask;
 import io.openems.edge.bridge.lucidcontrol.task.LucidControlBridgeTask;
 import io.openems.edge.common.channel.Channel;
 
-public class LucidControlReadTask extends AbstractLucidControlBridgeTask implements LucidControlBridgeTask {
+public class LucidControlOutputTask extends AbstractLucidControlBridgeTask implements LucidControlBridgeTask {
 
-    private Channel<Double> barChannel;
+    private Channel<Double> percentChannel;
     private String path;
     private String voltage;
     private int pinPos;
-    private double lastBarValue = 0;
+    private double lastVoltValue = 0;
     //will be changed, just a placeholder atm
     private double maxPressure;
     //max Voltage is needed later depending on module and device; atm we just need 10V
     private int maxVoltage;
 
-
-    public LucidControlReadTask(String moduleId, String deviceId, String path, String voltage, int pinPos,
-                                double maxPressure, Channel<Double> barChannel) {
+    public LucidControlOutputTask(String moduleId, String deviceId, String path, String voltage, int pinPos,
+                                  Channel<Double> percentChannel) {
         super(moduleId, deviceId);
 
-        this.barChannel = barChannel;
+        this.percentChannel = percentChannel;
         this.path = path;
         this.voltage = voltage;
         this.pinPos = pinPos;
-        //allocateMaxVoltage();
-        this.maxPressure = maxPressure;
+        allocateMaxVoltage();
     }
 
     private void allocateMaxVoltage() {
+        maxVoltage = Integer.parseInt(voltage.replaceAll("\\D+", ""));
 
-        switch (voltage) {
-            case "5V":
-            case "+-5V":
-                maxVoltage = 5;
-                break;
-            case "10V":
-            case "+-10V":
-                maxVoltage = 10;
-                break;
-            default:
-                maxVoltage = 24;
-        }
     }
 
-    /**
-     * Gets the CommandLine result of the Bridge and calculates pressure.
-     *
-     * @param voltageRead result of the Bridge command line.
-     */
     @Override
     public void setResponse(double voltageRead) {
-
-        this.barChannel.setNextValue((voltageRead * maxPressure) / 10);
-
     }
 
     /**
@@ -67,14 +46,39 @@ public class LucidControlReadTask extends AbstractLucidControlBridgeTask impleme
         return this.path;
     }
 
+    @Override
+    public boolean writeTaskDefined() {
+        return this.percentChannel.value().isDefined();
+    }
+
 
     /**
      * Pin Position of the Device.
      *
      * @return pinPosition.
      */
-    @Override
     public int getPinPos() {
         return this.pinPos;
     }
+
+    /**
+     * Returns the Request String to write to a device.
+     */
+    @Override
+    public String getRequest() {
+        return " -w" + calculateVoltage() + " -c" + this.pinPos + " -tV";
+    }
+
+    private double calculateVoltage() {
+        double volt = this.percentChannel.value().get() * maxVoltage / 100;
+        this.lastVoltValue = volt;
+        return volt;
+    }
+
+    @Override
+    public boolean isRead() {
+        return false;
+    }
+
+
 }

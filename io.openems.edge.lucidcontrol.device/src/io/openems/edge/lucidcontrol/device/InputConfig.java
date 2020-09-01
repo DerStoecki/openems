@@ -4,26 +4,26 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "LucidControl Device",
+        name = "LucidControl Input Device",
         description = "LucidControl Device, connected with the LucidControl Module."
 )
-@interface Config {
+@interface InputConfig {
 
     String service_pid();
 
     @AttributeDefinition(name = "LucidControlDevice-ID", description = "ID of LucidControlDevice.")
-    String id() default "LucidControlDevice0";
+    String id() default "LucidControlInputDevice0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable Name.")
-    String alias() default "PressureMeter";
+    String alias() default "PressureMeterInput";
 
     @AttributeDefinition(name = "LucidControlModule-ID", description = "ID of LucidControlModule where the Device is connected with.")
-    String moduleId() default "LucidControlModule0";
+    String moduleId() default "LucidControlInputModule0";
 
     @AttributeDefinition(name = "Position", description = "Position of Device (0-3)")
     int pinPos() default 0;
 
-    @AttributeDefinition(name = "MaxBar at 10V", description = "How much pressure(in bar) is max. measured at 10V")
+    @AttributeDefinition(name = "MaxBar", description = "How much pressure(in bar) is max. measured")
             double maxPressure() default 200;
     boolean enabled() default true;
 
