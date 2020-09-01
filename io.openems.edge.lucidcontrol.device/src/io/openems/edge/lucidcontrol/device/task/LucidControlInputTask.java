@@ -7,6 +7,7 @@ import io.openems.edge.common.channel.Channel;
 public class LucidControlInputTask extends AbstractLucidControlBridgeTask implements LucidControlBridgeTask {
 
     private Channel<Double> barChannel;
+    private Channel<Double> voltageChannel;
     private String path;
     private String voltage;
     private int pinPos;
@@ -18,7 +19,7 @@ public class LucidControlInputTask extends AbstractLucidControlBridgeTask implem
 
 
     public LucidControlInputTask(String moduleId, String deviceId, String path, String voltage, int pinPos,
-                                 double maxPressure, Channel<Double> barChannel) {
+                                 double maxPressure, Channel<Double> barChannel, Channel<Double> voltageChannel) {
         super(moduleId, deviceId);
 
         this.barChannel = barChannel;
@@ -27,6 +28,7 @@ public class LucidControlInputTask extends AbstractLucidControlBridgeTask implem
         this.pinPos = pinPos;
         allocateMaxVoltage();
         this.maxPressure = maxPressure;
+        this.voltageChannel = voltageChannel;
     }
 
     private void allocateMaxVoltage() {
@@ -43,6 +45,7 @@ public class LucidControlInputTask extends AbstractLucidControlBridgeTask implem
     @Override
     public void setResponse(double voltageRead) {
 
+        this.voltageChannel.setNextValue(voltageRead);
         this.barChannel.setNextValue((voltageRead * maxPressure) / maxVoltage);
 
     }
@@ -74,10 +77,10 @@ public class LucidControlInputTask extends AbstractLucidControlBridgeTask implem
 
     /**
      * Returns the Request String to read from this device.
-     * */
+     */
     @Override
     public String getRequest() {
-        return  " -tV -c" + this.pinPos + " -r";
+        return " -tV -c" + this.pinPos + " -r";
     }
 
     @Override

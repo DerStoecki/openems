@@ -11,6 +11,7 @@ public interface LucidControlDeviceInput extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+        INPUT_VOLTAGE(Doc.of(OpenemsType.DOUBLE).unit(Unit.VOLT)),
         PRESSURE(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR));
 
         private final Doc doc;
@@ -24,6 +25,14 @@ public interface LucidControlDeviceInput extends OpenemsComponent {
             return this.doc;
         }
 
+    }
+
+    default Channel<Double> getVoltageChannel() {
+        return this.channel(ChannelId.INPUT_VOLTAGE);
+    }
+
+    default Value<Double> getVoltage() {
+        return getVoltageChannel().value();
     }
 
     default Channel<Double> getPressureChannel() {

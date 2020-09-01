@@ -149,7 +149,7 @@ public class LucidControlBridgeImpl extends AbstractOpenemsComponent implements 
 
                     String[] command = {"bash", "-c", "sudo " + lucidIoPath + " -d" + task.getPath() + task.getRequest()};
 
-                    String value = execCmd(command);
+                    String value = execCmd(command, task.isRead());
                     if (task.isRead()) {
                         if (value.contains(":")) {
                             if (value.contains("\t") && value.contains("\n")) {
@@ -172,37 +172,39 @@ public class LucidControlBridgeImpl extends AbstractOpenemsComponent implements 
      * Execute the command and returns the output.
      *
      * @param params the Command, containing bash exec and the line what should be written in such line
+     * @param isRead a boolean to determine if the cmdline output should be read.
      * @return the output of the commandline e.g. Chip0:-1.5264
      */
-    private static String execCmd(String[] params) {
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command(params);
+    private static String execCmd(String[] params, boolean isRead) {
         try {
-
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            processBuilder.command(params);
             Process process = processBuilder.start();
 
-            StringBuilder output = new StringBuilder();
+            if (isRead) {
+                StringBuilder output = new StringBuilder();
 
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(process.getInputStream()));
 
-            String line;
-            int counter = 0;
-            while (counter < 5) {
-                line = reader.readLine();
-                if (line != null) {
-                    output.append(line).append("\n");
-                    break;
+                String line;
+                int counter = 0;
+                while (counter < 5) {
+                    line = reader.readLine();
+                    if (line != null) {
+                        output.append(line).append("\n");
+                        break;
+                    }
+                    counter++;
                 }
-                counter++;
+                return output.toString();
             }
-            return output.toString();
-
         } catch (IOException e) {
             e.printStackTrace();
+            return "Didn't Work";
 
         }
-        return "Didn't Work";
+        return "Not Readable";
     }
 
 

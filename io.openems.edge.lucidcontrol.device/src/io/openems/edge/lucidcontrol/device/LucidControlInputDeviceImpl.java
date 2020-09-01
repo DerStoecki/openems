@@ -17,7 +17,6 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.metatype.annotations.Designate;
 
 
-
 @Designate(ocd = InputConfig.class, factory = true)
 @Component(name = "Device.LucidControl.Output")
 public class LucidControlInputDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, LucidControlDeviceInput {
@@ -39,8 +38,8 @@ public class LucidControlInputDeviceImpl extends AbstractOpenemsComponent implem
         lucidControlBridge.addLucidControlTask(config.id(),
                 new LucidControlInputTask(config.moduleId(), config.id(),
                         lucidControlBridge.getPath(config.moduleId()),
-                        lucidControlBridge.getVoltage(config.moduleId()),config.pinPos(), config.maxPressure(),
-                        this.getPressureChannel()));
+                        lucidControlBridge.getVoltage(config.moduleId()), config.pinPos(), config.maxPressure(),
+                        this.getPressureChannel(), this.getVoltageChannel()));
     }
 
     @Deactivate
@@ -51,8 +50,8 @@ public class LucidControlInputDeviceImpl extends AbstractOpenemsComponent implem
 
     @Override
     public String debugLog() {
-        if (getPressure().isDefined()) {
-            return "The pressure of " + super.id() + " is: " + this.getPressure().get();
+        if (getPressure().isDefined() && getVoltage().isDefined()) {
+            return "The pressure of " + super.id() + " is: " + this.getPressure().get() + "\nVoltage Read: " + this.getVoltage().get();
         } else {
             return "The pressure of " + super.id() + " is not defined yet.";
         }
