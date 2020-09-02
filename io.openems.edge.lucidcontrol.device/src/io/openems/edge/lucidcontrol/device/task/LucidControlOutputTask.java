@@ -4,6 +4,12 @@ import io.openems.edge.bridge.lucidcontrol.task.AbstractLucidControlBridgeTask;
 import io.openems.edge.bridge.lucidcontrol.task.LucidControlBridgeTask;
 import io.openems.edge.common.channel.Channel;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class LucidControlOutputTask extends AbstractLucidControlBridgeTask implements LucidControlBridgeTask {
 
     private Channel<Double> percentChannel;
@@ -15,9 +21,11 @@ public class LucidControlOutputTask extends AbstractLucidControlBridgeTask imple
     private double maxPressure;
     //max Voltage is needed later depending on module and device; atm we just need 10V
     private int maxVoltage;
+    private Map<Double, Double> voltageThresholdMap;
+    private List<Double> keyList;
 
     public LucidControlOutputTask(String moduleId, String deviceId, String path, String voltage, int pinPos,
-                                  Channel<Double> percentChannel) {
+                                  Channel<Double> percentChannel, List<Double> keyList, Map<Double, Double> voltageThresholdMap) {
         super(moduleId, deviceId);
 
         this.percentChannel = percentChannel;
@@ -25,6 +33,8 @@ public class LucidControlOutputTask extends AbstractLucidControlBridgeTask imple
         this.voltage = voltage;
         this.pinPos = pinPos;
         allocateMaxVoltage();
+        this.voltageThresholdMap = voltageThresholdMap;
+        this.keyList = keyList;
     }
 
     private void allocateMaxVoltage() {
@@ -70,9 +80,37 @@ public class LucidControlOutputTask extends AbstractLucidControlBridgeTask imple
     }
 
     private double calculateVoltage() {
-        double volt = this.percentChannel.value().get() * maxVoltage / 100;
+
+        double volt = calculateAdaptedVoltage() * maxVoltage / 100;
         this.lastVoltValue = volt;
         return volt;
+    }
+
+    private double calculateAdaptedVoltage() {
+        double percent = this.percentChannel.value().get();
+        if (this.keyList.size() > 0) {
+            AtomicBoolean wasSet = new AtomicBoolean();
+            wasSet.set(false);
+            AtomicInteger keyInList = new AtomicInteger();
+            keyInList.set(-1);
+            this.keyList.forEach(key -> {
+                if (key <= percent) {
+                    if (wasSet.get()) {
+                        if (key > this.keyList.get(keyInList.get())) {
+                            keyInList.set(this.keyList.indexOf(key));
+                        }
+                    } else {
+                        wasSet.set(true);
+                        keyInList.set(this.keyList.indexOf(key));
+                    }
+                }
+            });
+            if (wasSet.get()) {
+                return percent + this.voltageThresholdMap.get(this.keyList.get(keyInList.get()));
+            }
+        }
+
+        return percent;
     }
 
     @Override
