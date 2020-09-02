@@ -7,17 +7,27 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.lucidcontrol.device.api.LucidControlDeviceOutput;
 
 import io.openems.edge.lucidcontrol.device.task.LucidControlOutputTask;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Designate(ocd = OutputConfig.class, factory = true)
-@Component(name = "Device.LucidControl.Input")
+@Component(name = "Device.LucidControl.Output")
 public class LucidControlOutputDeviceImpl extends AbstractOpenemsComponent implements OpenemsComponent, LucidControlDeviceOutput {
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY,
             cardinality = ReferenceCardinality.MANDATORY)
     LucidControlBridge lucidControlBridge;
+
+    private Map<Double, Double> voltageThresholdMap = new HashMap<>();
+    private List<Double> keyList = new ArrayList<>();
 
     public LucidControlOutputDeviceImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -25,13 +35,24 @@ public class LucidControlOutputDeviceImpl extends AbstractOpenemsComponent imple
     }
 
     @Activate
-    public void activate(ComponentContext context, InputConfig config) {
+    public void activate(ComponentContext context, OutputConfig config) throws ConfigurationException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
+        allocateValuesForMap(config.voltageThreshold(), config.voltageThresholdValue());
         lucidControlBridge.addLucidControlTask(config.id(),
                 new LucidControlOutputTask(config.moduleId(), config.id(), lucidControlBridge.getPath(config.moduleId()),
                         lucidControlBridge.getVoltage(config.moduleId()), config.pinPos(),
-                        this.getPercentageChannel()));
+                        this.getPercentageChannel(), keyList, voltageThresholdMap));
+    }
+
+    private void allocateValuesForMap(double[] voltageThreshold, double[] voltageThresholdValue) throws ConfigurationException {
+        if (voltageThreshold.length > voltageThresholdValue.length) {
+            throw new ConfigurationException("Config Voltage Threshold and Their Values", "Not enough Thresholds!");
+        }
+        for (int x = 0; x < voltageThreshold.length; x++) {
+            this.keyList.add(x, voltageThreshold[x]);
+            voltageThresholdMap.put(voltageThreshold[x], voltageThresholdValue[x]);
+        }
     }
 
     @Deactivate

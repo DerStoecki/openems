@@ -22,6 +22,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Position", description = "Position of Device (0-3)")
     int pinPos() default 0;
 
+    @AttributeDefinition(name = "VoltageThreshold", description = "VoltageThreshold List: Given Value indicates extra Offset. Inputs as %")
+    double[] voltageThreshold() default {50};
+
+    @AttributeDefinition(name = "VoltageThreshold Value", description = "VoltageThreshold Offset Value added/substracted from % Value")
+    double[] voltageThresholdValue() default {0.5};
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "LucidControlDevice[{id}]";
