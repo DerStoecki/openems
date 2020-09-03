@@ -228,11 +228,20 @@ public class I2cBridgeImpl extends AbstractOpenemsComponent implements OpenemsCo
                     int digit = task.calculateDigit(4096);
 
                     if (digit <= 0) {
-                            gpio.setAlwaysOff(task.getPinPosition());
+                        gpio.setAlwaysOff(task.getPinPosition());
+                        if (task.hasLed()) {
+                            gpio.setAlwaysOn(task.ledPosition());
+                        }
                     } else if (digit >= 4095) {
-                            gpio.setAlwaysOn(task.getPinPosition());
+                        gpio.setAlwaysOn(task.getPinPosition());
+                        if (task.hasLed()) {
+                            gpio.setAlwaysOff(task.ledPosition());
+                        }
                     } else {
                         gpio.setPwm(task.getPinPosition(), digit);
+                        if (task.hasLed()) {
+                            gpio.setAlwaysOff(task.ledPosition());
+                        }
                     }
                 });
             });

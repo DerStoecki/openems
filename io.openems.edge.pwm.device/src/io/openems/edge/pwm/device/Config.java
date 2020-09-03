@@ -26,6 +26,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Is Inverse", description = "If the Device is powered at a low Flank set true")
     boolean isInverse() default false;
 
+    @AttributeDefinition(name = "Pwm LED Signal available", description = "Is a LED On the PWM Module available")
+    boolean hasLed() default false;
+
+    @AttributeDefinition(name = "Which PwmPosition has a LED", description = "Only if LED available")
+    int pinPositionLed() default 4;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Pwm Device [{id}]";

@@ -48,7 +48,7 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
         this.temperatureBoardId = config.temperatureBoardId();
         this.spiChannel = config.spiChannel();
         this.pinPosition = config.pinPosition();
-       this.getSignalType().setNextValue(config.signalType());
+        this.getSignalType().setNextValue(config.signalType());
         this.getSignalMessage().setNextValue(config.signalDescription());
         createSpiSignalTask();
     }
