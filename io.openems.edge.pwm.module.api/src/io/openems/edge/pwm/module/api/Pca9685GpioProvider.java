@@ -41,7 +41,7 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
     private BigDecimal frequency;
     private BigDecimal frequencyCorrectionFactor;
     private int periodDurationMicros;
-    private int maxPinPos = 7;
+    private int maxPinPos = 18;
     private boolean wasRemoved = false;
     private int address;
 
@@ -110,6 +110,13 @@ public class Pca9685GpioProvider extends AbstractPcaGpioProvider implements PcaG
         }
     }
 
+    /**
+     * sets the Pwm Signal.
+     *
+     * @param pinPos position of the Pwm Device
+     * @param offPos offPosition of the PwmSignal.
+     *               <p>  Note: On Position will be Set to 0 --> No Offset.</p>
+     */
     @Override
     public void setPwm(int pinPos, int offPos) {
         this.setPwm(pinPos, 0, offPos);

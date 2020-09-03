@@ -87,7 +87,7 @@ public class LucidControlOutputTask extends AbstractLucidControlBridgeTask imple
     }
 
     private double calculateAdaptedVoltage() {
-        double percent = this.percentChannel.value().get();
+        double percent = this.percentChannel.value().get() > 0 ? this.percentChannel.value().get() : 0;
         if (this.keyList.size() > 0) {
             AtomicBoolean wasSet = new AtomicBoolean();
             wasSet.set(false);

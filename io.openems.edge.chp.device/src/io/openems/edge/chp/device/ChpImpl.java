@@ -2,7 +2,6 @@ package io.openems.edge.chp.device;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
@@ -40,96 +39,16 @@ import java.util.List;
 @Component(name = "Chp",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true,
-        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)
-public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, EventHandler, Heater {
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
+public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsComponent, PowerLevel, ChpInformationChannel, Heater, EventHandler {
+
     private Mcp mcp;
     private ChpType chpType;
     private String accessMode;
     private int thermicalOutput;
     private int electricalOutput;
-    private final ChpErrorWorker chpErrorWorker = new ChpErrorWorker();
-    private String[] errorPossibilities = {
-            "Lüfter	gestört		",
-            "Kühlwasserpumpe	gestört		",
-            "Abgasgegendruck	max.		",
-            "Einspeiseschalter			",
-            "Externe	Störung		",
-            "Überdrehzahl			",
-            "Kühlwassertemperatur			",
-            "Abgastemperatur	max.		",
-            "			",
-            "Not-Stopp			",
-            "Ölstand	min.		",
-            "Kühlwasserdruck	min.		",
-            "Gasdruck	min.		",
-            "Sicherheitstemperatur			",
-            "Generatortemperatur			",
-            "Schallhaubentemperatur			",
-            "Zuschaltung	gestört		",
-            "Synchronisierung	gestört		",
-            "Drehzahl	<	50	/",
-            "Ölstand	max.		",
-            "Temperatur	Pt100_2	max.	",
-            "Temperatur	Pt100_3	max.	",
-            "Leistung	max.		",
-            "Rückleistung			",
-            "Abgastemperatur	min.		",
-            "Öldruck	min.		",
-            "Gasdruck	max.		",
-            "Heizwasserpumpe	gestört		",
-            "Anlassdrehzahl	<	50	Upm",
-            "Zünddrehzahl			",
-            "Drehzahlfenster			",
-            "Drehzahl	<	1200	Upm",
-            "Schaltuhr	Abwahl	Meldung	",
-            "Schaltuhr	Freigabe	Meldung	",
-            "Netzstörung	F	<	nicht",
-            "Netzstörung	F	>	nicht",
-            "Netzstörung	U+F	<>	nicht",
-            "Klopfen	Leistung	Min.	",
-            "Klopfen	Leistung	Max.	",
-            "Netzkuppelschalter			",
-            "Leistungsregler	gestört		",
-            "Lambdaregler	gestört		",
-            "Generatorschütz	gestört		",
-            "Zündung gestört			",
-            "Öldruck	gestört		",
-            "Lambda	Startposition		",
-            "Klopfen	EIN		",
-            "Klopfen	AUS		",
-            "Batterie	Unterspannung		",
-            "Generator	Unterspannung		",
-            "Generator	Überspannung		",
-            "Generator	Überstrom		",
-            "Generator	Schieflast		",
-            "Dichttest	gestört		",
-            "Netzschutz	gestört		",
-            "Sensoren	gestört		",
-            "Klopfen	Störung		",
-            "Netz	o.k.	Meldung	",
-            "Netzstörung	Warnung		",
-            "Temperatur	Abwahl	Meldung	",
-            "Temperatur	Freigabe	Meldung	",
-            "Wartung	überschritten		",
-            "Sicherheitsabschaltung			",
-            "Motor	steht	nicht	",
-            "Abgastemp. Differenz A/B			",
-            "Reserve			",
-            "Temp.	Rücklauf	max	PT100/2",
-            "Temp.	Heizwasser	max	PT100/3",
-            "Temp.	Motoröl	max	",
-            "Temp.	Gasgemisch	max	",
-            "Temp.	Gemischkühlwasser	max	",
-            "Reserve			",
-            "Abgastemperatur	A	max	",
-            "Abgastemperatur	A	min	",
-            "Abgastemperatur	B	max	",
-            "Abgastemperatur	B	min	",
-            "Abgastemperatur	C	max	",
-            "Abgastemperatur	C	min	",
-            "Abgastemperatur	D	max	",
-            "Abgastemperatur	D	min	"};
 
+    private String[] errorPossibilities = ErrorPossibilities.STANDARD_ERRORS.getErrorList();
 
     @Reference
     protected ConfigurationAdmin cm;
@@ -221,7 +140,6 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
                         config.percentageRange(), 4096.f, this.getPowerLevelChannel()));
             }
         }
-        this.chpErrorWorker.activate(config.id());
         this.accessMode = config.accesMode();
         this.thermicalOutput = Math.round(this.chpType.getThermalOutput());
         this.electricalOutput = Math.round(this.chpType.getElectricalOutput());
@@ -398,122 +316,81 @@ public class ChpImpl extends AbstractOpenemsModbusComponent implements OpenemsCo
     }
 
 
-    private class ChpErrorWorker extends AbstractCycleWorker {
+    private void forever() {
+        List<String> errorSummary = new ArrayList<>();
 
-        @Override
-        public void activate(String name) {
-            super.activate(name);
+        char[] allErrorsAsChar = generateErrorAsCharArray();
+
+        int errorMax = 80;
+        //int errorBitLength = 16;
+        for (int i = 0, errorListPosition = 0; i < errorMax; i++) {
+            if (allErrorsAsChar[i] == '1') {
+                errorSummary.add(errorListPosition, errorPossibilities[i]);
+                errorListPosition++;
+            }
+        }
+        //All occuring errors in openemsChannel.
+
+        if ((errorSummary.size() > 0)) {
+            getErrorChannel().setNextValue(errorSummary.toString());
+        } else {
+            getErrorChannel().setNextValue("No Errors found.");
         }
 
-        @Override
-        public void deactivate() {
-            super.deactivate();
+    }
+
+    private char[] generateErrorAsCharArray() {
+
+        String errorBitsAsString = "";
+        String dummyString = "0000000000000000";
+        if (getErrorOne().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorTwo().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorThree().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorFour().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorFive().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorSix().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorSeven().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
+        }
+        if (getErrorEight().getNextValue().isDefined()) {
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(" ", "0");
+        } else {
+            errorBitsAsString += dummyString;
         }
 
-
-        /**
-         * <pr>Due to possible ErrorLogs etc; a foreverMethod is needed or an AbstractCycleWorker to be concrete.
-         * <p>
-         * The Errors will be logged depending on the ErrorBits. All Errors possible are in the errorPossibilities array.
-         * <p>
-         * When all Errors are written in the errorSummary; the ErrorChannels will be Listed in the ErrorChannel.
-         * </p>
-         */
-
-        @Override
-        protected void forever() throws Throwable {
-
-            List<String> errorSummary = new ArrayList<>();
-
-            char[] allErrorsAsChar = generateErrorAsCharArray();
-
-            int errorMax = 80;
-            //int errorBitLength = 16;
-            for (int i = 0, errorListPosition = 0; i < errorMax; i++) {
-                if (allErrorsAsChar[i] == '1') {
-                    errorSummary.add(errorListPosition, errorPossibilities[i]);
-                    errorListPosition++;
-                }
-            }
-            //All occuring errors in openemsChannel.
-
-            if ((errorSummary.size() > 0)) {
-                getErrorChannel().setNextValue(errorSummary.toString());
-            } else {
-                getErrorChannel().setNextValue("No Errors found.");
-            }
-
-        }
-
-
-        /**
-         * <p>
-         * Gets all Errors of the ErrorBitChannels and writes them in a charArray.
-         * <p>
-         * Usually called by the forever() Method.
-         * <p>
-         * The 16 bit String is necessary to localize the correct Error etc.
-         * If Value is not Defined; the DummyString will be written.
-         *
-         * @return the errorBitArray.
-         * </p>
-         */
-        private char[] generateErrorAsCharArray() {
-
-            String errorBitsAsString = "";
-            String dummyString = "0000000000000000";
-            if (getErrorOne().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorTwo().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorThree().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorFour().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorFive().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorSix().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorSeven().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-            if (getErrorEight().getNextValue().isDefined()) {
-                errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(" ", "0");
-            } else {
-                errorBitsAsString += dummyString;
-            }
-
-            return errorBitsAsString.toCharArray();
-        }
-
-
+        return errorBitsAsString.toCharArray();
     }
 
     @Override
     public void handleEvent(Event event) {
-        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)) {
-            this.chpErrorWorker.triggerNextRun();
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
+            this.forever();
         }
     }
-
 }

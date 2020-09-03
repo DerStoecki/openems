@@ -58,8 +58,6 @@
 	bnd.identity;id='io.openems.edge.controller.csvwriter.emv',\
 	bnd.identity;id='io.openems.edge.controller.debug.detailedlog',\
 	bnd.identity;id='io.openems.edge.controller.debug.log',\
-	bnd.identity;id='io.openems.edge.controller.emvtest',\
-	bnd.identity;id='io.openems.edge.controller.emv.staticValues',\
 	bnd.identity;id='io.openems.edge.controller.ess.acisland',\
 	bnd.identity;id='io.openems.edge.controller.ess.delaycharge',\
 	bnd.identity;id='io.openems.edge.controller.ess.limitdischargecellvoltage',\
@@ -139,6 +137,7 @@
 	bnd.identity;id='io.openems.edge.meter.weidmueller',\
 	bnd.identity;id='io.openems.edge.onewire.thermometer',\
 	bnd.identity;id='io.openems.edge.thermometer.api',\
+	bnd.identity;id='io.openems.edge.powerplant.analog.api',\
 	bnd.identity;id='io.openems.edge.predictor.persistencemodel',\
 	bnd.identity;id='io.openems.edge.pvinverter.kaco.blueplanet',\
 	bnd.identity;id='io.openems.edge.pvinverter.solarlog',\
@@ -222,8 +221,6 @@
 	io.openems.edge.controller.csvwriter.emv;version=snapshot,\
 	io.openems.edge.controller.debug.detailedlog;version=snapshot,\
 	io.openems.edge.controller.debug.log;version=snapshot,\
-    io.openems.edge.controller.emvtest;version=snapshot,\
-	io.openems.edge.controller.emv.staticValues;version=snapshot,\
 	io.openems.edge.controller.ess.acisland;version=snapshot,\
 	io.openems.edge.controller.ess.delaycharge;version=snapshot,\
 	io.openems.edge.controller.ess.limitdischargecellvoltage;version=snapshot,\
@@ -304,6 +301,7 @@
 	io.openems.edge.meter.virtual;version=snapshot,\
 	io.openems.edge.meter.weidmueller;version=snapshot,\
 	io.openems.edge.onewire.thermometer;version=snapshot,\
+	io.openems.edge.powerplant.analog;version=snapshot,\
 	io.openems.edge.pvinverter.solarlog;version=snapshot,\
 	io.openems.edge.pvinverter.sunspec;version=snapshot,\
 	io.openems.edge.pwm.device;version=snapshot,\
