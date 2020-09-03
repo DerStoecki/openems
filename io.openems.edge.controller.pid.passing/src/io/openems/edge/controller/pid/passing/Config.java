@@ -17,7 +17,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human Readable Name of Component.")
     String alias() default "";
 
-    @AttributeDefinition(name = "Allocated Passing Controller", description = "Unique Id of the Passing Controller")
+    @AttributeDefinition(name = "Dependency : what component can block this Controller", description = "Component that can block this component")
     String passingControllerId() default "PassingController0";
 
 

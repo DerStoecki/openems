@@ -140,9 +140,9 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
      * @return a boolean depending if heat is reached or not.
      */
     private boolean heatingReached() {
-        if (passing.getMinTemperature().getNextWriteValue().isPresent()) {
+        if (passing.getMinTemperature().value().isDefined()) {
             return this.temperatureSensor.stream().noneMatch(
-                    thermometer -> thermometer.getTemperature().getNextValue().get() <= passing.getMinTemperature().getNextWriteValue().get());
+                    thermometer -> thermometer.getTemperature().getNextValue().get() <= passing.getMinTemperature().value().get());
 
         }
         return true;

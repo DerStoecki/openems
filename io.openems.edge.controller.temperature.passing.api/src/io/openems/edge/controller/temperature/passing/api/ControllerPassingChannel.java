@@ -6,24 +6,15 @@ import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.temperature.passing.api.PassingActivateNature;
 
-public interface ControllerPassingChannel extends OpenemsComponent {
+public interface ControllerPassingChannel extends PassingActivateNature {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-
-        /**
-         * ActivateOrNot.
-         * <ul>
-         * <li>Interface: ControllerPassingChannel
-         * <li>Type: boolean
-         * <li>Unit: ON_OFF
-         * </ul>
-         */
-
-        ON_OFF(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE)), //
 
         /**
          * Min Temperature.
@@ -34,7 +25,9 @@ public interface ControllerPassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        MIN_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
+        MIN_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE).onInit(
+                channel -> ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue)
+        )),
 
         /**
          * Is Error.
@@ -67,14 +60,6 @@ public interface ControllerPassingChannel extends OpenemsComponent {
 
     }
 
-    /**
-     * Activate/Deactivate the Passing Station.
-     *
-     * @return the Channel
-     */
-    default WriteChannel<Boolean> getOnOff_PassingController() {
-        return this.channel(ChannelId.ON_OFF);
-    }
 
     /**
      * Min Temperature you want to reach / check if it can be reached.
