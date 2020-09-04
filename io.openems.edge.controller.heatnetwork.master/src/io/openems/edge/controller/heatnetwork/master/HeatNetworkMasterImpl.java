@@ -7,6 +7,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.heatnetwork.master.api.HeatNetworkMaster;
+import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenterChannel;
 import io.openems.edge.rest.remote.device.general.api.RestRemoteDevice;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -31,7 +32,8 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
 
     private List<RestRemoteDevice> heatTankRequests = new ArrayList<>();
     private List<RestRemoteDevice> heatNetworkReady = new ArrayList<>();
-    private Object allocatedController;
+    private PassingControlCenterChannel allocatedController;
+    private int lastTemperature;
 
 
     public HeatNetworkMasterImpl() {
@@ -78,10 +80,10 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
             throw exC[0];
         }
         //TODO IMPLEMENT CONCRETE CONTROLLER
-        if (cpm.getComponent(config.allocatedController()) != null) {
+        if (cpm.getComponent(config.allocatedController()) instanceof PassingControlCenterChannel) {
             this.allocatedController = cpm.getComponent(config.allocatedController());
         }
-            this.temperatureSetPointChannel().setNextValue(config.temperatureSetPoint());
+        this.temperatureSetPointChannel().setNextValue(config.temperatureSetPoint());
 
     }
 
@@ -95,16 +97,27 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
     public void run() throws OpenemsError.OpenemsNamedException {
         //NO DEMAND!
         if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("true"))) {
-            //TODO CONTROLLER OFF ---> IS READY will be set internally to false
             this.heatNetworkReady.forEach(consumer -> consumer.setValue("false"));
+            this.lastTemperature = -1;
+
         } else {
-            //if(CONTROLLER OFFLINE){
-            // SET CONTROLLER ONLINE
-			//	return;
-			// }
-            //else if(CONTROLLER IS READY){
-            this.heatNetworkReady.forEach(consumer -> consumer.setValue("true"));
-            // }
+
+            if (this.temperatureSetPointChannel().value().isDefined()) {
+
+                if (!this.allocatedController.activateTemperatureOverride().value().get()) {
+                    this.allocatedController.activateTemperatureOverride().setNextValue(true);
+                    this.allocatedController.setOverrideTemperature().setNextWriteValue(this.temperatureSetPointChannel().value().get());
+                    this.heatNetworkReady.forEach(consumer -> consumer.setValue("true"));
+                    lastTemperature = this.temperatureSetPointChannel().value().get();
+                    return;
+
+                } else if (this.allocatedController.activateTemperatureOverride().value().get() && (this.temperatureSetPointChannel().value().get() != lastTemperature)) {
+                    this.allocatedController.setOverrideTemperature().setNextWriteValue(temperatureSetPointChannel().value().get());
+                    lastTemperature = this.temperatureSetPointChannel().value().get();
+                    // }
+                }
+            }
         }
+
     }
 }

@@ -14,9 +14,9 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
 
 
     public RestRemoteWriteTask(String remoteDeviceId, String realDeviceId,
-                               String deviceChannel, boolean autoAdapt, WriteChannel<String> value, String deviceType,
+                               String deviceChannel,  WriteChannel<String> value, String deviceType,
                                WriteChannel<Boolean> allowRequest, Channel<String> unit) {
-        super(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, deviceType, unit);
+        super(remoteDeviceId, realDeviceId, deviceChannel,  deviceType, unit);
 
         this.value = value;
         this.allowRequest = allowRequest;
@@ -39,19 +39,7 @@ public class RestRemoteWriteTask extends AbstractRestRemoteDeviceTask implements
 
             if (this.value.getNextValue().isDefined()) {
                 String msg = "{\"value\":";
-                if (super.isAutoAdapt()) {
-                    if (super.isInverse) {
-                        if (this.value.getNextValue().get().toLowerCase().equals("true")) {
-                            msg += "false}";
-                        } else if (this.value.getNextValue().get().toLowerCase().equals("false")) {
-                            msg += "true}";
-                        }
-                    } else {
-                        msg += this.value.getNextValue().get() + "}";
-                    }
-                } else {
                     msg += this.value.getNextValue().get() + "}";
-                }
                 return msg;
 
             }

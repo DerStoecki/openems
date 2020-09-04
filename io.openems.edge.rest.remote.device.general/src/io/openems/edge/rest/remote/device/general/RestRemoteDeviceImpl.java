@@ -45,7 +45,7 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
                 this.restBridgeId = config.restBridgeId();
 
                 restBridge.addRestRequest(super.id(), createNewTask(config.deviceType(), config.deviceChannel(),
-                        config.id(), config.realDeviceId(), config.autoAdapt(), config.deviceMode()));
+                        config.id(), config.realDeviceId(), config.deviceMode()));
             } else {
                 throw new ConfigurationException(config.restBridgeId(), "Master Slave Id Incorrect or not configured yet!");
             }
@@ -61,13 +61,12 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
      * @param deviceChannel  usually from Config, declares the Channel of the actual Device you want to access.
      * @param remoteDeviceId usually from Config, is the Remote Device Id.
      * @param realDeviceId   usually from Config, is the Unique Id of the Device you want to access.
-     * @param autoAdapt      usually from Config, just a boolean if the Device should AutoAdapt or not.(only Relays is supported).
      * @param deviceMode     usually from Config, declares if you want to Read or Write.
      * @return RestRequest if creation of Instance was successful.
      * @throws ConfigurationException if TemperatureSensor is set to Write; or if an impossible Case occurs (deviceMode neither Read/Write)
      */
     private RestRequest createNewTask(String deviceType, String deviceChannel, String remoteDeviceId,
-                                      String realDeviceId, boolean autoAdapt, String deviceMode) throws ConfigurationException {
+                                      String realDeviceId, String deviceMode) throws ConfigurationException {
 
         if (deviceMode.equals("Write")) {
 
@@ -76,14 +75,14 @@ public class RestRemoteDeviceImpl extends AbstractOpenemsComponent implements Op
                         + " TemperatureSensor does not support Write Tasks!");
             } else {
                 this.getTypeSet().setNextValue("Write");
-                task = new RestRemoteWriteTask(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt, getWriteValue(),
+                task = new RestRemoteWriteTask(remoteDeviceId, realDeviceId, deviceChannel, getWriteValue(),
                         deviceType, this.getAllowRequest(), this.getUnit());
                 return task;
             }
         } else if (deviceMode.equals("Read")) {
             this.getTypeSet().setNextValue("Read");
             //String deviceId, String masterSlaveId, boolean master, String realTemperatureSensor, Channel<Integer> temperature
-            task = new RestRemoteReadTask(remoteDeviceId, realDeviceId, deviceChannel, autoAdapt,
+            task = new RestRemoteReadTask(remoteDeviceId, realDeviceId, deviceChannel,
                     getReadValue(), deviceType, this.getUnit());
             return task;
         }
