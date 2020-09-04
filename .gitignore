@@ -270,3 +270,5 @@ buildfiles
 io.openems.edge.biomassheater/generated/
 
 io.openems.common/src/io/openems/common/OpenemsConstants.java
+
+io.openems.edge.controller.heatnetwork.master/bnd.bnd
