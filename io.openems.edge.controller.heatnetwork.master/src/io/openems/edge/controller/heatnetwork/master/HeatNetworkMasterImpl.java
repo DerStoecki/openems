@@ -79,12 +79,13 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         } else if (exC[0] != null) {
             throw exC[0];
         }
-        //TODO IMPLEMENT CONCRETE CONTROLLER
+
         if (cpm.getComponent(config.allocatedController()) instanceof PassingControlCenterChannel) {
             this.allocatedController = cpm.getComponent(config.allocatedController());
         }
         this.temperatureSetPointChannel().setNextValue(config.temperatureSetPoint());
-
+        this.allocatedController.setOverrideTemperature().setNextWriteValue(config.temperatureSetPoint());
+        this.allocatedController.activateTemperatureOverride().setNextWriteValue(false);
     }
 
     @Deactivate
@@ -96,7 +97,9 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //NO DEMAND!
-        if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("true"))) {
+        System.out.println("Run Start");
+
+        if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("1"))) {
             this.heatNetworkReady.forEach(consumer -> consumer.setValue("false"));
             this.lastTemperature = -1;
             this.allocatedController.activateTemperatureOverride().setNextWriteValue(false);
@@ -104,18 +107,19 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         } else {
 
             if (this.temperatureSetPointChannel().value().isDefined()) {
+                if (this.allocatedController.activateTemperatureOverride().value().isDefined()) {
+                    if (!this.allocatedController.activateTemperatureOverride().value().get()) {
+                        this.allocatedController.activateTemperatureOverride().setNextValue(true);
+                        this.allocatedController.setOverrideTemperature().setNextWriteValue(this.temperatureSetPointChannel().value().get());
+                        this.heatNetworkReady.forEach(consumer -> consumer.setValue("true"));
+                        lastTemperature = this.temperatureSetPointChannel().value().get();
+                        return;
 
-                if (!this.allocatedController.activateTemperatureOverride().value().get()) {
-                    this.allocatedController.activateTemperatureOverride().setNextValue(true);
-                    this.allocatedController.setOverrideTemperature().setNextWriteValue(this.temperatureSetPointChannel().value().get());
-                    this.heatNetworkReady.forEach(consumer -> consumer.setValue("true"));
-                    lastTemperature = this.temperatureSetPointChannel().value().get();
-                    return;
-
-                } else if (this.allocatedController.activateTemperatureOverride().value().get() && (this.temperatureSetPointChannel().value().get() != lastTemperature)) {
-                    this.allocatedController.setOverrideTemperature().setNextWriteValue(temperatureSetPointChannel().value().get());
-                    lastTemperature = this.temperatureSetPointChannel().value().get();
-                    // }
+                    } else if (this.allocatedController.activateTemperatureOverride().value().get() && (this.temperatureSetPointChannel().value().get() != lastTemperature)) {
+                        this.allocatedController.setOverrideTemperature().setNextWriteValue(temperatureSetPointChannel().value().get());
+                        lastTemperature = this.temperatureSetPointChannel().value().get();
+                        // }
+                    }
                 }
             }
         }
