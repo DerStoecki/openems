@@ -23,10 +23,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String[] readyResponse() default {"RestRemoteDevice1"};
 
     @AttributeDefinition(name = "Heatnetwork Heater Id", description = "Allocated Controller Id")
-    String allocatedController() default "HeatNetworkController0";
-
-    @AttributeDefinition(name = "ControlCenter ID", description = "Allocated Controlcenter Id For SetPoint Temperature")
-    String allocatedControlCenterId() default "ControlCenter0";
+    String allocatedController() default "ControlCenter0";
 
     @AttributeDefinition(name = "Set Point Temperature", description = "Temperature to be set when HeatingRequest is incoming: Unit is dC.")
             int temperatureSetPoint() default 800;

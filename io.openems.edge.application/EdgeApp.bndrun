@@ -65,7 +65,9 @@
 	bnd.identity;id='io.openems.edge.controller.ess.onefullcycle',\
 	bnd.identity;id='io.openems.edge.controller.evcs',\
 	bnd.identity;id='io.openems.edge.controller.evcs.fixactivepower',\
+	bnd.identity;id='io.openems.edge.controller.neatnetwork.master',\
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
+	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
 	bnd.identity;id='io.openems.edge.controller.pump.grundfos',\
 	bnd.identity;id='io.openems.edge.controller.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
@@ -228,6 +230,8 @@
 	io.openems.edge.controller.ess.onefullcycle;version=snapshot,\
 	io.openems.edge.controller.evcs;version=snapshot,\
 	io.openems.edge.controller.evcs.fixactivepower;version=snapshot,\
+	io.openems.edge.controller.heatnetwork.master;version=snapshot,\
+	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
 	io.openems.edge.controller.pump.grundfos;version=snapshot,\
 	io.openems.edge.controller.pump.grundfos.api;version=snapshot,\
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\

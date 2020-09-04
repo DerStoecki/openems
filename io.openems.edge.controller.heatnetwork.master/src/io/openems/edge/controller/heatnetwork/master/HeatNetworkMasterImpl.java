@@ -99,6 +99,7 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("true"))) {
             this.heatNetworkReady.forEach(consumer -> consumer.setValue("false"));
             this.lastTemperature = -1;
+            this.allocatedController.activateTemperatureOverride().setNextWriteValue(false);
 
         } else {
 
