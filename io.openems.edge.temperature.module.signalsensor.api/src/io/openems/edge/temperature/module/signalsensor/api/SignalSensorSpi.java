@@ -56,7 +56,9 @@ public interface SignalSensorSpi extends OpenemsComponent {
 
     /**
      * Gets the Error Message.
-     *
+     * Status
+     * Error
+     * Fault Message
      * @return the Channel
      */
     default Channel<String> getSignalMessage() {

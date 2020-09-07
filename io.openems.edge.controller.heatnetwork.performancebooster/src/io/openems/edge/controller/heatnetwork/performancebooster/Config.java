@@ -22,6 +22,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "MaxTemperatureSetPoint", description = "Max Temperature --> max threshold in dC! for Buffer")
     int maxTemp() default 500;
 
+    @AttributeDefinition(name = "MaxLiter in Buffer", description = "Max Litres in Buffer possible")
+    int litres() default 6000;
+
+    @AttributeDefinition(name = "Max Buffer Threshold", description = "Max Percentage Buffer Threshold in %")
+    int maxBufferThreshold() default 120;
+
     @AttributeDefinition(name = "Heat Mixer SetPoint", description = "Percentage Value of Valve when Controller activates.")
     int valvePercent() default 48;
 
@@ -42,7 +48,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Temperature Reference SetPoint", description = "Temperature for Activation")
     int activationTemp() default 450;
-    @AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Primary Forward")
+
+    @AttributeDefinition(name = "TemperatureSensors at SecondaryHeater", description = "Like Primary/Secondary Forward/Rewind-->ORDER: pF,pR,sF,sR")
+    String [] primaryAndSecondary() default {"TemperatureSensor8"};
+
+
+    /*@AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Primary Forward")
     String primaryForward() default "TemperatureSensor8";
 
     @AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Primary Rewind")
@@ -53,6 +64,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Secondary Rewind")
     String secondaryRewind() default "TemperatureSensor11";
+    */
 
     @AttributeDefinition(name = "ErrorInputHeater Type 2", description = "ErrorInputs via SignalSensorSpi for Heater Type 2 ( e.g. BiomassHeater).")
     String[] errorInputHeater1() default {"SignalSensorSpi3", "SignalSensorSpi4"};
@@ -63,8 +75,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Heat Mixer (== Valve)", description = "Temperature to be set when HeatingRequest is incoming: Unit is dC.")
     String valve() default "Valve0";
 
-    @AttributeDefinition(name = "LucidControl Devices", description = "Position on LucidControl where Gasboiler are connected to.")
-    String[] heaters() default {"LucidControlDeviceOutput0, LucidControlDeviceOutput1, LucidControlDeviceOutput2"};
+    @AttributeDefinition(name = "HeaterIds Controlled by Relay or 10V", description = "Id of Devices on Relay or 0-10V module.")
+    String[] heaters() default {"Relay0, LucidControlDeviceOutput1, LucidControlDeviceOutput2"};
+
 
     boolean enabled() default true;
 

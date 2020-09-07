@@ -13,6 +13,7 @@ import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.heatnetwork.performancebooster.api.HeatnetworkPerformanceBooster;
 import io.openems.edge.heater.api.Buffer;
 import io.openems.edge.lucidcontrol.device.api.LucidControlDeviceOutput;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.module.signalsensor.api.SignalSensorSpi;
 import io.openems.edge.temperature.passing.api.PassingActivateNature;
 import io.openems.edge.temperature.passing.valve.api.Valve;
@@ -37,12 +38,14 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     private List<SignalSensorSpi> heaterFallbackSignalSensors = new ArrayList<>();
     private List<SignalSensorSpi> heaterPrimarySignalSensors = new ArrayList<>();
     private List<LucidControlDeviceOutput> heaterControl = new ArrayList<>();
+    private List<ActuatorRelaysChannel> heaterControlRelay = new ArrayList<>();
     private Valve heatMixer;
     private Thermometer referenceThermometer;
     private Thermometer primaryForward;
     private Thermometer primaryRewind;
     private Thermometer secondaryForward;
     private Thermometer secondaryRewind;
+    private int deltaT;
 
 
     public HeatnetworkPerformanceBoosterImpl() {
@@ -66,21 +69,42 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         this.heaterSetPointStandard().setNextValue(config.backUpPercent());
         this.heaterSetPointAddition().setNextValue(config.backUpPercentAdditional());
         this.temperatureSetPoint().setNextValue(config.activationTemp());
+        this.storageLitreMax().setNextValue(config.litres());
+        this.bufferSetPointMaxPercent().setNextValue(config.maxBufferThreshold());
 
-
+        allocatePrimaryAndSecondary(config.primaryAndSecondary());
         allocateComponents(config.thermometer(), "Thermometer");
-        allocateComponent(config.primaryForward(), "pF");
-        allocateComponent(config.secondaryForward(), "sF");
-        allocateComponent(config.primaryRewind(), "pR");
-        allocateComponent(config.secondaryRewind(), "sR");
         allocateComponent(config.referenceThermometer(), "ref");
         allocateComponents(config.errorInputHeater1(), "Heater1");
         allocateComponents(config.errorInputHeater2(), "Heater2");
         allocateComponent(config.valve(), "Valve");
-        allocateComponents(config.heaters(), "Lucid");
+        allocateComponents(config.heaters(), "LucidOrRelay");
+
         this.getOnOff().setNextValue(false);
+        this.deltaT = config.maxTemp() - config.minTemp();
+
     }
 
+    private void allocatePrimaryAndSecondary(String[] primaryAndSecondary) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        for (int x = 0; x < primaryAndSecondary.length; x++) {
+            String identifier = "";
+            switch (x) {
+                case 0:
+                    identifier = "pF";
+                    break;
+                case 1:
+                    identifier = "pR";
+                    break;
+                case 2:
+                    identifier = "sF";
+                    break;
+                case 3:
+                    identifier = "sR";
+                    break;
+            }
+            this.allocateComponent(primaryAndSecondary[x], identifier);
+        }
+    }
 
     private void allocateComponents(String[] components, String type) throws ConfigurationException, OpenemsError.OpenemsNamedException {
         ConfigurationException[] ex = {null};
@@ -109,10 +133,11 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
                                     ex[0] = new ConfigurationException(comp, "Not A SignalSensor");
                                 }
                                 break;
-
-                            case "Lucid":
+                            case "LucidOrRelay":
                                 if (cpm.getComponent(comp) instanceof LucidControlDeviceOutput) {
                                     this.heaterControl.add(cpm.getComponent(comp));
+                                } else if (cpm.getComponent(comp) instanceof ActuatorRelaysChannel) {
+                                    this.heaterControlRelay.add(cpm.getComponent(comp));
                                 } else {
                                     ex[0] = new ConfigurationException(comp, "Not A LucidControlDevice");
                                 }
@@ -120,7 +145,6 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
                             default:
                                 ex[0] = new ConfigurationException("This shouldn't occur", "Shouldn't occure");
                         }
-
                     } catch (OpenemsError.OpenemsNamedException e) {
                         exNamed[0] = e;
                     }
@@ -172,22 +196,89 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
+        averageTemperatureCalculation();
+        assignCurrentTemperature();
+        boolean shouldActivate = this.referenceThermometer.getTemperature().value().get() < this.temperatureSetPoint().value().get();
+        //next Value bc of averageTemperatureCalculation
+        boolean shouldDeactivate = (this.storagePercent().getNextValue().get() <= this.bufferSetPointMaxPercent().value().get())
+                && (this.referenceThermometer.getTemperature().value().get() > this.temperatureSetPointMax().value().get());
+        this.getOnOff().setNextValue(shouldActivate);
+        if (shouldActivate == true) {
+            AtomicInteger percentIncreaseValve = new AtomicInteger(this.valveSetPointStandard().value().get());
+            AtomicInteger percentIncreaseFallbackHeater = new AtomicInteger(this.heaterSetPointStandard().value().get());
+            this.heaterPrimarySignalSensors.forEach(signalSensorSpi -> {
+                if (signalSensorSpi.signalActive().value().get() == false) {
+                    percentIncreaseValve.getAndAdd(this.valveSetPointAddition().value().get());
+                    percentIncreaseFallbackHeater.getAndAdd(this.heaterSetPointAddition().value().get());
+                }
+            });
+            this.heatMixer.changeByPercentage(percentIncreaseValve.get());
+            this.heaterControl.forEach(lucid -> lucid.getPercentageChannel().setNextValue(percentIncreaseFallbackHeater.get()));
+            this.heaterControlRelay.forEach(relay -> {
+                try {
+                    relay.getRelaysChannel().setNextWriteValue(true);
+                } catch (OpenemsError.OpenemsNamedException e) {
+                    e.printStackTrace();
+                }
+            });
 
-        int avg = averageTemperatureCalculation();
+        }
+        if (shouldDeactivate == true) {
 
+            this.getOnOff().setNextValue(false);
+            this.heatMixer.forceClose();
+            this.heaterControl.forEach(lucid -> {
+                lucid.getPercentageChannel().setNextValue(0);
+            });
+            this.heaterControlRelay.forEach(relay -> {
+                try {
+                    relay.getRelaysChannel().setNextWriteValue(false);
+                } catch (OpenemsError.OpenemsNamedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
 
 
     }
 
-    private int averageTemperatureCalculation() {
-        AtomicInteger temp = new AtomicInteger(0);
+    private void assignCurrentTemperature() {
+        this.getPrimaryForward().setNextValue(this.primaryForward.getTemperature().value().get());
+        this.getPrimaryRewind().setNextValue(this.primaryRewind.getTemperature().value().get());
+        this.getSecondaryForward().setNextValue(this.secondaryForward.getTemperature().value().get());
+        this.getSecondaryRewind().setNextValue(this.secondaryRewind.getTemperature().value().get());
+    }
+
+    private void averageTemperatureCalculation() {
+
+        AtomicInteger tempAverage = new AtomicInteger(0);
+
+        AtomicInteger minTemp = new AtomicInteger(Integer.MAX_VALUE);
+        AtomicInteger maxTemp = new AtomicInteger(Integer.MIN_VALUE);
+
         this.thermometerList.forEach(thermometer -> {
             if (thermometer.getTemperature().value().isDefined()) {
-                temp.getAndAdd(thermometer.getTemperature().value().get());
+                int temperature = thermometer.getTemperature().value().get();
+                tempAverage.getAndAdd(temperature);
+                if (temperature > maxTemp.get()) {
+                    maxTemp.set(temperature);
+                }
+                if (temperature < minTemp.get()) {
+                    minTemp.set(temperature);
+                }
             }
         });
 
-        temp.set(temp.get() / this.thermometerList.size());
-        return temp.get();
+        tempAverage.set(tempAverage.get() / this.thermometerList.size());
+        this.maxTemperature().setNextValue(maxTemp.get());
+        this.minTemperature().setNextValue(minTemp.get());
+        this.averageTemperature().setNextValue(tempAverage.get());
+        int w = tempAverage.get() - this.temperatureSetPointMin().value().get();
+        //can change during runtime
+        deltaT = this.temperatureSetPointMax().value().get() - this.temperatureSetPointMin().value().get();
+        int percentage = ((100 * w) / deltaT);
+        this.storagePercent().setNextValue(percentage);
+        this.storageEnergy().setNextValue(this.storageLitreMax().value().get() * deltaT * percentage);
+        this.storageLitresCurrent().setNextValue(percentage * this.storageLitreMax().value().get() / 100);
     }
 }

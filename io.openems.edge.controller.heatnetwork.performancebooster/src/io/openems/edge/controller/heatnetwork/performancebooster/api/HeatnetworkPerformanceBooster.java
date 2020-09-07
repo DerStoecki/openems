@@ -3,6 +3,7 @@ package io.openems.edge.controller.heatnetwork.performancebooster.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.WriteChannel;
@@ -76,11 +77,55 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
         SET_POINT_HEATER_PERCENT_ADDITION(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(
                 channel -> {
                     ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
-                }));
+                })),
+        /**
+         * Primary Forward Temperature.
+         *
+         * <ul>
+         * <li>Interface: HeatnetworkPerformanceBooster
+         * <li>Type: Integer
+         * <li>Unit: dezidegree celsius
+         * </ul>
+         */
+        PRIMARY_FORWARD(Doc.of(OpenemsType.INTEGER) //
+                .unit(Unit.DEZIDEGREE_CELSIUS)),
+        /**
+         * Primary Rewind Temperature.
+         *
+         * <ul>
+         * <li>Interface: HeatnetworkPerformanceBooster
+         * <li>Type: Integer
+         * <li>Unit: dezidegree celsius
+         * </ul>
+         */
+        PRIMARY_REWIND(Doc.of(OpenemsType.INTEGER) //
+                .unit(Unit.DEZIDEGREE_CELSIUS)),
+        /**
+         * Secondary Forward Temperature.
+         *
+         * <ul>
+         * <li>Interface: HeatnetworkPerformanceBooster
+         * <li>Type: Integer
+         * <li>Unit: dezidegree celsius
+         * </ul>
+         */
+        SECONDARY_FORWARD(Doc.of(OpenemsType.INTEGER) //
+                .unit(Unit.DEZIDEGREE_CELSIUS)),
+        /**
+         * Secondary Rewind Temperature.
+         *
+         * <ul>
+         * <li>Interface: HeatnetworkPerformanceBooster
+         * <li>Type: Integer
+         * <li>Unit: dezidegree celsius
+         * </ul>
+         */
+        SECONDARY_REWIND(Doc.of(OpenemsType.INTEGER) //
+                .unit(Unit.DEZIDEGREE_CELSIUS));
 
         private final Doc doc;
 
-        private ChannelId(Doc doc) {
+        ChannelId(Doc doc) {
             this.doc = doc;
         }
 
@@ -88,8 +133,42 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
         public Doc doc() {
             return this.doc;
         }
+    }
 
+    /**
+     * Gets the Temperature in [degree celsius].
+     *
+     * @return the Channel
+     */
+    default Channel<Integer> getPrimaryForward() {
+        return this.channel(ChannelId.PRIMARY_FORWARD);
+    }
 
+    /**
+     * Gets the Temperature in [degree celsius].
+     *
+     * @return the Channel
+     */
+    default Channel<Integer> getPrimaryRewind() {
+        return this.channel(ChannelId.PRIMARY_REWIND);
+    }
+
+    /**
+     * Gets the Temperature in [degree celsius].
+     *
+     * @return the Channel
+     */
+    default Channel<Integer> getSecondaryForward() {
+        return this.channel(ChannelId.SECONDARY_FORWARD);
+    }
+
+    /**
+     * Gets the Temperature in [degree celsius].
+     *
+     * @return the Channel
+     */
+    default Channel<Integer> getSecondaryRewind() {
+        return this.channel(ChannelId.SECONDARY_REWIND);
     }
 
     default WriteChannel<Integer> temperatureSetPoint() {

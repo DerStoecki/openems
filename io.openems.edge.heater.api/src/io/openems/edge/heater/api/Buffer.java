@@ -40,6 +40,11 @@ public interface Buffer extends OpenemsComponent {
                     ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 }
         )),
+        SET_POINT_BUFFER_MAX_PERCENT(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(
+                channel -> {
+                    ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
+                }
+        )),
 
         STORAGE_LEVEL_PERCENT(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY).unit(Unit.PERCENT)),
         STORAGE_LITRES_MAX(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_ONLY).unit(Unit.LITRES)),
@@ -73,6 +78,10 @@ public interface Buffer extends OpenemsComponent {
 
     default WriteChannel<Integer> temperatureSetPointMax() {
         return this.channel(ChannelId.SET_POINT_TEMPERATURE_MAX);
+    }
+
+    default WriteChannel<Integer> bufferSetPointMaxPercent() {
+        return this.channel(ChannelId.SET_POINT_BUFFER_MAX_PERCENT);
     }
 
     default Channel<Integer> storagePercent() {
