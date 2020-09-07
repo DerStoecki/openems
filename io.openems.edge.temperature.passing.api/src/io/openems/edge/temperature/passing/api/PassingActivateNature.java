@@ -42,7 +42,7 @@ public interface PassingActivateNature extends OpenemsComponent {
      *
      * @return the Channel
      */
-    default WriteChannel<Boolean> getOnOff_PassingController() {
+    default WriteChannel<Boolean> getOnOff() {
         return this.channel(ChannelId.ON_OFF);
     }
 }

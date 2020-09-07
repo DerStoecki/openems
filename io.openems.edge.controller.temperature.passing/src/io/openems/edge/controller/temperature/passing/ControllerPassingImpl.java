@@ -105,7 +105,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        this.getOnOff_PassingController().setNextValue(false);
+        this.getOnOff().setNextValue(false);
         this.valve.forceClose();
         this.pump.changeByPercentage(-100);
     }
@@ -122,9 +122,9 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (this.getMinTemperature().value().isDefined()
-                && this.getOnOff_PassingController().value().isDefined()) {
+                && this.getOnOff().value().isDefined()) {
             if (this.noError().value().get()
-                    && this.getOnOff_PassingController().value().get()) {
+                    && this.getOnOff().value().get()) {
                 try {
                     if (!isOpen) {
                         if (isClosed && valve.readyToChange()) {
