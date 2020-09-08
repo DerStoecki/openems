@@ -66,8 +66,9 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         this.temperatureSetPointMax().setNextValue(config.maxTemp());
         this.valveSetPointStandard().setNextValue(config.valvePercent());
         this.valveSetPointAddition().setNextValue(config.valvePercentAdditional());
+        this.valveSetPointSubtraction().setNextValue(config.backUpPercentHeater2Error());
         this.heaterSetPointStandard().setNextValue(config.backUpPercent());
-        this.heaterSetPointAddition().setNextValue(config.backUpPercentAdditional());
+        this.heaterSetPointAddition().setNextValue(config.backUpPercentAdditionalHeater1Error());
         this.temperatureSetPoint().setNextValue(config.activationTemp());
         this.storageLitreMax().setNextValue(config.litres());
         this.bufferSetPointMaxPercent().setNextValue(config.maxBufferThreshold());
@@ -76,7 +77,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         allocateComponents(config.thermometer(), "Thermometer");
         allocateComponent(config.referenceThermometer(), "ref");
         allocateComponents(config.errorInputHeater1(), "Heater1");
-        allocateComponents(config.errorInputHeater2(), "Heater2");
+        allocateComponents(config.backUpPercentHeater2Error(), "Heater2");
         allocateComponent(config.valve(), "Valve");
         allocateComponents(config.heaters(), "LucidOrRelay");
 
@@ -207,9 +208,14 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
             AtomicInteger percentIncreaseValve = new AtomicInteger(this.valveSetPointStandard().value().get());
             AtomicInteger percentIncreaseFallbackHeater = new AtomicInteger(this.heaterSetPointStandard().value().get());
             this.heaterPrimarySignalSensors.forEach(signalSensorSpi -> {
-                if (signalSensorSpi.signalActive().value().get() == false) {
+                if (signalSensorSpi.signalActive().value().get() == true) {
                     percentIncreaseValve.getAndAdd(this.valveSetPointAddition().value().get());
                     percentIncreaseFallbackHeater.getAndAdd(this.heaterSetPointAddition().value().get());
+                }
+            });
+            this.heaterFallbackSignalSensors.forEach(signalSensorSpi -> {
+                if (signalSensorSpi.signalActive().value().get() == true) {
+                    percentIncreaseValve.getAndAdd(this.valveSetPointSubtraction().value().get());
                 }
             });
             this.heatMixer.changeByPercentage(percentIncreaseValve.get());

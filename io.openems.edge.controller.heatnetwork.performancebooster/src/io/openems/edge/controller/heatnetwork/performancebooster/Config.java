@@ -38,7 +38,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     int backUpPercent() default 30;
 
     @AttributeDefinition(name = "Percent Increase Performance", description = "Additional Percentage Increase if Error occurred in Primary Heater.")
-    int backUpPercentAdditional() default 20;
+    int backUpPercentAdditionalHeater1Error() default 20;
+
+    @AttributeDefinition(name = "Percent Increase Performance Heater 2 Error", description = "If Secondary Heater got a Error this Percent will In/Decrease (negative Numbers if it should decrease).")
+    int backUpPercentAdditionalHeater2Error() default -10;
 
     @AttributeDefinition(name = "TemperatureSensors", description = "Temperaturesensors to overlook the Temperature.")
     String[] thermometer() default {"TemperatureSensor0", "TemperatureSensor1"};
@@ -70,7 +73,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String[] errorInputHeater1() default {"SignalSensorSpi3", "SignalSensorSpi4"};
 
     @AttributeDefinition(name = "ErrorInputHeater Type 1", description = "ErrorInputs via SignalSensorsSpi for Heater Type 1 ( e.g. GasBoiler)")
-    String[] errorInputHeater2() default {"SignalSensorSpi0", "SignalSensorSpi1", "SignalSensorSpi2"};
+    String[] backUpPercentHeater2Error() default {"SignalSensorSpi0", "SignalSensorSpi1", "SignalSensorSpi2"};
 
     @AttributeDefinition(name = "Heat Mixer (== Valve)", description = "Temperature to be set when HeatingRequest is incoming: Unit is dC.")
     String valve() default "Valve0";

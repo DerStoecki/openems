@@ -40,7 +40,7 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
                     ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
         /**
-         * SetPoint Valve Percent Addition. This Percent is added to standard configuration if errors occurred and heat demand present.
+         * SetPoint Valve Percent Addition. This Percent is added to standard configuration if errors occurred at primary Heater and heat demand present.
          *
          * <ul>
          * <li>Interface: HeatnetworkPerformanceBooster
@@ -49,6 +49,21 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
          * </ul>
          */
         SET_POINT_VALVE_PERCENT_ADDITION(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(
+                channel -> {
+                    ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
+                })),
+
+        /**
+         * SetPoint Valve Percent Subtraction. This Percent is added to standard configuration if errors occurred at secondary Heater and heat demand present.
+         *
+         * <ul>
+         * <li>Interface: HeatnetworkPerformanceBooster
+         * <li>Type: Integer
+         * <li> Unit: Percent
+         * </ul>
+         */
+
+        SET_POINT_VALVE_PERCENT_SUBTRACTION(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(
                 channel -> {
                     ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
@@ -181,6 +196,10 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
 
     default WriteChannel<Integer> valveSetPointAddition() {
         return this.channel(ChannelId.SET_POINT_VALVE_PERCENT_ADDITION);
+    }
+
+    default WriteChannel<Integer> valveSetPointSubtraction() {
+        return this.channel(ChannelId.SET_POINT_VALVE_PERCENT_SUBTRACTION);
     }
 
     default WriteChannel<Integer> heaterSetPointStandard() {
