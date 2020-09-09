@@ -1,0 +1,25 @@
+#
+# watermeter PROVIDER BUNDLE
+#
+
+Bundle-Version:					1.0.0.${tstamp}
+Bundle-Description: \
+	This bundle implements Mbus Watermeters
+
+Export-Package:  \
+	io.openems.edge.meter.watermeter.api;-provide=true
+
+Private-Package:  \
+	io.openems.edge.meter.watermeter
+
+-includeresource: {readme.md}
+
+-buildpath:  \
+    ${buildpath},\
+	io.openems.common;version=latest,\
+	io.openems.edge.common;version=latest,\
+	io.openems.edge.meter.api;version=latest,\
+	io.openems.edge.bridge.mbus;version=latest
+
+-testpath: ${testpath}
+

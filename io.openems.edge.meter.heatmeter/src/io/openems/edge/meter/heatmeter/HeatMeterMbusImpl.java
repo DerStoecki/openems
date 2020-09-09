@@ -57,32 +57,16 @@ public class HeatMeterMbusImpl extends AbstractOpenemsMbusComponent implements O
 
     @Activate
     public void activate(ComponentContext context, Config config) {
-        allocateAddressViaMeterType(config.meterType());
+
+        //use data record positions as specified in HeatMeterType
+        this.heatMeterType=HeatMeterType.valueOf(config.model());
+
         super.activate(context, config.id(), config.alias(), config.enabled(),
                 config.primaryAddress(), cm, "mbus", config.mbusBridgeId());
 
         this.mbus.addTask(config.id(), new HeatMeterTask(this.mbus, this, this.getAverageHourConsumption(), this.getTotalConsumedEnergy()));
-
     }
 
-    private void allocateAddressViaMeterType(String meterType) {
-        switch (meterType) {
-            case "Itron-CF51":
-                this.heatMeterType = HeatMeterType.ITRON_CF_51;
-                break;
-
-            case "Sharky-775":
-                this.heatMeterType = HeatMeterType.SHARKY_775;
-
-                break;
-
-            case "Zelsius CF-CMF":
-                this.heatMeterType = HeatMeterType.ZELSIUS_C5_CMF;
-                break;
-
-
-        }
-    }
 
     @Deactivate
     public void deactivate() {
@@ -92,18 +76,13 @@ public class HeatMeterMbusImpl extends AbstractOpenemsMbusComponent implements O
 
     @Override
     protected void addChannelDataRecords() {
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(HeatMeterMbus.ChannelId.TOTAL_CONSUMED_ENERGY), this.heatMeterType.totalConsumptionEnergyAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(HeatMeterMbus.ChannelId.FLOW_TEMP), this.heatMeterType.flowTempAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(HeatMeterMbus.ChannelId.RETURN_TEMP), this.heatMeterType.returnTempAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(HeatMeterMbus.ChannelId.POWER), this.heatMeterType.powerAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(HeatMeterMbus.ChannelId.PERCOLATION), this.heatMeterType.percolationAddress));
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(ChannelId.MANUFACTURER_ID), ChannelRecord.DataType.Manufacturer));
-        this.channelDataRecordsList.add(new ChannelRecord(this.channel(ChannelId.DEVICE_ID), ChannelRecord.DataType.DeviceId));
-    }
-
-    @Override
-    public String debugLog() {
-        return super.id() + " total consumed energy: " + this.getTotalConsumedEnergy().value() + " average consumption: " + this.getAverageHourConsumption().value();
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.TOTAL_CONSUMED_ENERGY), this.heatMeterType.totalConsumptionEnergyAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.FLOW_TEMP), this.heatMeterType.flowTempAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.RETURN_TEMP), this.heatMeterType.returnTempAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.POWER), this.heatMeterType.powerAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(HeatMeterMbus.ChannelId.PERCOLATION), this.heatMeterType.percolationAddress));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(ChannelId.MANUFACTURER_ID), ChannelRecord.DataType.Manufacturer));
+        this.channelDataRecordsList.add(new ChannelRecord(channel(ChannelId.DEVICE_ID), ChannelRecord.DataType.DeviceId));
     }
 
 }

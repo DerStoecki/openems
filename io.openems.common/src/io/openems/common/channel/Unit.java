@@ -369,6 +369,10 @@ public enum Unit {
         return baseUnit;
     }
 
+    public int getScaleFactor() {
+        return this.scaleFactor;
+    }
+
     public int getAsBaseUnit(int value) {
         return (int) (value * Math.pow(10, this.scaleFactor));
     }
@@ -415,10 +419,10 @@ public enum Unit {
             case VOLT_AMPERE_HOURS:
             case VOLT_AMPERE_REACTIVE_HOURS:
             case WATT_HOURS_BY_WATT_PEAK:
+            case CUBIC_METER:
             case CUBICMETER_PER_HOUR:
             case CUBICMETER_PER_SECOND:
-            case CUBIC_METER:
-                return value + " " + this.symbol;
+               return value + " " + this.symbol;
             case ON_OFF:
                 boolean booleanValue = (Boolean) value;
                 return booleanValue ? "ON" : "OFF";

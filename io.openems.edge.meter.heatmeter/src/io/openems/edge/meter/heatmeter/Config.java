@@ -13,18 +13,19 @@ import org.osgi.service.metatype.annotations.Option;
     String service_pid();
 
     @AttributeDefinition(name = "HeatMeter-Device ID", description = "Unique Id of the HeatMeter.")
-    String id() default "HeatMeter0";
+    String id() default "MH-0";
 
     @AttributeDefinition(name = "alias", description = "Human readable name of the heat-meter.")
     String alias() default "";
 
-    @AttributeDefinition(name = "MeterType", description = "Identification via Type",
+    @AttributeDefinition(name = "Model", description = "Identification via Type",
             options = {
-                    @Option(label = "Itron-CF51", value = "Itron-CF51"),
-                    @Option(label = "Sharky-775", value = "Sharky-775"),
-                    @Option(label = "Zelsius CF-CMF", value = "Zelsius CF-CMF"),
+                    // value has to be one of those specified in HeatMeterType.java
+                    @Option(label = "Itron-CF51", value = "ITRON_CF_51"),
+                    @Option(label = "Sharky-775", value = "ZELSIUS_C5_CMF"),
+                    @Option(label = "Zelsius CF-CMF", value = "SHARKY_775"),
             })
-    String meterType() default "Itron-CF51";
+    String model() default "ITRON_CF_51";
 
     @AttributeDefinition(name = "MBus-Bridge Id", description = "The Unique Id of the mBus-Bridge you what to allocate to this device.")
     String mbusBridgeId() default "mbus0";

@@ -20,8 +20,6 @@ public class HeatMeterTask extends MbusTask {
     private Channel<Integer> averageHourConsumption;
     private Channel<Integer> totalConsumption;
 
-    private static int KILOWATT_CONVERTER = 1000;
-
     public HeatMeterTask(BridgeMbus bridgeMbus, AbstractOpenemsMbusComponent openemsMbusComponent, Channel<Integer> averageHourConsumption, Channel<Integer> consumption) {
         super(bridgeMbus, openemsMbusComponent);
         this.averageHourConsumption = averageHourConsumption;
@@ -59,17 +57,17 @@ public class HeatMeterTask extends MbusTask {
                 //Average Hour Consumption is either (max-min) / available values XOR (max-min)/60 <-- hours
                 if (this.counterFilling <= consumptionData.length) {
                     //from watthours to kw
-                    if (counterFilling != 0) {
-                        averageHourConsumption.setNextValue((maxValueOfData - minValueOfData) / (counterFilling * KILOWATT_CONVERTER));
+                    if (this.counterFilling > 0) {
+                        averageHourConsumption.setNextValue(60*(maxValueOfData - minValueOfData) / counterFilling);
                     }
                 } else {
-                    averageHourConsumption.setNextValue((maxValueOfData - minValueOfData) / (consumptionData.length * KILOWATT_CONVERTER));
+                    averageHourConsumption.setNextValue(60*(maxValueOfData - minValueOfData) / consumptionData.length);
                 }
                 counterFilling++;
                 lastTimeStamp = System.currentTimeMillis();
 
-                //if counterFilling was at max once --> e.g. 60 --> always stay in between 60-119 --> for correct filling
-                if (counterFilling >= consumptionData.length) {
+                //shouldn't occur but just to make sure; if counter reaches max --> reduced to at least 60.
+                if (counterFilling == Integer.MAX_VALUE) {
                     counterFilling = (counterFilling % consumptionData.length) + consumptionData.length;
                 }
             }

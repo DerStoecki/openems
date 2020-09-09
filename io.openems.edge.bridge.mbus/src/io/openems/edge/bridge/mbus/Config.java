@@ -18,7 +18,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	boolean enabled() default true;
 
 	@AttributeDefinition(name = "Serial-Device", description = "Serial Device Name")
-	String portName() default "/dev/ttyUSB0";
+	String portName() default "/dev/ttyAMA0";
 
 	@AttributeDefinition(name = "Baudrate", description = "Serial Device Speed")
 	int baudrate() default 2400;

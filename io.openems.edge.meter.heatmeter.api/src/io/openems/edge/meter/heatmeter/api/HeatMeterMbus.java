@@ -30,7 +30,7 @@ public interface HeatMeterMbus extends OpenemsComponent {
          * <li>Unit: m³/s CubicmeterPerSecond
          * </ul>
          */
-        PERCOLATION(Doc.of(OpenemsType.INTEGER).unit(Unit.CUBICMETER_PER_SECOND)),
+        PERCOLATION(Doc.of(OpenemsType.DOUBLE).unit(Unit.CUBICMETER_PER_HOUR)),
         /**
          * Total Consumed Energy.
          *
@@ -40,7 +40,7 @@ public interface HeatMeterMbus extends OpenemsComponent {
          * <li>Unit: WattHours
          * </ul>
          */
-        TOTAL_CONSUMED_ENERGY(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT_HOURS)),
+        TOTAL_CONSUMED_ENERGY(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT_HOURS)),
         /**
          * FlowTemp.
          *
@@ -50,7 +50,7 @@ public interface HeatMeterMbus extends OpenemsComponent {
          * <li>Unit: DegreeCelsius
          * </ul>
          */
-        FLOW_TEMP(Doc.of(OpenemsType.FLOAT).unit(Unit.DEGREE_CELSIUS)),
+        FLOW_TEMP(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
         /**
          * Return Temp.
          *
@@ -60,7 +60,12 @@ public interface HeatMeterMbus extends OpenemsComponent {
          * <li>Unit: DegreeCelsius
          * </ul>
          */
-        RETURN_TEMP(Doc.of(OpenemsType.FLOAT).unit(Unit.DEGREE_CELSIUS)),
+        RETURN_TEMP(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)),
+
+        /**
+         * Timestamp of Measurement
+         */
+        TIMESTAMP(Doc.of(OpenemsType.LONG).unit(Unit.SECONDS)),
 
         AVERAGE_CONSUMPTION_PER_HOUR(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT));
 
@@ -99,6 +104,10 @@ public interface HeatMeterMbus extends OpenemsComponent {
 
     default Channel<Float> getReturnTemp() {
         return this.channel(ChannelId.RETURN_TEMP);
+    }
+
+    default Channel<Float> getTimestamp() {
+        return this.channel(ChannelId.TIMESTAMP);
     }
 }
 
