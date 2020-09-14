@@ -12,7 +12,7 @@
 -runee: JavaSE-1.8
 
 -runsystempackages: sun.misc, com.sun.net.httpserver
-<
+
 -runrequires: \
  osgi.identity;filter:='(osgi.identity=io.openems.edge.meter.simulated)',\
 	bnd.identity;id='org.apache.felix.http.jetty',\
@@ -69,18 +69,17 @@
 	bnd.identity;id='io.openems.edge.controller.ess.onefullcycle',\
 	bnd.identity;id='io.openems.edge.controller.evcs',\
 	bnd.identity;id='io.openems.edge.controller.evcs.fixactivepower',\
-	bnd.identity;id='io.openems.edge.controller.neatnetwork.master',\
+	bnd.identity;id='io.openems.edge.controller.heatnetwork.master',\
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
-	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
-	bnd.identity;id='io.openems.edge.controller.pump.grundfos',\
-	bnd.identity;id='io.openems.edge.controller.pump.grundfos.api',\
-		bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
-    	bnd.identity;id='io.openems.edge.controller.heatpump.device',\
-    	bnd.identity;id='io.openems.edge.controller.heatpump.device.api',\
+    bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
+    bnd.identity;id='io.openems.edge.controller.heatpump.device',\
+    bnd.identity;id='io.openems.edge.controller.heatpump.device.api',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter',\
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
+	bnd.identity;id='io.openems.edge.controller.pump.grundfos',\
+	bnd.identity;id='io.openems.edge.controller.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator.api',\
 	bnd.identity;id='io.openems.edge.controller.passing.valvepumpcontrol',\
@@ -131,13 +130,13 @@
 	bnd.identity;id='io.openems.edge.gpio.device',\
 	bnd.identity;id='io.openems.edge.gpio.device.api',\
 	bnd.identity;id='io.openems.edge.heater.api',\
-	bnd.identity;id='io.openems.edge.pump.grundfos',\
-	bnd.identity;id='io.openems.edge.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.heatpump.alphainnotec',\
 	bnd.identity;id='io.openems.edge.heatpump.alphainnotec.api',\
 	bnd.identity;id='io.openems.edge.heatpump.device',\
 	bnd.identity;id='io.openems.edge.heatpump.device.api',\
 	bnd.identity;id='io.openems.edge.heatpump.smartgrid.generalized.api',\
+	bnd.identity;id='io.openems.edge.pump.grundfos',\
+	bnd.identity;id='io.openems.edge.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\

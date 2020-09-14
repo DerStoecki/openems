@@ -2,7 +2,7 @@ package io.openems.edge.controller.emvtest;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.chp.device.api.PowerLevel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -40,7 +40,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
     private int cycleRelaysCount;        //track which relay to turn on or off.
 
 
-    private PowerLevel[] dacArray;
+    private ChpPowerPercentage[] dacArray;
     private boolean rampDac;
     private long dacRampStepTime;
     private int dacRampStepValue;
@@ -84,7 +84,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         cycleRelays = config.cycle_relays();
         relaysCycleOnTime = config.relays_cycle_on_time() * 1000 - 500;  //convert from s to ms
         relaysCycleBreakTime = config.relays_cycle_break_time() * 1000;  //convert from s to ms
-        relayIsOpenerInversion = config.relays_isopener_inversion();
+        relayIsOpenerInversion = false;//config.relays_isopener_inversion();
         timestampRelaysCycling = System.currentTimeMillis() - relaysCycleBreakTime;
         cycleRelaysState = false;   //false means currently no relay is on
         cycleRelaysCount = 0;
@@ -98,7 +98,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
          //   this.logInfo(this.log, "DAC array entry " + index + ": " + config.DacDeviceList()[index]);
         //}
 
-        dacArray = new PowerLevel[config.DacDeviceList().length];        //array is filled with entries in allocate_Component method
+        dacArray = new ChpPowerPercentage[config.DacDeviceList().length];        //array is filled with entries in allocate_Component method
         rampDac = config.ramp_dac();
         dacRampStepTime = config.dac_ramp_step_time() * 1000;    //convert from s to ms
         dacRampStepValue = config.dac_ramp_step_value();
@@ -150,7 +150,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         for (ActuatorRelaysChannel entry : relayArray) {       // turn off all initialized relays
             controlRelay(false, entry);
         }
-        for (PowerLevel entry : dacArray) {     // turn off all initialized dac
+        for (ChpPowerPercentage entry : dacArray) {     // turn off all initialized dac
             controlDac(0, entry);
         }
         for (PwmPowerLevelChannel entry : pwmArray) {      // turn off all initialized pwm
@@ -220,7 +220,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
                 timestampDacRamping = System.currentTimeMillis();
             }
         } else {
-            for (PowerLevel entry : dacArray) {    // turn off all initialized dac
+            for (ChpPowerPercentage entry : dacArray) {    // turn off all initialized dac
                 controlDac(0, entry);
             }
         }
@@ -289,7 +289,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
 
             case "Dac":
                 for (int index = 0; index < id.length; index++) {
-                    if (cpm.getComponent(id[index]) instanceof PowerLevel) {
+                    if (cpm.getComponent(id[index]) instanceof ChpPowerPercentage) {
                         dacArray[index] = cpm.getComponent(id[index]);
                         dacArray[index].getPowerLevelChannel().setNextWriteValue(0);            // set dac output to 0 upon initialization.
                     } else {
@@ -328,7 +328,7 @@ public class ControllerEMVtestImpl extends AbstractOpenemsComponent implements O
         }
     }
 
-    private void controlDac(int value, PowerLevel dac) {
+    private void controlDac(int value, ChpPowerPercentage dac) {
         try {
             dac.getPowerLevelChannel().setNextWriteValue(value);
         } catch (OpenemsError.OpenemsNamedException e) {
