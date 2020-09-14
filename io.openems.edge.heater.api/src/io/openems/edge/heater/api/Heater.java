@@ -10,5 +10,4 @@ public interface Heater {
     int getMaximumThermicalOutput();
 
     void setOffline() throws OpenemsError.OpenemsNamedException;
-
 }

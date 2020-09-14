@@ -314,8 +314,13 @@ public enum Unit {
      * */
     DEGREE("°"),
 
-    MILLI_DEGREE("m°", DEGREE, -3);
+    MILLI_DEGREE("m°", DEGREE, -3),
 
+    // #########
+    // Volume
+    // ########
+
+    LITRES("l");
 
 
 

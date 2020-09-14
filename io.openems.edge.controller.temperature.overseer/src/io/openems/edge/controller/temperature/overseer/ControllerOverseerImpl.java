@@ -19,7 +19,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -54,7 +53,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
         super.deactivate();
         try {
-            this.passing.getOnOff_PassingController().setNextWriteValue(false);
+            this.passing.getOnOff().setNextWriteValue(false);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
@@ -108,13 +107,13 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
             throw new RuntimeException("The Allocated Passing Controller is not active, please Check.");
         } else if (heatingReached == false && passingStationNoError == true) {
 
-            this.passing.getOnOff_PassingController().setNextWriteValue(true);
+            this.passing.getOnOff().setNextWriteValue(true);
         } else if (heatingReached == true && passingStationNoError == true) {
 
-            this.passing.getOnOff_PassingController().setNextWriteValue(false);
+            this.passing.getOnOff().setNextWriteValue(false);
 
         } else {
-            passing.getOnOff_PassingController().setNextWriteValue(false);
+            passing.getOnOff().setNextWriteValue(false);
 
             if (coolDownTimeSet == false && this.passing.getErrorCode().getNextValue().get() == 2) {
                 this.coolDownTime = System.currentTimeMillis();
@@ -124,7 +123,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
             if (coolDownTimeSet == true) {
                 if (System.currentTimeMillis() - coolDownTime > 30 * 1000) {
                     passing.noError().setNextValue(true);
-                    passing.getOnOff_PassingController().setNextWriteValue(true);
+                    passing.getOnOff().setNextWriteValue(true);
                     this.coolDownTimeSet = false;
                     return;
                 }

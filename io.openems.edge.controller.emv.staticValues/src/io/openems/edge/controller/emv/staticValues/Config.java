@@ -19,10 +19,14 @@ import org.osgi.service.metatype.annotations.Option;
     boolean enabled() default true;
 
     @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices")
-    String[] relaysDeviceList() default {"Relays0", "Relays1","Relays2","Relays3","Relays4","Relays5","Relays6","Relays7"};
+    String[] relaysDeviceList() default {
+            "Relays0", "Relays1","Relays2","Relays3","Relays4","Relays5","Relays6","Relays7",
+            "Relays8","Relays9","Relays10","Relays11","Relays12","Relays13","Relays14","Relays15",
+            "Relays16","Relays17","Relays18","Relays19","Relays20","Relays21","Relays22","Relays23",
+            "Relays24","Relays25","Relays26","Relays27","Relays28","Relays29","Relays30","Relays31"};
 
     @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changed via 1 and 0 ")
-    String relaysValues() default "10011010";
+    String relaysValues() default "10011010100110101001101010011010";
 
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
@@ -49,12 +53,12 @@ import org.osgi.service.metatype.annotations.Option;
             options = {
                     @Option(label = "LED-RED", value = "LED-RED"),
                     @Option(label = "LED-YELLOW", value = "LED-YELLOW"),
-                    @Option(label = "ENABLE-OUTPUT", value = "ENABLE-OUTPUT")}
+                    @Option(label = "LED-GREEN", value = "LED-GREEN")}
     )
     String[] sc16ChoiceList() default {};
 
     @AttributeDefinition(name = "Sc16Values", description = "Values for the Statuses")
-    String sc16Values() default "101";
+    String sc16Values() default "100";
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Static Values [{id}]";
 

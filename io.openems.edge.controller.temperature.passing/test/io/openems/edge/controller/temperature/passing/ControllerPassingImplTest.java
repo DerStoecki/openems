@@ -218,7 +218,7 @@ public class ControllerPassingImplTest {
             passing.activate(null, config);
             passing.activate(null, config);
             passing.getMinTemperature().setNextValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(true);
+            passing.getOnOff().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                     secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -267,7 +267,7 @@ public class ControllerPassingImplTest {
             passing.activate(null, config);
             passing.activate(null, config);
             passing.getMinTemperature().setNextValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(true);
+            passing.getOnOff().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                     secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -315,7 +315,7 @@ public class ControllerPassingImplTest {
             passing.activate(null, config);
             passing.activate(null, config);
             passing.getMinTemperature().setNextWriteValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(false);
+            passing.getOnOff().setNextWriteValue(false);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                     secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -363,7 +363,7 @@ public class ControllerPassingImplTest {
             passing.activate(null, config);
             passing.activate(null, config);
             passing.getMinTemperature().setNextWriteValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(true);
+            passing.getOnOff().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                     secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -384,7 +384,7 @@ public class ControllerPassingImplTest {
             );
             passing.activate(null, config);
             controllerTest.run();
-            passing.getOnOff_PassingController().setNextWriteValue(false);
+            passing.getOnOff().setNextWriteValue(false);
             valve.getIsBusy().setNextValue(false);
             int count = 0;
             while (count < 2) {
@@ -410,7 +410,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -448,7 +448,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -486,7 +486,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -524,7 +524,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -563,7 +563,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -601,7 +601,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -639,7 +639,7 @@ public class ControllerPassingImplTest {
         passing.activate(null, config);
         passing.activate(null, config);
         passing.getMinTemperature().setNextWriteValue(500);
-        passing.getOnOff_PassingController().setNextWriteValue(true);
+        passing.getOnOff().setNextWriteValue(true);
 
         AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                 secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -673,7 +673,7 @@ public class ControllerPassingImplTest {
             passing.activate(null, config);
             passing.activate(null, config);
             passing.getMinTemperature().setNextWriteValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(true);
+            passing.getOnOff().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                     secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
@@ -720,7 +720,7 @@ public class ControllerPassingImplTest {
             passing.activate(null, config);
             passing.activate(null, config);
             passing.getMinTemperature().setNextWriteValue(500);
-            passing.getOnOff_PassingController().setNextWriteValue(true);
+            passing.getOnOff().setNextWriteValue(true);
 
             AbstractComponentTest controllerTest = new ControllerTest(passing, cpm, primaryForward, primaryRewind, secundaryForward,
                     secundaryRewind, valveOpen, valveClose, pumpRelays, passing).next(
