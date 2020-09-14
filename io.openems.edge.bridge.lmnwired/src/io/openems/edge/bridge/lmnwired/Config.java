@@ -24,10 +24,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     int baudRate() default 460800;
 
     @AttributeDefinition(name = "TimeSlots", description = "Timeslots for device addressing, eg. 32")
-    byte timeSlots() default 32;
+    int timeSlots() default 32;
 
     @AttributeDefinition(name = "TimeSlotDuration in ms", description = "Timeslot duration for device addressing, eg. 5")
-    byte timeSlotDurationInMs() default 5;
+    int timeSlotDurationInMs() default 5;
 
     @AttributeDefinition(name = "Devices", description = "Current Devices in list")
     String[] devices() default {};

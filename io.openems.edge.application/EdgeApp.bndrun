@@ -58,6 +58,7 @@
 	bnd.identity;id='io.openems.edge.controller.csvwriter.emv',\
 	bnd.identity;id='io.openems.edge.controller.debug.detailedlog',\
 	bnd.identity;id='io.openems.edge.controller.debug.log',\
+	bnd.identity;id='io.openems.edge.controler.emv.staticValues',\
 	bnd.identity;id='io.openems.edge.controller.ess.acisland',\
 	bnd.identity;id='io.openems.edge.controller.ess.delaycharge',\
 	bnd.identity;id='io.openems.edge.controller.ess.limitdischargecellvoltage',\
@@ -65,7 +66,8 @@
 	bnd.identity;id='io.openems.edge.controller.ess.onefullcycle',\
 	bnd.identity;id='io.openems.edge.controller.evcs',\
 	bnd.identity;id='io.openems.edge.controller.evcs.fixactivepower',\
-	bnd.identity;id='io.openems.edge.controller.neatnetwork.master',\
+	bnd.identity;id='io.openems.edge.controller.heatnetwork.master',\
+	bnd.identity;id='io.openems.edge.controller.heatnetwork.performancebooster',\
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
 	bnd.identity;id='io.openems.edge.controller.pump.grundfos',\
@@ -223,6 +225,7 @@
 	io.openems.edge.controller.csvwriter.emv;version=snapshot,\
 	io.openems.edge.controller.debug.detailedlog;version=snapshot,\
 	io.openems.edge.controller.debug.log;version=snapshot,\
+	io.openems.edge.controller.emv.staticValues;version=snapshot,\
 	io.openems.edge.controller.ess.acisland;version=snapshot,\
 	io.openems.edge.controller.ess.delaycharge;version=snapshot,\
 	io.openems.edge.controller.ess.limitdischargecellvoltage;version=snapshot,\
@@ -231,6 +234,7 @@
 	io.openems.edge.controller.evcs;version=snapshot,\
 	io.openems.edge.controller.evcs.fixactivepower;version=snapshot,\
 	io.openems.edge.controller.heatnetwork.master;version=snapshot,\
+	io.openems.edge.controller.heatnetwork.performancebooster;version=snapshot,\
 	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
 	io.openems.edge.controller.pump.grundfos;version=snapshot,\
 	io.openems.edge.controller.pump.grundfos.api;version=snapshot,\

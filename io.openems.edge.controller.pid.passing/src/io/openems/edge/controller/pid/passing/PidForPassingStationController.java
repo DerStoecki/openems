@@ -7,9 +7,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.filter.PidFilter;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.pid.passing.api.PidForPassingNature;
-import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
 import io.openems.edge.temperature.passing.api.PassingActivateNature;
-import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.api.PassingForPid;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.thermometer.api.Thermometer;
@@ -110,7 +108,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     public void run() throws OpenemsError.OpenemsNamedException {
 
 
-        if (this.passing.getOnOff_PassingController().value().isDefined() && this.passing.getOnOff_PassingController().value().get()) {
+        if (this.passing.getOnOff().value().isDefined() && this.passing.getOnOff().value().get()) {
             if (this.thermometer.getTemperature().getNextValue().isDefined()) {
                 if (this.setMinTemperature().getNextWriteValue().isPresent()) {
                     this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
