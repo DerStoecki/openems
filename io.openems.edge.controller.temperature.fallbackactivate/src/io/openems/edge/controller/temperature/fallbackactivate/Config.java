@@ -17,14 +17,17 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human readable name of Controller.")
     String alias() default "FallbackActivate";
 
-    @AttributeDefinition(name = "Minimum temperature", description = "The minimum temperature.")
+    @AttributeDefinition(name = "Minimum temperature", description = "The minimum temperature, in °C.")
     int min_temp() default 40;
 
-    @AttributeDefinition(name = "Temperature Sensor Id", description = "The TemperatureSensor Id used to measure the Temperature.")
+    @AttributeDefinition(name = "Hysteresis", description = "Once the fallback heater activates, the temperature needs to rise this much above the min temperature before the fallback heater deactivates again. Unit is °C.")
+    int hysteresis() default 1;
+
+    @AttributeDefinition(name = "Temperature Sensor Id", description = "The id of the temperature sensor used to measure the temperature.")
     String temp_Sensor() default "TemperatureSensor0";
 
-    @AttributeDefinition(name =  "Relay Id", description = "The Relay Id used to activate the fallback heater.")
-    String relay_id() default "Relays0";
+    @AttributeDefinition(name =  "Relay Id", description = "The id of the relay used to activate the fallback heater.")
+    String relay_id() default "Relay0";
 
     boolean enabled() default true;
 

@@ -3,6 +3,7 @@ package io.openems.edge.controller.pid.passing.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
@@ -11,6 +12,23 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface PidForPassingNature extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+
+
+        /**
+         * Turn PID on or off.
+         * <ul>
+         * <li>Type: Boolean
+         * <li>
+         * </ul>
+         */
+
+        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> { //
+                    // on each Write to the channel -> set the value
+                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
+                        channel.setNextValue(value);
+                    });
+                })),
 
 
         /**
@@ -37,6 +55,15 @@ public interface PidForPassingNature extends OpenemsComponent {
 
     }
 
+    /**
+     * Turn PID on or off.
+     *
+     * @return the Channel
+     */
+
+    default WriteChannel<Boolean> turnOn() {
+        return this.channel(ChannelId.ON_OFF);
+    }
 
     /**
      * Min Temperature you want to reach / check if it can be reached.
