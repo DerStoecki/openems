@@ -133,8 +133,6 @@
 	bnd.identity;id='io.openems.edge.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.heatpump.alphainnotec',\
 	bnd.identity;id='io.openems.edge.heatpump.alphainnotec.api',\
-	bnd.identity;id='io.openems.edge.heatpump.device',\
-	bnd.identity;id='io.openems.edge.heatpump.device.api',\
 	bnd.identity;id='io.openems.edge.heatpump.smartgrid.generalized.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
@@ -263,8 +261,6 @@
 	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
 	io.openems.edge.controller.pump.grundfos;version=snapshot,\
 	io.openems.edge.controller.pump.grundfos.api;version=snapshot,\
-	io.openems.edge.controller.heatpump.device;version=snapshot,\
-	io.openems.edge.controller.heatpump.device.api;version=snapshot,\
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
@@ -324,8 +320,6 @@
 	io.openems.edge.pump.grundfos.api;version=snapshot,\
 	io.openems.edge.heatpump.alphainnotec;version=snapshot,\
 	io.openems.edge.heatpump.alphainnotec.api;version=snapshot,\
-	io.openems.edge.heatpump.device;version=snapshot,\
-	io.openems.edge.heatpump.device.api;version=snapshot,\
 	io.openems.edge.heatpump.smartgrid.generalized.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.device;version=snapshot,\
 	io.openems.edge.lucidcontrol.device.api;version=snapshot,\
