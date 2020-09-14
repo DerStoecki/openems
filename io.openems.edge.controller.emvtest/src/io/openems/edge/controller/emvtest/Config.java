@@ -41,9 +41,6 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "CycleRelaysBreakTime", description = "Time of break between relay activation, in s.")
     int relays_cycle_break_time() default 0;
 
-    @AttributeDefinition(name = "RelaysIsOpenerInversion", description = "How to treat is-opener type relays. \"Checked\" means when \"off\" state is requested by the controller, is-opener type relays are open.")
-    boolean relays_isopener_inversion() default true;
-
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
                     @Option(label = "DacDevice0", value = "DacDevice0"),
