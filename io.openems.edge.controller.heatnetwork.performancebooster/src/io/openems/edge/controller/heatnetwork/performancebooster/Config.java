@@ -47,27 +47,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String[] thermometer() default {"TemperatureSensor0", "TemperatureSensor1"};
 
     @AttributeDefinition(name = "Reference Thermometer", description = "Reference Thermometer to be a start/endpoint for activation")
-    String referenceThermometer() default "TemperatureSensor7";
+    String referenceThermometer() default "NotDefined";
 
     @AttributeDefinition(name = "Temperature Reference SetPoint", description = "Temperature for Activation")
     int activationTemp() default 450;
 
     @AttributeDefinition(name = "TemperatureSensors at SecondaryHeater", description = "Like Primary/Secondary Forward/Rewind-->ORDER: pF,pR,sF,sR")
-    String [] primaryAndSecondary() default {"TemperatureSensor8"};
-
-
-    /*@AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Primary Forward")
-    String primaryForward() default "TemperatureSensor8";
-
-    @AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Primary Rewind")
-    String primaryRewind() default "TemperatureSensor9";
-
-    @AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Secondary Forward")
-    String secondaryForward() default "TemperatureSensor10";
-
-    @AttributeDefinition(name = "Heatnetwork TemperatureSensor Primary Forward", description = "Temperature Sensor at the Heat mixer --> Secondary Rewind")
-    String secondaryRewind() default "TemperatureSensor11";
-    */
+    String [] primaryAndSecondary() default {"NotDefined"};
 
     @AttributeDefinition(name = "ErrorInputHeater Type 2", description = "ErrorInputs via SignalSensorSpi for Heater Type 2 ( e.g. BiomassHeater).")
     String[] errorInputHeater1() default {"SignalSensorSpi3", "SignalSensorSpi4"};
@@ -80,6 +66,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "HeaterIds Controlled by Relay or 10V", description = "Id of Devices on Relay or 0-10V module.")
     String[] heaters() default {"Relay0, LucidControlDeviceOutput1, LucidControlDeviceOutput2"};
+
+    @AttributeDefinition(name = "Timeout", description = "After which time Should the Controller definetly deactivate. Time in s")
+            int sleepTime() default 1000;
 
 
     boolean enabled() default true;

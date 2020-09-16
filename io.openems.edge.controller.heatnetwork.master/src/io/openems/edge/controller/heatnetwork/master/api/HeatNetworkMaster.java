@@ -12,12 +12,13 @@ public interface HeatNetworkMaster extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         /**
-         * PowerLevel.
+         * Temperature Set-point.
+         * React to this temperature.
          *
          * <ul>
-         * <li>Interface: PassingChannel
-         * <li>Type: Double
-         * <li> Unit: Percentage
+         * <li>Interface: HeatnetworkMaster
+         * <li>Type: Integer
+         * <li> Unit: Dezidegree Celsius
          * </ul>
          */
 
