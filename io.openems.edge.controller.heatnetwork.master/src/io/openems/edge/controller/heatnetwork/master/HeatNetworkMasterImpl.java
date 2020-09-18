@@ -47,6 +47,7 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         super.activate(context, config.id(), config.alias(), config.enabled());
         OpenemsError.OpenemsNamedException[] ex = {null};
         ConfigurationException[] exC = {null};
+        //Configure all Remote Components; Listen to Heat-requests
         Arrays.stream(config.requests()).forEach(consumer -> {
             try {
                 if (cpm.getComponent(consumer) instanceof RestRemoteDevice) {
@@ -60,6 +61,7 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
                 exC[0] = e;
             }
         });
+        //Configure all Remote components; Listening to Heatnetwork ready.
         Arrays.stream(config.readyResponse()).forEach(consumer -> {
             try {
                 if (cpm.getComponent(consumer) instanceof RestRemoteDevice) {
@@ -73,13 +75,13 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
                 exC[0] = e;
             }
         });
-
+        //Throw Exceptions if any occurred during configuration of Remote Devices.
         if (ex[0] != null) {
             throw ex[0];
         } else if (exC[0] != null) {
             throw exC[0];
         }
-
+        //Main Heat Control-Center reacting to this Controller
         if (cpm.getComponent(config.allocatedController()) instanceof PassingControlCenterChannel) {
             this.allocatedController = cpm.getComponent(config.allocatedController());
         }
@@ -97,6 +99,7 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //NO DEMAND!
+        // Equals 1 because Rest Get request returns 0 or 1 at boolean
 
         if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("1"))) {
             this.heatNetworkReady.forEach(consumer -> consumer.setValue("false"));
@@ -104,20 +107,24 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
             this.allocatedController.activateTemperatureOverride().setNextWriteValue(false);
 
         } else {
-
+            //Check if temperatureSetPoint is defined --> Can be changed outside of config --> e.g. REST Post
             if (this.temperatureSetPointChannel().value().isDefined()) {
                 if (this.allocatedController.activateTemperatureOverride().value().isDefined()) {
-                    if (!this.allocatedController.activateTemperatureOverride().value().get()) {
+                    boolean controlCenterIsActive = this.allocatedController.activateTemperatureOverride().value().get();
+                    if (controlCenterIsActive == false) {
+                        //Activate temperature override and set Temperature
                         this.allocatedController.activateTemperatureOverride().setNextValue(true);
                         this.allocatedController.setOverrideTemperature().setNextWriteValue(this.temperatureSetPointChannel().value().get());
+                        //Notify all Remote Devices that Heatnetwork is ready
                         this.heatNetworkReady.forEach(consumer -> consumer.setValue("true"));
                         lastTemperature = this.temperatureSetPointChannel().value().get();
                         return;
-
-                    } else if (this.allocatedController.activateTemperatureOverride().value().get() && (this.temperatureSetPointChannel().value().get() != lastTemperature)) {
+                        //If Controlcenter is active but SetPointTemperature has changed.
+                    } else if (controlCenterIsActive == true && (this.temperatureSetPointChannel().value().get() != lastTemperature)) {
+                        //Controlcenter --> Set new Temperature
                         this.allocatedController.setOverrideTemperature().setNextWriteValue(temperatureSetPointChannel().value().get());
                         lastTemperature = this.temperatureSetPointChannel().value().get();
-                        // }
+
                     }
                 }
             }
