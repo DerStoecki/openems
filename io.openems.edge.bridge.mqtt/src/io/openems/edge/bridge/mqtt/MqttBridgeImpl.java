@@ -1,33 +1,53 @@
 package io.openems.edge.bridge.mqtt;
 
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.mqtt.api.MqttBridge;
 import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
 import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
 import io.openems.edge.bridge.mqtt.api.MqttTask;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.event.EdgeEventConstants;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Bridge.Mqtt")
-public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, MqttBridge {
+@Component(name = "Bridge.Mqtt",
+        immediate = true,
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
+public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, MqttBridge, EventHandler {
     //Add to Manager
-    private Map<String, List<MqttPublishTask>> publishTasks;
-    private Map<String, List<MqttSubscribeTask>> subscribeTasks;
+    private Map<String, List<MqttPublishTask>> publishTasks = new ConcurrentHashMap<>();
+    private Map<String, List<MqttSubscribeTask>> subscribeTasks = new ConcurrentHashMap<>();
 
     private MqttPublishManager publishManager;
     private MqttSubscribeManager subscribeManager;
+    private String mqttUsername;
+    private String mqttPassword;
+    private String mqttBroker;
+    private String mqttBrokerUrl;
+    private String mqttClientId;
 
+    private MqttConnectionPublish bridgePublisher;
 
     public MqttBridgeImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -36,42 +56,72 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsException {
         super.activate(context, config.id(), config.alias(), config.enabled());
-        //ClientId --> + CLIENT_0 // CLIENT_1 // CLIENT_2
-        publishManager = new MqttPublishManager(publishTasks, config.username(), config.password(), config.connection(), config.clientId(), config.);
-        //ClientId --> +CLIENT_3
-        subscribeManager = new MqttSubscribeManager(subscribeTasks);
+        try {
+            this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat());
+            this.createMqttSession(config);
+        } catch (MqttException | NoSuchAlgorithmException e) {
+            throw new OpenemsException(e.getMessage());
+        }
+
+        publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
+                this.mqttPassword, this.mqttClientId, config.keepAlive());
+        //ClientId --> + CLIENT_SUB_0
+        subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
+                this.mqttPassword, this.mqttClientId, config.keepAlive());
 
     }
+
+    private void createMqttSession(Config config) throws MqttException, NoSuchAlgorithmException {
+        //TCP OR SSL
+        String broker = config.connection().equals("Tcp") ? "tcp" : "ssl";
+        boolean isTcp = broker.equals("tcp");
+        broker += "://" + config.ipBroker() + ":" + config.portBroker();
+        this.mqttBroker = broker;
+        this.mqttUsername = config.username();
+
+        //TODO ENCRYPT PASSWORD IF TCP NOT SSL!
+        this.mqttPassword = config.password();
+
+        this.mqttClientId = config.clientId();
+        this.mqttBrokerUrl = config.brokerUrl();
+
+        this.bridgePublisher.createMqttSession(this.mqttBroker, this.mqttClientId, config.retainedFlag(), config.keepAlive(),
+                this.mqttUsername, this.mqttPassword, config.lastWillSet(), config.topicLastWill(),
+                config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.cleanSessionFlag());
+        this.bridgePublisher.sendMessage(config.topicLastWill(), "\"Status\": Connected", 1, config.timeStampEnabled());
+
+
+    }
+
+    //TODO Password encryption etc --> Research etc; Public and private Keys etc etc on not Secure Connection.
+    // TODO AT THE END!
+    //TODO DO THIS IN AN EXTRA CLASS!
+    /*private char[] createHashedPassword(String password) throws NoSuchAlgorithmException {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        MessageDigest md = MessageDigest.getInstance("SHA-512");
+        md.update(salt);
+        byte[] hashedPassword = md.digest(password.getBytes(StandardCharsets.UTF_8));
+        return Arrays.toString(hashedPassword).toCharArray();
+    }*/
 
     @Deactivate
     public void deactivate() {
-    }
-
-
-    /*
-    *  if (this.tasks.containsKey(deviceId)) {
-            if (this.tasks.get(deviceId).keySet().stream().anyMatch(header -> header.equals(task.getHeader()))) {
-                this.tasks.get(deviceId).keySet().stream().filter(header -> header.equals(task.getHeader())).findFirst().ifPresent(
-                        header -> this.tasks.get(deviceId).get(header).add(task));
-            } else {
-                List<GenibusTask> taskForNewHead = new ArrayList<>();
-                taskForNewHead.add(task);
-                this.tasks.get(deviceId).put(task.getHeader(), taskForNewHead);
-            }
-        } else {
-            List<GenibusTask> list = new ArrayList<>();
-            list.add(task);
-            Map<Integer, List<GenibusTask>> map = new HashMap<>();
-            map.put(task.getHeader(), list);
-            this.tasks.put(deviceId, map);
+        try {
+            this.bridgePublisher.disconnect();
+            this.publishManager.deactivate();
+            this.subscribeManager.deactivate();
+        } catch (MqttException e) {
+            e.printStackTrace();
         }
-    *
-    * */
+    }
 
     @Override
     public boolean addMqttTask(String id, MqttTask mqttTask) {
+
         if (mqttTask instanceof MqttPublishManager) {
             if (this.publishTasks.containsKey(id)) {
                 this.publishTasks.get(id).add((MqttPublishTask) mqttTask);
@@ -100,5 +150,13 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.publishTasks.remove(id);
 
         return true;
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
+            this.subscribeManager.triggerNextRun();
+            this.publishManager.triggerNextRun();
+        }
     }
 }

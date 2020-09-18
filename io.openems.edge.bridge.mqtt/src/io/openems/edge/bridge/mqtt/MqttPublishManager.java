@@ -11,8 +11,15 @@ public class MqttPublishManager extends AbstractMqttManager {
     Map<String, List<MqttPublishTask>> tasks;
 
 
-    public MqttPublishManager(Map<String, List<MqttPublishTask>> tasks, String username, String password, String connection, String s) {
+    public MqttPublishManager(Map<String, List<MqttPublishTask>> tasks) {
         this.tasks = tasks;
+    }
+
+
+    MqttPublishManager(Map<String, List<MqttPublishTask>> publishTasks, String mqtt_broker, String mqtt_broker_url,
+                       String mqtt_username, String mqtt_password, String mqtt_client_id, int keepAlive) {
+
+
     }
 
     @Override

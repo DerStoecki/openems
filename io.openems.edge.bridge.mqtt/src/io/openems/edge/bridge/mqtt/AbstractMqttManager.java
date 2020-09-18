@@ -9,4 +9,4 @@ import java.util.Map;
 
     abstract class AbstractMqttManager extends AbstractCycleWorker {
 
-}
+    }

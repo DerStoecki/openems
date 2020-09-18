@@ -13,6 +13,11 @@ public class MqttSubscribeManager extends AbstractMqttManager {
         this.subscribeTasks = subscribeTasks;
     }
 
+    public MqttSubscribeManager(Map<String, List<MqttSubscribeTask>> subscribeTasks, String ipBroker,
+                                String username, String password, String connection, String clientId, int keepAlive) {
+
+    }
+
     @Override
     protected void forever() throws InterruptedException {
 

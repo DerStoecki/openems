@@ -1,18 +1,16 @@
-#
-# io.openems.edge.bridge.mqtt PROVIDER BUNDLE
-#
-
-Bundle-Version:					1.0.0.${tstamp}
+Bundle-Name: OpenEMS Edge SpiBridge
+Bundle-Vendor: Consolinno Energy GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
 Bundle-Description: \
-	The provider bundle for io.openems.edge.bridge.mqtt. \
-	\
-	${warning;Please update this Bundle-Description in io.openems.edge.bridge.mqtt/api.bnd}
+    This Bundle provides the basis for the communication via mqtt.
+
 
 Export-Package:  \
-	io.openems.edge.bridge.mqtt.api;-provide=true
+	io.openems.edge.bridge.mqtt.api,\
 
 Private-Package:  \
-	io.openems.edge.bridge.mqtt
+	io.openems.edge.bridge.mqtt,\
 
 -includeresource: {readme.md}
 
@@ -20,6 +18,7 @@ Private-Package:  \
 	osgi.enroute.base.api;version=2.1,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
+	org.eclipse.paho.client.mqttv3;version=1.1.0,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \
