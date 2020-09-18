@@ -34,7 +34,7 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "Connection Type", description = "Tcp or TLS",
             options = {
-                    @Option(label = "Tcp",value = "Tcp"),
+                    @Option(label = "Tcp", value = "Tcp"),
                     @Option(label = "TLS", value = "TLS")
             })
     String connection() default "Tcp";
@@ -53,7 +53,7 @@ import org.osgi.service.metatype.annotations.Option;
     String topicLastWill() default "OpenEMS/Leaflet_0/Status/";
 
     @AttributeDefinition(name = "LastWill Payload", description = "Payload for the last Will")
-    String payloadLastWill() default "\"Status\":Connection Lost";
+    String payloadLastWill() default "\"Status\": Connection Lost";
 
     @AttributeDefinition(name = "QoS of Last Will", description = "Quality of Service of last Will Msg")
     int qosLastWill() default 0;
@@ -69,6 +69,9 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "Date Format", description = "What Format should your Date have?")
     String timeFormat() default "yyy-MM-dd 'at' HH:mm:ss";
+
+    @AttributeDefinition(name = "Region", description = "Set Region of your Device e.g. DE")
+    String locale() default "DE";
 
     boolean enabled() default true;
 

@@ -59,7 +59,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     public void activate(ComponentContext context, Config config) throws OpenemsException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
-            this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat());
+            this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat(), config.locale());
             this.createMqttSession(config);
         } catch (MqttException | NoSuchAlgorithmException e) {
             throw new OpenemsException(e.getMessage());

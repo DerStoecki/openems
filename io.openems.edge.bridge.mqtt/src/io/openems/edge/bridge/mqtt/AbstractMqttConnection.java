@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public abstract class AbstractMqttConnection {
@@ -21,11 +22,10 @@ public abstract class AbstractMqttConnection {
     boolean timeStampEnabled;
     private SimpleDateFormat formatter;
 
-    AbstractMqttConnection(boolean timeStampEnabled, String timeDataFormat) {
+    AbstractMqttConnection(boolean timeStampEnabled, String timeDataFormat, String locale) {
         this.timeStampEnabled = timeStampEnabled;
         if (timeStampEnabled == true) {
-            this.formatter = new SimpleDateFormat(timeDataFormat);
-            this.formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            this.formatter = new SimpleDateFormat(timeDataFormat, new Locale.Builder().setRegion(locale).build());
         }
         this.persistence = new MemoryPersistence();
         this.mqttConnectOptions = new MqttConnectOptions();

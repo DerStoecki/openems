@@ -2,8 +2,8 @@ package io.openems.edge.bridge.mqtt;
 
 public class MqttConnectionSubscribe extends AbstractMqttConnection {
 
-    MqttConnectionSubscribe(boolean timeStampEnabled, String timeDataFormat) {
-        super(timeStampEnabled, timeDataFormat);
+    MqttConnectionSubscribe(boolean timeStampEnabled, String timeDataFormat, String locale) {
+        super(timeStampEnabled, timeDataFormat, locale);
     }
 
     //TODO SUBSCRIBE TO TOPIC

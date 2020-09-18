@@ -5,8 +5,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
  class MqttConnectionPublish extends AbstractMqttConnection {
 
-     MqttConnectionPublish(boolean timeStampEnabled, String timeDataFormat) {
-        super(timeStampEnabled, timeDataFormat);
+     MqttConnectionPublish(boolean timeStampEnabled, String timeDataFormat, String locale) {
+        super(timeStampEnabled, timeDataFormat, locale);
     }
 
     //TODO MAYBE MORE STUFF
