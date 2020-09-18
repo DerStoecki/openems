@@ -97,7 +97,6 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //NO DEMAND!
-        System.out.println("Run Start");
 
         if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("1"))) {
             this.heatNetworkReady.forEach(consumer -> consumer.setValue("false"));

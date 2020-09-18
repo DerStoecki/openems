@@ -205,8 +205,11 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
                 && (this.referenceThermometer.getTemperature().value().get() > this.temperatureSetPointMax().value().get());
         this.getOnOff().setNextValue(shouldActivate);
         if (shouldActivate == true) {
+
+            //open/close Valve if there are error signals
             AtomicInteger percentIncreaseValve = new AtomicInteger(this.valveSetPointStandard().value().get());
             AtomicInteger percentIncreaseFallbackHeater = new AtomicInteger(this.heaterSetPointStandard().value().get());
+            //primaryheatererrors also increases Energy of second
             this.heaterPrimarySignalSensors.forEach(signalSensorSpi -> {
                 if (signalSensorSpi.signalActive().value().get() == true) {
                     percentIncreaseValve.getAndAdd(this.valveSetPointAddition().value().get());

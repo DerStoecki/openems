@@ -126,7 +126,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 				watertankTempUpperSensor = watertankTempSensorUpperChannel.getTemperature().value().get();
 				if (this.noError().value().get() == false) {
 					this.noError().setNextValue(true);
-					this.logError(this.log, "Temperature sensors are fine now!");
+					this.logInfo(this.log, "Temperature sensors are fine now!");
 				}
 			} else {
 				tempSensorsSendData = false;
@@ -144,75 +144,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 		heatNetworkReady = this.heatNetworkReadySignal().value().get();
 
 
-		// Control logic, version 1.
-		if (tempSensorsSendData) {
 
-			// Remote changes from false to true.
-			if (heatNetworkSignalReveived && heatNetworkReady && (heatNetworkStateTracker == false)) {
-				this.heatTankRequest().setNextValue(true);
-				heatNetworkStateTracker = true;
-
-				// Set timer, just in case "heatNetworkReady == false" next cycle.
-				timestamp = LocalDateTime.now();
-			}
-
-			// Remote changes from true to false.
-			if (heatNetworkSignalReveived && (heatNetworkReady == false) && heatNetworkStateTracker) {
-				this.heatTankRequest().setNextValue(false);
-				heatNetworkStateTracker = false;
-			}
-
-			// Check lower temperature limit. Use heatTankRequest().getNextValue() here, to override remote if needed.
-			if (this.heatTankRequest().getNextValue().get() == false) {
-				if (watertankTempUpperSensor < minTempUpper) {
-					timestamp = LocalDateTime.now();
-					this.heatTankRequest().setNextValue(true);
-				}
-			}
-
-			// Stop when hot enough.
-			if (watertankTempLowerSensor > maxTempLower) {
-				this.heatTankRequest().setNextValue(false);
-				this.needHotWater().setNextValue(false);
-			} else {
-
-				// Heating has been requested.
-				if (this.heatTankRequest().value().get()) {
-
-					// Wait for remote signal or execute after timeout.
-					if ((heatNetworkSignalReveived && heatNetworkReady)
-							|| ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= responseTimeout) {
-
-						// Check if we got here by timeout.
-						if ((heatNetworkSignalReveived && heatNetworkReady) == false){
-							if (this.needHotWater().value().get() == false) {
-								this.logWarn(this.log, "Warning: remote response timeout.");
-							}
-						}
-
-						this.needHotWater().setNextValue(true);
-					}
-				} else {
-					this.needHotWater().setNextValue(false);
-				}
-			}
-
-			// Pass on temperature of lower sensor. Saves needing to configure the temperature sensor in other controller.
-			this.waterTankTemp().setNextValue(watertankTempLowerSensor);
-		}
-
-
-		// An Paul:
-		// Weil bei control logic version 1 die Abfrage "this.heatTankRequest().getNextValue().get()" drin ist, habe ich
-		// versucht zu überlegen ob ich das umbauen kann um statt "getNextValue()" die Abfrage "value()" zu verwenden.
-		// Herausgekommen ist control logic version 2. Ich kann jetzt nicht beurteilen ob die besser oder schlechter ist,
-		// vor allem was verständlichkeit angeht. Musst Du sagen.
-		// Es gibt tatsächlich Unterschiede im Verhalten, aber nur im unwahrscheinlichen Grenzfall. Ist in Zeile 283
-		// beschrieben.
-
-
-/*
-		// Control logic, version 2.
 		if (tempSensorsSendData) {
 
 			// Check if water tank is above max temperature.
@@ -277,31 +209,6 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 			// Pass on temperature of lower sensor. Saves needing to configure the temperature sensor in other controller.
 			this.waterTankTemp().setNextValue(watertankTempLowerSensor);
 		}
-*/
-
-
-		// An Paul:
-		// Unterschied Control logic ver. 1 zu ver. 2: Grenzfall niedrige Wassertank Temperatur
-		// (Szenario is unwahrscheinlich, aber es existiert)
-		// Fall Wassertank zu kalt, Wärmenetz geht an, Tank wird beheizt. Jetzt geht das Netz wieder aus bevor der Tank
-		// voll ist.
-		// Ist der Tank über minimum Temperatur, wird bei beiden Logik Versionen das heizen abgebrochen.
-		// Ist der Tank UNTER minimum Temperatur, gibt es einen Unterschied zwischen ver. 1 und ver. 2.
-		// - Ver. 1: Das Netz-aus hat keine Auswirkungen, es wird erst aufgehört zu heizen wenn der Tank voll ist. Oder
-		// 			 wenn das Netz nochmal an und dann wieder aus geht, während der Tank über minimum Temp ist.
-		// - Ver. 2: Sobald minimum Temp erreicht ist wird Netz-aus umgesetzt und mit dem Heizen aufgehört.
-		//
-		// Nächster Unterschied: Grenzfall hohe Wassertank Temperatur
-		// (Dieses Szenario ist vermutlich ebenfalls selten)
-		// Fall Wassertank wurde befüllt und ist über maximum Temperatur. Das Wärmenetz bleibt aber an. Der Wassertank
-		// kühlt ab und ist wieder unter Maximaltemperatur.
-		// Bleibt das Wärmenetz durchgehend an, passiert nichts. Keine Version fängt zum heizen an.
-		// Für Ver. 2 gibt es aber den Spezialfall: Geht das Wärmenetz aus und dann wieder an, während der Tank über
-		// maximum Temperatur ist, fängt Ver. 2 zum Heizen an sobald der Tank die Maximaltemperatur unterschreitet.
-		//
-		// Der Unterschied kommt daher, ob remote überprüft wird mit oder ohne Temperaturabfrage vorher. Man kann sich
-		// aussuchen welches Verhalten in welchem Grenzfall man haben will. Also z.B. bei Grenzfall tiefe Temp Verhalten
-		// Ver. 2 und bei Grenzfall hohe Temp Verhalten Ver. 1 ist möglich.
 
 
 

@@ -119,7 +119,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				heatNetworkTemp = waermetauscherVorlauf.getTemperature().value().get();
 				waterTankTemperature = signalHotWaterChannel.waterTankTemp().value().get();
 				if (temperatureSensorSendsData == false) {
-					this.logError(this.log, "Temperature sensors are fine now!");
+					this.logDebug(this.log, "Temperature sensors are fine now!");
 				}
 				temperatureSensorSendsData = true;
 				if (valveError == false) {
@@ -186,7 +186,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				    timestamp = LocalDateTime.now();
 
 				    // waterTankTemperature is the temperature of the bottom sensor in the tank.
-				    this.logInfo(this.log, "Heating the water tank. Heat source temperature is at "
+				    this.logDebug(this.log, "Heating the water tank. Heat source temperature is at "
 							+ heatNetworkTemp / 10 + "°C, water tank lowest temperature is at "
 							+ waterTankTemperature / 10 + "°C.");
                 }

@@ -152,7 +152,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 		if (pumpHK01.getPowerLevel().value().isDefined()){
 			// Check if pump is already at full power.
 			if (pumpHK01.getPowerLevel().value().get() < 100) {
-				pumpHK01.changeByPercentage(101); // = full power.
+				pumpHK01.changeByPercentage(100); // = full power.
 			}
 			this.noError().setNextValue(true);
 		} else {

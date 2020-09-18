@@ -98,7 +98,7 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 			// Error handling.
 			if (this.noError().value().get() == false) {
 				this.noError().setNextValue(true);
-				this.logError(this.log, "Everything is fine now! Reading from the temperature sensor is "
+				this.logInfo(this.log, "Everything is fine now! Reading from the temperature sensor is "
 						+ outsideTemperature / 10 + "°C.");
 			}
 		} else {

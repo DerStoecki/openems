@@ -98,7 +98,7 @@ public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent imp
             // Error handling
             if (error) {
                 error = false;
-                this.logError(this.log, "Everything is fine now! Reading from the temperature sensor is "
+                this.logInfo(this.log, "Everything is fine now! Reading from the temperature sensor is "
                         + temperature / 10 + "°C.");
             }
         } else {
