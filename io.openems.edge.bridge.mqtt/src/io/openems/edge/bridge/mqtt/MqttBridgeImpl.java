@@ -9,7 +9,6 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -20,11 +19,7 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,7 +42,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     private String mqttBrokerUrl;
     private String mqttClientId;
 
+    //ONLY DEBUG SUBSCRIBE
+    private String subscribeId;
+    private String subscribeTopic;
+
     private MqttConnectionPublish bridgePublisher;
+    private MqttConnectionSubscribe bridgeSubscriberTest;
 
     public MqttBridgeImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -60,8 +60,9 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
             this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat(), config.locale());
+            this.bridgeSubscriberTest = new MqttConnectionSubscribe(config.timeStampEnabled(), config.timeFormat(), config.locale());
             this.createMqttSession(config);
-        } catch (MqttException | NoSuchAlgorithmException e) {
+        } catch (MqttException e) {
             throw new OpenemsException(e.getMessage());
         }
 
@@ -73,7 +74,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     }
 
-    private void createMqttSession(Config config) throws MqttException, NoSuchAlgorithmException {
+    private void createMqttSession(Config config) throws MqttException {
         //TCP OR SSL
         String broker = config.connection().equals("Tcp") ? "tcp" : "ssl";
         boolean isTcp = broker.equals("tcp");
@@ -87,11 +88,26 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.mqttClientId = config.clientId();
         this.mqttBrokerUrl = config.brokerUrl();
 
-        this.bridgePublisher.createMqttSession(this.mqttBroker, this.mqttClientId, config.retainedFlag(), config.keepAlive(),
-                this.mqttUsername, this.mqttPassword, config.lastWillSet(), config.topicLastWill(),
-                config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.cleanSessionFlag());
-        this.bridgePublisher.sendMessage(config.topicLastWill(), "\"Status\": Connected", 1, config.timeStampEnabled());
+        this.bridgePublisher.createMqttPublishSession(this.mqttBroker, this.mqttClientId, config.keepAlive(),
+                this.mqttUsername, this.mqttPassword, config.cleanSessionFlag());
+        if (config.lastWillSet()) {
+            this.bridgePublisher.addLastWill(config.topicLastWill(),
+                    config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.retainedFlag());
+        }
+        //External Call bc Last will can be set
+        this.bridgePublisher.connect();
 
+        this.bridgePublisher.sendMessage(config.topicLastWill(), "\"Status\": Connected", 1,
+                config.retainedFlag(), config.timeStampEnabled());
+
+        //DEBUG AND TEST TODO DELETE LATER
+        this.subscribeId = this.mqttClientId + "_CLIENT_TEST_SUBSCRIBE";
+        this.bridgeSubscriberTest.createMqttSubscribeSession(this.mqttBroker, subscribeId,
+                this.mqttUsername, this.mqttPassword, config.keepAlive());
+
+        this.subscribeTopic = config.topicLastWill();
+
+        this.bridgeSubscriberTest.subscribeToTopic(subscribeTopic, 0, subscribeId);
 
     }
 
@@ -112,6 +128,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     public void deactivate() {
         try {
             this.bridgePublisher.disconnect();
+            this.bridgeSubscriberTest.disconnect();
             this.publishManager.deactivate();
             this.subscribeManager.deactivate();
         } catch (MqttException e) {
@@ -157,6 +174,13 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
             this.subscribeManager.triggerNextRun();
             this.publishManager.triggerNextRun();
+            
+            System.out.println("Getting Message");
+            this.bridgeSubscriberTest.getTopic(this.subscribeId).forEach(entry -> {
+                System.out.println(entry + this.bridgeSubscriberTest.getPayload(entry));
+            });
+            //System.out.println(this.bridgeSubscriberTest.getTopic(this.subscribeId) + this.bridgeSubscriberTest.getPayload(subscribeTopic));
+            System.out.println("New Message Await");
         }
     }
 }
