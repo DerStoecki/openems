@@ -19,9 +19,6 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
     //          ID      Topic
     private Map<String, List<String>> idsAndTopics = new HashMap<>();
 
-
-    //private String topic = "";
-    //private String payload = "";
     private boolean connectionLost;
 
 
@@ -29,7 +26,7 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
         super(timeStampEnabled, timeDataFormat, locale);
     }
 
-    //TODO SUBSCRIBE TO TOPIC
+
     void subscribeToTopic(String topic, int qos, String id) throws MqttException {
 
         super.mqttClient.subscribe(topic, qos);

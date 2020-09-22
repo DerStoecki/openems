@@ -28,11 +28,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component(name = "Bridge.Mqtt",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE
+)
 public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, MqttBridge, EventHandler {
     //Add to Manager
-    private Map<String, List<MqttPublishTask>> publishTasks = new ConcurrentHashMap<>();
-    private Map<String, List<MqttSubscribeTask>> subscribeTasks = new ConcurrentHashMap<>();
+    private Map<String, List<MqttTask>> publishTasks = new ConcurrentHashMap<>();
+    private Map<String, List<MqttTask>> subscribeTasks = new ConcurrentHashMap<>();
 
     private MqttPublishManager publishManager;
     private MqttSubscribeManager subscribeManager;
@@ -56,7 +57,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) throws OpenemsException {
+    public void activate(ComponentContext context, Config config) throws OpenemsException, MqttException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         try {
             this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat(), config.locale());
@@ -67,10 +68,10 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         }
 
         publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive());
+                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), config.timeFormat(), config.locale());
         //ClientId --> + CLIENT_SUB_0
         subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive());
+                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), config.timeFormat(), config.locale());
 
     }
 
@@ -139,22 +140,22 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     @Override
     public boolean addMqttTask(String id, MqttTask mqttTask) {
 
-        if (mqttTask instanceof MqttPublishManager) {
+        if (mqttTask instanceof MqttPublishTask) {
             if (this.publishTasks.containsKey(id)) {
-                this.publishTasks.get(id).add((MqttPublishTask) mqttTask);
+                this.publishTasks.get(id).add(mqttTask);
             } else {
-                List<MqttPublishTask> task = new ArrayList<>();
-                task.add((MqttPublishTask) mqttTask);
+                List<MqttTask> task = new ArrayList<>();
+                task.add(mqttTask);
                 this.publishTasks.put(id, task);
             }
         }
 
-        if (mqttTask instanceof MqttSubscribeManager) {
+        if (mqttTask instanceof MqttSubscribeTask) {
             if (this.subscribeTasks.containsKey(id)) {
-                this.subscribeTasks.get(id).add((MqttSubscribeTask) mqttTask);
+                this.subscribeTasks.get(id).add(mqttTask);
             } else {
-                List<MqttSubscribeTask> task = new ArrayList<>();
-                task.add((MqttSubscribeTask) mqttTask);
+                List<MqttTask> task = new ArrayList<>();
+                task.add(mqttTask);
                 this.subscribeTasks.put(id, task);
             }
         }
@@ -171,10 +172,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     @Override
     public void handleEvent(Event event) {
-        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
+
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
             this.subscribeManager.triggerNextRun();
             this.publishManager.triggerNextRun();
-            
+
             System.out.println("Getting Message");
             this.bridgeSubscriberTest.getTopic(this.subscribeId).forEach(entry -> {
                 System.out.println(entry + this.bridgeSubscriberTest.getPayload(entry));
