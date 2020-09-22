@@ -52,13 +52,9 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         }
         this.pidFilter = new PidFilter(config.proportionalGain(), config.integralGain(), config.derivativeGain());
         pidFilter.setLimits(-200, 200);
-        try {
-            this.setMinTemperature().setNextWriteValue(config.setPoint_Temperature());
-            //for REST / JSON
-            this.setMinTemperature().setNextValue(config.setPoint_Temperature());
-        } catch (OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-        }
+
+        this.setMinTemperature().setNextValue(config.setPoint_Temperature());
+
         this.offPercentage = config.offPercentage();
     }
 
@@ -124,11 +120,8 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         if (ownActivation) {
             if (activeDependency) {
                 if (this.thermometer.getTemperature().getNextValue().isDefined()) {
-                    if (this.setMinTemperature().getNextWriteValue().isPresent()) {
-                        this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
-                    }
                     this.timestamp = System.currentTimeMillis();
-                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
+                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().value().get());
                     // is percentage value fix if so substract from current powerlevel?
                     output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
@@ -141,11 +134,21 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
                 }
             } else if (this.passingForPid.readyToChange()) {
-                this.passingForPid.changeByPercentage(this.offPercentage);
+                if (this.passingForPid.getPowerLevel().value().isDefined()) {
+                    int percentToChange = offPercentage - this.passingForPid.getPowerLevel().value().get().intValue();
+                    this.passingForPid.changeByPercentage(percentToChange);
+                } else {
+                    this.passingForPid.changeByPercentage(offPercentage);
+                }
             }
         } else {
             if (this.passingForPid.readyToChange()) {
-                this.passingForPid.changeByPercentage(this.offPercentage);
+                if (this.passingForPid.getPowerLevel().value().isDefined()) {
+                    int percentToChange = offPercentage - this.passingForPid.getPowerLevel().value().get().intValue();
+                    this.passingForPid.changeByPercentage(percentToChange);
+                } else {
+                    this.passingForPid.changeByPercentage(offPercentage);
+                }
             }
         }
     }

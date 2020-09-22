@@ -56,7 +56,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 		this.noError().setNextValue(true);
 
 		//allocate components
-		try {
+
 			if (cpm.getComponent(config.allocated_Heating_Controller()) instanceof PassingControlCenterChannel) {
 				heatingController = cpm.getComponent(config.allocated_Heating_Controller());
 			} else {
@@ -73,12 +73,8 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 				pumpHK01 = cpm.getComponent(config.pumpHK01Id());
 			} else {
 				throw new ConfigurationException("The configured component is not a pump! Please check "
-						+ config.valveUS01Id(), "configured component is incorrect!");
+						+ config.pumpHK01Id(), "configured component is incorrect!");
 			}
-		} catch (ConfigurationException | OpenemsError.OpenemsNamedException e) {
-			e.printStackTrace();
-			throw e;
-		}
 
 	}
 

@@ -32,7 +32,6 @@ import java.time.temporal.ChronoUnit;
  * "false" while the water tank is heating up and is already above min temperature, needHotWater will change to "false"
  * and the heating will stop. If heatNetworkReadySignal changes from "false" to "true" while the tank is below max
  * temperature, needHotWater will change to "true" and heating will start.
- *
  */
 
 // An Paul:
@@ -53,167 +52,164 @@ import java.time.temporal.ChronoUnit;
 @Component(name = "SignalHotWater", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class SignalHotWaterImpl extends AbstractOpenemsComponent implements OpenemsComponent, SignalHotWaterChannel, Controller {
 
-	private final Logger log = LoggerFactory.getLogger(SignalHotWaterImpl.class);
+    private final Logger log = LoggerFactory.getLogger(SignalHotWaterImpl.class);
 
-	@Reference
-	protected ComponentManager cpm;
+    @Reference
+    protected ComponentManager cpm;
 
-	private Thermometer watertankTempSensorUpperChannel;
-	private Thermometer watertankTempSensorLowerChannel;
-	private int minTempUpper;
-	private int maxTempLower;
-	private int responseTimeout;
-	private LocalDateTime timestamp;
-	private boolean heatNetworkStateTracker;
+    private Thermometer watertankTempSensorUpperChannel;
+    private Thermometer watertankTempSensorLowerChannel;
+    private int minTempUpper;
+    private int maxTempLower;
+    private int responseTimeout;
+    private LocalDateTime timestamp;
+    private boolean heatNetworkStateTracker;
 
-	// Variables for channel readout
-	private boolean tempSensorsSendData;
-	private boolean heatNetworkSignalReveived;
-	private boolean heatNetworkReady;
-	private int watertankTempUpperSensor;
-	private int watertankTempLowerSensor;
+    // Variables for channel readout
+    private boolean tempSensorsSendData;
+    private boolean heatNetworkSignalReveived;
+    private boolean heatNetworkReady;
+    private int watertankTempUpperSensor;
+    private int watertankTempLowerSensor;
 
-	public SignalHotWaterImpl() {
-		super(OpenemsComponent.ChannelId.values(),
-				SignalHotWaterChannel.ChannelId.values(),
-				Controller.ChannelId.values());
-	}
+    public SignalHotWaterImpl() {
+        super(OpenemsComponent.ChannelId.values(),
+                SignalHotWaterChannel.ChannelId.values(),
+                Controller.ChannelId.values());
+    }
 
-	@Activate
-	public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
-		super.activate(context, config.id(), config.alias(), config.enabled());
+    @Activate
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        super.activate(context, config.id(), config.alias(), config.enabled());
 
-		minTempUpper = config.min_temp_upper() * 10;	// Convert to dezidegree.
-		maxTempLower = config.max_temp_lower() * 10;
-		responseTimeout = config.response_timeout();
-		this.heatTankRequest().setNextValue(false);
-		this.needHotWater().setNextValue(false);
-		heatNetworkStateTracker = false;
-		this.noError().setNextValue(true);
+        minTempUpper = config.min_temp_upper() * 10;    // Convert to dezidegree.
+        maxTempLower = config.max_temp_lower() * 10;
+        responseTimeout = config.response_timeout();
+        this.heatTankRequest().setNextValue(false);
+        this.needHotWater().setNextValue(false);
+        heatNetworkStateTracker = false;
+        this.noError().setNextValue(true);
 
-		// Allocate components.
-		try {
-			if (cpm.getComponent(config.temperatureSensorUpperId()) instanceof Thermometer) {
-				this.watertankTempSensorUpperChannel = cpm.getComponent(config.temperatureSensorUpperId());
-			} else {
-				throw new ConfigurationException("The configured component is not a temperature sensor! Please check "
-						+ config.temperatureSensorUpperId(), "configured component is incorrect!");
-			}
-			if (cpm.getComponent(config.temperatureSensorLowerId()) instanceof Thermometer) {
-				this.watertankTempSensorLowerChannel = cpm.getComponent(config.temperatureSensorLowerId());
-			} else {
-				throw new ConfigurationException("The configured component is not a temperature sensor! Please check "
-						+ config.temperatureSensorLowerId(), "configured component is incorrect!");
-			}
-		} catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-			e.printStackTrace();
-		}
-
-	}
+        // Allocate components.
+        if (cpm.getComponent(config.temperatureSensorUpperId()) instanceof Thermometer) {
+            this.watertankTempSensorUpperChannel = cpm.getComponent(config.temperatureSensorUpperId());
+        } else {
+            throw new ConfigurationException("The configured component is not a temperature sensor! Please check "
+                    + config.temperatureSensorUpperId(), "configured component is incorrect!");
+        }
+        if (cpm.getComponent(config.temperatureSensorLowerId()) instanceof Thermometer) {
+            this.watertankTempSensorLowerChannel = cpm.getComponent(config.temperatureSensorLowerId());
+        } else {
+            throw new ConfigurationException("The configured component is not a temperature sensor! Please check "
+                    + config.temperatureSensorLowerId(), "configured component is incorrect!");
+        }
 
 
-	@Deactivate
-	public void deactivate() {super.deactivate();}
-
-	@Override
-	public void run() throws OpenemsError.OpenemsNamedException {
-
-		// Sensor checks and error handling.
-		if (watertankTempSensorUpperChannel.getTemperature().value().isDefined()) {
-			if (watertankTempSensorLowerChannel.getTemperature().value().isDefined()) {
-				tempSensorsSendData = true;
-				watertankTempLowerSensor = watertankTempSensorLowerChannel.getTemperature().value().get();
-				watertankTempUpperSensor = watertankTempSensorUpperChannel.getTemperature().value().get();
-				if (this.noError().value().get() == false) {
-					this.noError().setNextValue(true);
-					this.logInfo(this.log, "Temperature sensors are fine now!");
-				}
-			} else {
-				tempSensorsSendData = false;
-				this.noError().setNextValue(false);
-				this.logError(this.log, "Not getting any data from the water tank lower temperature sensor " + watertankTempSensorLowerChannel.id() + ".");
-			}
-		} else {
-			tempSensorsSendData = false;
-			this.noError().setNextValue(false);
-			this.logError(this.log, "Not getting any data from the water tank upper temperature sensor " + watertankTempSensorUpperChannel.id() + ".");
-		}
-
-		// Transfer channel data to local variables for better readability of logic code.
-		heatNetworkSignalReveived = this.heatNetworkReadySignal().value().isDefined();
-		heatNetworkReady = this.heatNetworkReadySignal().value().get();
+    }
 
 
+    @Deactivate
+    public void deactivate() {
+        super.deactivate();
+    }
 
-		if (tempSensorsSendData) {
+    @Override
+    public void run() throws OpenemsError.OpenemsNamedException {
 
-			// Check if water tank is above max temperature.
-			if (watertankTempLowerSensor > maxTempLower) {
-				// Stop heating
-				this.heatTankRequest().setNextValue(false);
-				this.needHotWater().setNextValue(false);
-			} else {
+        // Sensor checks and error handling.
+        if (watertankTempSensorUpperChannel.getTemperature().value().isDefined()) {
+            if (watertankTempSensorLowerChannel.getTemperature().value().isDefined()) {
+                tempSensorsSendData = true;
+                watertankTempLowerSensor = watertankTempSensorLowerChannel.getTemperature().value().get();
+                watertankTempUpperSensor = watertankTempSensorUpperChannel.getTemperature().value().get();
+                if (this.noError().value().get() == false) {
+                    this.noError().setNextValue(true);
+                    this.logInfo(this.log, "Temperature sensors are fine now!");
+                }
+            } else {
+                tempSensorsSendData = false;
+                this.noError().setNextValue(false);
+                this.logError(this.log, "Not getting any data from the water tank lower temperature sensor " + watertankTempSensorLowerChannel.id() + ".");
+            }
+        } else {
+            tempSensorsSendData = false;
+            this.noError().setNextValue(false);
+            this.logError(this.log, "Not getting any data from the water tank upper temperature sensor " + watertankTempSensorUpperChannel.id() + ".");
+        }
 
-				// When water tank temperature is below max, check remote for "on" signal.
-				// heatNetworkReady changes from false to true -> start heating.
-				if (heatNetworkSignalReveived && heatNetworkReady && (heatNetworkStateTracker == false)) {
-					this.heatTankRequest().setNextValue(true);
-					heatNetworkStateTracker = true;
-
-					// Set timer, just in case "heatNetworkReady == false" next cycle.
-					timestamp = LocalDateTime.now();
-				}
-
-				// Check if heating has been requested.
-				if (this.heatTankRequest().value().get()) {
-
-					// Wait for "heatNetworkReady == true" or execute after timeout.
-					if ((heatNetworkSignalReveived && heatNetworkReady)
-							|| ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= responseTimeout) {
-
-						// Check if we got here by timeout.
-						if ((heatNetworkSignalReveived && heatNetworkReady) == false){
-							if (this.needHotWater().value().get() == false) {
-								this.logWarn(this.log, "Warning: heat network response timeout.");
-							}
-						}
-
-						this.needHotWater().setNextValue(true);
-					}
-				}
-			}
-
-			// Anmerkung an PauL:
-			// Soll die "too cold" Abfrage zur besseren Lesbarkeit vor der "too hot" Abfrage stehen muss etwas Code
-			// geändert werden. Genauer: this.needHotWater().setNextValue(false) in Zeile 272 muss verschoben werden
-			// in ein "else" in Zeile 251.
+        // Transfer channel data to local variables for better readability of logic code.
+        heatNetworkSignalReveived = this.heatNetworkReadySignal().value().isDefined();
+        if (heatNetworkSignalReveived) {
+            heatNetworkReady = this.heatNetworkReadySignal().value().get();
+        }
 
 
-			// Check if water tank is too cold.
-			if (watertankTempUpperSensor < minTempUpper) {
-				// Request heat and start timer.
-				if (this.heatTankRequest().value().get() == false) {
-					timestamp = LocalDateTime.now();
-					this.heatTankRequest().setNextValue(true);
-				}
-			} else {
-				// If water tank temperature is not too low, check remote for "off" signal.
-				// heatNetworkReady changes from true to false -> turn off heating.
-				if (heatNetworkSignalReveived && (heatNetworkReady == false) && heatNetworkStateTracker) {
-					this.heatTankRequest().setNextValue(false);
-					this.needHotWater().setNextValue(false);
-					heatNetworkStateTracker = false;
-				}
-			}
+        if (tempSensorsSendData) {
 
-			// Pass on temperature of lower sensor. Saves needing to configure the temperature sensor in other controller.
-			this.waterTankTemp().setNextValue(watertankTempLowerSensor);
-		}
+            // Check if water tank is above max temperature.
+            if (watertankTempLowerSensor > maxTempLower) {
+                // Stop heating
+                this.heatTankRequest().setNextValue(false);
+                this.needHotWater().setNextValue(false);
+            } else {
+
+                // When water tank temperature is below max, check remote for "on" signal.
+                // heatNetworkReady changes from false to true -> start heating.
+                if (heatNetworkSignalReveived && heatNetworkReady && (heatNetworkStateTracker == false)) {
+                    this.heatTankRequest().setNextValue(true);
+                    heatNetworkStateTracker = true;
+
+                    // Set timer, just in case "heatNetworkReady == false" next cycle.
+                    timestamp = LocalDateTime.now();
+                }
+
+                // Check if heating has been requested.
+                if (this.heatTankRequest().value().get()) {
+
+                    // Wait for "heatNetworkReady == true" or execute after timeout.
+                    if ((heatNetworkSignalReveived && heatNetworkReady)
+                            || ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= responseTimeout) {
+
+                        // Check if we got here by timeout.
+                        if ((heatNetworkSignalReveived && heatNetworkReady) == false) {
+                            if (this.needHotWater().value().get() == false) {
+                                this.logWarn(this.log, "Warning: heat network response timeout.");
+                            }
+                        }
+
+                        this.needHotWater().setNextValue(true);
+                    }
+                }
+            }
+
+            // Anmerkung an PauL:
+            // Soll die "too cold" Abfrage zur besseren Lesbarkeit vor der "too hot" Abfrage stehen muss etwas Code
+            // geändert werden. Genauer: this.needHotWater().setNextValue(false) in Zeile 272 muss verschoben werden
+            // in ein "else" in Zeile 251.
 
 
+            // Check if water tank is too cold.
+            if (watertankTempUpperSensor < minTempUpper) {
+                // Request heat and start timer.
+                if (this.heatTankRequest().value().get() == false) {
+                    timestamp = LocalDateTime.now();
+                    this.heatTankRequest().setNextValue(true);
+                }
+            } else {
+                // If water tank temperature is not too low, check remote for "off" signal.
+                // heatNetworkReady changes from true to false -> turn off heating.
+                if (heatNetworkSignalReveived && (heatNetworkReady == false) && heatNetworkStateTracker) {
+                    this.heatTankRequest().setNextValue(false);
+                    this.needHotWater().setNextValue(false);
+                    heatNetworkStateTracker = false;
+                }
+            }
+
+            // Pass on temperature of lower sensor. Saves needing to configure the temperature sensor in other controller.
+            this.waterTankTemp().setNextValue(watertankTempLowerSensor);
+        }
 
 
-
-	}
+    }
 
 }

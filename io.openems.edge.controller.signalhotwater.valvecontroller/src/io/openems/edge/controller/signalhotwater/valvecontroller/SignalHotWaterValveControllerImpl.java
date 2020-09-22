@@ -74,7 +74,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 		temperatureSensorSendsData = true;
 
 		// Allocate components
-		try {
+
 			if (cpm.getComponent(config.temperatureSensorVlId()) instanceof Thermometer) {
 				this.waermetauscherVorlauf = cpm.getComponent(config.temperatureSensorVlId());
 			} else {
@@ -99,9 +99,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 				throw new ConfigurationException("The configured component is not a valve! Please check "
 						+ config.valveTL01Id(), "configured component is incorrect!");
 			}
-		} catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-			e.printStackTrace();
-		}
+
 
 	}
 
