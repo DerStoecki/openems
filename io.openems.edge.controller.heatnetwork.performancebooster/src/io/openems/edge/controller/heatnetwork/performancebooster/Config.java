@@ -65,7 +65,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String valve() default "Valve0";
 
     @AttributeDefinition(name = "HeaterIds Controlled by Relay or 10V", description = "Id of Devices on Relay or 0-10V module.")
-    String[] heaters() default {"Relay0, LucidControlDeviceOutput1, LucidControlDeviceOutput2"};
+    String[] heaters() default {"Relay0", "LucidControlDeviceOutput1", "LucidControlDeviceOutput2"};
 
     @AttributeDefinition(name = "Timeout", description = "After which time Should the Controller definetly deactivate. Time in s")
             int sleepTime() default 1000;

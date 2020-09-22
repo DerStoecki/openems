@@ -17,9 +17,11 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "alias", description = "Human Readable Name of Component.")
     String alias() default "";
 
+    @AttributeDefinition(name = "Use Dependency", description = "PID Reacting only to active Passing station")
+    boolean useDependency() default false;
+
     @AttributeDefinition(name = "Dependency : what component can block this Controller", description = "Component that can block this component")
     String passingControllerId() default "PassingController0";
-
 
     @AttributeDefinition(name = "Allocated Passing Device", description = "Unique Name of the allocated Device.")
     String allocatedPassingDevice() default "Valve0";
@@ -35,6 +37,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Temperature", description = "The Temperature you want to reach (T in dC--> 1°C = 10).")
     int setPoint_Temperature() default 750;
+
+    @AttributeDefinition(name = "Turn off Percentage", description = "If PID is off position of controlled device")
+    int offPercentage() default 0;
 
     @AttributeDefinition(name = "TemperatureSensor", description = "The Temperaturesensor allocated to this controller")
     String temperatureSensorId() default "TemperatureSensor4";

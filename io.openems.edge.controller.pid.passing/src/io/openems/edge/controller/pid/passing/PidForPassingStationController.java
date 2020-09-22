@@ -32,6 +32,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     private PassingActivateNature passing;
     private boolean isPump;
     private PidFilter pidFilter;
+    private int offPercentage = 0;
 
     private double intervalTime = 2000;
     private double timestamp = 0;
@@ -45,7 +46,10 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponent(config.temperatureSensorId());
         allocateComponent(config.allocatedPassingDevice());
-        allocateComponent(config.passingControllerId());
+
+        if (config.useDependency()) {
+            allocateComponent(config.passingControllerId());
+        }
         this.pidFilter = new PidFilter(config.proportionalGain(), config.integralGain(), config.derivativeGain());
         pidFilter.setLimits(-200, 200);
         try {
@@ -55,6 +59,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
+        this.offPercentage = config.offPercentage();
     }
 
     /**
@@ -65,7 +70,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
      *               Allocate the Component --> Access to Channels
      *               </p>
      * @throws OpenemsError.OpenemsNamedException when cpm can't access / somethings wrong with cpm.
-     * @throws ConfigurationException                                          when cpm tries to access device but it's not correct instance.
+     * @throws ConfigurationException             when cpm tries to access device but it's not correct instance.
      */
     private void allocateComponent(String Device) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         if (cpm.getComponent(Device) instanceof PassingForPid) {
@@ -107,24 +112,40 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
+        boolean activeDependency = true;
+        if (this.passing != null) {
+            activeDependency = this.passing.getOnOff().value().isDefined() && this.passing.getOnOff().value().get();
+        }
+        boolean ownActivation = true;
+        if (this.turnOn().value().isDefined()) {
+            ownActivation = this.turnOn().value().get();
+        }
 
-        if (this.passing.getOnOff().value().isDefined() && this.passing.getOnOff().value().get()) {
-            if (this.thermometer.getTemperature().getNextValue().isDefined()) {
-                if (this.setMinTemperature().getNextWriteValue().isPresent()) {
-                    this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
-                }
-                this.timestamp = System.currentTimeMillis();
-                double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
-                // is percentage value fix if so substract from current powerlevel?
-                output -= this.passingForPid.getPowerLevel().getNextValue().get();
+        if (ownActivation) {
+            if (activeDependency) {
+                if (this.thermometer.getTemperature().getNextValue().isDefined()) {
+                    if (this.setMinTemperature().getNextWriteValue().isPresent()) {
+                        this.setMinTemperature().setNextValue(this.setMinTemperature().getNextWriteValue().get());
+                    }
+                    this.timestamp = System.currentTimeMillis();
+                    double output = pidFilter.applyPidFilter(this.thermometer.getTemperature().getNextValue().get(), this.setMinTemperature().getNextWriteValue().get());
+                    // is percentage value fix if so substract from current powerlevel?
+                    output -= this.passingForPid.getPowerLevel().getNextValue().get();
 
-                if (this.isPump) {
-                    output *= -1;
-                }
-                if (this.passingForPid.readyToChange()) {
-                    this.passingForPid.changeByPercentage(output / 10);
-                }
+                    if (this.isPump) {
+                        output *= -1;
+                    }
+                    if (this.passingForPid.readyToChange()) {
+                        this.passingForPid.changeByPercentage(output / 10);
+                    }
 
+                }
+            } else if (this.passingForPid.readyToChange()) {
+                this.passingForPid.changeByPercentage(this.offPercentage);
+            }
+        } else {
+            if (this.passingForPid.readyToChange()) {
+                this.passingForPid.changeByPercentage(this.offPercentage);
             }
         }
     }
