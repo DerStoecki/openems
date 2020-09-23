@@ -70,9 +70,16 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
                 this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), config.timeFormat(), config.locale());
 
+        publishManager.activate(super.id() + "_publish");
+        subscribeManager.activate(super.id() + "_subscribe");
+
         //TODO DELETE LATER ONLY FOR TEST
         this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 0, MqttPriority.LOW));
+        this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
+                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 1, MqttPriority.LOW));
+        this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
+                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 2, MqttPriority.LOW));
         this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
                 true, false, 0, MqttPriority.LOW));
 
@@ -161,7 +168,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                 task.add(mqttTask);
                 this.subscribeTasks.put(id, task);
             }
-            this.subscribeManager.subscribeToTopic(mqttTask, id);
+            // this.subscribeManager.subscribeToTopic(mqttTask, id);
         }
 
         return true;
@@ -180,8 +187,10 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     public void handleEvent(Event event) {
 
         if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
+
             this.subscribeManager.triggerNextRun();
             this.publishManager.triggerNextRun();
+
 
             System.out.println("Getting Message");
             this.bridgeSubscriberTest.getTopic(this.subscribeId).forEach(entry -> {

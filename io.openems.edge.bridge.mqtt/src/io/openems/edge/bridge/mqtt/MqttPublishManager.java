@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openems.edge.bridge.mqtt.api.MqttTask;
 
@@ -30,28 +31,26 @@ public class MqttPublishManager extends AbstractMqttManager {
     }
 
     @Override
-    protected void forever() {
+    public void forever() throws InterruptedException {
         super.foreverAbstract();
         super.currentToDo.forEach(task -> {
             try {
+
                 int qos = task.getQos();
-                super.stopwatch.start();
+                long time = System.nanoTime();
                 this.connections.get(qos).sendMessage(task.getTopic(), task.getPayload(), qos, task.getRetainFlag(), task.getAddTime());
-                long time = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-                //update timeForQosTask randomly; Used for Later Average Time Calculation of each Task.
-
-                int counterOfQoS = super.counterForQos.get(qos);
-                super.timeForQos.get(qos).add(counterOfQoS, time);
-                super.counterForQos.replace(qos, (counterOfQoS + 1) % super.maxListLength);
-
-                super.stopwatch.stop();
-                super.stopwatch.reset();
-                //remove Task after it's done
-                super.currentToDo.remove(task);
+                time = System.nanoTime() - time;
+                time = TimeUnit.MILLISECONDS.convert(time, TimeUnit.NANOSECONDS);
+                AtomicInteger counter = super.counterForQos.get(qos);
+                super.timeForQos.get(qos).add(counter.get(), time);
+                counter.getAndIncrement();
+                counter.set(counter.get() % 30);
             } catch (MqttException e) {
                 e.printStackTrace();
+                super.toDoFuture.add(task);
             }
         });
+        super.currentToDo.clear();
     }
 
 
