@@ -1,16 +1,19 @@
 package io.openems.edge.bridge.mqtt;
 
+import com.google.common.base.Stopwatch;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.mqtt.api.MqttTask;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 abstract class AbstractMqttManager extends AbstractCycleWorker {
     //STRING = ID OF COMPONENT
     Map<String, List<MqttTask>> allTasks; //with ID
     List<MqttTask> toDoFuture;
-    List<MqttTask> currenttoDo;
+    List<MqttTask> currentToDo;
+    final Stopwatch stopwatch = Stopwatch.createUnstarted();
     String mqttBroker;
     String mqttBrokerUrl;
     String mqttUsername;
@@ -28,11 +31,16 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
     //Calculate Random new Time for QoS;
     Random rd = new Random();
 
+    //TODO GET EFFECTIVE CYCLE TIME
+    //TODO ATM STANDARD TIME 1000 ms
+
+    private long maxTime = 1000;
+
     private List<Long> averageTime = new ArrayList<>();
 
     AbstractMqttManager(String mqttBroker, String mqttBrokerUrl, String mqttUsername, String mqttPassword,
                         String mqttClientId, int keepAlive, Map<String, List<MqttTask>> allTasks,
-                        boolean timeEnabled, String timeFormat, String locale) {
+                        boolean timeEnabled, String timeFormat, String locale, boolean useAverageTime) {
 
         this.mqttBroker = mqttBroker;
         this.mqttBrokerUrl = mqttBrokerUrl;
@@ -55,26 +63,58 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
 
     void foreverAbstract() {
-        calculateAverageTime();
-        handleTasks();
+        calculateAverageTimes();
+        addToFutureAndCurrentToDo(sortTasks());
     }
 
-    private void handleTasks() {
-        
+    //TODO IMPROVE
+    private void addToFutureAndCurrentToDo(List<MqttTask> sortedTasks) {
+        //Add at the End of Future
+        this.toDoFuture.addAll(sortedTasks);
+        boolean timeAvailable = true;
+        long timeLeft = maxTime;
+        while (timeAvailable) {
+            MqttTask task = toDoFuture.get(0);
+            timeLeft = timeLeft - averageTime.get(task.getQos());
+            if (timeLeft < 0) {
+                timeAvailable = false;
+                break;
+            }
+            currentToDo.add(task);
+            toDoFuture.remove(0);
+        }
+
+
+    }
+
+    //TODO SEE IF SORTED BY PRIORITY
+    private List<MqttTask> sortTasks() {
+        List<MqttTask> collectionOfAllTasks = new ArrayList<>();
+        this.allTasks.forEach((key, value) -> collectionOfAllTasks.addAll(value));
+        //Add QoS 0 to CurrentToDo --> No Time Required
+        collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.getQos() == 0).forEach(task -> {
+            this.currentToDo.add(task);
+            collectionOfAllTasks.remove(task);
+        });
+        return collectionOfAllTasks.stream().sorted(Comparator.comparing(MqttTask::getPriority)).collect(Collectors.toList());
     }
 
 
-    //EACH QoS has AverageTime
+    //EACH QoS has AverageTime except QoS 0
 
-    void calculateAverageTime() {
+    private void calculateAverageTimes() {
         //for each Time of each QoS --> add and create Average
         AtomicLong time = new AtomicLong(0);
         this.timeForQos.forEach((key, value) -> {
-            value.forEach(time::getAndAdd);
-            long addedTime = time.get();
-            addedTime /= value.size(); //either maxlength or <
-            this.averageTime.add(key, addedTime);
-            time.set(0);
+            if (key == 0) {
+                this.averageTime.add(key, (long) 0);
+            } else {
+                value.forEach(time::getAndAdd);
+                long addedTime = time.get();
+                addedTime /= value.size(); //either maxlength or <
+                this.averageTime.add(key, addedTime);
+                time.set(0);
+            }
         });
     }
 }

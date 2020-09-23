@@ -12,7 +12,9 @@ public interface MqttTask {
 
     boolean getAddTime();
 
-    void response(String payload);
+    MqttPriority getPriority();
+
+    MqttType getMqttType();
 
 
 }

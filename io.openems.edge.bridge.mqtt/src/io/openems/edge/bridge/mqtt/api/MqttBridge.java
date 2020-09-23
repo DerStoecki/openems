@@ -5,6 +5,7 @@ import io.openems.common.channel.Level;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.OpenemsComponent;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 
 public interface MqttBridge extends OpenemsComponent {
@@ -31,7 +32,7 @@ public interface MqttBridge extends OpenemsComponent {
 
     //add and remove Task
 
-    boolean addMqttTask(String id, MqttTask mqttTask);
+    boolean addMqttTask(String id, MqttTask mqttTask) throws MqttException;
 
     boolean removeMqttTasks(String id);
 

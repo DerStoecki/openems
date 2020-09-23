@@ -1,10 +1,7 @@
 package io.openems.edge.bridge.mqtt;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.bridge.mqtt.api.MqttBridge;
-import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
-import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
-import io.openems.edge.bridge.mqtt.api.MqttTask;
+import io.openems.edge.bridge.mqtt.api.*;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -73,6 +70,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
                 this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), config.timeFormat(), config.locale());
 
+        //TODO DELETE LATER ONLY FOR TEST
+        this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge",
+                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 0, MqttPriority.LOW));
+        this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
+                true, false, 0, MqttPriority.LOW));
+
     }
 
     private void createMqttSession(Config config) throws MqttException {
@@ -138,7 +141,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     }
 
     @Override
-    public boolean addMqttTask(String id, MqttTask mqttTask) {
+    public boolean addMqttTask(String id, MqttTask mqttTask) throws MqttException {
 
         if (mqttTask instanceof MqttPublishTask) {
             if (this.publishTasks.containsKey(id)) {
@@ -158,12 +161,15 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                 task.add(mqttTask);
                 this.subscribeTasks.put(id, task);
             }
+            this.subscribeManager.subscribeToTopic(mqttTask, id);
         }
+
         return true;
     }
 
     @Override
     public boolean removeMqttTasks(String id) {
+        //TODO SEE IF MANAGER TASKS GET REMOVED
         this.subscribeTasks.remove(id);
         this.publishTasks.remove(id);
 
