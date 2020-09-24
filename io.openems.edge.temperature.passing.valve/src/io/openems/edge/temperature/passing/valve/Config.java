@@ -28,6 +28,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Valve Time", description = "The time needed to Open and Close the valve (t in seconds).")
     int valve_Time() default 30;
 
+    @AttributeDefinition(name = "Should Close on Activation", description = "Should the Valve Close completely if it's "
+            + "activated: prevents in flight status due to crashes or restarts etc")
+    boolean shouldCloseOnActivation() default true;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Valve Two Relays [{id}]";

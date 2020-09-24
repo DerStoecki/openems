@@ -3,20 +3,28 @@ package io.openems.edge.temperature.passing.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.IntegerWriteChannel;
-import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PassingChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+        /**
+         * Current Power Level.
+         * <ul>
+         *     <li>Interfce: PassingChannel
+         *     <li>Type: Double
+         *     <li>Unit: Percentage
+         *     <p> Indicates the Current Power Level.
+         *     </ul>
+         */
+        CURRENT_POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT)),
+
 
         // TODO: Why is this a write channel? It does not seem it needs to be. Can it be changed to a read channel if that is sufficient?
         /**
-         * PowerLevel.
+         * PowerLevel Goal.
          *
          * <ul>
          * <li>Interface: PassingChannel
@@ -25,7 +33,9 @@ public interface PassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
+        POWER_LEVEL_GOAL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(
+                channel -> ((DoubleWriteChannel) channel).onSetNextWrite(channel::setNextValue)
+        )),
 
         /**
          * LastPowerLevel.
@@ -57,6 +67,9 @@ public interface PassingChannel extends OpenemsComponent {
          */
         SET_POWER_LEVEL(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(channel ->
                 ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
+
+        RESET_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(channel ->
+                ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
 
 
         /**
@@ -93,8 +106,8 @@ public interface PassingChannel extends OpenemsComponent {
      * @return the Channel
      */
 
-    default WriteChannel<Double> getPowerLevel() {
-        return this.channel(ChannelId.POWER_LEVEL);
+    default Channel<Double> getPowerLevel() {
+        return this.channel(ChannelId.CURRENT_POWER_LEVEL);
     }
 
     /**
@@ -127,6 +140,15 @@ public interface PassingChannel extends OpenemsComponent {
         return this.channel(ChannelId.SET_POWER_LEVEL);
     }
 
+    default WriteChannel<Double> setGoalPowerLevel() {
+        return this.channel(ChannelId.POWER_LEVEL_GOAL);
+    }
+
+
+    default WriteChannel<Boolean> getValveReset() {
+        return this.channel(ChannelId.RESET_VALVE);
+    }
+
 
     /**
      * Tells how much time is needed for e.g. Valve to Open or Close 100%.
@@ -139,4 +161,6 @@ public interface PassingChannel extends OpenemsComponent {
     default Channel<Double> getTimeNeeded() {
         return this.channel(ChannelId.TIME);
     }
+
+
 }

@@ -61,7 +61,16 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        valves.values().forEach(Valve::readyToChange);
+        valves.values().forEach(valve -> {
+
+            if (valve.getValveReset().value().isDefined() && valve.getValveReset().value().get()) {
+                valve.reset();
+            }
+            if (!valve.powerLevelReached()) {
+                valve.updatePowerLevel();
+            }
+            valve.readyToChange();
+        });
         i2cBridge.getMcpList().forEach(McpChannelRegister::shift);
     }
 }

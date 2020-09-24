@@ -102,8 +102,6 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
     }
 
 
-
-
     public void controlRelays(boolean activate, String whichRelays) {
         switch (whichRelays) {
             case "Open":
@@ -129,8 +127,30 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
 
     // Added because of changes to valve interface. Won't compile otherwise.
     @Override
-    public void forceOpen() {}
+    public void forceOpen() {
+    }
 
     @Override
-    public void forceClose() {}
+    public void updatePowerLevel() {
+
+    }
+
+    @Override
+    public boolean powerLevelReached() {
+        return false;
+    }
+
+    @Override
+    public boolean isChanging() {
+        return false;
+    }
+
+    @Override
+    public void reset() {
+
+    }
+
+    @Override
+    public void forceClose() {
+    }
 }
