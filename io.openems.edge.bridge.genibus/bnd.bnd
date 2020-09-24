@@ -8,6 +8,7 @@ Bundle-Description: \
 
 Export-Package:  \
 	io.openems.edge.bridge.genibus.api,\
+	io.openems.edge.bridge.genibus.api.task,\
 	io.openems.edge.bridge.genibus.protocol,\
 
 
@@ -32,6 +33,8 @@ Import-Package: \
     org.osgi.compendium,\
     osgi.annotation,\
     org.openmuc.jrxtx;version=1.0.1,\
+    com.google.gson,\
+    com.google.guava,\
 
 
 -testpath: \

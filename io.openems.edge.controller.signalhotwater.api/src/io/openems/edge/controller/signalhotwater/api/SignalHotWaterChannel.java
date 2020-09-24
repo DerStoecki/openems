@@ -14,7 +14,8 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
 
         /**
-         * Request to heat the water tank. Controller output, request to turn on the heat network.
+         * Controller output, request to heat the water tank. Low temperature detected in the water tank, requesting to
+         * turn on the heat network so the tank can be heated.
          * <li>
          * <li>Type: Boolean
          * <li>
@@ -47,7 +48,7 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
          * </ul>
          */
 
-        NEED_HOT_WATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
+        START_HEATING_TANK(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Water tank temperature
@@ -84,7 +85,8 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
 
     /**
-     * Request to heat the water tank.
+     * Controller output, request to heat the water tank. Low temperature detected in the water tank, requesting to turn
+     * on the heat network so the tank can be heated.
      *
      * @return the Channel
      */
@@ -108,13 +110,13 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
     }
 
     /**
-     * Controller output, signalling need for hot water.
+     * Controller output, signalling to commence the procedure to heat the tank.
      *
      * @return the Channel
      */
 
-    default Channel<Boolean> needHotWater() {
-        return this.channel(ChannelId.NEED_HOT_WATER);
+    default Channel<Boolean> startHeatingTank() {
+        return this.channel(ChannelId.START_HEATING_TANK);
     }
 
     /**

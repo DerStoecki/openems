@@ -1,7 +1,6 @@
 package io.openems.edge.controller.pump.grundfos;
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.bridge.genibus.api.GenibusChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -41,23 +40,15 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     private int maxPumpingHeadMeters;
 
     // Give these variables values to prevent null pointer exception in channelOutput()
-    private double range = 10;
+    private double range = 20;
     private double intervalMin = 0;
-    private double intervalMax = 10;
+    private double intervalMax = 20;
     private double setpoint = 0;
+    private int controlMode;
 
     private PumpGrundfosChannels pumpChannels;
 
     private boolean verbose;
-
-    private boolean start;
-    private boolean stop;
-    private boolean remote;
-    private boolean minMotorCurve;
-    private boolean maxMotorCurve;
-    private boolean constFrequency;
-    private boolean constPressure;
-    private boolean autoAdapt;
 
     public PumpGrundfosControllerImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -78,6 +69,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
         }
+        controlMode = config.controlMode().getValue();
         maxPumpingHeadMeters = config.maxPumpingHead();
         if (maxPumpingHeadMeters < 2) {
             maxPumpingHeadMeters = 2;
@@ -92,13 +84,19 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             sethIntervalMin().setNextWriteValue(config.hIntervalMin());
             sethIntervalMax().setNextWriteValue(config.hIntervalMax());
             setPumpingHead().setNextWriteValue(config.setpoint());
-            this.pumpChannels.setConstPressure().setNextWriteValue(true);
+            switch (controlMode) {
+                case 1:
+                    this.pumpChannels.setConstPressure().setNextWriteValue(true);
+                    break;
+                case 2:
+                    this.pumpChannels.setConstFrequency().setNextWriteValue(true);
+                    break;
+            }
+
             if (config.stopPump()) {
                 this.pumpChannels.setStop().setNextWriteValue(true);
-                this.pumpChannels.setStart().setNextWriteValue(false);
             } else {
                 this.pumpChannels.setStart().setNextWriteValue(true);
-                this.pumpChannels.setStop().setNextWriteValue(false);
             }
 
         } catch (OpenemsError.OpenemsNamedException e) {
@@ -106,39 +104,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         }
 
         verbose = config.printPumpStatus();
-
-
-        /*
-        String[] commands = config.commands();
-        Arrays.stream(commands).forEach(string -> {
-            switch (string) {
-                case "Remote":
-                    this.remote = true;
-                    break;
-                case "Start":
-                    this.start = true;
-                    break;
-                case "Stop":
-                    this.stop = true;
-                    break;
-                case "MinMotorCurve":
-                    this.minMotorCurve = true;
-                    break;
-                case "MaxMotorCurve":
-                    this.maxMotorCurve = true;
-                    break;
-                case "ConstFrequency":
-                    this.constFrequency = true;
-                    break;
-                case "ConstPressure":
-                    this.constPressure = true;
-                    break;
-                case "AutoAdapt":
-                    this.autoAdapt = true;
-                    break;
-            }
-        });
-        */
 
     }
 
@@ -156,20 +121,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         // Puts the pump in remote mode. Send every second.
         this.pumpChannels.setRemote().setNextWriteValue(true);
 
-        /*
-        if (this.remote) {
-            this.autoAdapt = false;
-        }
-        this.pumpChannels.setAutoAdapt().setNextWriteValue(this.autoAdapt);
-        this.pumpChannels.setStart().setNextWriteValue(this.start);
-        this.pumpChannels.setStop().setNextWriteValue(this.stop);
-        this.pumpChannels.setMaxMotorCurve().setNextWriteValue(this.maxMotorCurve);
-        this.pumpChannels.setMinMotorCurve().setNextWriteValue(this.minMotorCurve);
-        this.pumpChannels.setConstFrequency().setNextWriteValue(this.constFrequency);
-        this.pumpChannels.setConstPressure().setNextWriteValue(this.constPressure);
-        this.pumpChannels.setRemote().setNextWriteValue(this.remote);
-        */
-
         // Fetch write values from channels and put them in the correct containers.
         boolean writeChannelsHaveValues = sethIntervalMin().getNextWriteValue().isPresent() && sethIntervalMax().getNextWriteValue().isPresent()
                 && setPumpingHead().getNextWriteValue().isPresent();
@@ -179,37 +130,64 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             setPumpingHead().setNextValue(setPumpingHead().getNextWriteValue().get());
         }
 
-        boolean channelsHaveValues = sethIntervalMin().value().isDefined() && sethIntervalMax().value().isDefined() &&
-                setPumpingHead().value().isDefined();
-        if (channelsHaveValues) {
-            intervalMin = sethIntervalMin().value().get();
-            intervalMax = sethIntervalMax().value().get();
-            setpoint = setPumpingHead().value().get();
+        if (controlMode == 2) {
+            if (setPumpingHead().value().isDefined()) {
+                setpoint = setPumpingHead().value().get();
+                if (setpoint < 0) {
+                    setpoint = 0;
+                }
+                if (setpoint > 100) {
+                    setpoint = 100;
+                }
+                this.pumpChannels.setRefRem().setNextWriteValue(setpoint / 100.0);
+            }
+        } else {
+            boolean channelsHaveValues = sethIntervalMin().value().isDefined() && sethIntervalMax().value().isDefined()
+                    && setPumpingHead().value().isDefined();
+            if (channelsHaveValues) {
+                intervalMin = sethIntervalMin().value().get();
+                intervalMax = sethIntervalMax().value().get();
+                setpoint = setPumpingHead().value().get();
 
-            // Check validity of values. Check every cycle, as new values can come from Json/Rest at any time.
-            if (intervalMax > maxPumpingHeadMeters || intervalMax <= 0) {
-                intervalMax = maxPumpingHeadMeters;
-                sethIntervalMax().setNextWriteValue(intervalMax);
-                this.logError(this.log, "Bad value for interval max setting. Resetting to maximum valid value " + maxPumpingHeadMeters + ".");
+                // Check validity of values. Check every cycle, as new values can come from Json/Rest at any time.
+                if (intervalMax > maxPumpingHeadMeters || intervalMax <= 0) {
+                    intervalMax = maxPumpingHeadMeters;
+                    sethIntervalMax().setNextWriteValue(intervalMax);
+                    sethIntervalMax().setNextValue(intervalMax);
+                    this.logError(this.log, "Bad value for interval max setting. Resetting to maximum valid value " + maxPumpingHeadMeters + ".");
+                }
+                if (intervalMin > intervalMax || intervalMin < 0) {
+                    intervalMin = 0;
+                    sethIntervalMin().setNextWriteValue(intervalMin);
+                    sethIntervalMin().setNextValue(intervalMin);
+                    this.logError(this.log, "Bad value for interval min setting. Resetting to 0.");
+                }
+                if (setpoint > intervalMax || setpoint < intervalMin) {
+                    setpoint = intervalMax;
+                    setPumpingHead().setNextWriteValue(setpoint);
+                    setPumpingHead().setNextValue(setpoint);
+                    this.logError(this.log, "Value for pumping head setpoint (Förderhöhe) outside of interval range. "
+                            + "Resetting to maximum valid value " + intervalMax + ".");
+                }
+
+                // Don't need to convert to 0-254 anymore. GENIbus does that. To send 100%, write 1.00 to the channel.
+                /*
+                range = intervalMax - intervalMin;
+                double byteValueRefRem = Math.round((bitRange / range) * (setpoint - intervalMin));
+                double byteValueHmin = Math.round((intervalMin / maxPumpingHeadMeters) * bitRange);
+                double byteValueHmax = Math.round((intervalMax / maxPumpingHeadMeters) * bitRange);
+                this.pumpChannels.setConstRefMinH().setNextWriteValue(byteValueHmin);
+                this.pumpChannels.setConstRefMaxH().setNextWriteValue(byteValueHmax);
+                this.pumpChannels.setRefRem().setNextWriteValue(byteValueRefRem);
+                */
+                range = intervalMax - intervalMin;
+                double percentRefRem = (setpoint - intervalMin) / range;
+                double percentHmin = intervalMin / maxPumpingHeadMeters;
+                double percentHmax = intervalMax / maxPumpingHeadMeters;
+                this.pumpChannels.setConstRefMinH().setNextWriteValue(percentHmin);
+                this.pumpChannels.setConstRefMaxH().setNextWriteValue(percentHmax);
+                this.pumpChannels.setRefRem().setNextWriteValue(percentRefRem);
             }
-            if (intervalMin > intervalMax || intervalMin < 0) {
-                intervalMin = 0;
-                sethIntervalMin().setNextWriteValue(intervalMin);
-                this.logError(this.log, "Bad value for interval min setting. Resetting to 0.");
-            }
-            if (setpoint > intervalMax || setpoint < intervalMin) {
-                setpoint = intervalMax;
-                setPumpingHead().setNextWriteValue(setpoint);
-                this.logError(this.log, "Value for pumping head setpoint (Förderhöhe) outside of interval range. "
-                        + "Resetting to maximum valid value " + intervalMax + ".");
-            }
-            range = intervalMax - intervalMin;
-            double byteValueRefRem = Math.round((bitRange / range)*(setpoint - intervalMin));
-            double byteValueHmin = Math.round((intervalMin / maxPumpingHeadMeters) * bitRange);
-            double byteValueHmax = Math.round((intervalMax / maxPumpingHeadMeters) * bitRange);
-            this.pumpChannels.setConstRefMinH().setNextWriteValue(byteValueHmin);
-            this.pumpChannels.setConstRefMaxH().setNextWriteValue(byteValueHmax);
-            this.pumpChannels.setRefRem().setNextWriteValue(byteValueRefRem);
         }
 
         if (verbose) {
@@ -220,13 +198,18 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     private void channelOutput() {
         this.logInfo(this.log, "--Pump status--");
         this.logInfo(this.log, "Power consumption: " + formatter2.format(pumpChannels.getPowerConsumption().value().orElse(0.0)) + " W");
-        this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz");
+        this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
+                + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
         this.logInfo(this.log, "Pump pressure: " + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0)) + " bar or "
                 + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0) * 10) + " m");
+        this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or "
+                + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
         this.logInfo(this.log, "Pump flow: " + formatter2.format(pumpChannels.getCurrentPumpFlow().value().orElse(0.0)) + " m³/h");
+        this.logInfo(this.log, "Pump flow max: " + formatter2.format(pumpChannels.setPumpMaxFlow().value().orElse(0.0)) + " m³/h");
         this.logInfo(this.log, "Pumped medium temperature: " + formatter1.format(pumpChannels.getPumpedWaterMediumTemperature().value().orElse(0.0) / 10) + "°C");
         this.logInfo(this.log, "Control mode: " + pumpChannels.getActualControlMode().value().asEnum().getName());
         this.logInfo(this.log, pumpChannels.getControlSource().value().orElse("Command source:"));
+        this.logInfo(this.log, "Buffer length: " + pumpChannels.getBufferLength().value().get());
         this.logInfo(this.log, "AlarmCode: " + pumpChannels.getAlarmCode().value().get());
         this.logInfo(this.log, "WarnCode: " + pumpChannels.getWarnCode().value().get());
         this.logInfo(this.log, "Warn message: " + pumpChannels.getWarnMessage().value().get());
@@ -236,6 +219,34 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "");
         this.logInfo(this.log, "Controller setpoint: " + setpoint + " m or " + formatter2.format((100.0 / range)*(setpoint - intervalMin)) + "% of interval range.");
         this.logInfo(this.log, "");
+        this.logInfo(this.log, "Sensor:");
+        this.logInfo(this.log, "ana_in_1_func: " + pumpChannels.setSensor1Func().value().get());
+        this.logInfo(this.log, "ana_in_1_applic: " + pumpChannels.setSensor1Applic().value().get());
+        this.logInfo(this.log, "ana_in_1_unit: " + pumpChannels.setSensor1Unit().value().get());
+        this.logInfo(this.log, "ana_in_1_min: " + pumpChannels.setSensor1Min().value().get());
+        this.logInfo(this.log, "ana_in_1_max: " + pumpChannels.setSensor1Max().value().get());
+        this.logInfo(this.log, "grf_sensor_press: " + pumpChannels.getSensorGsp().value().get());
+        this.logInfo(this.log, "grf_sensor_press_func: " + pumpChannels.setSensorGspFunc().value().get());
+        this.logInfo(this.log, "Product number: " + pumpChannels.getProductNumber().value().get());
+        this.logInfo(this.log, "Serial number: " + pumpChannels.getSerialNumber().value().get());
+        this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
+        this.logInfo(this.log, "f_upper: " + pumpChannels.setFupper().value().get());
+        this.logInfo(this.log, "f_nom: " + pumpChannels.setFnom().value().get());
+        this.logInfo(this.log, "f_min: " + pumpChannels.setFmin().value().get());
+        this.logInfo(this.log, "f_max: " + pumpChannels.setFmax().value().get());
+        this.logInfo(this.log, "h_const_ref_min: " + pumpChannels.setConstRefMinH().value().get());
+        this.logInfo(this.log, "h_const_ref_max: " + pumpChannels.setConstRefMaxH().value().get());
+        this.logInfo(this.log, "ref_rem: " + pumpChannels.setRefRem().value().get());
+        this.logInfo(this.log, "ref_rem write: " + pumpChannels.setRefRem().getNextWriteValue().get());
+
+
+
+        try {
+            pumpChannels.setMaxPressure().setNextWriteValue(4.1);
+        } catch (OpenemsError.OpenemsNamedException e) {
+            e.printStackTrace();
+        }
+
 
     }
 }

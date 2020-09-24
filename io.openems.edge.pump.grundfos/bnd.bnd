@@ -10,7 +10,6 @@ Export-Package: \
 
 Private-Package:  \
 	io.openems.edge.pump.grundfos,\
-	io.openems.edge.pump.grundfos.task,\
 
 -includeresource: {readme.md}
 

@@ -1,11 +1,11 @@
-package io.openems.edge.bridge.genibus.api;
+package io.openems.edge.bridge.genibus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.*;
 
-import io.openems.edge.bridge.genibus.GenibusImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.openmuc.jrxtx.DataBits;
@@ -13,7 +13,6 @@ import org.openmuc.jrxtx.Parity;
 import org.openmuc.jrxtx.SerialPort;
 import org.openmuc.jrxtx.SerialPortBuilder;
 import org.openmuc.jrxtx.StopBits;
-import gnu.io.*;
 
 import io.openems.edge.bridge.genibus.protocol.Telegram;
 
@@ -100,7 +99,7 @@ public class Handler {
     }
 
 
-    public boolean packageOK(byte[] bytesCurrentPackage) {
+    public boolean packageOK(byte[] bytesCurrentPackage, boolean verbose) {
         //Look for Start Delimiter (SD)
         boolean sdOK = false;
         if (bytesCurrentPackage.length >= 1) {
@@ -115,7 +114,9 @@ public class Handler {
             }
         }
         if (!sdOK) { //wrong package start, reset
-            this.parent.logWarn(this.log, "SD not OK");
+            if (verbose) {
+                this.parent.logWarn(this.log, "SD not OK");
+            }
             return false;
         }
         //Look for Length (LE), Check package length match
@@ -124,7 +125,9 @@ public class Handler {
             lengthOK = true;
         }
         if (!lengthOK) { //collect more data
-            this.parent.logWarn(this.log, "Length not OK");
+            if (verbose) {
+                this.parent.logWarn(this.log, "Length not OK");
+            }
             return false;
         }
         //Check crc from relevant message part
@@ -202,23 +205,56 @@ public class Handler {
     private Telegram handleResponse(Telegram task, boolean debug) {
         try {
             long startTime = System.currentTimeMillis();
+
+            // This "while" only tests for timeout as long as is.available() <= 0, since there is a break at the end.
+            // This is the timeout length of the GENIbus, which should be set to 60 ms according to GENIbus spec.
             while ((System.currentTimeMillis() - startTime) < 500) {
-                byte[] readBuffer = new byte[1024];
-                int numRead = is.available();
-                if (numRead <= 0) {
+                if (is.available() <= 0) {
                     continue;
                 }
-                is.read(readBuffer, 0, numRead);
-                ByteArrayOutputStream bytesRelevant = new ByteArrayOutputStream();
-                bytesRelevant.write(readBuffer, 0, numRead);
-                byte[] receivedData = bytesRelevant.toByteArray();
+                int numRead;
+                byte[] readBuffer = new byte[1024];
+                List<Byte> completeInput = new ArrayList<>();
+                boolean transferOk = false;
+                while (transferOk == false && (System.currentTimeMillis() - startTime) < 500) {
+                    if (is.available() <= 0) {
+                        continue;
+                    }
+                    numRead = is.available();
+                    if (numRead > 1024) {
+                        numRead = 1024;
+                    }
+                    is.read(readBuffer, 0, numRead);
+                    for (int counter1 = 0 ; counter1 < numRead; counter1++) {
+                        completeInput.add(readBuffer[counter1]);
+                    }
+                    byte[] receivedDataTemp = new byte[completeInput.size()];
+                    int counter2 = 0;
+                    for (byte entry:completeInput) {
+                        receivedDataTemp[counter2] = entry;
+                        counter2++;
+                    }
+                    transferOk = packageOK(receivedDataTemp, false);
+                }
+                byte[] receivedData = new byte[completeInput.size()];
+                int counter2 = 0;
+                for (byte entry:completeInput) {
+                    receivedData[counter2] = entry;
+                    counter2++;
+                }
+
                 if (debug) {
-                    // Debug return data hex values
+                    // Debug return data hex or int values
                     //this.parent.logInfo(this.log, "Data received: " + bytesToHex(receivedData));
                     this.parent.logInfo(this.log, "Data received: " + bytesToInt(receivedData));
                 }
 
-                if (packageOK(receivedData)) {
+                //Thread.sleep(50);
+                //this.parent.logInfo(this.log, "Data available: " + is.available());
+
+                if (packageOK(receivedData, true)) {
+                    // GENIbus requirement: wait 3 ms after reception of a telegram before sending the next one.
+                    Thread.sleep(3);
                     if (debug) {
                         this.parent.logInfo(this.log, "CRC Check ok.");
                     }

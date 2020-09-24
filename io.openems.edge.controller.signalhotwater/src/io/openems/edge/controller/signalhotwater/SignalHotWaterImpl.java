@@ -24,14 +24,14 @@ import java.time.temporal.ChronoUnit;
  * water tank lower sensor monitors the maximum temperature. When the temperature falls below the minimum, the
  * controller sets the heatTankRequest channel to "true", which signals to a remote station to activate the heat network.
  * The controller then waits for a response from the remote station that the heat network is ready ("true" is written in
- * the heatNetworkReadySignal channel by the remote station), or proceeds after a timeout. Then the needHotWater channel
- * is set to "true", which signals to the next controller to start transferring heat from the heat network to the water
- * tank.
+ * the heatNetworkReadySignal channel by the remote station), or proceeds after a timeout. Then the startHeatingTank
+ * channel is set to "true", which signals to the next controller to start transferring heat from the heat network to
+ * the water tank.
  * While the water tank temperature is within bounds, changes (!) in the heatNetworkReadySignal channel are
- * passed on to the needHotWater channel. That means, if the heatNetworkReadySignal channel changes from "true" to
- * "false" while the water tank is heating up and is already above min temperature, needHotWater will change to "false"
+ * passed on to the startHeatingTank channel. That means, if the heatNetworkReadySignal channel changes from "true" to
+ * "false" while the water tank is heating up and is already above min temperature, startHeatingTank will change to "false"
  * and the heating will stop. If heatNetworkReadySignal changes from "false" to "true" while the tank is below max
- * temperature, needHotWater will change to "true" and heating will start.
+ * temperature, startHeatingTank will change to "true" and heating will start.
  *
  */
 
@@ -87,7 +87,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 		maxTempLower = config.max_temp_lower() * 10;
 		responseTimeout = config.response_timeout();
 		this.heatTankRequest().setNextValue(false);
-		this.needHotWater().setNextValue(false);
+		this.startHeatingTank().setNextValue(false);
 		heatNetworkStateTracker = false;
 		this.noError().setNextValue(true);
 
@@ -173,7 +173,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 			// Stop when hot enough.
 			if (watertankTempLowerSensor > maxTempLower) {
 				this.heatTankRequest().setNextValue(false);
-				this.needHotWater().setNextValue(false);
+				this.startHeatingTank().setNextValue(false);
 			} else {
 
 				// Heating has been requested.
@@ -185,15 +185,15 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
 						// Check if we got here by timeout.
 						if ((heatNetworkSignalReveived && heatNetworkReady) == false){
-							if (this.needHotWater().value().get() == false) {
+							if (this.startHeatingTank().value().get() == false) {
 								this.logWarn(this.log, "Warning: remote response timeout.");
 							}
 						}
 
-						this.needHotWater().setNextValue(true);
+						this.startHeatingTank().setNextValue(true);
 					}
 				} else {
-					this.needHotWater().setNextValue(false);
+					this.startHeatingTank().setNextValue(false);
 				}
 			}
 

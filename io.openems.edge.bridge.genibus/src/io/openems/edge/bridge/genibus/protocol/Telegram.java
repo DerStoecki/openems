@@ -2,7 +2,12 @@ package io.openems.edge.bridge.genibus.protocol;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+import io.openems.edge.bridge.genibus.api.PumpDevice;
+import io.openems.edge.bridge.genibus.api.task.GenibusTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +21,16 @@ public class Telegram {
     ProtocolDataUnit protocolDataUnit = new ProtocolDataUnit();
     short crcHighOrder;
     short crcLowOrder;
+    Map<Integer, ArrayList<GenibusTask>> telegramTaskList = new HashMap<>();
+    private PumpDevice pumpDevice;
 
     private final Logger log = LoggerFactory.getLogger(Telegram.class);
+
+    public void setPumpDevice(PumpDevice pumpDevice) {
+        this.pumpDevice = pumpDevice;
+    }
+
+    public PumpDevice getPumpDevice() { return pumpDevice; }
 
     public byte getStartDelimiter() {
         return startDelimiter;
@@ -94,6 +107,14 @@ public class Telegram {
 
     public void setProtocolDataUnit(ProtocolDataUnit protocolDataUnit) {
         this.protocolDataUnit = protocolDataUnit;
+    }
+
+    public void setTelegramTaskList(Map<Integer, ArrayList<GenibusTask>> telegramTaskList) {
+        this.telegramTaskList = telegramTaskList;
+    }
+
+    public Map<Integer, ArrayList<GenibusTask>> getTelegramTaskList() {
+        return telegramTaskList;
     }
 
     public short getCrcHighOrder() {

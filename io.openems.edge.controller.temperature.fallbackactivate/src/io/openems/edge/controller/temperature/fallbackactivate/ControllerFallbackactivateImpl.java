@@ -65,7 +65,7 @@ public class ControllerFallbackactivateImpl extends AbstractOpenemsComponent imp
                 tempSensor = cpm.getComponent(config.temp_Sensor());
             } else {
                 throw new ConfigurationException(config.temp_Sensor(), "The temperature-sensor " + config.temp_Sensor()
-                        + " Is not a (configured) temperature sensor.");
+                        + " is not a (configured) temperature sensor.");
             }
             if (cpm.getComponent(config.relay_id()) instanceof ActuatorRelaysChannel) {
                 relay = cpm.getComponent(config.relay_id());

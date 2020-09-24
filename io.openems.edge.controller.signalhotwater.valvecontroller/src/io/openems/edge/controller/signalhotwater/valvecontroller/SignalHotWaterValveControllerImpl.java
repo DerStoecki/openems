@@ -138,7 +138,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 
 
 		// Transfer channel data to local variables for better readability of logic code.
-		needHotWater = signalHotWaterChannel.needHotWater().value().isDefined() && signalHotWaterChannel.needHotWater().value().get();
+		needHotWater = signalHotWaterChannel.startHeatingTank().value().isDefined() && signalHotWaterChannel.startHeatingTank().value().get();
 
 
 		// Control logic.

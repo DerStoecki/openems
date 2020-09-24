@@ -4,15 +4,8 @@ import io.openems.edge.common.channel.Channel;
 
 public interface Genibus {
 
-    void addTask(String deviceId, GenibusTask task);
+    void addDevice(PumpDevice pumpDevice);
 
-    void removeTask(String id);
-
-    void addDevice(String id, int address);
-
-    void removeDevice(String id);
-
-    Channel<Integer> getConfigurationParameterChannel();
-
+    void removeDevice(String deviceId);
 
 }

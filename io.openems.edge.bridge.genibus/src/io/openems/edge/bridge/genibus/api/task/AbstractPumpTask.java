@@ -1,8 +1,7 @@
-package io.openems.edge.pump.grundfos.task;
+package io.openems.edge.bridge.genibus.api.task;
 
-import io.openems.edge.bridge.genibus.api.GenibusTask;
-import io.openems.edge.pump.grundfos.api.UnitTable;
 
+import io.openems.edge.bridge.genibus.api.PumpDevice;
 
 public abstract class AbstractPumpTask implements GenibusTask {
 
@@ -25,12 +24,16 @@ public abstract class AbstractPumpTask implements GenibusTask {
     int scaleFactorLowOrder;
     int zeroScaleFactor;
     int rangeScaleFactor;
-    boolean informationAvailable;
+    private boolean informationAvailable = false;
     boolean wasAdded;
+    PumpDevice pumpDevice;
+    final int dataByteSize;
+    private int apduIdentifier;
 
-    public AbstractPumpTask(int address, int headerNumber, String unitString) {
+    public AbstractPumpTask(int address, int headerNumber, String unitString, int dataByteSize) {
         this.address = (byte) address;
         this.headerNumber = headerNumber;
+        this.dataByteSize = dataByteSize;
         switch (unitString) {
             case "Standard":
             default:
@@ -109,6 +112,7 @@ public abstract class AbstractPumpTask implements GenibusTask {
                         break;
 
                     case "Kelvin/100":
+                    case "diff-Kelvin/100":
                     case "bar/100":
                     case "kPa":
                     case "0.01*Hz":
@@ -137,41 +141,49 @@ public abstract class AbstractPumpTask implements GenibusTask {
                         unitCalc = 0.6895; // convert to bar
                         break;
 
+                    case "2*Hz":
+                        unitCalc = 2.0;
+                        break;
+
                     case "2.5*Hz":
                         unitCalc = 2.5;
                         break;
 
                     case "5*m³/h":
-                        unitCalc = 5;
+                        unitCalc = 5.0;
                         break;
 
                     case "Watt*10":
                     case "10*m³/h":
-                        unitCalc = 10;
+                        unitCalc = 10.0;
                         break;
 
                     case "Watt*100":
-                        unitCalc = 100;
+                        unitCalc = 100.0;
                         break;
 
                     case "kW":
-                        unitCalc = 1000;
+                        unitCalc = 1000.0;
                         break;
 
                     case "kW*10":
-                        unitCalc = 10000;
+                        unitCalc = 10000.0;
                         break;
 
                     case "Celsius":
                     case "Fahrenheit":  // <- conversion to °C in PumpReadTask.java
                     case "Kelvin":      // <- conversion to °C in PumpReadTask.java
+                    case "diff-Kelvin":
                     case "Watt":
                     case "bar":
                     case "m³/h":
                     case "Hz":
-                    case "2*Hz":    // <- fix for Magna3. Might be different for other pumps.
                     default:
-                        unitCalc = 1;
+                        unitCalc = 1.0;
+                }
+
+                if ((unitIndex & 128) == 128) {
+                    unitCalc = unitCalc * (-1);
                 }
             }
         }
@@ -183,9 +195,30 @@ public abstract class AbstractPumpTask implements GenibusTask {
     //        return wasAdded;
     //    }
 
-    //    @Override
-    //    public boolean InformationDataAvailable() {
-    //        return informationAvailable;
-    //    }
+    @Override
+    public boolean InformationDataAvailable() {
+        return informationAvailable;
+    }
 
+    public void resetInfo() { informationAvailable = false; }
+
+    @Override
+    public void setPumpDevice(PumpDevice pumpDevice) {
+        this.pumpDevice = pumpDevice;
+    }
+
+    @Override
+    public int getDataByteSize() {
+        return dataByteSize;
+    }
+
+    @Override
+    public void setApduIdentifier(int identifier) {
+        this.apduIdentifier = identifier;
+    }
+
+    @Override
+    public int getApduIdentifier() {
+        return this.apduIdentifier;
+    }
 }

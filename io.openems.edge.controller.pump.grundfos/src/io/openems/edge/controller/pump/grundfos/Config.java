@@ -21,6 +21,9 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "PumpId", description = "Unique Id of the Pump.")
     String pumpId() default "Pump0";
 
+    @AttributeDefinition(name = "Control mode", description = "Control mode - 'constant pressure' or 'constant frequency'")
+    ControlMode controlMode() default ControlMode.CONST_PRESSURE;
+
      @AttributeDefinition(name = "Maximum pumping head (Förderhöhe)", description = "Maximum pumping head in meters. "
              + "If this value is wrong, actual pressure to setpoint will be wrong by the same factor. This can be used to calculate the correct maximum pumping head. "
              + "E.g. if the setpoint is 100 mBar but the actual pressure is 200 mBar, then the actual maximum pumping head is twice the entered value.")

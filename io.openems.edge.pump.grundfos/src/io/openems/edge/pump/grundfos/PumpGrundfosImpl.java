@@ -2,22 +2,27 @@ package io.openems.edge.pump.grundfos;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.bridge.genibus.api.Genibus;
+import io.openems.edge.bridge.genibus.api.PumpDevice;
+import io.openems.edge.bridge.genibus.api.task.PumpReadTask8bit;
+import io.openems.edge.bridge.genibus.api.task.PumpReadTaskASCII;
+import io.openems.edge.bridge.genibus.api.task.PumpWriteTask16bitOrMore;
+import io.openems.edge.bridge.genibus.api.task.PumpWriteTask8bit;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.pump.grundfos.api.PumpGrundfosChannels;
 import io.openems.edge.pump.grundfos.api.PumpType;
-import io.openems.edge.pump.grundfos.task.PumpCommandsTask;
-import io.openems.edge.pump.grundfos.task.PumpReadTask;
-import io.openems.edge.pump.grundfos.task.PumpWarnBitsTask;
-import io.openems.edge.pump.grundfos.task.PumpWriteTask;
+import io.openems.edge.pump.grundfos.api.WarnBits;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
+
+import java.util.List;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -38,6 +43,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     ComponentManager cpm;
 
     private PumpType pumpType;
+    private WarnBits warnBits;
 
 
     public PumpGrundfosImpl() {
@@ -49,7 +55,9 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        genibus.addDevice(super.id(), config.pumpAddress());
+        allocatePumpType(config.pumpType());
+        createTaskList(super.id(), config.pumpAddress());
+        //genibus.addDevice(super.id(), config.pumpAddress());
         try {
             //default commands, can be changed via REST
             this.setRemote().setNextWriteValue(false);
@@ -64,19 +72,137 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             e.printStackTrace();
         }
 
-
-        allocatePumpType(config.pumpType());
-
-
     }
 
     private void allocatePumpType(String pumpType) {
         switch (pumpType) {
             case "Magna3":
                 this.pumpType = PumpType.MAGNA_3;
-                createMagna3Tasks();
+                //createMagna3Tasks();
                 break;
         }
+    }
+
+    /** Creates a PumpDevice object containing all the tasks the GENIbus should send to this device. The PumpDevice is
+     * then added to the GENIbus bridge.
+     *
+     * @param deviceId
+     * @param pumpAddress
+     */
+    private void createTaskList(String deviceId, int pumpAddress) {
+
+        // The variable "lowPrioTasksPerCycle" lets you tune how fast the low priority tasks are executed. A higher
+        // number means faster execution, up to the same execution speed as high priority tasks.
+        // The controller will execute all high and low tasks once per cycle if there is enough time. A reduced execution
+        // speed of low priority tasks happens only when there is not enough time.
+        // There is also priority once, which as the name implies will be executed just once.
+        //
+        // What does "lowPrioTasksPerCycle" actually do?
+        // Commands are sent to the pump device from a task queue. Each cycle, all the high tasks are added to the queue,
+        // plus the amount "lowPrioTasksPerCycle" of low tasks. If the queue is empty before the cycle is finished, as
+        // many low tasks as can still fit in this cycle will be executed as well. When all tasks have been executed
+        // once this cycle, the controller will idle.
+        // If there is not enough time, the execution rate of low tasks compared to high tasks depends on the total
+        // amount of low tasks. The fastest execution rate (same as priority high) is reached when "lowPrioTasksPerCycle"
+        // equals the total number of low tasks (value is capped at that number).
+        // So if there are 10 low tasks and lowPrioTasksPerCycle=10, the low tasks behave like high tasks.
+        // If in the same situation lowPrioTasksPerCycle=5, a priority low task is executed at half the rate of a
+        // priority high task.
+        PumpDevice pumpDevice = new PumpDevice(deviceId, pumpAddress, 20,
+
+
+                // Commands. If true is sent to to conflicting channels at the same time (e.g. start and stop), the pump
+                // device will act on the command that was sent first. The command list is executed from top to bottom
+                // in the order they are listed here.
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getRemote(),
+                        this.pumpType.getRemoteHeadClass(), setRemote()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getStart(),
+                        this.pumpType.getStartHeadClass(), this.setStart()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getStop(),
+                        this.pumpType.getStopHeadClass(), this.setStop()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getMinMotorCurve(),
+                        this.pumpType.getMinMotorCurveHeadClass(), setMinMotorCurve()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getMaxMotorCurve(),
+                        this.pumpType.getMaxMotorCurveHeadClass(), setMaxMotorCurve()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getConstFrequency(),
+                        this.pumpType.getConstFrequencyHeadClass(), setConstFrequency()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getConstPressure(),
+                        this.pumpType.getConstPressureHeadClass(), setConstPressure()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getAutoAdapt(),
+                        this.pumpType.getAutoAdaptHeadClass(), setAutoAdapt()),
+
+                // Read tasks priority once
+                new PumpReadTask8bit(2, 0, getBufferLength(), "Standard", Priority.ONCE),
+
+                // Read tasks priority high
+                new PumpReadTask8bit(48, 2, getRefAct(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(49, 2, getRefNorm(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(90, 2, getControlSourceBits(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getPlo(), this.pumpType.getPloHeadClass(), getPowerConsumption(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getH(), this.pumpType.gethHeadClass(), getCurrentPressure(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getQ(), this.pumpType.getqHeadClass(), getCurrentPumpFlow(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.gettW(), this.pumpType.gettWHeadClass(), getPumpedWaterMediumTemperature(), "Standard", Priority.HIGH),
+                // PumpReadTask has an optional channel multiplier. That is a double that is multiplied with the readout
+                // value just before it is put in the channel. Here is an example of how to use this feature:
+                // Apparently the unit returned by INFO is wrong. Unit type = 30 = 2*Hz, but the value is returned in Hz.
+                // Could also be that the error is in the documentation and unit 30 is Hz and not Hz*2.
+                new PumpReadTask8bit(this.pumpType.getfAct(), this.pumpType.getfActHeadClass(), getMotorFrequency(), "Standard", Priority.HIGH, 0.5),
+                new PumpReadTask8bit(this.pumpType.getrMin(), this.pumpType.getrMinHeadClass(), getRmin(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getrMax(), this.pumpType.getrMaxHeadClass(), getRmax(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getControlMode(), this.pumpType.getControlModeHeadClass(), getActualControlModeBits(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getWarnCode(), this.pumpType.getWarnCodeHeadClass(), getWarnCode(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getAlarmCode(), this.pumpType.getAlarmCodeHeadClass(), getAlarmCode(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getWarnBits1(), this.pumpType.getWarnBits1HeadClass(), getWarnBits_1(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getWarnBits2(), this.pumpType.getWarnBits2HeadClass(), getWarnBits_2(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getWarnBits3(), this.pumpType.getWarnBits3HeadClass(), getWarnBits_3(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(this.pumpType.getWarnBits4(), this.pumpType.getWarnBits4HeadClass(), getWarnBits_4(), "Standard", Priority.HIGH),
+
+                // Read tasks priority low
+                new PumpReadTask8bit(this.pumpType.gethDiff(), this.pumpType.gethDiffHeadClass(), getDiffPressureHead(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(this.pumpType.gettE(), this.pumpType.gettEheadClass(), getElectronicsTemperature(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(this.pumpType.getiMo(), this.pumpType.getImoHeadClass(), getCurrentMotor(), "Standard", Priority.LOW),
+
+                new PumpReadTask8bit(this.pumpType.getAlarmCodePump(), this.pumpType.getAlarmCodePumpHeadClass(), getAlarmCodePump(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(163, 2, getAlarmLog1(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(164, 2, getAlarmLog2(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(165, 2, getAlarmLog3(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(166, 2, getAlarmLog4(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(167, 2, getAlarmLog5(), "Standard", Priority.LOW),
+
+                // Config parameters tasks
+                new PumpWriteTask8bit(this.pumpType.gethConstRefMax(), this.pumpType.gethConstRefMaxHeadClass(),
+                        setConstRefMaxH(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(this.pumpType.gethConstRefMin(), this.pumpType.gethConstRefMinHeadClass(),
+                        setConstRefMinH(), "Standard", Priority.HIGH),
+                new PumpWriteTask16bitOrMore(2, this.pumpType.gethMaxHi(), this.pumpType.gethMaxHiHeadClass(),
+                        setMaxPressure(), "Standard", Priority.HIGH),
+                new PumpWriteTask16bitOrMore(2, this.pumpType.getqMaxHi(), this.pumpType.getqMaxHiHeadClass(),
+                        setPumpMaxFlow(), "Standard", Priority.HIGH),
+
+                new PumpWriteTask8bit(30, 4, setFupper(), "Standard", Priority.HIGH, 0.5),
+                new PumpWriteTask8bit(31, 4, setFnom(), "Standard", Priority.HIGH, 0.5),
+                new PumpWriteTask8bit(34, 4, setFmin(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(35, 4, setFmax(), "Standard", Priority.HIGH),
+
+                // Sensor configuration
+                new PumpWriteTask8bit(229, 4, setSensor1Func(), "Standard", Priority.LOW),
+                new PumpWriteTask8bit(226, 4, setSensor1Applic(), "Standard", Priority.LOW),
+                new PumpWriteTask8bit(208, 4, setSensor1Unit(), "Standard", Priority.LOW),
+                new PumpWriteTask16bitOrMore(2, 209, 4, setSensor1Min(), "Standard", Priority.LOW),
+                new PumpWriteTask16bitOrMore(2, 211, 4, setSensor1Max(), "Standard", Priority.LOW),
+
+                new PumpReadTask8bit(127, 2, getSensorGsp(), "Standard", Priority.LOW),
+                new PumpWriteTask8bit(238, 4, setSensorGspFunc(), "Standard", Priority.LOW),
+
+                // Reference values tasks
+                new PumpWriteTask8bit(this.pumpType.getRefRem(), this.pumpType.getRefRemHeadClass(),
+                        setRefRem(), "Standard", Priority.HIGH),
+
+                // Strings
+                new PumpReadTaskASCII(8, 7, getProductNumber(), "Standard", Priority.ONCE),
+                new PumpReadTaskASCII(9, 7, getSerialNumber(), "Standard", Priority.ONCE)
+        );
+        genibus.addDevice(pumpDevice);
     }
 
     /**
@@ -93,137 +219,26 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
      * </p>
      */
 
+    /*
     private void createMagna3Tasks() {
         // foreach Channel create Task
         // ------------
-        // With the current Genibus implementation, the telegram length is limited. Only a limited amount of commands
-        // can be sent. That is why a lot of tasks are disabled.
 
-        ///////////////COMMANDS/////////////////
-
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getRemote(),
-                this.pumpType.getRemoteHeadClass(), setRemote()));
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getStart(),
-                this.pumpType.getStartHeadClass(), this.setStart()));
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getStop(),
-                this.pumpType.getStopHeadClass(), this.setStop()));
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getMinMotorCurve(),
-                this.pumpType.getMinMotorCurveHeadClass(), setMinMotorCurve()));
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getMaxMotorCurve(),
-                this.pumpType.getMaxMotorCurveHeadClass(), setMaxMotorCurve()));
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getConstFrequency(),
-                this.pumpType.getConstFrequencyHeadClass(), setConstFrequency()));
-
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getConstPressure(),
-                this.pumpType.getConstPressureHeadClass(), setConstPressure()));
-        this.genibus.addTask(super.id(), new PumpCommandsTask(this.pumpType.getAutoAdapt(),
-                this.pumpType.getAutoAdaptHeadClass(), setAutoAdapt()));
 
         ///////////////READ TASK/////////////////
-        this.genibus.addTask(super.id(), new PumpReadTask(48,
-                2, getRefAct(), "Standard"));
 
-        this.genibus.addTask(super.id(), new PumpReadTask(90,
-                2, getControlSourceBits(), "Standard"));
-
-        //this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.gethDiff(),
-        //        this.pumpType.gethDiffHeadClass(), getDiffPressureHead(), "Standard"));
-
-        //this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.gettE(),
-        //        this.pumpType.gettEheadClass(), getElectronicsTemperature(), "Standard"));
-
-        //this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getiMo(),
-        //        this.pumpType.getImoHeadClass(), getCurrentMotor(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getPlo(),
-                this.pumpType.getPloHeadClass(), getPowerConsumption(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getH(),
-                this.pumpType.gethHeadClass(), getCurrentPressure(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getQ(),
-                this.pumpType.getqHeadClass(), getCurrentPumpFlow(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.gettW(),
-                this.pumpType.gettWHeadClass(), getPumpedWaterMediumTemperature(), "Standard"));
-
-        // Frequency might have wrong unit. Magna3 output is Hz, but unit type = 30 = 2*Hz.
-        // Temporary fix is change unit type 30 from 2*Hz -> Hz.
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getfAct(),
-                this.pumpType.getfActHeadClass(), getMotorFrequency(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getControlMode(),
-                this.pumpType.getControlModeHeadClass(), getActualControlModeBits(), "Standard"));
-
-        //this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getAlarmCodePump(),
-        //        this.pumpType.getAlarmCodePumpHeadClass(), getAlarmCodePump(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getWarnCode(),
-                this.pumpType.getWarnCodeHeadClass(), getWarnCode(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getAlarmCode(),
-                this.pumpType.getAlarmCodeHeadClass(), getAlarmCode(), "Standard"));
-        ///////////////WARN BITS/////////////////
-        this.genibus.addTask(super.id(), new PumpWarnBitsTask(this.pumpType.getWarnBits1(),
-                this.pumpType.getWarnBits1HeadClass(), getWarnBits_1(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpWarnBitsTask(this.pumpType.getWarnBits2(),
-                this.pumpType.getWarnBits2HeadClass(), getWarnBits_2(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpWarnBitsTask(this.pumpType.getWarnBits3(),
-                this.pumpType.getWarnBits3HeadClass(), getWarnBits_3(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpWarnBitsTask(this.pumpType.getWarnBits4(),
-                this.pumpType.getWarnBits4HeadClass(), getWarnBits_4(), "Magna3"));
-
-        /*
-        this.genibus.addTask(super.id(), new PumpReadTask(163,
-                2, getAlarmLog1(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(164,
-                2, getAlarmLog2(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(165,
-                2, getAlarmLog3(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(166,
-                2, getAlarmLog4(), "Magna3"));
-
-        this.genibus.addTask(super.id(), new PumpReadTask(167,
-                2, getAlarmLog5(), "Magna3"));
-        */
-        ///////////////REFERENCE VALUES/////////////////
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getrMin(),
-                this.pumpType.getrMinHeadClass(), getRmin(), "Standard"));
-        this.genibus.addTask(super.id(), new PumpReadTask(this.pumpType.getrMax(),
-                this.pumpType.getrMaxHeadClass(), getRmax(), "Standard"));
 
         ///////////////WRITE TASK/////////////////
         ///////////////CONFIG PARAMS/////////////////
-        //this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getqMaxHi(),
-        //        this.pumpType.getqMaxHiHeadClass(), setPumpFlowHi(), "Standard"));
 
-        //this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getqMaxLo(),
-        //        this.pumpType.getqMaxLowClass(), setPumpFlowLo(), "Standard"));
 
-        //this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getDeltaH(),
-        //        this.pumpType.getDeltaHheadClass(), setPressureDelta(), "Standard"));
 
-        //this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.gethMaxHi(),
-        //        this.pumpType.gethMaxHiHeadClass(), setMaxPressureHi(), "Standard"));
+        this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getDeltaH(),
+                this.pumpType.getDeltaHheadClass(), setPressureDelta(), "Standard"));
 
-        //this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.gethMaxLo(),
-        //        this.pumpType.gethMaxLoHeadClass(), setMaxPressureLo(), "Standard"));
-
-        this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.gethConstRefMax(),
-                this.pumpType.gethConstRefMaxHeadClass(), setConstRefMaxH(), "Standard"));
-        this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.gethConstRefMin(),
-                this.pumpType.gethConstRefMinHeadClass(), setConstRefMinH(), "Standard"));
 
         ///////////////REFERENCE VALUES/////////////////
 
-        this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getRefRem(),
-                this.pumpType.getRefRemHeadClass(), setRefRem(), "Standard"));
 
         ///////////////FREQUENCY VALUES/////////////////
         //this.genibus.addTask(super.id(), new PumpWriteTask(30,
@@ -231,6 +246,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
 
     }
+    */
 
     @Deactivate
     public void deactivate() {
@@ -284,19 +300,44 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             getControlSource().setNextValue("Command source: " + source + ", priority: " + priorityBits);
         }
 
-        // Put warn messages all in one channel.
+        // Parse warn messages and put them all in one channel.
         StringBuilder allErrors = new StringBuilder();
+        List<String> errorValue;
         if (getWarnBits_1().value().isDefined()) {
-            allErrors.append(getWarnBits_1().value().get());
+            int data = (int)Math.round(getWarnBits_1().value().get());
+            errorValue = this.warnBits.getErrorBits1();
+            for (int x = 0; x < 8; x++) {
+                if ((data & (1 << x)) == (1 << x)) {
+                    allErrors.append(errorValue.get(x));
+                }
+            }
         }
         if (getWarnBits_2().value().isDefined()) {
-            allErrors.append(getWarnBits_2().value().get());
+            int data = (int)Math.round(getWarnBits_2().value().get());
+            errorValue = this.warnBits.getErrorBits2();
+            for (int x = 0; x < 8; x++) {
+                if ((data & (1 << x)) == (1 << x)) {
+                    allErrors.append(errorValue.get(x));
+                }
+            }
         }
         if (getWarnBits_3().value().isDefined()) {
-            allErrors.append(getWarnBits_3().value().get());
+            int data = (int)Math.round(getWarnBits_3().value().get());
+            errorValue = this.warnBits.getErrorBits3();
+            for (int x = 0; x < 8; x++) {
+                if ((data & (1 << x)) == (1 << x)) {
+                    allErrors.append(errorValue.get(x));
+                }
+            }
         }
         if (getWarnBits_4().value().isDefined()) {
-            allErrors.append(getWarnBits_4().value().get());
+            int data = (int)Math.round(getWarnBits_4().value().get());
+            errorValue = this.warnBits.getErrorBits4();
+            for (int x = 0; x < 8; x++) {
+                if ((data & (1 << x)) == (1 << x)) {
+                    allErrors.append(errorValue.get(x));
+                }
+            }
         }
         getWarnMessage().setNextValue(allErrors);
 
