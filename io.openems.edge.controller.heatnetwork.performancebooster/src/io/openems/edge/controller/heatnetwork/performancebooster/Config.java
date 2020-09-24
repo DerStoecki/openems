@@ -16,6 +16,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Alias", description = "Human readable Name.")
     String alias() default "GLT-Booster-Controller";
 
+    @AttributeDefinition(name = "Control center ", description = "waits for activation")
+    String allocatedControlCenter() default "ControlCenter0";
+
+
+    @AttributeDefinition(name = "DelayTime", description = "wait seconds after activation switches")
+    int waitingAfterActive() default 300;
+
     @AttributeDefinition(name = "MinTemperatureSetPoint", description = "Min Temperature --> min threshold in dC! for Buffer")
     int minTemp() default 400;
 

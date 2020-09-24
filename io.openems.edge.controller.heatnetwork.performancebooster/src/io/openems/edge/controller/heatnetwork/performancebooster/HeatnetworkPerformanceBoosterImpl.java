@@ -17,6 +17,7 @@ import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.module.signalsensor.api.SignalSensorSpi;
 import io.openems.edge.temperature.passing.api.PassingActivateNature;
 import io.openems.edge.temperature.passing.valve.api.Valve;
+import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenterChannel;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -40,12 +41,16 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     private List<LucidControlDeviceOutput> heaterControl = new ArrayList<>();
     private List<ActuatorRelaysChannel> heaterControlRelay = new ArrayList<>();
     private Valve heatMixer;
+    private PassingControlCenterChannel controlCenter;
+    private int waitExternalSeconds = 0;
     private Thermometer referenceThermometer;
     private Thermometer primaryForward;
     private Thermometer primaryRewind;
     private Thermometer secondaryForward;
     private Thermometer secondaryRewind;
     private int deltaT;
+    private boolean isActive= false;
+
     private boolean primaryForwardDefined;
     private boolean primaryRewindDefined;
     private boolean secondaryForwardDefined;
@@ -53,6 +58,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     private boolean referenceDefined;
     private long sleepTime;
     private long activationTime = 0;
+    private long externActivate = 0;
 
 
     public HeatnetworkPerformanceBoosterImpl() {
@@ -79,13 +85,14 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         this.temperatureSetPoint().setNextValue(config.activationTemp());
         this.storageLitreMax().setNextValue(config.litres());
         this.bufferSetPointMaxPercent().setNextValue(config.maxBufferThreshold());
-
+        this.waitExternalSeconds =config.waitingAfterActive();
         allocatePrimaryAndSecondary(config.primaryAndSecondary());
         allocateComponents(config.thermometer(), "Thermometer");
         allocateComponent(config.referenceThermometer(), "ref");
         allocateComponents(config.errorInputHeater1(), "Heater1");
         allocateComponents(config.backUpPercentHeater2Error(), "Heater2");
         allocateComponent(config.valve(), "Valve");
+        allocateComponent(config.allocatedControlCenter(), "ControlCenter");
         allocateComponents(config.heaters(), "LucidOrRelay");
 
         this.getOnOff().setNextValue(false);
@@ -219,6 +226,8 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
             }
         } else if (cpm.getComponent(component) instanceof Valve) {
             this.heatMixer = cpm.getComponent(component);
+        } else if (cpm.getComponent(component) instanceof PassingControlCenterChannel) {
+            this.controlCenter = cpm.getComponent(component);
         } else {
             throw new ConfigurationException(component, "Not a correct Component");
         }
@@ -237,6 +246,26 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
 
         averageTemperatureCalculation();
         assignCurrentTemperature();
+        boolean isHeatNeeded = this.controlCenter.activateHeater().value().isDefined() && this.controlCenter.activateHeater().value().get();
+        if(isHeatNeeded == false)
+        {
+            this.isActive = false;
+            this.getWaitTillStart().setNextValue(null);
+            this.deactiveBooster();
+            return;
+        }
+        if(this.isActive == false)
+        {
+            this.isActive = true;
+            this.activationTime = System.currentTimeMillis();
+        }
+        //still waiting till time is over?
+        if(this.activationTime + this.waitExternalSeconds*1000 <System.currentTimeMillis())
+        {
+            this.getWaitTillStart().setNextValue((int) ( System.currentTimeMillis() - this.activationTime)/1000 -this.waitExternalSeconds);
+            return;
+        }
+        this.getWaitTillStart().setNextValue(0);
         //Reference < SetPoint Temperature
         boolean shouldActivate = this.referenceThermometer.getTemperature().value().get() < this.temperatureSetPoint().value().get();
         boolean timeIsOver = this.sleepTime < (this.activationTime - System.currentTimeMillis());
@@ -248,6 +277,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         //Reference < SetPoint
         if (shouldActivate == true && timeIsOver == false) {
 
+            int openValvePercent = (int) (this.heatMixer.getPowerLevel().value().get()*100);
             //Init basic Percentage for Valve and FallbackHEater
             AtomicInteger percentIncreaseValve = new AtomicInteger(this.valveSetPointStandard().value().get());
             AtomicInteger percentIncreaseFallbackHeater = new AtomicInteger(this.heaterSetPointStandard().value().get());
@@ -267,8 +297,9 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
                     percentIncreaseValve.getAndAdd(this.valveSetPointSubtraction().value().get());
                 }
             });
+
             //Set Heatmixer e.g. Valve to calculated %
-            this.heatMixer.changeByPercentage(percentIncreaseValve.get());
+            this.heatMixer.changeByPercentage(percentIncreaseValve.get() - openValvePercent);
             //Set Each Lucid to Percentage and Relay to true
             this.heaterControl.forEach(lucid -> lucid.getPercentageChannel().setNextValue(percentIncreaseFallbackHeater.get()));
             this.heaterControlRelay.forEach(relay -> {
@@ -285,24 +316,28 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
 
         if (shouldDeactivate == true || timeIsOver == true) {
 
-            //Deactivate and force heatmixer e.g. Valve to close
-            this.getOnOff().setNextValue(false);
-            this.heatMixer.forceClose();
-            //Set all Secondary / Fallback heater to 0 / deactivate them
-            this.heaterControl.forEach(lucid -> {
-                lucid.getPercentageChannel().setNextValue(0);
-            });
-            this.heaterControlRelay.forEach(relay -> {
-                try {
-                    relay.getRelaysChannel().setNextWriteValue(false);
-                } catch (OpenemsError.OpenemsNamedException e) {
-                    e.printStackTrace();
-                }
-            });
-            this.activationTime = 0;
+            this.deactiveBooster();
         }
 
 
+    }
+    private void deactiveBooster()
+    {
+        //Deactivate and force heatmixer e.g. Valve to close
+        this.getOnOff().setNextValue(false);
+        this.heatMixer.forceClose();
+        //Set all Secondary / Fallback heater to 0 / deactivate them
+        this.heaterControl.forEach(lucid -> {
+            lucid.getPercentageChannel().setNextValue(0);
+        });
+        this.heaterControlRelay.forEach(relay -> {
+            try {
+                relay.getRelaysChannel().setNextWriteValue(false);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+            }
+        });
+        this.activationTime = 0;
     }
 
     private void assignCurrentTemperature() {

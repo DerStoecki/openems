@@ -93,6 +93,17 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
                 channel -> {
                     ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
+
+        /**
+         * Primary Forward Temperature.
+         *
+         * <ul>
+         * <li>Interface: HeatnetworkPerformanceBooster
+         * <li>Type: Integer
+         * <li>Unit: dezidegree celsius
+         * </ul>
+         */
+        WAIT_TILL_START(Doc.of(OpenemsType.INTEGER)),
         /**
          * Primary Forward Temperature.
          *
@@ -175,6 +186,15 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
      */
     default Channel<Integer> getSecondaryForward() {
         return this.channel(ChannelId.SECONDARY_FORWARD);
+    }
+
+    /**
+     * Waiting time to start
+     *
+     * @return the Channel
+     */
+    default Channel<Integer> getWaitTillStart() {
+        return this.channel(ChannelId.WAIT_TILL_START);
     }
 
     /**

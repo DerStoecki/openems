@@ -118,7 +118,7 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
                 // Convert back to dezidegree integer.
                 int outputTempDezidegree = (int) Math.round(function * 10);
 
-                setHeatingTemperature(outsideTemperature);
+                setHeatingTemperature(outputTempDezidegree);
                 this.logDebug(this.log, "Outside thermometer measures " + 0.1 * outsideTemperature
                         + "°C. Heater function calculates forward temperature to " + outputTempDezidegree / 10 + "°C.");
             } else {

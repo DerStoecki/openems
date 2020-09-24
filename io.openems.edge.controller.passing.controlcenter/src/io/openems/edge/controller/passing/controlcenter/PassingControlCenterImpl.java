@@ -5,6 +5,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenterChannel;
 import io.openems.edge.controller.passing.heatingcurveregulator.api.HeatingCurveRegulatorChannel;
 import io.openems.edge.controller.pid.passing.api.PidForPassingNature;
@@ -35,6 +36,7 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
     private PidForPassingNature pidControllerChannel;
     private ControllerWarmupChannel warmupControllerChannel;
     private HeatingCurveRegulatorChannel heatingCurveRegulatorChannel;
+    private ActuatorRelaysChannel pump;
 
     // Variables for channel readout
     private boolean activateTemperatureOverride;
@@ -72,6 +74,12 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
         }
         if (cpm.getComponent(config.allocated_Heating_Curve_Regulator()) instanceof HeatingCurveRegulatorChannel) {
             this.heatingCurveRegulatorChannel = cpm.getComponent(config.allocated_Heating_Curve_Regulator());
+        } else {
+            throw new ConfigurationException(config.allocated_Warmup_Controller(),
+                    "Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
+        }
+        if (cpm.getComponent(config.allocated_Pump()) instanceof ActuatorRelaysChannel) {
+            this.pump = cpm.getComponent(config.allocated_Pump());
         } else {
             throw new ConfigurationException(config.allocated_Warmup_Controller(),
                     "Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
@@ -149,11 +157,13 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
         this.activateHeater().setNextValue(true);
         pidControllerChannel.turnOn().setNextWriteValue(true);
         pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureInDezidegree);
+        pump.getRelaysChannel().setNextWriteValue(true);
     }
 
     private void turnOffHeater() throws OpenemsError.OpenemsNamedException {
         this.activateHeater().setNextValue(false);
         pidControllerChannel.turnOn().setNextWriteValue(false);
+        pump.getRelaysChannel().setNextWriteValue(false);
     }
 
 }
