@@ -19,14 +19,15 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Passing.Valve",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
-        immediate = true,
-        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
-public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve, EventHandler {
+        immediate = true
+)
+public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
 
     private ActuatorRelaysChannel closing;
     private ActuatorRelaysChannel opens;
@@ -68,7 +69,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         this.secondsPerPercentage = ((double) config.valve_Time() / 100.d);
         this.managerValve.addValve(super.id(), this);
         this.getTimeNeeded().setNextValue(0);
-        this.setPowerLevelPercent().setNextValue(0);
+        this.setPowerLevelPercent().setNextValue(-1);
         this.setGoalPowerLevel().setNextValue(0);
         if (config.shouldCloseOnActivation()) {
             this.forceClose();
@@ -177,6 +178,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             controlRelays(false, "Open");
             controlRelays(false, "Closed");
             this.wasAlreadyReset = false;
+            this.isChanging = false;
             return true;
         }
         return false;
@@ -189,6 +191,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      * not open/close the valve instantly but slowly. The time it takes from completely closed to completely
      * open is entered in the config. Partial open state of x% is then archived by switching the relay on for
      * time-to-open * x%, or the appropriate amount of time depending on initial state.
+     * Sets the Future PowerLevel; ValveManager calls further Methods to refresh true % state
      *
      * @param percentage adjusting the current powerlevel in % points. Meaning if current state is 10%, requesting
      *                   changeByPercentage(20) will change the state to 30%.
@@ -216,7 +219,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             } else if (currentPowerLevel <= 0) {
                 currentPowerLevel = 0;
             }
-            //Set goal
+            //Set goal Percentage for future reference
             this.setGoalPowerLevel().setNextValue(currentPowerLevel);
             //if same power level do not change and return --> relays is not always powered
             if (getLastPowerLevel().getNextValue().get() == currentPowerLevel) {
@@ -277,6 +280,12 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     //----------------
     //UPDATE POWERLEVEL AND POWER LEVEL REACHED
+
+    /**
+     * <p>Update Powerlevel by getting elapsed Time and check how much time has passed by either initial Valve timestamp
+     * or last time.
+     * Current PowerLevel and new Percentage is added together and rounded to 3 decimals.
+     */
     @Override
     public void updatePowerLevel() {
         if (this.isChanging()) {
@@ -305,10 +314,15 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
+    /**
+     * Check if Valve is opened enough.
+     *
+     * @return is powerLevelReached
+     */
     @Override
     public boolean powerLevelReached() {
         boolean reached = false;
-        if (this.getPowerLevel().value().isDefined() && this.setGoalPowerLevel().value().isDefined()) {
+        if (this.getPowerLevel().value().isDefined() && this.setGoalPowerLevel().getNextValue().isDefined()) {
             if (this.isClosing) {
                 reached = this.getPowerLevel().value().get() <= this.setGoalPowerLevel().getNextValue().get();
             } else {
@@ -325,21 +339,46 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     // -----------------------
 
+    /**
+     * IS Changing --> Is closing/Opening.
+     *
+     * @return isChanging
+     */
     @Override
     public boolean isChanging() {
         return this.isChanging;
     }
 
+    //---------------------RESET-------------------------
+
+    /**
+     * Resets the Valve and forces to close.
+     * Was Already Reset prevents multiple forceCloses if Channel not refreshed in time.
+     */
     @Override
     public void reset() {
         if (this.wasAlreadyReset == false) {
             this.forceClose();
-            this.getValveReset().setNextValue(false);
             this.wasAlreadyReset = true;
         }
 
     }
 
+    /**
+     * Called by ValveManager to check if this Valve should be reset.
+     *
+     * @return shouldReset.
+     */
+    @Override
+    public boolean shouldReset() {
+        AtomicBoolean shouldReset = new AtomicBoolean(false);
+        if (this.shouldForceClose().getNextWriteValue().isPresent()) {
+            return this.shouldForceClose().getNextWriteValue().get();
+        }
+        return shouldReset.get();
+    }
+
+    // --------------------------------------
     @Override
     public String debugLog() {
         if (this.getPowerLevel().value().isDefined()) {
@@ -355,28 +394,29 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
-    @Override
-    public void handleEvent(Event event) {
-
-//        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
-//           this.updatePowerLevel();
-//           boolean reached = powerLevelReached();
-//           if (reached) {
-//               this.readyToChange();
-//           }
+//    @Override
+//    public void handleEvent(Event event) {
+//
+////        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
+////           this.updatePowerLevel();
+////           boolean reached = powerLevelReached();
+////           if (reached) {
+////               this.readyToChange();
+////           }
+////        }
+//        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
+//            if (this.setPowerLevelPercent().value().isDefined() && this.setPowerLevelPercent().value().get() >= 0) {
+//
+//                if (this.changeByPercentage(changeByPercent)) {
+//                    try {
+//                        this.setPowerLevelPercent().setNextWriteValue(-1);
+//                    } catch (OpenemsError.OpenemsNamedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//
 //        }
-        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
-            if (this.setPowerLevelPercent().value().isDefined() && this.setPowerLevelPercent().value().get() > 0) {
-                int changeByPercent = this.setPowerLevelPercent().value().get();
-                if (this.getPowerLevel().value().isDefined()) {
-                    changeByPercent -= this.getPowerLevel().value().get();
-                }
-                if (this.changeByPercentage(changeByPercent)) {
-                    this.setPowerLevelPercent().setNextValue(0);
-                }
-            }
-
-        }
-    }
+//    }
 }
 

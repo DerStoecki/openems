@@ -6,6 +6,8 @@ import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 
+import java.util.Optional;
+
 public class DummyValve extends AbstractOpenemsComponent implements Valve, OpenemsComponent {
     /*
      * This Class works the same way as the ValveImpl except it's constructor and lacking of the
@@ -148,6 +150,11 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
     @Override
     public void reset() {
 
+    }
+
+    @Override
+    public boolean shouldReset() {
+        return false;
     }
 
     @Override

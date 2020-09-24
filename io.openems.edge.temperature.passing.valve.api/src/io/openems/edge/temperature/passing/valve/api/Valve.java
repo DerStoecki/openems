@@ -31,4 +31,6 @@ public interface Valve extends PassingForPid {
     boolean isChanging();
 
     void reset();
+
+    boolean shouldReset();
 }

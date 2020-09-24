@@ -11,7 +11,7 @@ public interface PassingChannel extends OpenemsComponent {
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
         /**
-         * Current Power Level.
+         * Current Power Level Of Valve.
          * <ul>
          *     <li>Interfce: PassingChannel
          *     <li>Type: Double
@@ -24,7 +24,7 @@ public interface PassingChannel extends OpenemsComponent {
 
         // TODO: Why is this a write channel? It does not seem it needs to be. Can it be changed to a read channel if that is sufficient?
         /**
-         * PowerLevel Goal.
+         * PowerLevel Goal. == Future PowerLevel that needs to be reached.
          *
          * <ul>
          * <li>Interface: PassingChannel
@@ -68,8 +68,14 @@ public interface PassingChannel extends OpenemsComponent {
         SET_POWER_LEVEL(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(channel ->
                 ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
 
-        RESET_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(channel ->
-                ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
+        /**
+         * Reset the Valve.
+         * <ul>
+         *     <li> Type: Boolean
+         * </ul>
+         */
+
+        RESET_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
 
 
         /**
@@ -135,17 +141,30 @@ public interface PassingChannel extends OpenemsComponent {
         return this.channel(ChannelId.BUSY);
     }
 
-
+    /**
+     * Set the Valve PowerLevel by a Percent Value.
+     *
+     * @return the Channel
+     */
     default WriteChannel<Integer> setPowerLevelPercent() {
         return this.channel(ChannelId.SET_POWER_LEVEL);
     }
 
+    /**
+     * Future PowerLevel.
+     *
+     * @return the channel
+     */
     default WriteChannel<Double> setGoalPowerLevel() {
         return this.channel(ChannelId.POWER_LEVEL_GOAL);
     }
 
-
-    default WriteChannel<Boolean> getValveReset() {
+    /**
+     * Resets Valve if set to true
+     *
+     * @return this Channel
+     */
+    default WriteChannel<Boolean> shouldForceClose() {
         return this.channel(ChannelId.RESET_VALVE);
     }
 
