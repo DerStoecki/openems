@@ -16,5 +16,4 @@ public interface MqttTask {
 
     MqttType getMqttType();
 
-
 }

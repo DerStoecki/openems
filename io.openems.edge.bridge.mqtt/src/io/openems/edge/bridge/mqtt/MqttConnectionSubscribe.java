@@ -20,7 +20,7 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
     private Map<String, List<String>> idsAndTopics = new HashMap<>();
 
     private boolean connectionLost;
-
+    private boolean callBackWasSet;
 
     MqttConnectionSubscribe(boolean timeStampEnabled, String timeDataFormat, String locale) {
         super(timeStampEnabled, timeDataFormat, locale);
@@ -30,7 +30,10 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
     void subscribeToTopic(String topic, int qos, String id) throws MqttException {
 
         super.mqttClient.subscribe(topic, qos);
-        mqttClient.setCallback(this);
+        if (callBackWasSet == false) {
+            mqttClient.setCallback(this);
+            callBackWasSet = true;
+        }
         this.subscriptions.put(topic, "");
         addTopicList(id, topic);
     }
@@ -69,6 +72,7 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         this.subscriptions.replace(topic, new String(message.getPayload(), StandardCharsets.UTF_8));
+
     }
 
     //TODO PUBACK AND PUBCOMP

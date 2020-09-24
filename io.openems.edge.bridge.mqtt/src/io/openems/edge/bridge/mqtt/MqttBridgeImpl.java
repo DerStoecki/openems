@@ -16,7 +16,6 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +38,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     private String mqttBroker;
     private String mqttBrokerUrl;
     private String mqttClientId;
+    static int subscribeIdCounter = 0;
 
     //ONLY DEBUG SUBSCRIBE
     private String subscribeId;
@@ -77,12 +77,15 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 0, MqttPriority.LOW));
         this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
-                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 1, MqttPriority.LOW));
+                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 1, MqttPriority.HIGH));
         this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
-                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 2, MqttPriority.LOW));
+                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 2, MqttPriority.URGENT));
         this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
                 true, false, 0, MqttPriority.LOW));
 
+        this.addMqttTask("Test", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1", MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
+        this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/#", MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
+        this.addMqttTask("Test3", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2", MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
     }
 
     private void createMqttSession(Config config) throws MqttException {
@@ -166,9 +169,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             } else {
                 List<MqttTask> task = new ArrayList<>();
                 task.add(mqttTask);
+
                 this.subscribeTasks.put(id, task);
             }
-            // this.subscribeManager.subscribeToTopic(mqttTask, id);
+            ((MqttSubscribeTask) mqttTask).putMessageId(subscribeIdCounter++);
+            this.subscribeManager.subscribeToTopic(mqttTask, id);
         }
 
         return true;
