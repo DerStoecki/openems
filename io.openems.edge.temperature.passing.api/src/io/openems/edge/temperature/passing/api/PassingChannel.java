@@ -5,6 +5,7 @@ import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
@@ -46,6 +47,18 @@ public interface PassingChannel extends OpenemsComponent {
          */
 
         BUSY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+
+        /**
+         * Set Power Level of e.g. Valve.
+         * Handled before Controllers.
+         * <ul>
+         *     <li> Type: Integer
+         * </ul>
+         */
+        SET_POWER_LEVEL(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(channel ->
+                ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
+
+
         /**
          * How Long does the Device need to do something(e.g. Valve Opening/Closing time)
          *
@@ -53,6 +66,7 @@ public interface PassingChannel extends OpenemsComponent {
          * <li>Type: Double
          * </ul>
          */
+
 
         TIME(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY).unit(Unit.SECONDS));
 
@@ -108,12 +122,19 @@ public interface PassingChannel extends OpenemsComponent {
         return this.channel(ChannelId.BUSY);
     }
 
+
+    default WriteChannel<Integer> setPowerLevelPercent() {
+        return this.channel(ChannelId.SET_POWER_LEVEL);
+    }
+
+
     /**
      * Tells how much time is needed for e.g. Valve to Open or Close 100%.
      * <li> Type: Double
      *
      * @return the Channel
      */
+
 
     default Channel<Double> getTimeNeeded() {
         return this.channel(ChannelId.TIME);

@@ -4,6 +4,7 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
@@ -11,12 +12,18 @@ import io.openems.edge.temperature.passing.valve.api.Valve;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Passing.Valve")
-public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
+@Component(name = "Passing.Valve",
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        immediate = true,
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)
+public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve, EventHandler {
 
     private ActuatorRelaysChannel closing;
     private ActuatorRelaysChannel opens;
@@ -51,6 +58,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         this.secondsPerPercentage = ((double) config.valve_Time() / 100.d);
         this.managerValve.addValve(super.id(), this);
         this.getTimeNeeded().setNextValue(0);
+        this.setPowerLevelPercent().setNextValue(0);
     }
 
     @Deactivate
@@ -70,6 +78,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      * Closes the valve and sets a time stamp.
      * DO NOT CALL DIRECTLY! Might not work if called directly as the timer for "readyToChange()" is not
      * set properly. Use either "changeByPercentage()" or forceClose / forceOpen.
+     *
      * @param wasForced indicates if the valve was Forced to close or not.
      */
     private void valveClose(boolean wasForced) {
@@ -84,6 +93,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      * Opens the valve and sets a time stamp.
      * DO NOT CALL DIRECTLY! Might not work if called directly as the timer for "readyToChange()" is not
      * set properly. Use either "changeByPercentage()" or forceClose / forceOpen.
+     *
      * @param wasForced indicates if the valve was forced to Open.
      */
     private void valveOpen(boolean wasForced) {
@@ -101,6 +111,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      * Controls the relays by typing either activate or not and what relays should be called.
      * DO NOT USE THIS !!!! Exception: ValveManager --> Needs this method if Time is up to set Valve Relays off.
      * If ExceptionHandling --> use forceClose or forceOpen!
+     *
      * @param activate    activate or deactivate.
      * @param whichRelays opening or closing relays ?
      *                    <p>Writes depending if the relays is an opener or closer, the correct boolean.
@@ -111,12 +122,12 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             switch (whichRelays) {
                 case "Open":
 
-                        this.opens.getRelaysChannel().setNextWriteValue(activate);
-                        break;
+                    this.opens.getRelaysChannel().setNextWriteValue(activate);
+                    break;
 
                 case "Closed":
-                        this.closing.getRelaysChannel().setNextWriteValue(activate);
-                        break;
+                    this.closing.getRelaysChannel().setNextWriteValue(activate);
+                    break;
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -239,4 +250,20 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         }
     }
 
+    @Override
+    public void handleEvent(Event event) {
+        if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS)) {
+            if (this.readyToChange()) {
+                if (this.setPowerLevelPercent().value().isDefined() && this.setPowerLevelPercent().value().get() > 0) {
+                    int changeByPercent = this.setPowerLevelPercent().value().get();
+                    if (this.getPowerLevel().value().isDefined()) {
+                        changeByPercent -= this.getPowerLevel().value().get();
+                    }
+                    this.changeByPercentage(changeByPercent);
+                    this.setPowerLevelPercent().setNextValue(0);
+                }
+            }
+        }
+    }
 }
+
