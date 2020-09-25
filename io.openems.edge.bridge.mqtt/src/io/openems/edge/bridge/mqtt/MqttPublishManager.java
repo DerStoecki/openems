@@ -31,8 +31,9 @@ public class MqttPublishManager extends AbstractMqttManager {
     }
 
     @Override
-    public void forever() throws InterruptedException {
+    public void forever() throws InterruptedException, MqttException {
         super.foreverAbstract();
+        this.checkLostConnections();
         super.currentToDo.forEach(task -> {
             try {
 
@@ -63,5 +64,22 @@ public class MqttPublishManager extends AbstractMqttManager {
                 e.printStackTrace();
             }
         });
+    }
+
+    private void checkLostConnections() throws MqttException {
+        MqttException[] exceptions = {null};
+        this.connections.forEach((key, value) -> {
+            if (!value.getMqttClient().isConnected()) {
+                try {
+                    super.tryReconnect(value.getMqttClient());
+                } catch (MqttException e) {
+                    exceptions[0] = e;
+                }
+            }
+
+        });
+        if (exceptions[0] != null) {
+            throw exceptions[0];
+        }
     }
 }

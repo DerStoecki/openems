@@ -13,7 +13,7 @@ public class DummySubscribeTask extends AbstractMqttTask implements MqttSubscrib
     @Override
     public void response(String payload) {
         super.payload = payload;
-        System.out.println("Subscribe Task received Payload : " + payload);
+        System.out.println("Subscribe Task " +  "received Payload : " + payload);
     }
 
     @Override

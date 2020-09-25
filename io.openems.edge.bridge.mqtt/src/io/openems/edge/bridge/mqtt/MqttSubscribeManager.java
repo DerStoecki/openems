@@ -13,6 +13,7 @@ public class MqttSubscribeManager extends AbstractMqttManager {
 
     private Map<MqttType, MqttConnectionSubscribe> connections = new HashMap<>();
 
+
     MqttSubscribeManager(Map<String, List<MqttTask>> subscribeTasks, String mqtt_broker, String mqtt_broker_url,
                          String mqtt_username, String mqtt_password, String mqtt_client_id, int keepAlive,
                          boolean timeEnabled, String timeFormat, String locale) throws MqttException {
@@ -30,7 +31,9 @@ public class MqttSubscribeManager extends AbstractMqttManager {
     }
 
     @Override
-    public void forever() throws InterruptedException {
+    public void forever() throws InterruptedException, MqttException {
+
+        checkLostConnections();
         super.allTasks.forEach((key, value) -> {
             value.forEach(task -> {
                 if (task instanceof MqttSubscribeTask) {
@@ -39,6 +42,23 @@ public class MqttSubscribeManager extends AbstractMqttManager {
             });
         });
 
+    }
+
+    private void checkLostConnections() throws MqttException {
+        MqttException[] exceptions = {null};
+        this.connections.forEach((key, value) -> {
+            if (!value.getMqttClient().isConnected()) {
+                try {
+                    super.tryReconnect(value.getMqttClient());
+                } catch (MqttException e) {
+                    exceptions[0] = e;
+                }
+            }
+
+        });
+        if (exceptions[0] != null) {
+            throw exceptions[0];
+        }
     }
 
     //CHANGE TO WILDCARD AND RESPONSE --> PUT IDS etc etc

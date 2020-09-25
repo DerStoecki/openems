@@ -3,6 +3,8 @@ package io.openems.edge.bridge.mqtt;
 import com.google.common.base.Stopwatch;
 import io.openems.common.worker.AbstractCycleWorker;
 import io.openems.edge.bridge.mqtt.api.MqttTask;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +17,10 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
     List<MqttTask> toDoFuture = new ArrayList<>();
     List<MqttTask> currentToDo = new ArrayList<>();
     final Stopwatch stopwatch = Stopwatch.createUnstarted();
+
+    private int connectionLostCounter = 0;
+
+
     String mqttBroker;
     String mqttBrokerUrl;
     String mqttUsername;
@@ -123,5 +129,25 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
                 time.set(0);
             }
         });
+    }
+
+    protected int getConnectionLostCounter() {
+        return this.connectionLostCounter;
+    }
+
+    public void tryReconnect(MqttClient connection) throws MqttException {
+        if (connection.isConnected()) {
+            return;
+        } else {
+            try {
+                connection.reconnect();
+            } catch (MqttException e) {
+                if (connectionLostCounter < 10) {
+                    connectionLostCounter++;
+                } else {
+                    throw e;
+                }
+            }
+        }
     }
 }

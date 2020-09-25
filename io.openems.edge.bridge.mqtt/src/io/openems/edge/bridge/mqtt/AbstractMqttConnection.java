@@ -18,6 +18,8 @@ public abstract class AbstractMqttConnection {
     private MemoryPersistence persistence;
     private MqttConnectOptions mqttConnectOptions;
 
+    private boolean disconnected = false;
+
     //protected boolean lastWillSet;
     boolean timeStampEnabled;
     private SimpleDateFormat formatter;
@@ -32,7 +34,7 @@ public abstract class AbstractMqttConnection {
     }
 
     private void createMqttSessionBasicSetup(String mqttBroker, String mqttClientId, String username, String mqttPassword,
-                                              boolean cleanSession, int keepAlive) throws MqttException {
+                                             boolean cleanSession, int keepAlive) throws MqttException {
         this.mqttClient = new MqttClient(mqttBroker, mqttClientId, this.persistence);
         mqttConnectOptions.setUserName(username);
         mqttConnectOptions.setPassword(mqttPassword.toCharArray());
@@ -42,7 +44,7 @@ public abstract class AbstractMqttConnection {
 
 
     void createMqttSubscribeSession(String mqttBroker, String mqttClientId, String username, String mqttPassword, int keepAlive) throws MqttException {
-        createMqttSessionBasicSetup(mqttBroker, mqttClientId, username, mqttPassword,  false, keepAlive);
+        createMqttSessionBasicSetup(mqttBroker, mqttClientId, username, mqttPassword, false, keepAlive);
         connect();
     }
 
@@ -71,6 +73,7 @@ public abstract class AbstractMqttConnection {
     void connect() throws MqttException {
         System.out.println("Connecting to Broker");
         this.mqttClient.connect(this.mqttConnectOptions);
+        this.disconnected = false;
         System.out.println("Connected");
     }
 
@@ -80,6 +83,10 @@ public abstract class AbstractMqttConnection {
 
         this.mqttClient.disconnect();
 
+    }
+
+    MqttClient getMqttClient() {
+        return this.mqttClient;
     }
 
 }
