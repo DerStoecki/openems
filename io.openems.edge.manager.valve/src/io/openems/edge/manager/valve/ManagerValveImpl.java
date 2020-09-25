@@ -28,6 +28,8 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
 
     private Map<String, Valve> valves = new ConcurrentHashMap<>();
 
+    //private final static int PERCENT_TOLERANCE_VALVE = 5;
+
     public ManagerValveImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
     }
@@ -77,7 +79,10 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
             }
             //Calculate current % State of Valve
             if (valve.powerLevelReached()) {
-                valve.shutdownRelays();
+              /*  double valvePowerLevel = valve.setGoalPowerLevel().getNextValue().get() - valve.getPowerLevel().value().get();
+                if (Math.abs(valvePowerLevel) > PERCENT_TOLERANCE_VALVE) {
+                    valve.changeByPercentage(valvePowerLevel);
+                }*/
             } else {
                 valve.updatePowerLevel();
             }

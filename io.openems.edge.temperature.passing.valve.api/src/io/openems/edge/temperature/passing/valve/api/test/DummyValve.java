@@ -158,11 +158,6 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
     }
 
     @Override
-    public void shutdownRelays() {
-
-    }
-
-    @Override
     public void forceClose() {
     }
 }

@@ -34,5 +34,5 @@ public interface Valve extends PassingForPid {
 
     boolean shouldReset();
 
-    void shutdownRelays();
+    //void shutdownRelays();
 }
