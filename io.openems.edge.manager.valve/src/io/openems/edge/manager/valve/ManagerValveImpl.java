@@ -28,6 +28,8 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
 
     private Map<String, Valve> valves = new ConcurrentHashMap<>();
 
+    //private final static int PERCENT_TOLERANCE_VALVE = 5;
+
     public ManagerValveImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
     }
@@ -64,9 +66,10 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
                 valve.shouldForceClose().setNextValue(false);
             }
             //Reacting to SetPowerLevelPercent by REST Request
-            if (valve.setPowerLevelPercent().getNextValue().isDefined() && valve.setPowerLevelPercent().getNextValue().get() >= 0) {
+            if (valve.setPowerLevelPercent().value().isDefined() && valve.setPowerLevelPercent().value().get() >= 0) {
 
                 int changeByPercent = valve.setPowerLevelPercent().value().get();
+                //getNextPowerLevel Bc it's the true current state that's been calculated
                 if (valve.getPowerLevel().getNextValue().isDefined()) {
                     changeByPercent -= valve.getPowerLevel().getNextValue().get();
                 }
@@ -75,10 +78,14 @@ public class ManagerValveImpl extends AbstractOpenemsComponent implements Openem
                 }
             }
             //Calculate current % State of Valve
-            if (!valve.powerLevelReached()) {
+            if (valve.powerLevelReached()) {
+              /*  double valvePowerLevel = valve.setGoalPowerLevel().getNextValue().get() - valve.getPowerLevel().value().get();
+                if (Math.abs(valvePowerLevel) > PERCENT_TOLERANCE_VALVE) {
+                    valve.changeByPercentage(valvePowerLevel);
+                }*/
+            } else {
                 valve.updatePowerLevel();
             }
-            valve.readyToChange();
         });
         i2cBridge.getMcpList().forEach(McpChannelRegister::shift);
     }

@@ -75,7 +75,8 @@ public interface PassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        RESET_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        RESET_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(
+                channel -> ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
 
 
         /**
