@@ -29,6 +29,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Valve timeout", description = "Time in minutes to wait for reaction before the valve is considered defunct.")
     int timeout() default 5;
 
+    @AttributeDefinition(name = "Valve Opening", description = "How much the valve should be opened")
+    int getValvePercent() default 80;
+
+
     @AttributeDefinition(name = "overrider module for valve US01", description = "The module that handles override access to valve US01.")
     String valveUS01overrideId() default "ValveAndPumpControl0";
 

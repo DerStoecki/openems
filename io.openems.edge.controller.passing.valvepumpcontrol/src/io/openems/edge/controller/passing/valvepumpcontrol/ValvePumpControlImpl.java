@@ -69,11 +69,14 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 				throw new ConfigurationException("The configured component is not a valve! Please check "
 						+ config.valveUS01Id(), "configured component is incorrect!");
 			}
-			if (cpm.getComponent(config.pumpHK01Id()) instanceof Pump) {
-				pumpHK01 = cpm.getComponent(config.pumpHK01Id());
-			} else {
-				throw new ConfigurationException("The configured component is not a pump! Please check "
-						+ config.pumpHK01Id(), "configured component is incorrect!");
+			try {
+				if ( cpm.getComponent(config.pumpHK01Id()) instanceof Pump) {
+					pumpHK01 = cpm.getComponent(config.pumpHK01Id());
+				} else {
+
+				}
+			}catch (Exception e){
+
 			}
 
 	}
@@ -83,7 +86,11 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 	public void deactivate() {
 		super.deactivate();
 		valveUS01.forceClose();
-		pumpHK01.changeByPercentage(-101); // = deactivate. Use 101 because variable is double and math with double is not accurate.
+		if(pumpHK01 !=null)
+		{
+			pumpHK01.changeByPercentage(-101); // = deactivate. Use 101 because variable is double and math with double is not accurate.
+
+		}
 	}
 
 
@@ -104,7 +111,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 				valveOpen();
 			} else {
 				//
-				valveClose();
+				valveClose(0);
 			}
 		}
 		if (heaterWantsToHeat) {
@@ -114,11 +121,16 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 		}
 	}
 
-	private void valveClose() {
+	private void valveClose(int percent) {
 		// Check if valve is already closed. If there is null in the channel, it's probably offline and closed.
-		if (valveUS01.getPowerLevel().value().orElse(0.0) > 0) {
-			valveUS01.forceClose();
+		boolean isValveBusy= valveUS01.getIsBusy().value().isDefined() &&valveUS01.getIsBusy().value().get();
+		if(isValveBusy || valveUS01.getPowerLevel().value().get() <percent)
+		{
+			return;
 		}
+
+		valveUS01.changeByPercentage(percent - valveUS01.getPowerLevel().value().get());
+
 	}
 
 	private void valveOpen() {
@@ -126,7 +138,13 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 		if (valveUS01.getPowerLevel().value().isDefined()){
 			// Check if valve is already open.
 			if (valveUS01.getPowerLevel().value().get() < 100) {
-				valveUS01.forceOpen();
+
+				boolean isValveBusy= valveUS01.getIsBusy().value().isDefined() &&valveUS01.getIsBusy().value().get();
+				if(isValveBusy)
+				{
+					return;
+				}
+				valveUS01.changeByPercentage(100- valveUS01.getPowerLevel().value().get());
 			}
 			this.noError().setNextValue(true);
 		} else {
@@ -137,23 +155,25 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 
 	private void stopPump() {
 		// Check if pump has already stopped.
-		if (pumpHK01.getPowerLevel().value().orElse(0.0) > 0) {
+		if (pumpHK01!= null && pumpHK01.getPowerLevel().value().orElse(0.0) > 0) {
 			pumpHK01.changeByPercentage(-101); // = deactivate. Use 101 because variable is double and math with double is not accurate.
 		}
 	}
 
 	// Pump goes to full speed.
 	private void startPump() {
-		// Check if pump is operational. If there is null in power level channel, something is wrong.
-		if (pumpHK01.getPowerLevel().value().isDefined()){
-			// Check if pump is already at full power.
-			if (pumpHK01.getPowerLevel().value().get() < 100) {
-				pumpHK01.changeByPercentage(100); // = full power.
+		if(pumpHK01 != null) {
+			// Check if pump is operational. If there is null in power level channel, something is wrong.
+			if (pumpHK01.getPowerLevel().value().isDefined()) {
+				// Check if pump is already at full power.
+				if (pumpHK01.getPowerLevel().value().get() < 100) {
+					pumpHK01.changeByPercentage(100); // = full power.
+				}
+				this.noError().setNextValue(true);
+			} else {
+				this.noError().setNextValue(false);
+				this.logError(this.log, "ERROR: null in pump power level channel. Something must be wrong with the pump!");
 			}
-			this.noError().setNextValue(true);
-		} else {
-			this.noError().setNextValue(false);
-			this.logError(this.log, "ERROR: null in pump power level channel. Something must be wrong with the pump!");
 		}
 	}
 
@@ -165,7 +185,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 			if (setValveOverrideOpenClose().value().get()) {
 				valveOpen();
 			} else {
-				valveClose();
+				valveClose(20);
 			}
 		}
 	}

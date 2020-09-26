@@ -120,8 +120,8 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
                         lastTemperature = this.temperatureSetPointChannel().value().get();
                         return;
                         //If Controlcenter is active but SetPointTemperature has changed.
-                    } else if (controlCenterIsActive == true && (this.temperatureSetPointChannel().value().get() != lastTemperature)) {
-                        //Controlcenter --> Set new Temperature
+                    } else if (controlCenterIsActive == true ) {
+                        this.allocatedController.activateTemperatureOverride().setNextValue(true);
                         this.allocatedController.setOverrideTemperature().setNextWriteValue(temperatureSetPointChannel().value().get());
                         lastTemperature = this.temperatureSetPointChannel().value().get();
 

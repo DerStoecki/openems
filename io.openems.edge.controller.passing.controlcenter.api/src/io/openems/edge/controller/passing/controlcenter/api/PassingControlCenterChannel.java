@@ -36,6 +36,11 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
                 .onInit(channel -> ((BooleanWriteChannel)channel).onSetNextWrite(channel::setNextValue))),
 
         /**
+         * Heating temperature.
+         */
+        TEMPERATURE_HEATING(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_ONLY)),
+
+        /**
          * Controller output. If the heater should activate or not.
          * <ul>
          * <li>If the heater should activate.
@@ -45,6 +50,8 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
          */
 
         ACTIVATE_HEATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
+
+
 
         private final Doc doc;
 
@@ -87,6 +94,16 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
 
     default Channel<Boolean> activateHeater() {
         return this.channel(ChannelId.ACTIVATE_HEATER);
+    }
+
+    /**
+     * Controller output. If the heater should activate or not.
+     *
+     * @return the Channel
+     */
+
+    default Channel<Boolean> temperatureHeating() {
+        return this.channel(ChannelId.TEMPERATURE_HEATING);
     }
 
 

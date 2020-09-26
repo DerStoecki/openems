@@ -71,7 +71,8 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
     private boolean heatNetworkReady;
     private int watertankTempUpperSensor;
     private int watertankTempLowerSensor;
-
+    private long startTimeNotTooCold =0;
+    private int heatingDelay =0;
     public SignalHotWaterImpl() {
         super(OpenemsComponent.ChannelId.values(),
                 SignalHotWaterChannel.ChannelId.values(),
@@ -84,6 +85,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
         minTempUpper = config.min_temp_upper() * 10;    // Convert to dezidegree.
         maxTempLower = config.max_temp_lower() * 10;
+        heatingDelay = config.getHeatingDelay()*1000;
         responseTimeout = config.response_timeout();
         this.heatTankRequest().setNextValue(false);
         this.needHotWater().setNextValue(false);
@@ -147,7 +149,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
         if (tempSensorsSendData) {
 
             // Check if water tank is above max temperature.
-            if (watertankTempLowerSensor > maxTempLower) {
+            if (watertankTempLowerSensor > maxTempLower && (startTimeNotTooCold!=0) && (startTimeNotTooCold + heatingDelay < System.currentTimeMillis())) {
                 // Stop heating
                 this.heatTankRequest().setNextValue(false);
                 this.needHotWater().setNextValue(false);
@@ -161,6 +163,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
                     // Set timer, just in case "heatNetworkReady == false" next cycle.
                     timestamp = LocalDateTime.now();
+                    startTimeNotTooCold = 0;
                 }
 
                 // Check if heating has been requested.
@@ -190,12 +193,18 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
             // Check if water tank is too cold.
             if (watertankTempUpperSensor < minTempUpper) {
+
                 // Request heat and start timer.
                 if (this.heatTankRequest().value().get() == false) {
                     timestamp = LocalDateTime.now();
                     this.heatTankRequest().setNextValue(true);
+                    startTimeNotTooCold = 0;
+
                 }
             } else {
+                if(startTimeNotTooCold==0) {
+                    startTimeNotTooCold = System.currentTimeMillis();
+                }
                 // If water tank temperature is not too low, check remote for "off" signal.
                 // heatNetworkReady changes from true to false -> turn off heating.
                 if (heatNetworkSignalReveived && (heatNetworkReady == false) && heatNetworkStateTracker) {

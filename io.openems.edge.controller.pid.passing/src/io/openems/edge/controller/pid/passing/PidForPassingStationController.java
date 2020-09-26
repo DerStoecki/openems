@@ -33,7 +33,8 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     private boolean isPump;
     private PidFilter pidFilter;
     private int offPercentage = 0;
-
+    private int counter=0;
+    private int waitticks=10;
     private double intervalTime = 2000;
     private double timestamp = 0;
 
@@ -108,6 +109,15 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
+        counter++;
+        if(counter%waitticks!=0)
+        {
+            return;
+        }
+        if(counter%waitticks ==0)
+        {
+            counter=waitticks;
+        }
         boolean activeDependency = true;
         if (this.passing != null) {
             activeDependency = this.passing.getOnOff().value().isDefined() && this.passing.getOnOff().value().get();

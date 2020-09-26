@@ -260,7 +260,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
             this.activationTime = System.currentTimeMillis();
         }
         //still waiting till time is over?
-        if(this.activationTime + this.waitExternalSeconds*1000 <System.currentTimeMillis())
+        if(System.currentTimeMillis() <= this.activationTime + this.waitExternalSeconds*1000 )
         {
             this.getWaitTillStart().setNextValue((int) ( System.currentTimeMillis() - this.activationTime)/1000 -this.waitExternalSeconds);
             return;
@@ -268,16 +268,20 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         this.getWaitTillStart().setNextValue(0);
         //Reference < SetPoint Temperature
         boolean shouldActivate = this.referenceThermometer.getTemperature().value().get() < this.temperatureSetPoint().value().get();
-        boolean timeIsOver = this.sleepTime < (this.activationTime - System.currentTimeMillis());
+        boolean timeIsOver = false;
+        if(this.sleepTime>0)
+        {
+           timeIsOver= this.sleepTime < (this.activationTime - System.currentTimeMillis());
+        }
         //next Value bc of averageTemperatureCalculation
-        boolean shouldDeactivate = (this.storagePercent().getNextValue().get() <= this.bufferSetPointMaxPercent().value().get())
+        boolean shouldDeactivate = (this.storagePercent().getNextValue().get() >= this.bufferSetPointMaxPercent().value().get())
                 && (this.referenceThermometer.getTemperature().value().get() > this.temperatureSetPointMax().value().get());
         this.getOnOff().setNextValue(shouldActivate);
 
         //Reference < SetPoint
         if (shouldActivate == true && timeIsOver == false) {
 
-            int openValvePercent = (int) (this.heatMixer.getPowerLevel().value().get()*100);
+            int openValvePercent = this.heatMixer.getPowerLevel().value().get().intValue();
             //Init basic Percentage for Valve and FallbackHEater
             AtomicInteger percentIncreaseValve = new AtomicInteger(this.valveSetPointStandard().value().get());
             AtomicInteger percentIncreaseFallbackHeater = new AtomicInteger(this.heaterSetPointStandard().value().get());

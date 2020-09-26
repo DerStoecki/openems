@@ -29,6 +29,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Maximum temperature lower sensor", description = "Maximum temperature of the water tank lower sensor. Unit is °C")
     int max_temp_lower() default 65;
 
+    @AttributeDefinition(name = "Delay after not too cold", description = "in seconds")
+    int getHeatingDelay() default 600;
+
     @AttributeDefinition(name = "response timeout in seconds", description = "How long to wait for the response signal before continuing without it. Unit is seconds.")
     int response_timeout() default 10;
 

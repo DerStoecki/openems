@@ -155,6 +155,7 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
     private void turnOnHeater(int temperatureInDezidegree) throws OpenemsError.OpenemsNamedException {
         this.activateHeater().setNextValue(true);
+        this.temperatureHeating().setNextValue(temperatureInDezidegree);
         pidControllerChannel.turnOn().setNextWriteValue(true);
         pidControllerChannel.setMinTemperature().setNextWriteValue(temperatureInDezidegree);
         pump.getRelaysChannel().setNextWriteValue(true);
@@ -162,6 +163,7 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
     private void turnOffHeater() throws OpenemsError.OpenemsNamedException {
         this.activateHeater().setNextValue(false);
+        this.temperatureHeating().setNextValue(0);
         pidControllerChannel.turnOn().setNextWriteValue(false);
         pump.getRelaysChannel().setNextWriteValue(false);
     }
