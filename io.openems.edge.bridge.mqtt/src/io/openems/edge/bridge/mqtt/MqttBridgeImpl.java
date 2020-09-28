@@ -95,7 +95,6 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.addMqttTask("Test3", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2", MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
 
 
-
     }
 
     private void updateConfig() {
@@ -109,6 +108,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             if (existingTarget.isEmpty()) {
                 properties.put("mqttTypes", Arrays.toString(MqttType.values()));
                 c.update(properties);
+                this.setMqttTypes().setNextValue(MqttType.values());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -178,6 +178,16 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         }
     }
 
+
+    /**
+     * Add Mqtt Task.
+     *
+     * @param id       usually from MqttComponent / Same as component id
+     * @param mqttTask usually created by MqttComponent
+     * @return true if add was successful
+     * @throws MqttException if somethings wrong
+     */
+
     @Override
     public boolean addMqttTask(String id, MqttTask mqttTask) throws MqttException {
 
@@ -214,6 +224,16 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.publishTasks.remove(id);
 
         return true;
+    }
+
+    @Override
+    public List<MqttTask> getSubscribeTasks(String id) {
+        return this.subscribeTasks.get(id);
+    }
+
+    @Override
+    public List<MqttTask> getPublishTasks(String id) {
+        return this.publishTasks.get(id);
     }
 
     @Override

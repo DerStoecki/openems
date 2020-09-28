@@ -8,6 +8,8 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.util.List;
+
 
 public interface MqttBridge extends OpenemsComponent {
 
@@ -41,6 +43,10 @@ public interface MqttBridge extends OpenemsComponent {
     default Channel<String> setMqttTypes() {
         return this.channel(ChannelId.MQTT_TYPES);
     }
+
+    List<MqttTask> getSubscribeTasks(String id);
+
+    List<MqttTask> getPublishTasks(String id);
 }
 
 
