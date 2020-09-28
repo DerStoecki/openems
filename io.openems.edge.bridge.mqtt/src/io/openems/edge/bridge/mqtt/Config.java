@@ -4,10 +4,12 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
+
 @ObjectClassDefinition(
         name = "Bridge Mqtt",
         description = "Mqtt Bridge to communicate with a specific broker.")
 @interface Config {
+
     String service_pid();
 
     @AttributeDefinition(name = "MqttBridge - ID", description = "Id of Mqtt Bridge.")
@@ -72,6 +74,9 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "Region", description = "Set Region of your Device e.g. DE")
     String locale() default "DE";
+
+    @AttributeDefinition(name = "Mqtt Types", description = "Possible MqttTypes, will be filled after activation")
+    String [] mqttTypes() default "";
 
     boolean enabled() default true;
 

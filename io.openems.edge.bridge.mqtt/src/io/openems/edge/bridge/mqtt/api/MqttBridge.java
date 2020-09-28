@@ -3,6 +3,7 @@ package io.openems.edge.bridge.mqtt.api;
 import io.openems.common.channel.Debounce;
 import io.openems.common.channel.Level;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -16,7 +17,8 @@ public interface MqttBridge extends OpenemsComponent {
                 .debounce(10, Debounce.TRUE_VALUES_IN_A_ROW_TO_SET_TRUE)), //
         CYCLE_TIME_IS_TOO_SHORT(Doc.of(Level.WARNING) //
                 .debounce(10, Debounce.TRUE_VALUES_IN_A_ROW_TO_SET_TRUE)), //
-        EXECUTION_DURATION(Doc.of(OpenemsType.LONG));
+        EXECUTION_DURATION(Doc.of(OpenemsType.LONG)),
+        MQTT_TYPES(Doc.of(OpenemsType.STRING));
 
         private final Doc doc;
 
@@ -36,6 +38,9 @@ public interface MqttBridge extends OpenemsComponent {
 
     boolean removeMqttTasks(String id);
 
+    default Channel<String> setMqttTypes() {
+        return this.channel(ChannelId.MQTT_TYPES);
+    }
 }
 
 

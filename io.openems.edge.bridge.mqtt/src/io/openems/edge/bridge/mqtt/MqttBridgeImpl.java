@@ -6,16 +6,16 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import org.eclipse.paho.client.mqttv3.*;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,6 +27,11 @@ import java.util.concurrent.ConcurrentHashMap;
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE
 )
 public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, MqttBridge, EventHandler {
+
+    @Reference
+    ConfigurationAdmin ca;
+
+
     //Add to Manager
     private Map<String, List<MqttTask>> publishTasks = new ConcurrentHashMap<>();
     private Map<String, List<MqttTask>> subscribeTasks = new ConcurrentHashMap<>();
@@ -55,7 +60,9 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsException, MqttException {
+
         super.activate(context, config.id(), config.alias(), config.enabled());
+        updateConfig();
         try {
             this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat(), config.locale());
             this.bridgeSubscriberTest = new MqttConnectionSubscribe(config.timeStampEnabled(), config.timeFormat(), config.locale());
@@ -86,7 +93,28 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.addMqttTask("Test", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1", MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
         this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/#", MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
         this.addMqttTask("Test3", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2", MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
+
+
+
     }
+
+    private void updateConfig() {
+        Configuration c;
+
+        try {
+            c = ca.getConfiguration(this.servicePid(), "?");
+            Dictionary<String, Object> properties = c.getProperties();
+            Object target = properties.get("mqttTypes");
+            String existingTarget = target.toString();
+            if (existingTarget.isEmpty()) {
+                properties.put("mqttTypes", Arrays.toString(MqttType.values()));
+                c.update(properties);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void createMqttSession(Config config) throws MqttException {
         //TCP OR SSL
