@@ -36,6 +36,9 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String pinPosition() default "1.1";
 
+    @AttributeDefinition(name = "Is the Device Inverse", description = "Inverted Logic with this device")
+    boolean isInverse() default false;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Gpio Device [{id}]";

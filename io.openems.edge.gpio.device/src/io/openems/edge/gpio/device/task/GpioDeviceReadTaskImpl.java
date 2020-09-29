@@ -5,14 +5,16 @@ import io.openems.edge.common.channel.Channel;
 
 public class GpioDeviceReadTaskImpl implements GpioBridgeReadTask {
 
+    private boolean isInverse;
     private int gpioPinPosition;
     private Channel<Boolean> gpioChannel;
     private String deviceId;
 
-    public GpioDeviceReadTaskImpl(String deviceId, int gpioPinPosition, Channel<Boolean> gpioChannel) {
-       this.deviceId = deviceId;
+    public GpioDeviceReadTaskImpl(String deviceId, int gpioPinPosition, Channel<Boolean> gpioChannel, boolean isInverse) {
+        this.deviceId = deviceId;
         this.gpioPinPosition = gpioPinPosition;
         this.gpioChannel = gpioChannel;
+        this.isInverse = isInverse;
     }
 
     @Override
@@ -28,7 +30,9 @@ public class GpioDeviceReadTaskImpl implements GpioBridgeReadTask {
 
     @Override
     public void setResponse(boolean onOff) {
-
+        if (this.isInverse) {
+            onOff = !onOff;
+        }
         this.gpioChannel.setNextValue(onOff);
 
     }

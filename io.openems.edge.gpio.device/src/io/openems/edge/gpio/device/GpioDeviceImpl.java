@@ -36,7 +36,7 @@ public class GpioDeviceImpl extends AbstractOpenemsComponent implements OpenemsC
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         int pinPosition = setCorrectGpioPosition(config.pinPosition());
-            gpioBridge.addGpioReadTask(super.id(), new GpioDeviceReadTaskImpl(super.id(), pinPosition, getReadError()));
+            gpioBridge.addGpioReadTask(super.id(), new GpioDeviceReadTaskImpl(super.id(), pinPosition, getReadError(), config.isInverse()));
         this.informationType = config.informationType();
     }
 
