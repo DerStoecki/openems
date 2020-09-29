@@ -26,16 +26,17 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "SignalType", description = "Is the Signal an Error/Status",
             options = {
                     @Option(label = "Status", value = "Status"),
-                    @Option(label = "Error", value = "Error"),
-                    @Option(label = "Fault Message", value = "Fault Message")
+                    @Option(label = "Error", value = "Error")
             })
     String signalType() default "Status";
 
+    @AttributeDefinition(name = "Inverted Logic", description = "Usually ON signal at T. >100°C--> inverted Logic : Signal on at < 100°C")
+    boolean inverted() default false;
 
     @AttributeDefinition(name = "SignalDescription", description = "Type in Your DescriptionType for the Error/Signal/Status")
-            String signalDescription() default "operation";
+    String signalDescription() default "operation";
 
     boolean enabled() default true;
 
-    String webconsole_configurationFactory_nameHint() default "SginalSensorSpi [{id}]";
+    String webconsole_configurationFactory_nameHint() default "SignalSensorSpi [{id}]";
 }

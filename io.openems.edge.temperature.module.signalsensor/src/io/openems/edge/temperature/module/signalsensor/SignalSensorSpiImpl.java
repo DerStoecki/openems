@@ -34,6 +34,7 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
     private int spiChannel;
     private int pinPosition;
     private Adc adcForTemperature;
+    private boolean isInverted;
 
 
     public SignalSensorSpiImpl() {
@@ -48,6 +49,7 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
         this.temperatureBoardId = config.temperatureBoardId();
         this.spiChannel = config.spiChannel();
         this.pinPosition = config.pinPosition();
+        this.isInverted = config.inverted();
         this.getSignalType().setNextValue(config.signalType());
         this.getSignalMessage().setNextValue(config.signalDescription());
         createSpiSignalTask();
@@ -76,7 +78,7 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
                 ).findFirst().ifPresent(pinValue -> {
                     if (pinValue.setUsedBy(super.id()) || pinValue.getUsedBy().equals(super.id())) {
                         SpiSignalTask task = new SpiSignalTask(this.getTemperature(), this.signalActive(),
-                                adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition);
+                                adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition, this.isInverted);
                         try {
                             bridgeSpi.addSpiTask(super.id(), task);
                         } catch (ConfigurationException e) {
@@ -106,9 +108,14 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
 
     @Override
     public String debugLog() {
-        String message = super.alias().equals(super.id())?super.id():super.id() + " " + super.alias();
+        boolean signalReady = this.signalActive().value().isDefined() && this.signalActive().value().get();
+        String message = super.alias().equals(super.id()) ? super.id() : super.id() + " " + super.alias();
+        String signalMessage = "";
+        if (this.getSignalMessage().value().isDefined()) {
+            signalMessage = this.getSignalMessage().value().get();
+        }
         message += " is ";
-        if (this.signalActive().getNextValue().get()) {
+        if (signalReady) {
             message += "active";
         } else {
             message += "not active";
@@ -116,7 +123,7 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
 
         if (bridgeSpi.getTasks().containsKey(super.id())) {
             return "The Signal Sensor " + message + "\nSignalType: "
-                    + this.getSignalType().getNextValue().get()+ "\nSignalMessage: " + this.getSignalMessage().getNextValue().get();
+                    + this.getSignalType().getNextValue().get() + "\nSignalMessage: " + signalMessage;
         } else {
             return "\n";
         }

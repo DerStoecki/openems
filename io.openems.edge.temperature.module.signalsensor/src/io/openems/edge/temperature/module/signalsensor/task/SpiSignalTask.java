@@ -15,6 +15,7 @@ public class SpiSignalTask extends AbstractSpiTask implements SpiTask {
     private double regressionValueC;
     private int lastValue = -666;
     private long lastTimestamp = 0;
+    private boolean isInverted;
     //10 °C
     private static int TEMPERATURE_CHANGE = 200;
     private static int TIMESTAMP = 5000;
@@ -22,21 +23,22 @@ public class SpiSignalTask extends AbstractSpiTask implements SpiTask {
     private long pinValue;
 
     public SpiSignalTask(Channel<Integer> temperature, Channel<Boolean> signalActive, String versionId,
-                         Adc adcForTemperature, int pinPosition) {
+                         Adc adcForTemperature, int pinPosition, boolean isInverted) {
         super(adcForTemperature.getSpiChannel());
         this.channel = temperature;
         this.signalActive = signalActive;
         this.pinValue = adcForTemperature.getPins().get(pinPosition).getValue();
+        this.isInverted = isInverted;
         allocateRegressionValues(versionId);
     }
 
     /**
      * Regression Values are needed to calculate Correct temperature.
      * <p>
-     *     The Regressionvalues are for Temperature(x) = ax²+bx+c
-     *     Depending on the version of the Temperature Module, regression values can vary.
+     * The Regressionvalues are for Temperature(x) = ax²+bx+c
+     * Depending on the version of the Temperature Module, regression values can vary.
      * </p>
-     * */
+     */
     private void allocateRegressionValues(String version) {
         switch (version) {
             //more to come with further versions
@@ -69,8 +71,8 @@ public class SpiSignalTask extends AbstractSpiTask implements SpiTask {
      * Calculates the Temperature written in the pin; using the SpiWiringPi before.
      * regressionValues are given by the developers of the Temperature Module.
      * If the Temperature > 100°C Signal will be active/True.
+     * If IsInverted == true --> Signal will be active at T < 100°C
      * Remember that Temperature is in dC not C.
-     *
      */
     @Override
     public void setResponse(byte[] data) {
@@ -87,9 +89,10 @@ public class SpiSignalTask extends AbstractSpiTask implements SpiTask {
         }
 
         if (this.channel.getNextValue().get() > 1000) {
-            this.signalActive.setNextValue(true);
+            //isInverted is false if sensor is on at T > 1000dC else it is true
+            this.signalActive.setNextValue(!isInverted);
         } else {
-            this.signalActive.setNextValue(false);
+            this.signalActive.setNextValue(isInverted);
         }
 
     }
