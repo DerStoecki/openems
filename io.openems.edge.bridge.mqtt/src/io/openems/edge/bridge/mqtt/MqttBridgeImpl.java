@@ -237,6 +237,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     }
 
     @Override
+    public String getSubscribePayloadFromTopic(String topic, MqttType type) {
+        return this.subscribeManager.getPayloadFromTopic(topic, type);
+    }
+
+    @Override
     public void handleEvent(Event event) {
 
         if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {

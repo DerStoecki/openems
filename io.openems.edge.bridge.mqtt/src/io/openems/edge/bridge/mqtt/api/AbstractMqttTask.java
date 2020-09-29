@@ -19,8 +19,6 @@ public abstract class AbstractMqttTask implements MqttTask {
         this.addTime = addTime;
         this.qos = qos;
         this.mqttPriority = priority;
-
-
     }
 
 

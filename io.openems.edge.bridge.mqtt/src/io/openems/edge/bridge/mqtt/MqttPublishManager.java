@@ -1,5 +1,6 @@
 package io.openems.edge.bridge.mqtt;
 
+import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.HashMap;
@@ -36,6 +37,11 @@ public class MqttPublishManager extends AbstractMqttManager {
         this.checkLostConnections();
         super.currentToDo.forEach(task -> {
             try {
+                if (task instanceof MqttPublishTask) {
+                    MqttPublishTask task1 = ((MqttPublishTask) task);
+                    task1.readyToAlterPayload(super.currentTime);
+                    task1.updatePayload();
+                }
 
                 int qos = task.getQos();
                 long time = System.nanoTime();

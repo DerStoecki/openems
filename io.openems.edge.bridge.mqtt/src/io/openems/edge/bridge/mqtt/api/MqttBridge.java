@@ -47,6 +47,8 @@ public interface MqttBridge extends OpenemsComponent {
     List<MqttTask> getSubscribeTasks(String id);
 
     List<MqttTask> getPublishTasks(String id);
+
+    String getSubscribePayloadFromTopic(String topic, MqttType type);
 }
 
 

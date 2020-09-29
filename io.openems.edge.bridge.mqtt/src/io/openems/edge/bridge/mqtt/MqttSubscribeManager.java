@@ -77,4 +77,8 @@ public class MqttSubscribeManager extends AbstractMqttManager {
             }
         });
     }
+
+    String getPayloadFromTopic(String topic, MqttType type) {
+        return this.connections.get(type).getPayload(topic);
+    }
 }

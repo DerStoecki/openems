@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -37,6 +38,8 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
     Map<Integer, List<Long>> timeForQos;
     //Calculate Random new Time for QoS;
     Random rd = new Random();
+
+    long currentTime;
 
     //TODO GET EFFECTIVE CYCLE TIME
     //TODO ATM STANDARD TIME 1000 ms
@@ -71,6 +74,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
     void foreverAbstract() {
         calculateAverageTimes();
         addToFutureAndCurrentToDo(sortTasks());
+        this.currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
     }
 
     //TODO IMPROVE
