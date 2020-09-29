@@ -1,6 +1,7 @@
 package io.openems.edge.common.component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,8 +68,14 @@ public abstract class AbstractMqttComponent {
                 //UseTime
                 boolean useTime = Boolean.parseBoolean(tokens[4]);
                 //PayloadNo
-                String payload = configure()
+                int payloadNo = Integer.parseInt(tokens[5]);
+                try {
+                    String payloadForTask = configurePayload(payloadNo);
+                } catch (ConfigurationException e) {
+                    ex[0] = e;
+                }
                 //getAndAlterPayloadAndCreateMap
+
             }
             // compare and try to add AT THE END IF NO ERRORS OCCURRED
             //ConfigPub has: MqttType!Topic!Qos!RetainFlag!useTime!PayloadNo
@@ -78,6 +85,24 @@ public abstract class AbstractMqttComponent {
             // Publish task has: Topic; PayLoad; MqttType; retainFlag; addTime;qoS, MqttPriority
             //
         });
+    }
+
+    private String configurePayload(int payloadNo) throws ConfigurationException {
+        String currentPayload = this.payloads.get(payloadNo);
+        List<String> ids = new ArrayList<>();
+        List<String> channelIds = new ArrayList<>();
+        String[] tokens = currentPayload.split(":");
+        AtomicInteger counter = new AtomicInteger(0);
+        Arrays.stream(tokens).forEachOrdered(consumer -> {
+            if ((counter.get() % 2) == 0) {
+                ids.add(consumer);
+            } else {
+                channelIds.add(consumer);
+            }
+        });
+        if (ids.size() != channelIds.size()) {
+            throw new ConfigurationException("configurePayload " + payloadNo, "Payload incorrect");
+        }
     }
 
     //Each entry of List contains: Pub/Sub then: QoS: LastWill; TimeStampEnabled; PayloadNo Entry;
