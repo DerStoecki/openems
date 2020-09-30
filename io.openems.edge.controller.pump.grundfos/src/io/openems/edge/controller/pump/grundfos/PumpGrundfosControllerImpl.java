@@ -5,7 +5,9 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
+import io.openems.edge.controller.pump.grundfos.api.ControlModeSetting;
 import io.openems.edge.controller.pump.grundfos.api.PumpGrundfosControllerChannels;
+import io.openems.edge.pump.grundfos.api.ControlMode;
 import io.openems.edge.pump.grundfos.api.PumpGrundfosChannels;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -36,18 +38,13 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     private final DecimalFormat formatter2 = new DecimalFormat("#0.00");
     private final DecimalFormat formatter1 = new DecimalFormat("#0.0");
 
-    private final int bitRange = 254;
-    private int maxPumpingHeadMeters;
-
-    // Give these variables values to prevent null pointer exception in channelOutput()
-    private double range = 20;
-    private double intervalMin = 0;
-    private double intervalMax = 20;
     private double setpoint = 0;
-    private int controlMode;
-
+    double pressureSetpoint;
+    double frequencySetpoint;
+    private ControlModeSetting controlModeSetting;
+    private boolean stopPump;
+    private boolean pumpWink;
     private PumpGrundfosChannels pumpChannels;
-
     private boolean verbose;
 
     public PumpGrundfosControllerImpl() {
@@ -69,35 +66,34 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
             e.printStackTrace();
         }
-        controlMode = config.controlMode().getValue();
-        maxPumpingHeadMeters = config.maxPumpingHead();
-        if (maxPumpingHeadMeters < 2) {
-            maxPumpingHeadMeters = 2;
-            this.logError(this.log, "Pumping head setting unreasonably low (below 2 m). Resetting to 2 m. Check configuration!");
-        }
-        if (maxPumpingHeadMeters > 100) {
-            maxPumpingHeadMeters = 100;
-            this.logError(this.log, "Pumping head setting unreasonably high (above 100 m). Resetting to 100 m. Check configuration!");
-        }
-
+        controlModeSetting = config.controlMode();
+        stopPump = config.stopPump();
+        pumpWink = config.pumpWink();
+        pressureSetpoint = config.pressureSetpoint();
+        frequencySetpoint = config.frequencySetpoint();
         try {
-            sethIntervalMin().setNextWriteValue(config.hIntervalMin());
-            sethIntervalMax().setNextWriteValue(config.hIntervalMax());
-            setPumpingHead().setNextWriteValue(config.setpoint());
-            switch (controlMode) {
-                case 1:
-                    this.pumpChannels.setConstPressure().setNextWriteValue(true);
-                    break;
-                case 2:
-                    this.pumpChannels.setConstFrequency().setNextWriteValue(true);
-                    break;
-            }
+            // Fill all containers of the channels with values. This is needed since "run()" tests the "value" container
+            // of the channels.
+            setControlMode().setNextWriteValue(controlModeSetting.getValue());
+            setControlMode().setNextValue(controlModeSetting.getValue());
+            setControlMode().nextProcessImage();
+            setStopPump().setNextWriteValue(stopPump);
+            setStopPump().setNextValue(stopPump);
+            setStopPump().nextProcessImage();
+            setFlashLed().setNextWriteValue(pumpWink);
+            setFlashLed().setNextValue(pumpWink);
+            setFlashLed().nextProcessImage();
+            setPressureSetpoint().setNextWriteValue(pressureSetpoint);
+            setPressureSetpoint().setNextValue(pressureSetpoint);
+            setPressureSetpoint().nextProcessImage();
+            setFrequencySetpoint().setNextWriteValue(frequencySetpoint);
+            setFrequencySetpoint().setNextValue(frequencySetpoint);
+            setFrequencySetpoint().nextProcessImage();
 
-            if (config.stopPump()) {
-                this.pumpChannels.setStop().setNextWriteValue(true);
-            } else {
-                this.pumpChannels.setStart().setNextWriteValue(true);
-            }
+            changeControlMode();
+            startStopPump();
+            pumpFlashLed();
+            sendSetpoint();
 
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -112,6 +108,99 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         super.deactivate();
     }
 
+    private void changeControlMode() throws OpenemsError.OpenemsNamedException {
+        switch (controlModeSetting) {
+            case MIN_MOTOR_CURVE:
+                this.pumpChannels.setMinMotorCurve().setNextWriteValue(true);
+                break;
+            case MAX_MOTOR_CURVE:
+                this.pumpChannels.setMaxMotorCurve().setNextWriteValue(true);
+                break;
+            case AUTO_ADAPT:
+                this.pumpChannels.setAutoAdapt().setNextWriteValue(true);
+                break;
+            case CONST_FREQUENCY:
+                this.pumpChannels.setConstFrequency().setNextWriteValue(true);
+                // Set interval to maximum. Change this if more precision is needed. Fmin minimum is 52% for MAGNA3.
+                // You can set Fmin lower than that, but this will have no effect. Motor can't run slower than 52%.
+                this.pumpChannels.setFmin().setNextWriteValue(0.52);
+                this.pumpChannels.setFmax().setNextWriteValue(1.0);
+                break;
+            case CONST_PRESSURE:
+                this.pumpChannels.setConstPressure().setNextWriteValue(true);
+                // Set interval to sensor interval. Change this if more precision is needed.
+                this.pumpChannels.setConstRefMinH().setNextWriteValue(0.0);
+                this.pumpChannels.setConstRefMaxH().setNextWriteValue(1.0);
+                break;
+        }
+    }
+
+    private void startStopPump() throws OpenemsError.OpenemsNamedException {
+        if (stopPump) {
+            this.pumpChannels.setStop().setNextWriteValue(true);
+        } else {
+            this.pumpChannels.setStart().setNextWriteValue(true);
+        }
+    }
+
+    private void pumpFlashLed() throws OpenemsError.OpenemsNamedException {
+        if (pumpWink) {
+            this.pumpChannels.setWinkOn().setNextWriteValue(true);
+        } else {
+            this.pumpChannels.setWinkOff().setNextWriteValue(true);
+        }
+    }
+
+    private void sendSetpoint() throws OpenemsError.OpenemsNamedException {
+        switch (controlModeSetting) {
+            case MIN_MOTOR_CURVE:
+            case MAX_MOTOR_CURVE:
+            case AUTO_ADAPT:
+                break;
+            case CONST_FREQUENCY:
+                frequencySetpoint = setFrequencySetpoint().value().get();
+                if (frequencySetpoint < 0) {
+                    frequencySetpoint = 0;
+                    setFrequencySetpoint().setNextWriteValue(0.0);  // Update both containers to have correct values next cycle.
+                    setFrequencySetpoint().setNextValue(0.0);
+                }
+                if (frequencySetpoint > 100) {
+                    frequencySetpoint = 100;
+                    setFrequencySetpoint().setNextWriteValue(100.0);
+                    setFrequencySetpoint().setNextValue(100.0);
+                }
+                setpoint = frequencySetpoint / 100.0;
+                this.pumpChannels.setRefRem().setNextWriteValue(setpoint);
+                break;
+            case CONST_PRESSURE:
+                pressureSetpoint = setPressureSetpoint().value().get();
+                double intervalHrange = pumpChannels.getPumpDevice().getPressureSensorRangeBar();
+                double intervalHmin = pumpChannels.getPumpDevice().getPressureSensorMinBar();
+
+                if (pressureSetpoint > intervalHrange + intervalHmin) {
+                    this.logWarn(this.log, "Value for pressure setpoint = " + pressureSetpoint + " bar is above the interval range. "
+                            + "Resetting to maximum valid value " + intervalHrange + intervalHmin + " bar.");
+                    pressureSetpoint = intervalHrange + intervalHmin;
+                    setPressureSetpoint().setNextWriteValue(pressureSetpoint);
+                    setPressureSetpoint().setNextValue(pressureSetpoint);   // Need to set this, otherwise warn message is displayed twice.
+                }
+                if (pressureSetpoint < intervalHmin) {
+                    this.logWarn(this.log, "Value for pressure setpoint = " + pressureSetpoint + " bar is below the interval range. "
+                            + "Resetting to minimum valid value " + intervalHmin + " bar.");
+                    pressureSetpoint = intervalHmin;
+                    setPressureSetpoint().setNextWriteValue(pressureSetpoint);
+                    setPressureSetpoint().setNextValue(pressureSetpoint);
+                }
+
+                // Don't need to convert to 0-254. The GENIbus bridge does that.
+                // ref_rem is a percentage value and you write the percentage in the channel. To send 100%, write 1.00
+                // to the channel.
+                setpoint = (pressureSetpoint - intervalHmin) / intervalHrange;
+                this.pumpChannels.setRefRem().setNextWriteValue(setpoint);
+                break;
+        }
+    }
+
     /**
      * Gets the Commands usually from config; or REST/JSON Request and writes ReferenceValues in channels.
      */
@@ -121,114 +210,207 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         // Puts the pump in remote mode. Send every second.
         this.pumpChannels.setRemote().setNextWriteValue(true);
 
-        // Fetch write values from channels and put them in the correct containers.
-        boolean writeChannelsHaveValues = sethIntervalMin().getNextWriteValue().isPresent() && sethIntervalMax().getNextWriteValue().isPresent()
-                && setPumpingHead().getNextWriteValue().isPresent();
+        // Copy "write" to "nextValue".
+        boolean writeChannelsHaveValues = setControlMode().getNextWriteValue().isPresent()
+                && setStopPump().getNextWriteValue().isPresent()
+                && setFlashLed().getNextWriteValue().isPresent()
+                && setPressureSetpoint().getNextWriteValue().isPresent()
+                && setFrequencySetpoint().getNextWriteValue().isPresent();
         if (writeChannelsHaveValues) {
-            sethIntervalMin().setNextValue(sethIntervalMin().getNextWriteValue().get());
-            sethIntervalMax().setNextValue(sethIntervalMax().getNextWriteValue().get());
-            setPumpingHead().setNextValue(setPumpingHead().getNextWriteValue().get());
+            setControlMode().setNextValue(setControlMode().getNextWriteValue().get());
+            setStopPump().setNextValue(setStopPump().getNextWriteValue().get());
+            setFlashLed().setNextValue(setFlashLed().getNextWriteValue().get());
+            setPressureSetpoint().setNextValue(setPressureSetpoint().getNextWriteValue().get());
+            setFrequencySetpoint().setNextValue(setFrequencySetpoint().getNextWriteValue().get());
         }
 
-        if (controlMode == 2) {
-            if (setPumpingHead().value().isDefined()) {
-                setpoint = setPumpingHead().value().get();
-                if (setpoint < 0) {
-                    setpoint = 0;
+        boolean channelsHaveValues =  setControlMode().value().isDefined()
+                && setStopPump().value().isDefined()
+                && setFlashLed().value().isDefined()
+                && setPressureSetpoint().value().isDefined()
+                && setFrequencySetpoint().value().isDefined()
+                && pumpChannels.isConnectionOk().value().isDefined();
+        if (channelsHaveValues) {
+
+            // In case of a connection loss, all commands and configuration values need to be sent again.
+            // Because connection loss can also mean pump was turned off and restarted, or it may even be a different
+            // pump at this address.
+            if (pumpChannels.isConnectionOk().value().get()) {
+
+                // Compare pump status with controller settings. Resend commands if there is a difference.
+                if (stopPump) {
+                    if (pumpChannels.getMotorFrequency().value().orElse(0.0) > 0) {
+                        this.logInfo(this.log, "Pump should be stopped, but it is not.");
+                        startStopPump();
+                    }
+                } else {
+                    if (pumpChannels.getMotorFrequency().value().orElse(0.0) <= 0) {
+                        this.logInfo(this.log, "Pump should be running, but it is not.");
+                        startStopPump();
+                    }
                 }
-                if (setpoint > 100) {
-                    setpoint = 100;
+                switch (controlModeSetting) {
+                    case CONST_PRESSURE:
+                        if (pumpChannels.getActualControlMode().value().asEnum() != ControlMode.CONST_PRESS) {
+                            changeControlMode();
+                            this.logInfo(this.log, "Pump not in mode that it should be.");
+                        }
+                        break;
+                    case CONST_FREQUENCY:
+                    case MIN_MOTOR_CURVE:
+                    case MAX_MOTOR_CURVE:
+                        if (pumpChannels.getActualControlMode().value().asEnum() != ControlMode.CONST_FREQ) {
+                            changeControlMode();
+                            this.logInfo(this.log, "Pump not in mode that it should be.");
+                        }
+                        break;
+                    case AUTO_ADAPT:
+                        if (pumpChannels.getActualControlMode().value().asEnum() != ControlMode.AUTO_ADAPT) {
+                            changeControlMode();
+                            this.logInfo(this.log, "Pump not in mode that it should be.");
+                        }
+                        break;
                 }
-                this.pumpChannels.setRefRem().setNextWriteValue(setpoint / 100.0);
+
+                // Check if values in channels have changed. In case there is a REST/JSON write to a channel.
+                if (stopPump != setStopPump().value().get()) {
+                    stopPump = setStopPump().value().get();
+                    startStopPump();
+                }
+                if (controlModeSetting != setControlMode().value().asEnum()) {
+                    controlModeSetting = setControlMode().value().asEnum();
+                    changeControlMode();
+                }
+                if (pumpWink != setFlashLed().value().get()) {
+                    pumpWink = setFlashLed().value().get();
+                    pumpFlashLed();
+                }
+                if (pumpWink) { // Resend command in case pump was turned off.
+                    pumpFlashLed();
+                }
+
+                // Send setpoint to pump, depending on control mode.
+                switch (controlModeSetting) {
+                    case MIN_MOTOR_CURVE:
+                    case MAX_MOTOR_CURVE:
+                    case AUTO_ADAPT:
+                        break;
+                    case CONST_FREQUENCY:
+                        if (setpoint != setFrequencySetpoint().value().get()) {
+                            setpoint = setFrequencySetpoint().value().get();
+                            if (setpoint < 0) {
+                                setpoint = 0;
+                                setFrequencySetpoint().setNextWriteValue(0.0);  // Update both containers to have correct values next cycle.
+                                setFrequencySetpoint().setNextValue(0.0);
+                            }
+                            if (setpoint > 100) {
+                                setpoint = 100;
+                                setFrequencySetpoint().setNextWriteValue(100.0);
+                                setFrequencySetpoint().setNextValue(100.0);
+                            }
+                            this.pumpChannels.setRefRem().setNextWriteValue(setpoint / 100.0);
+                        }
+                        break;
+                    case CONST_PRESSURE:
+                        if (setpoint != setPressureSetpoint().value().get()) {
+                            setpoint = setPressureSetpoint().value().get();
+                            double intervalHrange = pumpChannels.getPumpDevice().getPressureSensorRangeBar();
+                            double intervalHmin = pumpChannels.getPumpDevice().getPressureSensorMinBar();
+
+                            if (setpoint > intervalHrange + intervalHmin) {
+                                this.logWarn(this.log, "Value for pressure setpoint = " + setpoint + " bar is above the interval range. "
+                                        + "Resetting to maximum valid value " + intervalHrange + intervalHmin + " bar.");
+                                setpoint = intervalHrange + intervalHmin;
+                                setPressureSetpoint().setNextWriteValue(setpoint);
+                                setPressureSetpoint().setNextValue(setpoint);   // Need to set this, otherwise warn message is displayed twice.
+                            }
+                            if (setpoint < intervalHmin) {
+                                this.logWarn(this.log, "Value for pressure setpoint = " + setpoint + " bar is below the interval range. "
+                                        + "Resetting to minimum valid value " + intervalHmin + " bar.");
+                                setpoint = intervalHmin;
+                                setPressureSetpoint().setNextWriteValue(setpoint);
+                                setPressureSetpoint().setNextValue(setpoint);
+                            }
+
+                            // Don't need to convert to 0-254. The GENIbus bridge does that.
+                            // ref_rem is a percentage value and you write the percentage in the channel. To send 100%, write 1.00
+                            // to the channel.
+                            double percentRefRem = (setpoint - intervalHmin) / intervalHrange;
+                            this.pumpChannels.setRefRem().setNextWriteValue(percentRefRem);
+                        }
+                        break;
+                }
+                if (verbose) {
+                    channelOutput();
+                }
+            } else {
+                this.logWarn(this.log, "Warning: Pump " + pumpChannels.getPumpDevice().getPumpDeviceId()
+                        + " at GENIbus address " + pumpChannels.getPumpDevice().getGenibusAddress() + " has no connection.");
             }
-        } else {
-            boolean channelsHaveValues = sethIntervalMin().value().isDefined() && sethIntervalMax().value().isDefined()
-                    && setPumpingHead().value().isDefined();
-            if (channelsHaveValues) {
-                intervalMin = sethIntervalMin().value().get();
-                intervalMax = sethIntervalMax().value().get();
-                setpoint = setPumpingHead().value().get();
-
-                // Check validity of values. Check every cycle, as new values can come from Json/Rest at any time.
-                if (intervalMax > maxPumpingHeadMeters || intervalMax <= 0) {
-                    intervalMax = maxPumpingHeadMeters;
-                    sethIntervalMax().setNextWriteValue(intervalMax);
-                    sethIntervalMax().setNextValue(intervalMax);
-                    this.logError(this.log, "Bad value for interval max setting. Resetting to maximum valid value " + maxPumpingHeadMeters + ".");
-                }
-                if (intervalMin > intervalMax || intervalMin < 0) {
-                    intervalMin = 0;
-                    sethIntervalMin().setNextWriteValue(intervalMin);
-                    sethIntervalMin().setNextValue(intervalMin);
-                    this.logError(this.log, "Bad value for interval min setting. Resetting to 0.");
-                }
-                if (setpoint > intervalMax || setpoint < intervalMin) {
-                    setpoint = intervalMax;
-                    setPumpingHead().setNextWriteValue(setpoint);
-                    setPumpingHead().setNextValue(setpoint);
-                    this.logError(this.log, "Value for pumping head setpoint (Förderhöhe) outside of interval range. "
-                            + "Resetting to maximum valid value " + intervalMax + ".");
-                }
-
-                // Don't need to convert to 0-254 anymore. GENIbus does that. To send 100%, write 1.00 to the channel.
-                /*
-                range = intervalMax - intervalMin;
-                double byteValueRefRem = Math.round((bitRange / range) * (setpoint - intervalMin));
-                double byteValueHmin = Math.round((intervalMin / maxPumpingHeadMeters) * bitRange);
-                double byteValueHmax = Math.round((intervalMax / maxPumpingHeadMeters) * bitRange);
-                this.pumpChannels.setConstRefMinH().setNextWriteValue(byteValueHmin);
-                this.pumpChannels.setConstRefMaxH().setNextWriteValue(byteValueHmax);
-                this.pumpChannels.setRefRem().setNextWriteValue(byteValueRefRem);
-                */
-                range = intervalMax - intervalMin;
-                double percentRefRem = (setpoint - intervalMin) / range;
-                double percentHmin = intervalMin / maxPumpingHeadMeters;
-                double percentHmax = intervalMax / maxPumpingHeadMeters;
-                this.pumpChannels.setConstRefMinH().setNextWriteValue(percentHmin);
-                this.pumpChannels.setConstRefMaxH().setNextWriteValue(percentHmax);
-                this.pumpChannels.setRefRem().setNextWriteValue(percentRefRem);
-            }
-        }
-
-        if (verbose) {
-            channelOutput();
         }
     }
 
     private void channelOutput() {
-        this.logInfo(this.log, "--Pump status--");
+        this.logInfo(this.log, "--Status of pump " + pumpChannels.getPumpDevice().getPumpDeviceId() + "--");
+        this.logInfo(this.log, "GENIbus address: " + pumpChannels.getPumpDevice().getGenibusAddress()
+                + ", product number: " + pumpChannels.getProductNumber().value().get() + ", "
+                + "serial number: " + pumpChannels.getSerialNumber().value().get());
         this.logInfo(this.log, "Power consumption: " + formatter2.format(pumpChannels.getPowerConsumption().value().orElse(0.0)) + " W");
         this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
         this.logInfo(this.log, "Pump pressure: " + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0)) + " bar or "
                 + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0) * 10) + " m");
-        this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or "
-                + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
+        //this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
         this.logInfo(this.log, "Pump flow: " + formatter2.format(pumpChannels.getCurrentPumpFlow().value().orElse(0.0)) + " m³/h");
-        this.logInfo(this.log, "Pump flow max: " + formatter2.format(pumpChannels.setPumpMaxFlow().value().orElse(0.0)) + " m³/h");
+        //this.logInfo(this.log, "Pump flow max: " + formatter2.format(pumpChannels.setPumpMaxFlow().value().orElse(0.0)) + " m³/h");
         this.logInfo(this.log, "Pumped medium temperature: " + formatter1.format(pumpChannels.getPumpedWaterMediumTemperature().value().orElse(0.0) / 10) + "°C");
         this.logInfo(this.log, "Control mode: " + pumpChannels.getActualControlMode().value().asEnum().getName());
         this.logInfo(this.log, pumpChannels.getControlSource().value().orElse("Command source:"));
-        this.logInfo(this.log, "Buffer length: " + pumpChannels.getBufferLength().value().get());
+        //this.logInfo(this.log, "Buffer length: " + pumpChannels.getBufferLength().value().get());
         this.logInfo(this.log, "AlarmCode: " + pumpChannels.getAlarmCode().value().get());
         this.logInfo(this.log, "WarnCode: " + pumpChannels.getWarnCode().value().get());
         this.logInfo(this.log, "Warn message: " + pumpChannels.getWarnMessage().value().get());
         this.logInfo(this.log, "Actual setpoint (pump internal): " + formatter2.format(pumpChannels.getRefAct().value().orElse(0.0) * 100) + "% of interval range.");
-        this.logInfo(this.log, "Interval min (internal): " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
-        this.logInfo(this.log, "Interval max (internal): " + formatter2.format(pumpChannels.getRmax().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
-        this.logInfo(this.log, "");
-        this.logInfo(this.log, "Controller setpoint: " + setpoint + " m or " + formatter2.format((100.0 / range)*(setpoint - intervalMin)) + "% of interval range.");
-        this.logInfo(this.log, "");
+        switch (controlModeSetting) {
+            case MIN_MOTOR_CURVE:
+            case MAX_MOTOR_CURVE:
+            case AUTO_ADAPT:
+                break;
+            case CONST_FREQUENCY:
+                this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
+                        + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
+                this.logInfo(this.log, "Motor frequency setpoint maximum: " + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz or "
+                        + formatter2.format(pumpChannels.setFnom().value().orElse(0.0) * 60) + " rpm");
+                this.logInfo(this.log, "Minimum pump speed: " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum.");
+                this.logInfo(this.log, "");
+                this.logInfo(this.log, "Controller setpoint: " + setpoint + "% of setpoint maximum.");
+                this.logInfo(this.log, "");
+                break;
+            case CONST_PRESSURE:
+                //this.logInfo(this.log, "Interval min (internal): " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
+                //this.logInfo(this.log, "Interval max (internal): " + formatter2.format(pumpChannels.getRmax().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
+                this.logInfo(this.log, "Maximum pressure setpoint: " + (pumpChannels.getPumpDevice().getPressureSensorMinBar()
+                        + pumpChannels.getPumpDevice().getPressureSensorRangeBar()) + " bar / "
+                        + (pumpChannels.getPumpDevice().getPressureSensorMinBar() + pumpChannels.getPumpDevice().getPressureSensorRangeBar()) * 10 + " m.");
+                this.logInfo(this.log, "Minimum pressure setpoint: " + pumpChannels.getPumpDevice().getPressureSensorMinBar()
+                        + " bar / " + pumpChannels.getPumpDevice().getPressureSensorMinBar() * 10 + " m.");
+                this.logInfo(this.log, "");
+                this.logInfo(this.log, "Controller setpoint: " + setpoint + " bar / " + setpoint * 10 + " m or "
+                        + formatter2.format(pumpChannels.setRefRem().value().orElse(0.0) * 100) + "% of interval range.");
+                this.logInfo(this.log, "");
+                break;
+        }
+
+        /*
         this.logInfo(this.log, "Sensor:");
         this.logInfo(this.log, "ana_in_1_func: " + pumpChannels.setSensor1Func().value().get());
         this.logInfo(this.log, "ana_in_1_applic: " + pumpChannels.setSensor1Applic().value().get());
         this.logInfo(this.log, "ana_in_1_unit: " + pumpChannels.setSensor1Unit().value().get());
         this.logInfo(this.log, "ana_in_1_min: " + pumpChannels.setSensor1Min().value().get());
         this.logInfo(this.log, "ana_in_1_max: " + pumpChannels.setSensor1Max().value().get());
-        this.logInfo(this.log, "grf_sensor_press: " + pumpChannels.getSensorGsp().value().get());
-        this.logInfo(this.log, "grf_sensor_press_func: " + pumpChannels.setSensorGspFunc().value().get());
-        this.logInfo(this.log, "Product number: " + pumpChannels.getProductNumber().value().get());
-        this.logInfo(this.log, "Serial number: " + pumpChannels.getSerialNumber().value().get());
+
+         */
+
         this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
         this.logInfo(this.log, "f_upper: " + pumpChannels.setFupper().value().get());
         this.logInfo(this.log, "f_nom: " + pumpChannels.setFnom().value().get());
@@ -236,16 +418,21 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "f_max: " + pumpChannels.setFmax().value().get());
         this.logInfo(this.log, "h_const_ref_min: " + pumpChannels.setConstRefMinH().value().get());
         this.logInfo(this.log, "h_const_ref_max: " + pumpChannels.setConstRefMaxH().value().get());
+        this.logInfo(this.log, "h_range: " + pumpChannels.setHrange().value().get());
         this.logInfo(this.log, "ref_rem: " + pumpChannels.setRefRem().value().get());
-        this.logInfo(this.log, "ref_rem write: " + pumpChannels.setRefRem().getNextWriteValue().get());
+        //this.logInfo(this.log, "ref_rem write: " + pumpChannels.setRefRem().getNextWriteValue().get());
 
 
-
+        // Motor übertakten.
+        /*
         try {
-            pumpChannels.setMaxPressure().setNextWriteValue(4.1);
+            pumpChannels.setFupper().setNextWriteValue(48.0);   // Motor max Frequenz
+            pumpChannels.setFnom().setNextWriteValue(48.0);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
+
+         */
 
 
     }

@@ -188,18 +188,32 @@ public abstract class AbstractPumpTask implements GenibusTask {
             }
         }
 
+        // Extract pressure sensor interval from h_diff
+        if (headerNumber == 2 && address == 23) {
+            if (unitString != null) {
+                switch (unitString) {
+                    case "m/10000":
+                    case "m/100":
+                    case "m/10":
+                    case "m":
+                    case "m*10":
+                        pumpDevice.setPressureSensorMinBar(zeroScaleFactor * unitCalc / 10);
+                        pumpDevice.setPressureSensorRangeBar(rangeScaleFactor * unitCalc / 10);
+                        break;
+                    default:
+                        pumpDevice.setPressureSensorMinBar(zeroScaleFactor * unitCalc);
+                        pumpDevice.setPressureSensorRangeBar(rangeScaleFactor * unitCalc);
+                }
+            }
+        }
     }
-
-    //    @Override
-    //    public boolean wasAdded() {
-    //        return wasAdded;
-    //    }
 
     @Override
     public boolean InformationDataAvailable() {
         return informationAvailable;
     }
 
+    @Override
     public void resetInfo() { informationAvailable = false; }
 
     @Override
@@ -220,5 +234,41 @@ public abstract class AbstractPumpTask implements GenibusTask {
     @Override
     public int getApduIdentifier() {
         return this.apduIdentifier;
+    }
+
+    @Override
+    public String printInfo() {
+        StringBuilder returnString = new StringBuilder();
+        returnString.append("Task " + headerNumber + ", " + Byte.toUnsignedInt(address) + " - ");
+        if (headerNumber == 7) {
+            returnString.append("ASCII");
+            return returnString.toString();
+        }
+        if (informationAvailable) {
+            returnString.append("Unit: " + unitString + ", Format: " + dataByteSize*8 + " bit ");
+            switch (sif) {
+                case 1:
+                    returnString.append("bit wise interpreted value");
+                    break;
+                case 2:
+                    returnString.append("scaled value, min: " + zeroScaleFactor + ", range: " + rangeScaleFactor);
+
+                    break;
+                case 3:
+                    int exponent = dataByteSize - 2;
+                    if (exponent < 0) {
+                        exponent = 0;
+                    }
+                    returnString.append("extended precision, min: " + (Math.pow(256, exponent) * (256 * scaleFactorHighOrder + scaleFactorLowOrder)));
+                    break;
+                case 0:
+                default:
+                    returnString.append("no scale info available");
+                    break;
+            }
+        } else {
+            returnString.append("no INFO yet.");
+        }
+        return returnString.toString();
     }
 }

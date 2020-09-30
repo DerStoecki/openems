@@ -1,8 +1,8 @@
 package io.openems.edge.controller.pump.grundfos;
 
+import io.openems.edge.controller.pump.grundfos.api.ControlModeSetting;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
-import org.osgi.service.metatype.annotations.Option;
 
 @ObjectClassDefinition(//
         name = "Controller Pump Grundfos", //
@@ -22,43 +22,25 @@ import org.osgi.service.metatype.annotations.Option;
     String pumpId() default "Pump0";
 
     @AttributeDefinition(name = "Control mode", description = "Control mode - 'constant pressure' or 'constant frequency'")
-    ControlMode controlMode() default ControlMode.CONST_PRESSURE;
+    ControlModeSetting controlMode() default ControlModeSetting.CONST_PRESSURE;
 
-     @AttributeDefinition(name = "Maximum pumping head (Förderhöhe)", description = "Maximum pumping head in meters. "
-             + "If this value is wrong, actual pressure to setpoint will be wrong by the same factor. This can be used to calculate the correct maximum pumping head. "
-             + "E.g. if the setpoint is 100 mBar but the actual pressure is 200 mBar, then the actual maximum pumping head is twice the entered value.")
-    int maxPumpingHead() default 20;
+    @AttributeDefinition(name = "Pressure setpoint (pumping head, Förderhöhe)",
+            description = "Unit is bar. Conversion for pumping head (Förderhöhe): 1 m = 0.1 Bar. Only used when in constant pressure mode.")
+    double pressureSetpoint() default 0.2;
 
-    @AttributeDefinition(name = "Setpoint interval minimum", description = "The setpoint is limited to this interval. Unit is the same as setpoint.")
-    double hIntervalMin() default 0;
-
-    @AttributeDefinition(name = "Setpoint interval maximum", description = "The setpoint is limited to this interval. Unit is the same as setpoint.")
-    double hIntervalMax() default 20;
-
-    @AttributeDefinition(name = "Pumping head (Förderhöhe) setpoint", description = "Setpoint for the pumping head in meters. Equivalent to pressure. 1 m = 100 mBar.")
-    double setpoint() default 2;
+    @AttributeDefinition(name = "Frequency setpoint",
+            description = "Unit is percent of maximum. E.g. 100 for full speed. Can't go below minimum frequency (52%). "
+                    + "Only used when in constant frequency mode.")
+    double frequencySetpoint() default 50;
 
     @AttributeDefinition(name = "Stop the pump", description = "Stops the pump")
     boolean stopPump() default false;
 
+    @AttributeDefinition(name = "Flash LED", description = "Continuous flashing of center LED, useful for pump identification.")
+    boolean pumpWink() default false;
+
     @AttributeDefinition(name = "Write pump status to log", description = "Write pump status parameters in the log.")
     boolean printPumpStatus() default false;
-
-    /*
-    @AttributeDefinition(name = "Command Settings", description = "If you wish you can add additional Commands which will be handled"
-            + "Remote needs to selected of not using AutoAdapt.",
-            options = {
-                    @Option(label = "Remote", value = "Remote"),
-                    @Option(label = "Start", value = "Start"),
-                    @Option(label = "Stop", value = "Stop"),
-                    @Option(label = "MinMotorCurve", value = "MinMotorCurve"),
-                    @Option(label = "MaxMotorCurve", value = "MaxMotorCurve"),
-                    @Option(label = "ConstFrequency", value = "ConstFrequency"),
-                    @Option(label = "ConstPressure", value = "ConstPressure"),
-                    @Option(label = "AutoAdapt", value = "AutoAdapt")
-            })
-    String[] commands() default {"Remote", "Start", "ConstFrequency"};
-    */
 
     String webconsole_configurationFactory_nameHint() default "Controller Pump Grundfos [{id}]";
 }

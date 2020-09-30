@@ -38,7 +38,7 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
     }
 
     @Override
-    public int getRequest(int byteCounter) {
+    public int getRequest(int byteCounter, boolean write) {
 
         // Maybe add option "direct" that passes channel value directly to GENIbus. Not sure if needed.
 
@@ -51,7 +51,7 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
 
             // For values of type scaled or extended precision:
             // With INFO available, the value in nextWrite is automatically converted to the correct bytes for GENIbus.
-            double dataOfChannel = correctValueFromChannel(this.channel.getNextWriteValue().get());
+            double dataOfChannel = correctValueFromChannel(this.channel.getNextWriteValue().get()) / super.channelMultiplier;
             switch (super.sif) {
                 case 2:
                     // Formula working for both 8 and 16 bit
@@ -61,8 +61,7 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
                     } else {
                         returnValue = (byte) ((combinedByteValueScaled % Math.pow(256, (byteCounter))) / Math.pow(256, (dataByteSize - 1 - byteCounter)));
                     }
-                    return returnValue;
-
+                    break;
                 case 3:
                     // Formula working for 8, 16, 24 and 32 bit.
                     long combinedByteValueExtended = Math.round(dataOfChannel / super.unitCalc) - (256 * super.scaleFactorHighOrder + super.scaleFactorLowOrder);
@@ -71,13 +70,19 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
                     } else {
                         returnValue = (byte) ((combinedByteValueExtended % Math.pow(256, (byteCounter))) / Math.pow(256, (dataByteSize - 1 - byteCounter)));
                     }
-                    return returnValue;
-
+                    break;
                 case 1:
                 case 0:
                 default:
-                    return (byte) Math.round(dataOfChannel);
+                    returnValue = (byte) Math.round(dataOfChannel);
+                    break;
             }
+
+            // If the write task is added to a telegram, reset channel to null to send write once.
+            if (write) {
+                this.channel.getNextWriteValueAndReset();
+            }
+            return returnValue;
 
         }
         return request;

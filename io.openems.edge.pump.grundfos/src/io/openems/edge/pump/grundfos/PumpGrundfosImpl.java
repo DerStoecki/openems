@@ -44,6 +44,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
     private PumpType pumpType;
     private WarnBits warnBits;
+    private PumpDevice pumpDevice;
 
 
     public PumpGrundfosImpl() {
@@ -57,28 +58,12 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
         allocatePumpType(config.pumpType());
         createTaskList(super.id(), config.pumpAddress());
-        //genibus.addDevice(super.id(), config.pumpAddress());
-        try {
-            //default commands, can be changed via REST
-            this.setRemote().setNextWriteValue(false);
-            this.setStart().setNextWriteValue(false);
-            this.setStop().setNextWriteValue(false);
-            this.setMinMotorCurve().setNextWriteValue(false);
-            this.setMaxMotorCurve().setNextWriteValue(false);
-            this.setConstFrequency().setNextWriteValue(false);
-            this.setConstPressure().setNextWriteValue(false);
-            this.setAutoAdapt().setNextWriteValue(false);
-        } catch (OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-        }
-
     }
 
     private void allocatePumpType(String pumpType) {
         switch (pumpType) {
             case "Magna3":
                 this.pumpType = PumpType.MAGNA_3;
-                //createMagna3Tasks();
                 break;
         }
     }
@@ -108,7 +93,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         // So if there are 10 low tasks and lowPrioTasksPerCycle=10, the low tasks behave like high tasks.
         // If in the same situation lowPrioTasksPerCycle=5, a priority low task is executed at half the rate of a
         // priority high task.
-        PumpDevice pumpDevice = new PumpDevice(deviceId, pumpAddress, 20,
+        pumpDevice = new PumpDevice(deviceId, pumpAddress, 20,
 
 
                 // Commands. If true is sent to to conflicting channels at the same time (e.g. start and stop), the pump
@@ -130,6 +115,8 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                         this.pumpType.getConstPressureHeadClass(), setConstPressure()),
                 new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getAutoAdapt(),
                         this.pumpType.getAutoAdaptHeadClass(), setAutoAdapt()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(121, 3, setWinkOn()),
+                new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(122, 3, setWinkOff()),
 
                 // Read tasks priority once
                 new PumpReadTask8bit(2, 0, getBufferLength(), "Standard", Priority.ONCE),
@@ -169,30 +156,34 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                 new PumpReadTask8bit(166, 2, getAlarmLog4(), "Standard", Priority.LOW),
                 new PumpReadTask8bit(167, 2, getAlarmLog5(), "Standard", Priority.LOW),
 
-                // Config parameters tasks
+                // Config parameters tasks high
                 new PumpWriteTask8bit(this.pumpType.gethConstRefMax(), this.pumpType.gethConstRefMaxHeadClass(),
                         setConstRefMaxH(), "Standard", Priority.HIGH),
                 new PumpWriteTask8bit(this.pumpType.gethConstRefMin(), this.pumpType.gethConstRefMinHeadClass(),
                         setConstRefMinH(), "Standard", Priority.HIGH),
-                new PumpWriteTask16bitOrMore(2, this.pumpType.gethMaxHi(), this.pumpType.gethMaxHiHeadClass(),
-                        setMaxPressure(), "Standard", Priority.HIGH),
-                new PumpWriteTask16bitOrMore(2, this.pumpType.getqMaxHi(), this.pumpType.getqMaxHiHeadClass(),
-                        setPumpMaxFlow(), "Standard", Priority.HIGH),
-
-                new PumpWriteTask8bit(30, 4, setFupper(), "Standard", Priority.HIGH, 0.5),
-                new PumpWriteTask8bit(31, 4, setFnom(), "Standard", Priority.HIGH, 0.5),
                 new PumpWriteTask8bit(34, 4, setFmin(), "Standard", Priority.HIGH),
                 new PumpWriteTask8bit(35, 4, setFmax(), "Standard", Priority.HIGH),
 
-                // Sensor configuration
-                new PumpWriteTask8bit(229, 4, setSensor1Func(), "Standard", Priority.LOW),
-                new PumpWriteTask8bit(226, 4, setSensor1Applic(), "Standard", Priority.LOW),
-                new PumpWriteTask8bit(208, 4, setSensor1Unit(), "Standard", Priority.LOW),
-                new PumpWriteTask16bitOrMore(2, 209, 4, setSensor1Min(), "Standard", Priority.LOW),
-                new PumpWriteTask16bitOrMore(2, 211, 4, setSensor1Max(), "Standard", Priority.LOW),
+                // Config parameters tasks low
+                new PumpWriteTask8bit(31, 4, setFnom(), "Standard", Priority.LOW, 0.5),
+                new PumpWriteTask16bitOrMore(2, this.pumpType.gethMaxHi(), this.pumpType.gethMaxHiHeadClass(),
+                        setMaxPressure(), "Standard", Priority.LOW),
+                new PumpWriteTask16bitOrMore(2, this.pumpType.getqMaxHi(), this.pumpType.getqMaxHiHeadClass(),
+                        setPumpMaxFlow(), "Standard", Priority.LOW),
+                new PumpWriteTask8bit(254, 4, setHrange(), "Standard", Priority.LOW),
 
-                new PumpReadTask8bit(127, 2, getSensorGsp(), "Standard", Priority.LOW),
-                new PumpWriteTask8bit(238, 4, setSensorGspFunc(), "Standard", Priority.LOW),
+                // Config parameters tasks once
+                new PumpWriteTask8bit(30, 4, setFupper(), "Standard", Priority.ONCE, 0.5),
+
+                // Sensor configuration
+                //new PumpWriteTask8bit(229, 4, setSensor1Func(), "Standard", Priority.LOW),
+                //new PumpWriteTask8bit(226, 4, setSensor1Applic(), "Standard", Priority.LOW),
+                //new PumpWriteTask8bit(208, 4, setSensor1Unit(), "Standard", Priority.LOW),
+                //new PumpWriteTask16bitOrMore(2, 209, 4, setSensor1Min(), "Standard", Priority.LOW),
+                //new PumpWriteTask16bitOrMore(2, 211, 4, setSensor1Max(), "Standard", Priority.LOW),
+
+                //new PumpReadTask8bit(127, 2, getSensorGsp(), "Standard", Priority.LOW),
+                //new PumpWriteTask8bit(238, 4, setSensorGspFunc(), "Standard", Priority.LOW),
 
                 // Reference values tasks
                 new PumpWriteTask8bit(this.pumpType.getRefRem(), this.pumpType.getRefRemHeadClass(),
@@ -225,24 +216,11 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         // ------------
 
 
-        ///////////////READ TASK/////////////////
-
-
-        ///////////////WRITE TASK/////////////////
         ///////////////CONFIG PARAMS/////////////////
-
 
 
         this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getDeltaH(),
                 this.pumpType.getDeltaHheadClass(), setPressureDelta(), "Standard"));
-
-
-        ///////////////REFERENCE VALUES/////////////////
-
-
-        ///////////////FREQUENCY VALUES/////////////////
-        //this.genibus.addTask(super.id(), new PumpWriteTask(30,
-        //        4, setFupper(), "Standard"));
 
 
     }
@@ -252,6 +230,11 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     public void deactivate() {
         genibus.removeDevice(super.id());
         super.deactivate();
+    }
+
+    @Override
+    public PumpDevice getPumpDevice() {
+        return pumpDevice;
     }
 
     @Override
@@ -265,6 +248,9 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
     // Fill channels with data that are not directly read from the Genibus.
     private void updateChannels() {
+
+        // Get connection status from pump, put it in the channel.
+        isConnectionOk().setNextValue(pumpDevice.isConnectionOk());
 
         // Parse ActualControlMode value to an enum.
         if (getActualControlModeBits().value().isDefined()) {
@@ -342,4 +328,5 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         getWarnMessage().setNextValue(allErrors);
 
     }
+
 }

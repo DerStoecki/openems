@@ -8,12 +8,10 @@ public class PumpReadTask16bitOrMore extends AbstractPumpTask {
 
     private Channel<Double> channel;
     private final Priority priority;
-    private final double channelMultiplier;
+    protected final double channelMultiplier;
+    private int refreshInfoCounter = 0;
     private int byteCounter = 0;
     private byte[] dataArray = new byte[dataByteSize];
-
-    // Not needed. Lo address is always addressHi + 1.
-    // private byte addressLo;
 
     public PumpReadTask16bitOrMore(int numberOfBytes, int address, int headerNumber, Channel<Double> channel, String unitString, Priority priority, double channelMultiplier) {
         super(address, headerNumber, unitString, numberOfBytes);
@@ -23,15 +21,7 @@ public class PumpReadTask16bitOrMore extends AbstractPumpTask {
     }
 
     public PumpReadTask16bitOrMore(int numberOfBytes, int address, int headerNumber, Channel<Double> channel, String unitString, Priority priority) {
-        super(address, headerNumber, unitString, numberOfBytes);
-        this.channel = channel;
-        this.priority = priority;
-        this.channelMultiplier = 1;
-    }
-
-    @Override
-    public int getRequest(int byteCounter) {
-        return -1;
+        this(numberOfBytes, address, headerNumber, channel, unitString, priority, 1);
     }
 
     @Override
@@ -42,6 +32,15 @@ public class PumpReadTask16bitOrMore extends AbstractPumpTask {
         if (byteCounter != dataByteSize - 1) {
             byteCounter++;
             return;
+        }
+
+        // ref_norm changes INFO if control mode is changed. If task is ref_norm (2, 49), regularly update INFO.
+        if (getHeader() == 2 && getAddress() == 49) {
+            refreshInfoCounter++;
+            if (refreshInfoCounter >= 5) {
+                super.resetInfo();
+                refreshInfoCounter = 0;
+            }
         }
 
         // Data is complete, now calculate value and put it in the channel.

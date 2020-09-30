@@ -21,19 +21,13 @@ import java.util.concurrent.TimeUnit;
 class GenibusWorker extends AbstractCycleWorker {
 
     private final Logger log = LoggerFactory.getLogger(GenibusWorker.class);
-    // Measures the Cycle-Length between two consecutive BeforeProcessImage events
     private final Stopwatch cycleStopwatch = Stopwatch.createUnstarted();
-
     private final LinkedBlockingDeque<Telegram> telegramQueue = new LinkedBlockingDeque<>();
-
     private final ArrayList<PumpDevice> deviceList = new ArrayList<>();
-
     private int currentDeviceCounter = 0;
-
     private final GenibusImpl parent;
+    private long cycleTimeMs = 1000;    // Start with 1000 ms, then measure the actual cycle time.
 
-    // The measured duration between BeforeProcessImage event and ExecuteWrite event
-    private long durationBetweenBeforeProcessImageTillExecuteWrite = 0;
 
     protected GenibusWorker(GenibusImpl parent) {
         this.parent = parent;
@@ -81,7 +75,7 @@ class GenibusWorker extends AbstractCycleWorker {
         int telegramRemainingBytes = currentDevice.getDeviceByteBufferLength() - 6;
 
         // Estimate how big the telegram can be to still fit in this cycle.
-        long remainingCycleTime = 940 - cycleStopwatch.elapsed(TimeUnit.MILLISECONDS);  // Include 60 ms buffer.
+        long remainingCycleTime = cycleTimeMs - 60 - cycleStopwatch.elapsed(TimeUnit.MILLISECONDS);  // Include 60 ms buffer.
         if (remainingCycleTime < 0) {
             remainingCycleTime = 0;
         }
@@ -106,7 +100,7 @@ class GenibusWorker extends AbstractCycleWorker {
         long lastExecutionMillis = System.currentTimeMillis() - currentDevice.getTimestamp();
         // Rollover backup. Just in case this software actually runs that long...
         if (lastExecutionMillis < 0) {
-            lastExecutionMillis = 1000;
+            lastExecutionMillis = cycleTimeMs;
         }
 
         // Get taskQueue from the device. Contains all tasks that couldn't fit in the last telegram.
@@ -123,7 +117,7 @@ class GenibusWorker extends AbstractCycleWorker {
             lowTasksToAdd = numberOfLowTasks;
         }
 
-        if (lastExecutionMillis > 950) {
+        if (lastExecutionMillis > cycleTimeMs - 50) {
             // This checks if this was already executed this cycle. This part should execute once per cycle only.
 
             currentDevice.setTimestamp();
@@ -148,29 +142,20 @@ class GenibusWorker extends AbstractCycleWorker {
                     }
                 }
 
-                // Add all once Tasks. Only done on the first run, since .getOneTask(Priority.ONCE) will return null after
-                // it has traversed the list once.
-                boolean onceTasksAvailable = true;
-                while (onceTasksAvailable) {
-                    GenibusTask currentTask = currentDevice.getTaskManager().getOneTask(Priority.ONCE);
-                    if (currentTask == null) {
-                        onceTasksAvailable = false;
-                    } else {
-                        tasksQueue.add(currentTask);
-                        switch (currentTask.getHeader()) {
+                // Add all once Tasks. Only done on the first run or after a device reset.
+                if (currentDevice.isAddAllOnceTasks()) {
+                    currentDevice.getTaskManager().getAllTasks(Priority.ONCE).forEach(onceTask -> {
+                        tasksQueue.add(onceTask);
+                        // Tasks with INFO need two executions. First to get INFO, second for GET and/or SET.
+                        switch (onceTask.getHeader()) {
                             case 2:
                             case 4:
                             case 5:
-                                currentDevice.getOnceTasksWithInfo().add(currentTask);
+                                currentDevice.getOnceTasksWithInfo().add(onceTask);
                         }
-                    }
+                    });
+                    currentDevice.setAddAllOnceTasks(false);
                 }
-                // ToDo: Add a check to see if the once tasks were executed. Right now a once task can fail if there is
-                //  an error while processing the telegram. Best way to do this is to check if the telegram was
-                //  processed or not. Can't check the individual tasks since a task could have a wrong address etc.
-                //  Could still do this by adding an execution counter. If a task was sent three times without success
-                //  it is considered faulty.
-
 
                 // Add a number of low tasks.
                 for (int i = 0; i < lowTasksToAdd; i++) {
@@ -184,8 +169,11 @@ class GenibusWorker extends AbstractCycleWorker {
             }
 
         } else {
-            // This executes if a telegram was already sent to this pumpDevice in this cycle. If the taskQueue is empty,
-            // fill the telegram with any remaining low priority tasks. If that was already done this cycle, exit the method.
+            // This executes if a telegram was already sent to this pumpDevice in this cycle.
+            // First, check if the connection is ok. If not, don't try to send another telegram. Then look at the
+            // taskQueue. If the taskQueue is empty, fill the telegram with any remaining low priority tasks. If that
+            // was already done this cycle, exit the method.
+            if (currentDevice.isConnectionOk() == false) { return; }
             if (tasksQueue.isEmpty()) {
                 if (currentDevice.isAllLowPrioTasksAdded() == false) {
                     currentDevice.setAllLowPrioTasksAdded(true);
@@ -322,7 +310,7 @@ class GenibusWorker extends AbstractCycleWorker {
     // This is how GET for a writeTask (HeadClass 4 or 5) is handled. Checks if the task is a writeTask and if not the
     // task is removed. If it is a writeTask, it will set the sendGet boolean to true and leaves the task in the queue
     // so that it is added to a GET apdu. If sendGet is true that is reset to false and the task is removed from the
-    // queue. That means every writeTask will perform a GET.
+    // queue. That means every writeTask will perform a SET and a GET.
     private void checkGetOrRemove(List<GenibusTask> tasksQueue, int position) {
         GenibusTask currentTask = tasksQueue.get(position);
         if (currentTask instanceof GenibusWriteTask && currentTask.InformationDataAvailable()) {
@@ -372,7 +360,7 @@ class GenibusWorker extends AbstractCycleWorker {
             case 3:
                 // HeadClass 3 is commands. Commands are boolean where true = send and false = no send. For true,
                 // getRequest() returns 1. HeadClass 3 does allow INFO, but it is not needed.
-                if (task.getRequest(0) != 0) {
+                if (task.getRequest(0, false) != 0) {
                     // Task is SET. Search for apdu with key 3*100 for HeadClass 3, 2*10 for SET and 0 for first apdu.
                     return checkAvailableApdu(task, 320, 63, telegramApduList);
                 } else {
@@ -392,7 +380,7 @@ class GenibusWorker extends AbstractCycleWorker {
                             return checkAvailableApdu(task, headClass * 100, 63, telegramApduList);
                         } else {
                             // Task is SET. Check if there is a value to set. If not don't send anything.
-                            int valueRequest = task.getRequest(0);  // This also works for 16bit. Will return something else than -256 in byte[0] if there is a value to set.
+                            int valueRequest = task.getRequest(0, false);  // This also works for 16bit. Will return something else than -256 in byte[0] if there is a value to set.
                             int setBytes = 0;
                             if (valueRequest > -256) {
                                 // Check apdu for SET. Key is HeadClass*100, 2*10 for SET and 0 for first apdu.
@@ -456,6 +444,41 @@ class GenibusWorker extends AbstractCycleWorker {
         int apduIdentifier = currentTask.getApduIdentifier();
 
         // telegramApduList should have the same keys as telegramTaskList, so only need to check one.
+        if (telegramTaskList.containsKey(apduIdentifier) == false) {
+            // Create task list and apdu if they don't exist yet.
+            ArrayList<GenibusTask> apduTaskList = new ArrayList<GenibusTask>();
+            telegramTaskList.put(apduIdentifier, apduTaskList);
+            ApplicationProgramDataUnit newApdu = new ApplicationProgramDataUnit();
+            newApdu.setHeadClass(apduIdentifier / 100);
+            newApdu.setHeadOSACK((apduIdentifier % 100) / 10);
+            telegramApduList.put(apduIdentifier, newApdu);
+        }
+
+        // Add task to list.
+        telegramTaskList.get(apduIdentifier).add(currentTask);
+
+        // Write bytes in apdu. For tasks with more than 8 bit, put more than one byte in the apdu.
+        for (int i = 0; i < currentTask.getDataByteSize(); i++) {
+            telegramApduList.get(apduIdentifier).putDataField(currentTask.getAddress() + i);
+            // Add write value for write task.
+            switch (currentTask.getHeader()) {
+                case 3:
+                    // Reset channel write value to send command just once.
+                    currentTask.getRequest(i, true);
+                    break;
+                case 4:
+                case 5:
+                    if (((apduIdentifier % 100) / 10) == 2) {
+                        int valueRequest = currentTask.getRequest(i, true);
+                        telegramApduList.get(apduIdentifier).putDataField((byte) valueRequest);
+                    }
+                    break;
+            }
+        }
+
+
+        /*
+        // telegramApduList should have the same keys as telegramTaskList, so only need to check one.
         if (telegramTaskList.containsKey(apduIdentifier)) {
             telegramTaskList.get(apduIdentifier).add(currentTask);
 
@@ -464,12 +487,17 @@ class GenibusWorker extends AbstractCycleWorker {
                 telegramApduList.get(apduIdentifier).putDataField(currentTask.getAddress() + i);
                 // Add write value for write task.
                 switch (currentTask.getHeader()) {
+                    case 3:
+                        // Reset channel write value to send command just once.
+                        currentTask.getRequest(i, true);
+                        break;
                     case 4:
                     case 5:
                         if (((apduIdentifier % 100) / 10) == 2) {
-                            int valueRequest = currentTask.getRequest(i);
+                            int valueRequest = currentTask.getRequest(i, true);
                             telegramApduList.get(apduIdentifier).putDataField((byte) valueRequest);
                         }
+                        break;
                 }
             }
         } else {
@@ -485,10 +513,14 @@ class GenibusWorker extends AbstractCycleWorker {
                 newApdu.putDataField(currentTask.getAddress() + i);
                 // Add write value for write task.
                 switch (currentTask.getHeader()) {
+                    case 3:
+                        // Reset channel write value to send command just once.
+                        currentTask.getRequest(i, true);
+                        break;
                     case 4:
                     case 5:
                         if (((apduIdentifier % 100) / 10) == 2) {
-                            int valueRequest = currentTask.getRequest(i);
+                            int valueRequest = currentTask.getRequest(i, true);
                             newApdu.putDataField((byte) valueRequest);
                         }
                 }
@@ -496,6 +528,7 @@ class GenibusWorker extends AbstractCycleWorker {
 
             telegramApduList.put(apduIdentifier, newApdu);
         }
+        */
     }
 
 
@@ -510,6 +543,7 @@ class GenibusWorker extends AbstractCycleWorker {
     @Override
     protected void forever() {
         if (this.cycleStopwatch.isRunning()) {
+            cycleTimeMs = cycleStopwatch.elapsed(TimeUnit.MILLISECONDS);
             if (parent.getDebug()) {
                 this.parent.logInfo(this.log, "Stopwatch 3: " + cycleStopwatch.elapsed(TimeUnit.MILLISECONDS));
             }
@@ -526,6 +560,13 @@ class GenibusWorker extends AbstractCycleWorker {
             if (!parent.handler.checkStatus()) {
                 // If checkStatus() returns false, the connection is lost. Try to reconnect
                 parent.connectionOk = parent.handler.start(parent.portName);
+                deviceList.forEach(pumpDevice -> {
+                    pumpDevice.setConnectionOk(parent.connectionOk);
+                    if (parent.connectionOk == false) {
+                        // Reset device in case pump was changed or restarted.
+                        pumpDevice.resetDevice();
+                    }
+                });
             }
             if (parent.connectionOk) {
                 try {
@@ -552,24 +593,25 @@ class GenibusWorker extends AbstractCycleWorker {
                 } catch (InterruptedException e) {
                     this.parent.logWarn(this.log, "Couldn't get telegram. " + e);
                 }
-            }
 
-            // Check if there is enough time for another telegram. The telegram length is dynamic and adjusts depending
-            // on time left in the cycle. A short telegram can be sent and received in ~50 ms.
-            if (cycleStopwatch.elapsed(TimeUnit.MILLISECONDS) < 900) {
-                // There should be enough time. Create the telegram. The createTelegram() method checks if a telegram
-                // has already been sent this cycle and will then only fill it with tasks that have not been executed
-                // this cycle. If all tasks were already executed, no telegram is created.
-                createTelegram();
 
-                // If no telegram was created and put in the queue (the device had nothing to send), check if the other
-                // devices still have tasks.
-                if (this.telegramQueue.isEmpty()) {
-                    for (int i = 0; i < deviceList.size() - 1; i++) {   // "deviceList.size() - 1" because we already checked one device.
-                        createTelegram();
-                        if (this.telegramQueue.isEmpty() == false) {
-                            // Exit for-loop if a telegram was created.
-                            break;
+                // Check if there is enough time for another telegram. The telegram length is dynamic and adjusts depending
+                // on time left in the cycle. A short telegram can be sent and received in ~50 ms.
+                if (cycleStopwatch.elapsed(TimeUnit.MILLISECONDS) < cycleTimeMs - 100) {
+                    // There should be enough time. Create the telegram. The createTelegram() method checks if a telegram
+                    // has already been sent this cycle and will then only fill it with tasks that have not been executed
+                    // this cycle. If all tasks were already executed, no telegram is created.
+                    createTelegram();
+
+                    // If no telegram was created and put in the queue (the device had nothing to send), check if the other
+                    // devices still have tasks.
+                    if (this.telegramQueue.isEmpty()) {
+                        for (int i = 0; i < deviceList.size() - 1; i++) {   // "deviceList.size() - 1" because we already checked one device.
+                            createTelegram();
+                            if (this.telegramQueue.isEmpty() == false) {
+                                // Exit for-loop if a telegram was created.
+                                break;
+                            }
                         }
                     }
                 }

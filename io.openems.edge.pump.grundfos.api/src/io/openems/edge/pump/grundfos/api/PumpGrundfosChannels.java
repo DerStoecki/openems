@@ -5,6 +5,7 @@ import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.bridge.genibus.api.PumpDevice;
 
 public interface PumpGrundfosChannels extends OpenemsComponent {
 
@@ -292,8 +293,8 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
         /**
          * Constant Pressure Mode minimum reference. INFO reads unit = 30 = 1%, min = 0, range = 100.
-         * Values for this parameter are 0% - 100% (write 0 - 1.0 in channel), where 100% means the upper range limit
-         * of the pressure sensor. The range limit of the pressure sensor is the one transmitted by INFO for h_diff.
+         * Values for this parameter are 0% - 100% (write 0 - 1.0 in channel), where % is % of the range interval
+         * of the pressure sensor. The range interval of the pressure sensor is the one transmitted by INFO for h_diff.
          * <ul>
          *        <li> Interface: PumpGrundfosChannels
          *        <li> Type: Double
@@ -416,6 +417,15 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * </ul>
          * */
         GRF_SENSOR_PRESS_FUNC(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Maximum pressure range (=20m).
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Measured Data: 4, 254 h_range
+         * </ul>
+         * */
+        H_RANGE(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
 
         // commands //
         /**
@@ -493,6 +503,26 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          *
          * */
         AUTO_ADAPT(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Turn on center LED flashing.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 121 wink_on
+         * </ul>
+         *
+         * */
+        WINK_ON(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Turn off center LED flashing.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 122 wink_off
+         * </ul>
+         *
+         * */
+        WINK_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
 
         // Reference Values //
         /**
@@ -523,7 +553,18 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          *        <li> Magna3: ASCII Value: 7, 9 serial_no
          * </ul>
          * */
-        SERIAL_NO(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_ONLY));
+        SERIAL_NO(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_ONLY)),
+
+        // Other, not GENIbus.
+        /**
+         * Connection status. Is the controller currently receiving data from the pump or not.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         * </ul>
+         *
+         * */
+        CONNECTION_OK(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
 
         private final Doc doc;
 
@@ -706,6 +747,10 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.GRF_SENSOR_PRESS_FUNC);
     }
 
+    default WriteChannel<Double> setHrange() {
+        return this.channel(ChannelId.H_RANGE);
+    }
+
 
     //command Channel
     default WriteChannel<Boolean> setRemote() {
@@ -740,6 +785,14 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.CONST_PRESSURE);
     }
 
+    default WriteChannel<Boolean> setWinkOn() {
+        return this.channel(ChannelId.WINK_ON);
+    }
+
+    default WriteChannel<Boolean> setWinkOff() {
+        return this.channel(ChannelId.WINK_OFF);
+    }
+
 
     //reference Value
     default WriteChannel<Double> setRefRem() {
@@ -772,6 +825,11 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     default Channel<String> getSerialNumber() {
         return this.channel(ChannelId.SERIAL_NO);
     }
+
+    // Other
+    default Channel<Boolean> isConnectionOk() { return this.channel(ChannelId.CONNECTION_OK); }
+
+    public PumpDevice getPumpDevice();
 
 }
 

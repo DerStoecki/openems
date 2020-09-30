@@ -7,7 +7,11 @@ import io.openems.edge.common.taskmanager.ManagedTask;
 public interface GenibusTask extends ManagedTask {
 
 
-    default int getRequest(int byteCounter) {
+    // The point of the boolean "write" is to tell the method if this is an actual write or just a test to see if there
+    // is something to write. If it is a write, the write channel associated with the task will have it's nextWriteValue
+    // reset to null. Any further calls of the method will then return "nothing to write" (-1 or -256), unless a
+    // value was put in nextWriteValue of the channel again.
+    default int getRequest(int byteCounter, boolean write) {
         return -1;
     };
 
@@ -21,9 +25,9 @@ public interface GenibusTask extends ManagedTask {
 
     void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow);
 
-    //boolean wasAdded();
-
     boolean InformationDataAvailable();
+
+    void resetInfo();
 
     void setPumpDevice(PumpDevice pumpDevice);
 
@@ -32,5 +36,7 @@ public interface GenibusTask extends ManagedTask {
     void setApduIdentifier(int identifier);
 
     int getApduIdentifier();
+
+    String printInfo();
 
 }

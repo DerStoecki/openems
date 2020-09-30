@@ -42,7 +42,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     private final GenibusWorker worker = new GenibusWorker(this);
 
     protected String portName;
-    boolean connectionOk;
+    protected boolean connectionOk = true;  // Start with true because this boolean is also used to track if an error message should be sent.
 
     protected Handler handler;
 
@@ -82,7 +82,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
 
     /**
-     * <p>Handles the telegram. created by the forever() method.
+     * <p>Handles the telegram. This is called by the GenibusWorker forever() method.
      *
      * @param telegram   telegram created beforehand.
      *                   </p>
@@ -99,10 +99,23 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     protected void handleTelegram(Telegram telegram) {
         //check OSACK --> infomration, request, data
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
-        Telegram responseTelegram = handler.writeTelegram(400, telegram, debug);
+
+        int telegramByteLength = Byte.toUnsignedInt(telegram.getLength()) - 2;  // Subtract crc
+        int telegramEstimatedTimeMillis = (int) (33 + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte());
+        Telegram responseTelegram = handler.writeTelegram(telegramEstimatedTimeMillis, telegram, debug);
+
+        // No answer received -> error handling
+        // This will happen if the pump is switched off. Assume that is the case. Reset the device, so once data is
+        // again received from this address, it is handled like a new pump (which might be the case).
+        // A reset means all priority once tasks are sent again and all INFO is requested again. So if any of these were
+        // in this failed telegram, they are not omitted.
         if (responseTelegram == null) {
+            telegram.getPumpDevice().setConnectionOk(false);
+            telegram.getPumpDevice().resetDevice();
             return;
         }
+
+        telegram.getPumpDevice().setConnectionOk(true);
         List<ApplicationProgramDataUnit> responseApdu = responseTelegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
 
         //if (debug) { this.logInfo(this.log, "--Reading Response--"); }
@@ -110,6 +123,8 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         AtomicInteger listCounter = new AtomicInteger();
         listCounter.set(0);
         telegram.getTelegramTaskList().forEach((key, taskList) -> {
+
+            // ToDO: test if responseApdu has the same number of apdus as the telegramTaskList. Otherwise out of bounds error.
             byte[] data = responseApdu.get(listCounter.get()).getBytes();
 
             //for the GenibusTask list --> index
@@ -169,6 +184,9 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
                                     data[byteCounter + 1], data[byteCounter + 2], data[byteCounter + 3]);
                             //bc of 4 byte data additional 3 byte incr. (or more for 16+ bit tasks)
                             byteCounter += 3 + geniTask.getDataByteSize();
+                        }
+                        if (debug) {
+                            this.logInfo(this.log, geniTask.printInfo());
                         }
                     } else {
                         // If task is more than 8 bit, read more than one byte.

@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -21,8 +23,7 @@ public class Handler {
 
     private SerialPort serialPort;
     protected String portName;
-    protected long timeout;
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    LocalDateTime errorTimestamp;
 
     OutputStream os;
     InputStream is;
@@ -31,6 +32,7 @@ public class Handler {
     protected final GenibusImpl parent;
 
     public Handler(GenibusImpl parent) {
+        errorTimestamp = LocalDateTime.now();
         this.parent = parent;
     }
 
@@ -38,12 +40,16 @@ public class Handler {
         this.portName = portName;
         String[] serialPortsOfSystem =  SerialPortBuilder.getSerialPortNames();
         boolean portFound = false;
-        this.parent.logInfo(this.log, "--Starting serial connection--");
         if (serialPortsOfSystem.length == 0) {
-            this.parent.logError(this.log, "No serial ports found or nothing plugged in.");
+            // So that error message is only sent once.
+            if (parent.connectionOk || ChronoUnit.SECONDS.between(errorTimestamp, LocalDateTime.now()) >= 5) {
+                errorTimestamp = LocalDateTime.now();
+                this.parent.logError(this.log, "Couldn't start serial connection. No serial ports found or nothing plugged in.");
+            }
             return false;
         }
         for (String entry : serialPortsOfSystem) {
+            this.parent.logInfo(this.log, "--Starting serial connection--");
             this.parent.logInfo(this.log, "Found serial port: " + entry);
             if (entry.contains(this.portName)) {
                 portFound = true;
@@ -57,15 +63,23 @@ public class Handler {
                 is = serialPort.getInputStream();
                 os = serialPort.getOutputStream();
             } catch (IOException e) {
-                this.parent.logError(this.log, "Failed to open connection on port " + portName);
+                // So that error message is only sent once.
+                if (parent.connectionOk || ChronoUnit.SECONDS.between(errorTimestamp, LocalDateTime.now()) >= 5) {
+                    errorTimestamp = LocalDateTime.now();
+                    this.parent.logError(this.log, "Failed to open connection on port " + portName);
+                }
                 e.printStackTrace();
                 return false;
             }
             this.parent.logInfo(this.log, "Connection opened on port " + portName);
             return true;
         } else {
-            this.parent.logError(this.log, "Configuration error: The specified serial port " + portName
-                    + " does not match any of the available ports or nothing is plugged in. Please check configuration and/or make sure the connector is plugged in.");
+            if (parent.connectionOk || ChronoUnit.SECONDS.between(errorTimestamp, LocalDateTime.now()) >= 5) {
+                errorTimestamp = LocalDateTime.now();
+                this.parent.logError(this.log, "Configuration error: The specified serial port " + portName
+                        + " does not match any of the available ports or nothing is plugged in. " +
+                        "Please check configuration and/or make sure the connector is plugged in.");
+            }
             return false;
         }
 
@@ -79,7 +93,11 @@ public class Handler {
                 // not interfere with anything.
                 os.write(0);
             } catch (IOException e) {
-                this.parent.logError(this.log, "Serial connection lost on port " + portName + ". Attempting to reconnect...");
+
+                // So that error message is only sent once.
+                if (parent.connectionOk) {
+                    this.parent.logError(this.log, "Serial connection lost on port " + portName + ". Attempting to reconnect...");
+                }
 
                 if (serialPort != null) {
                     try {
@@ -169,23 +187,23 @@ public class Handler {
         }
     }
 
-    /**
-     * .
-     *
-     * @param timeout in Milliseconds.
-     * @param task    .
-     * @return .
-     */
 
-    public Telegram writeTelegram(long timeout, Telegram task, boolean debug) {
+    /**
+     * Writes the content
+     * @param timeout
+     * @param telegram
+     * @param debug
+     * @return
+     */
+    public Telegram writeTelegram(long timeout, Telegram telegram, boolean debug) {
 
         /*
-         * Send data and save return handling task
+         * Send data and save return handling telegram
          */
         try {
             // Send Reqeust
 
-            byte[] bytes = task.getBytes();
+            byte[] bytes = telegram.getBytes();
             os.write(bytes);
             if (debug) {
                 // Debug output data hex values
@@ -194,7 +212,7 @@ public class Handler {
             }
 
             // Save return function/Task
-            return handleResponse(task, debug);
+            return handleResponse(timeout, debug);
 
         } catch (Exception e) {
             this.parent.logError(this.log, "Error while sending data: " + e.getMessage());
@@ -202,13 +220,14 @@ public class Handler {
         return null;
     }
 
-    private Telegram handleResponse(Telegram task, boolean debug) {
+    private Telegram handleResponse(long timeout, boolean debug) {
         try {
             long startTime = System.currentTimeMillis();
 
             // This "while" only tests for timeout as long as is.available() <= 0, since there is a break at the end.
-            // This is the timeout length of the GENIbus, which should be set to 60 ms according to GENIbus spec.
-            while ((System.currentTimeMillis() - startTime) < 500) {
+            // Timeout time is the estimated time it should take to send and receive the telegram, + the timeout length
+            // of the GENIbus which is 60 ms according to GENIbus spec.
+            while ((System.currentTimeMillis() - startTime) < timeout + 60) {
                 if (is.available() <= 0) {
                     continue;
                 }
@@ -216,13 +235,13 @@ public class Handler {
                 byte[] readBuffer = new byte[1024];
                 List<Byte> completeInput = new ArrayList<>();
                 boolean transferOk = false;
-                while (transferOk == false && (System.currentTimeMillis() - startTime) < 500) {
+                while (transferOk == false && (System.currentTimeMillis() - startTime) < timeout + 60) {
                     if (is.available() <= 0) {
                         continue;
                     }
                     numRead = is.available();
                     if (numRead > 1024) {
-                        numRead = 1024;
+                        numRead = 1024; // readBuffer is size 1024.
                     }
                     is.read(readBuffer, 0, numRead);
                     for (int counter1 = 0 ; counter1 < numRead; counter1++) {
@@ -249,9 +268,6 @@ public class Handler {
                     this.parent.logInfo(this.log, "Data received: " + bytesToInt(receivedData));
                 }
 
-                //Thread.sleep(50);
-                //this.parent.logInfo(this.log, "Data available: " + is.available());
-
                 if (packageOK(receivedData, true)) {
                     // GENIbus requirement: wait 3 ms after reception of a telegram before sending the next one.
                     Thread.sleep(3);
@@ -259,17 +275,17 @@ public class Handler {
                         this.parent.logInfo(this.log, "CRC Check ok.");
                     }
                     // if all done create telegram
-                    task = Telegram.parseEventStream(receivedData);
-                    return task;
-                    //task.setResponse(telegram);
-
+                    Telegram answerTelegram = Telegram.parseEventStream(receivedData);
+                    return answerTelegram;
                 }
                 break;
             }
 
         } catch (Exception e) {
+            this.parent.logError(this.log, "Error while receiving data: " + e.getMessage());
             e.printStackTrace();
         }
+        this.parent.logWarn(this.log, "Telegram response timeout");
         return null;
     }
 
