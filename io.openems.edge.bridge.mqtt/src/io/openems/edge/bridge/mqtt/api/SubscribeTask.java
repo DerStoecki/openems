@@ -29,7 +29,6 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         this.nameIdAndChannelIdMap = new HashMap<>();
         String[] tokens = payloadForTask.split(":");
 
-        AtomicInteger counter = new AtomicInteger(0);
         for (int x = 0; x < tokens.length; x += 2) {
             this.nameIdAndChannelIdMap.put(tokens[x], tokens[x + 1]);
         }
@@ -76,34 +75,24 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
      */
     private void standardResponse() {
 
-        List<String> ids = new ArrayList<>();
-        List<String> channelValues = new ArrayList<>();
+        Map<String, String> idChannelValueMap = new HashMap<>();
         String response = super.payloadToOrFromBroker.replaceAll(("[^A-Z][^a-z][^0-9.][^:]*"), "");
         String[] tokens = response.split(":");
-        AtomicInteger counter = new AtomicInteger(0);
-        Arrays.stream(tokens).forEachOrdered(entry -> {
-            if (!entry.equals("metrics")) {
-                if (counter.get() % 2 == 0) {
-                    ids.add(entry);
-                } else {
-                    channelValues.add(entry);
-                }
-                counter.getAndIncrement();
+        for (int x = 0; x < tokens.length; ) {
+            if (tokens[x].equals("metrics")) {
+                x++;
+            } else {
+                idChannelValueMap.put(tokens[x], tokens[x + 1]);
+                x += 2;
             }
-
-        });
-        counter.set(0);
-        ids.forEach(entry -> {
-
+        }
+        idChannelValueMap.forEach((key, value) -> {
             //index of nameIds is the same as for ChannelIds.
-            if (this.nameIds.contains(entry)) {
-                int index = this.nameIds.indexOf(entry);
-                String channelId = this.channelIds.get(index);
+            if (this.nameIdAndChannelIdMap.containsKey(key)) {
+                String channelId = this.nameIdAndChannelIdMap.get(key);
                 Channel<?> channel = super.channels.get(channelId);
-                String nextChannelValue = channelValues.get(counter.get());
-                channel.setNextValue(nextChannelValue);
+                channel.setNextValue(value);
             }
-            counter.getAndIncrement();
         });
 
     }
