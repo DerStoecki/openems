@@ -73,8 +73,8 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
     void foreverAbstract() {
         calculateAverageTimes();
-        addToFutureAndCurrentToDo(sortTasks());
         this.currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
+        addToFutureAndCurrentToDo(sortTasks());
     }
 
     //TODO IMPROVE
@@ -105,7 +105,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         List<MqttTask> collectionOfAllTasks = new ArrayList<>();
         this.allTasks.forEach((key, value) -> collectionOfAllTasks.addAll(value));
         //Add QoS 0 to CurrentToDo --> No Time Required
-        collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.getQos() == 0).forEach(task -> {
+        collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.getQos() == 0 && mqttTask.isReady(currentTime)).forEach(task -> {
             this.currentToDo.add(task);
         });
         this.currentToDo.forEach(collectionOfAllTasks::remove);

@@ -66,7 +66,7 @@ public abstract class AbstractMqttConnection {
     String addTimeToPayload(String payload) {
         Date date = new Date(System.currentTimeMillis());
         String now = formatter.format(date);
-        payload = "{\n \"sentOn\": " + now + ",\n" + payload;
+        payload = "\n\t \"sentOn\": " + now + ",\n" + payload;
         return payload;
     }
 

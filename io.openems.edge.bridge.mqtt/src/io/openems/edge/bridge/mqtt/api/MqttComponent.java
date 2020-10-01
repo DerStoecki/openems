@@ -13,7 +13,9 @@ public interface MqttComponent extends OpenemsComponent {
 
         COMMANDS(Doc.of(OpenemsType.STRING)),
 
-        EVENTS(Doc.of(OpenemsType.STRING));
+        EVENTS(Doc.of(OpenemsType.STRING)),
+
+        CONFIGURATION(Doc.of(OpenemsType.STRING));
 
 
         private final Doc doc;
@@ -55,4 +57,9 @@ public interface MqttComponent extends OpenemsComponent {
     default Channel<String> getEvents() {
         return this.channel(ChannelId.EVENTS);
     }
+
+    default Channel<String> getConfiguration() {
+        return this.channel(ChannelId.CONFIGURATION);
+    }
+
 }

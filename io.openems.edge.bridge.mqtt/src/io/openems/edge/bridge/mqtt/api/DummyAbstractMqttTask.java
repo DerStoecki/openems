@@ -57,5 +57,10 @@ public abstract class DummyAbstractMqttTask implements MqttTask {
         return this.mqttType;
     }
 
+    @Override
+    public boolean isReady() {
+        return true;
+    }
+
 
 }

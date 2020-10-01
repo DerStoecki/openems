@@ -39,7 +39,6 @@ public class MqttPublishManager extends AbstractMqttManager {
             try {
                 if (task instanceof MqttPublishTask) {
                     MqttPublishTask task1 = ((MqttPublishTask) task);
-                    task1.readyToAlterPayload(super.currentTime);
                     task1.updatePayload();
                 }
 

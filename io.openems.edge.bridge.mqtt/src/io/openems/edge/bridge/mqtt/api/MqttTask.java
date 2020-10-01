@@ -16,4 +16,11 @@ public interface MqttTask {
 
     MqttType getMqttType();
 
+    /**
+     * Called by Abstract Cycle Worker for current Tasks to handle.
+     *
+     * @param currentTime the currentTime, calculated each cycle by abstractManager
+     * @return aboolean.
+     */
+    boolean isReady(long currentTime);
 }
