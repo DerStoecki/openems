@@ -81,18 +81,18 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         subscribeManager.activate(super.id() + "_subscribe");
 
         //TODO DELETE LATER ONLY FOR TEST
-        this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge",
+        this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 0, MqttPriority.LOW));
-        this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
+        this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 1, MqttPriority.HIGH));
-        this.addMqttTask("Test", new DummyPublishTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
+        this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 2, MqttPriority.URGENT));
-        this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
+        this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
                 true, false, 0, MqttPriority.LOW));
 
-        this.addMqttTask("Test", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1", MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
-        this.addMqttTask("Test2", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/#", MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
-        this.addMqttTask("Test3", new DummySubscribeTask("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2", MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
+        this.addMqttTask("Test", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1", MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
+        this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/#", MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
+        this.addMqttTask("Test3", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2", MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
 
 
     }

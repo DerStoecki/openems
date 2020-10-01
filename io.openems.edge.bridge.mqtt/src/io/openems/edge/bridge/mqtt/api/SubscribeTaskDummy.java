@@ -1,11 +1,11 @@
 package io.openems.edge.bridge.mqtt.api;
 
-public class DummySubscribeTask extends AbstractMqttTask implements MqttSubscribeTask {
+public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSubscribeTask {
 
     private int messageId = -1;
 
 
-    public DummySubscribeTask(String topic, MqttType mqttType, boolean retainFlag, boolean addTime, int qos,
+    public SubscribeTaskDummy(String topic, MqttType mqttType, boolean retainFlag, boolean addTime, int qos,
                               MqttPriority priority) {
         super(topic, mqttType, retainFlag, addTime, qos, priority);
     }

@@ -1,23 +1,16 @@
 package io.openems.edge.bridge.mqtt.api;
 
-import io.openems.edge.common.channel.Channel;
-
-import java.util.Map;
-
-public abstract class AbstractMqttTask implements MqttTask {
+public abstract class DummyAbstractMqttTask implements MqttTask {
     private String topic;
-    String payloadFinal = "";
+    String payload = "";
     private MqttType mqttType;
     private boolean retainFlag;
     private boolean addTime;
     private int qos;
     private MqttPriority mqttPriority;
-    Map<String, Channel<?>> channels;
 
-
-    AbstractMqttTask(String topic, MqttType mqttType,
-                     boolean retainFlag, boolean addTime, int qos, MqttPriority priority, Map<String, Channel<?>> channels,
-                     String payloadForTask) {
+    DummyAbstractMqttTask(String topic, MqttType mqttType,
+                          boolean retainFlag, boolean addTime, int qos, MqttPriority priority) {
 
         this.topic = topic;
 
@@ -41,7 +34,7 @@ public abstract class AbstractMqttTask implements MqttTask {
 
     @Override
     public String getPayload() {
-        return this.payloadFinal;
+        return this.payload;
     }
 
     @Override
@@ -63,5 +56,6 @@ public abstract class AbstractMqttTask implements MqttTask {
     public MqttType getMqttType() {
         return this.mqttType;
     }
+
 
 }
