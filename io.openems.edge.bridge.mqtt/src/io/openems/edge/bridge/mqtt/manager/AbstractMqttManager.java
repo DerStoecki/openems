@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.mqtt;
+package io.openems.edge.bridge.mqtt.manager;
 
 import com.google.common.base.Stopwatch;
 import io.openems.common.worker.AbstractCycleWorker;
@@ -6,6 +6,7 @@ import io.openems.edge.bridge.mqtt.api.MqttTask;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +32,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
     boolean timeEnabled;
     String timeFormat;
     String locale;
+    SimpleDateFormat formatter;
     int maxListLength = 30;
     //Counter for Qos --> e.g. QoS 0 has counter 10 --> FOR LIST FILL
     Map<Integer, AtomicInteger> counterForQos = new HashMap<>();
@@ -50,7 +52,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
     AbstractMqttManager(String mqttBroker, String mqttBrokerUrl, String mqttUsername, String mqttPassword,
                         String mqttClientId, int keepAlive, Map<String, List<MqttTask>> allTasks,
-                        boolean timeEnabled, String timeFormat, String locale, boolean useAverageTime) {
+                        boolean timeEnabled, SimpleDateFormat formatter, boolean useAverageTime) {
 
         this.mqttBroker = mqttBroker;
         this.mqttBrokerUrl = mqttBrokerUrl;
@@ -60,8 +62,6 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         this.keepAlive = keepAlive;
         this.allTasks = allTasks;
         this.timeEnabled = timeEnabled;
-        this.timeFormat = timeFormat;
-        this.locale = locale;
         this.timeForQos = new HashMap<>();
         for (int x = 0; x < 3; x++) {
             this.timeForQos.put(x, new ArrayList<>());
@@ -69,6 +69,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
             this.timeForQos.put(x, new ArrayList<>());
             this.timeForQos.get(x).add(0, (long) (x + 1) * 10);
         }
+        this.formatter = formatter;
     }
 
     void foreverAbstract() {

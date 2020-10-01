@@ -1,4 +1,8 @@
-package io.openems.edge.bridge.mqtt.api;
+package io.openems.edge.bridge.mqtt.dummys;
+
+import io.openems.edge.bridge.mqtt.api.MqttPriority;
+import io.openems.edge.bridge.mqtt.api.MqttTask;
+import io.openems.edge.bridge.mqtt.api.MqttType;
 
 public abstract class DummyAbstractMqttTask implements MqttTask {
     private String topic;
@@ -58,9 +62,10 @@ public abstract class DummyAbstractMqttTask implements MqttTask {
     }
 
     @Override
-    public boolean isReady() {
+    public boolean isReady(long currentTime){
         return true;
     }
+
 
 
 }

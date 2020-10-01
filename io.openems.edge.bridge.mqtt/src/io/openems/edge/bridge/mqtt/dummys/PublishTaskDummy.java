@@ -1,5 +1,9 @@
-package io.openems.edge.bridge.mqtt.api;
+package io.openems.edge.bridge.mqtt.dummys;
 
+
+import io.openems.edge.bridge.mqtt.api.MqttPriority;
+import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
+import io.openems.edge.bridge.mqtt.api.MqttType;
 
 public class PublishTaskDummy extends DummyAbstractMqttTask implements MqttPublishTask {
 
@@ -9,19 +13,8 @@ public class PublishTaskDummy extends DummyAbstractMqttTask implements MqttPubli
         super.payload = payload;
     }
 
-
     @Override
-    public void alterPayload(String payload) {
-        super.payload = payload;
-    }
-
-    @Override
-    public void readyToAlterPayload(long currentTime) {
-
-    }
-
-    @Override
-    public void updatePayload() {
+    public void updatePayload(String now) {
 
     }
 }

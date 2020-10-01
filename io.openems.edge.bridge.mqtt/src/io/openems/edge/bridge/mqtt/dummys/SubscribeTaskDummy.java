@@ -1,4 +1,8 @@
-package io.openems.edge.bridge.mqtt.api;
+package io.openems.edge.bridge.mqtt.dummys;
+
+import io.openems.edge.bridge.mqtt.api.MqttPriority;
+import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
+import io.openems.edge.bridge.mqtt.api.MqttType;
 
 public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSubscribeTask {
 

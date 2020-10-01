@@ -2,6 +2,7 @@ package io.openems.edge.bridge.mqtt.api;
 
 import io.openems.edge.common.channel.Channel;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,20 +18,23 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
     }
 
     @Override
-    public void updatePayload() {
+    public void updatePayload(String now) {
         switch (super.style) {
 
             case STANDARD:
             default:
-                createStandardPayload();
+                createStandardPayload(now);
                 break;
         }
     }
 
-    private void createStandardPayload() {
+    private void createStandardPayload(String now) {
 
         StringBuilder builder = new StringBuilder();
         builder.append("{\n\t");
+        if (getAddTime()) {
+            builder.append("sentOn : ").append(now).append(", \n\t");
+        }
         builder.append("ID : ").append(super.id).append(",\n\t \"metrics\" : {");
         String[] tokens = super.configuredPayload.split("!");
         AtomicInteger counter = new AtomicInteger(0);
@@ -41,7 +45,7 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
             } else {
                 Channel<?> channel = super.channels.get(tokens[counter.get()]);
                 if (channel.value().isDefined()) {
-                    builder.append(channel.value().get()).append(" ").append(channel.channelDoc().getUnit().getSymbol()).append(",\n\t");
+                    builder.append(channel.value().get()).append(" ").append(channel.channelDoc().getUnit().getSymbol()).append(",\n\t\t");
                 } else {
                     builder.append("Not Defined Yet ");
                     //prevent of adding , after last value

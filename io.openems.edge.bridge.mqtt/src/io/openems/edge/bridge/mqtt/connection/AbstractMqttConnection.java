@@ -1,5 +1,6 @@
-package io.openems.edge.bridge.mqtt;
+package io.openems.edge.bridge.mqtt.connection;
 
+import io.openems.edge.bridge.mqtt.api.MqttConnection;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -10,7 +11,7 @@ import java.util.Date;
 import java.util.Locale;
 
 
-public abstract class AbstractMqttConnection {
+public abstract class AbstractMqttConnection implements MqttConnection {
 
     MqttClient mqttClient;
     //TODO RESEARCH MEMORYPERSISTENCE!
@@ -20,15 +21,8 @@ public abstract class AbstractMqttConnection {
 
     private boolean disconnected = false;
 
-    //protected boolean lastWillSet;
-    boolean timeStampEnabled;
-    private SimpleDateFormat formatter;
-
-    AbstractMqttConnection(boolean timeStampEnabled, String timeDataFormat, String locale) {
-        this.timeStampEnabled = timeStampEnabled;
-        if (timeStampEnabled == true) {
-            this.formatter = new SimpleDateFormat(timeDataFormat, new Locale.Builder().setRegion(locale).build());
-        }
+    AbstractMqttConnection() {
+        //protected boolean lastWillSet;
         this.persistence = new MemoryPersistence();
         this.mqttConnectOptions = new MqttConnectOptions();
     }
@@ -43,34 +37,32 @@ public abstract class AbstractMqttConnection {
     }
 
 
-    void createMqttSubscribeSession(String mqttBroker, String mqttClientId, String username, String mqttPassword, int keepAlive) throws MqttException {
+   public void createMqttSubscribeSession(String mqttBroker, String mqttClientId, String username, String mqttPassword, int keepAlive) throws MqttException {
         createMqttSessionBasicSetup(mqttBroker, mqttClientId, username, mqttPassword, false, keepAlive);
         connect();
     }
 
-    void createMqttPublishSession(String broker, String clientId, int keepAlive, String username,
+    public void createMqttPublishSession(String broker, String clientId, int keepAlive, String username,
                                   String password, boolean cleanSession) throws MqttException {
 
         createMqttSessionBasicSetup(broker, clientId, username, password, cleanSession, keepAlive);
 
     }
 
-    void addLastWill(String topicLastWill, String payloadLastWill, int qosLastWill, boolean shouldAddTime, boolean retainedFlag) {
+    public void addLastWill(String topicLastWill, String payloadLastWill, int qosLastWill, boolean shouldAddTime, boolean retainedFlag, String time) {
         if (shouldAddTime) {
-            payloadLastWill = addTimeToPayload(payloadLastWill);
+            payloadLastWill = addTimeToPayload(payloadLastWill, time);
         }
         mqttConnectOptions.setWill(topicLastWill, payloadLastWill.getBytes(), qosLastWill, retainedFlag);
     }
 
 
-    String addTimeToPayload(String payload) {
-        Date date = new Date(System.currentTimeMillis());
-        String now = formatter.format(date);
-        payload = "\n\t \"sentOn\": " + now + ",\n" + payload;
+    String addTimeToPayload(String payload, String time) {
+        payload = "\n\t \"sentOn\": " + time + ",\n" + payload;
         return payload;
     }
 
-    void connect() throws MqttException {
+    public void connect() throws MqttException {
         System.out.println("Connecting to Broker");
         this.mqttClient.connect(this.mqttConnectOptions);
         this.disconnected = false;
@@ -79,13 +71,13 @@ public abstract class AbstractMqttConnection {
 
     //TODO EXCEPTION HANDLING
 
-    void disconnect() throws MqttException {
+    public void disconnect() throws MqttException {
 
         this.mqttClient.disconnect();
 
     }
 
-    MqttClient getMqttClient() {
+   public MqttClient getMqttClient() {
         return this.mqttClient;
     }
 

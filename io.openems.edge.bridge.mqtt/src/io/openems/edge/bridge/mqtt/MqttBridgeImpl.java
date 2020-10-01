@@ -2,6 +2,12 @@ package io.openems.edge.bridge.mqtt;
 
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.mqtt.api.*;
+import io.openems.edge.bridge.mqtt.connection.MqttConnectionPublishImpl;
+import io.openems.edge.bridge.mqtt.connection.MqttConnectionSubscribeImpl;
+import io.openems.edge.bridge.mqtt.dummys.PublishTaskDummy;
+import io.openems.edge.bridge.mqtt.dummys.SubscribeTaskDummy;
+import io.openems.edge.bridge.mqtt.manager.MqttPublishManager;
+import io.openems.edge.bridge.mqtt.manager.MqttSubscribeManager;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -16,6 +22,7 @@ import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,13 +51,14 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     private String mqttBrokerUrl;
     private String mqttClientId;
     static int subscribeIdCounter = 0;
+    private SimpleDateFormat formatter;
 
     //ONLY DEBUG SUBSCRIBE
     private String subscribeId;
     private String subscribeTopic;
 
-    private MqttConnectionPublish bridgePublisher;
-    private MqttConnectionSubscribe bridgeSubscriberTest;
+    private MqttConnectionPublishImpl bridgePublisher;
+    private MqttConnectionSubscribeImpl bridgeSubscriberTest;
 
     public MqttBridgeImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -64,18 +72,19 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         super.activate(context, config.id(), config.alias(), config.enabled());
         updateConfig();
         try {
-            this.bridgePublisher = new MqttConnectionPublish(config.timeStampEnabled(), config.timeFormat(), config.locale());
-            this.bridgeSubscriberTest = new MqttConnectionSubscribe(config.timeStampEnabled(), config.timeFormat(), config.locale());
+            this.formatter = new SimpleDateFormat(config.timeFormat(), new Locale.Builder().setRegion(config.locale()).build());
+            this.bridgePublisher = new MqttConnectionPublishImpl();
+            this.bridgeSubscriberTest = new MqttConnectionSubscribeImpl();
             this.createMqttSession(config);
         } catch (MqttException e) {
             throw new OpenemsException(e.getMessage());
         }
 
         publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), config.timeFormat(), config.locale());
+                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), formatter);
         //ClientId --> + CLIENT_SUB_0
         subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), config.timeFormat(), config.locale());
+                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), formatter);
 
         publishManager.activate(super.id() + "_publish");
         subscribeManager.activate(super.id() + "_subscribe");
@@ -134,13 +143,14 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                 this.mqttUsername, this.mqttPassword, config.cleanSessionFlag());
         if (config.lastWillSet()) {
             this.bridgePublisher.addLastWill(config.topicLastWill(),
-                    config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.retainedFlag());
+                    config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.retainedFlag(),
+                    formatter.format(new Date(System.currentTimeMillis())));
         }
         //External Call bc Last will can be set
         this.bridgePublisher.connect();
 
         this.bridgePublisher.sendMessage(config.topicLastWill(), "\"Status\": Connected", 1,
-                config.retainedFlag(), config.timeStampEnabled());
+                config.retainedFlag());
 
         //DEBUG AND TEST TODO DELETE LATER
         this.subscribeId = this.mqttClientId + "_CLIENT_TEST_SUBSCRIBE";

@@ -1,4 +1,4 @@
-package io.openems.edge.bridge.mqtt;
+package io.openems.edge.bridge.mqtt.connection;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -6,13 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.openems.edge.bridge.mqtt.api.MqttConnectionSubscribe;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 
 
-public class MqttConnectionSubscribe extends AbstractMqttConnection implements MqttCallback {
+public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implements MqttCallback, MqttConnectionSubscribe {
 
     //          Topics  Payload
     private Map<String, String> subscriptions = new HashMap<>();
@@ -22,12 +23,12 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
     private boolean connectionLost;
     private boolean callBackWasSet;
 
-    MqttConnectionSubscribe(boolean timeStampEnabled, String timeDataFormat, String locale) {
-        super(timeStampEnabled, timeDataFormat, locale);
+    public MqttConnectionSubscribeImpl() {
+        super();
     }
 
 
-    void subscribeToTopic(String topic, int qos, String id) throws MqttException {
+    public void subscribeToTopic(String topic, int qos, String id) throws MqttException {
 
         super.mqttClient.subscribe(topic, qos);
         if (callBackWasSet == false) {
@@ -49,7 +50,7 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
         }
     }
 
-    String getPayload(String topic) {
+    public String getPayload(String topic) {
         if (this.subscriptions.containsKey(topic)) {
             return this.subscriptions.get(topic);
         }
@@ -58,7 +59,7 @@ public class MqttConnectionSubscribe extends AbstractMqttConnection implements M
     }
 
 
-    List<String> getTopic(String id) {
+    public List<String> getTopic(String id) {
         return this.idsAndTopics.getOrDefault(id, null);
     }
 
