@@ -1,5 +1,5 @@
 package io.openems.edge.bridge.mqtt.api;
 
-enum MqttEventType {
+public enum MqttEventType {
     ERROR
 }

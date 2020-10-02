@@ -81,7 +81,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         }
 
         publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), formatter);
+                this.mqttPassword, config.keepAlive(), this.mqttClientId, config.timeStampEnabled(), formatter);
         //ClientId --> + CLIENT_SUB_0
         subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
                 this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), formatter);
@@ -108,16 +108,26 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     private void updateConfig() {
         Configuration c;
+        boolean changesWereMade = false;
 
         try {
             c = ca.getConfiguration(this.servicePid(), "?");
             Dictionary<String, Object> properties = c.getProperties();
             Object target = properties.get("mqttTypes");
+            Object target2 = properties.get("mqttPriorities");
             String existingTarget = target.toString();
+            String existingTarget2 = target2.toString();
             if (existingTarget.isEmpty()) {
                 properties.put("mqttTypes", Arrays.toString(MqttType.values()));
-                c.update(properties);
+                changesWereMade = true;
                 this.setMqttTypes().setNextValue(MqttType.values());
+            }
+            if (existingTarget2.isEmpty()) {
+                properties.put("mqttPriorities", Arrays.toString(MqttPriority.values()));
+                changesWereMade = true;
+            }
+            if (changesWereMade) {
+                c.update(properties);
             }
         } catch (IOException e) {
             e.printStackTrace();

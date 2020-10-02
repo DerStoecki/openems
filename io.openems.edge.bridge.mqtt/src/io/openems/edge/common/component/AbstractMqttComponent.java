@@ -33,6 +33,7 @@ public abstract class AbstractMqttComponent {
     private Map<String, Channel<?>> mapOfChannel = new ConcurrentHashMap<>();
     private String id;
     private boolean createdByOsgi;
+    private boolean hasBeenConfigured;
 
     /**
      * Initially update Config and after that set params for initTasks.
@@ -49,18 +50,21 @@ public abstract class AbstractMqttComponent {
      */
     //Path/Qos/SpecifiedType/Payloadno     payloads     ComponentChannel
     public AbstractMqttComponent(String id, String servicePid, String configTarget, List<String> subConfigList,
-                                    List<String> pubConfigList, List<String> payloads, List<Channel<?>> channelIds,
-                                    boolean createdByOsgi, PayloadStyle style) {
+                                 List<String> pubConfigList, List<String> payloads, List<Channel<?>> channelIds,
+                                 boolean createdByOsgi, PayloadStyle style) {
         if (createdByOsgi) {
             updateConfig(servicePid, configTarget, channelIds);
         }
+
         this.id = id;
         this.subConfigList = subConfigList;
         this.pubConfigList = pubConfigList;
         this.payloads = payloads;
         this.payloadStyle = style;
         this.createdByOsgi = createdByOsgi;
+
     }
+
 
     /**
      * CALL THIS AFTER UPDATE IS DONE in component.
@@ -276,6 +280,7 @@ public abstract class AbstractMqttComponent {
      */
 
     private void updateConfig(String servicePid, String configTarget, List<Channel<?>> channels) {
+        this.hasBeenConfigured = true;
         Configuration c;
         AtomicInteger counter = new AtomicInteger(0);
         String[] channelIdArray = new String[channels.size()];
@@ -289,6 +294,7 @@ public abstract class AbstractMqttComponent {
             Object target = properties.get(configTarget);
             String existingTarget = target.toString();
             if (existingTarget.isEmpty()) {
+                this.hasBeenConfigured = false;
                 properties.put(configTarget, Arrays.toString(channelIdArray));
                 c.update(properties);
             }
@@ -321,6 +327,10 @@ public abstract class AbstractMqttComponent {
     private void createMqttTasksFromJson(List<Channel<?>> channelIds) {
     }
 
+
+    public boolean hasBeenConfigured() {
+        return this.hasBeenConfigured;
+    }
 
 }
 

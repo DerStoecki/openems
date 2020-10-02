@@ -76,7 +76,10 @@ import org.osgi.service.metatype.annotations.Option;
     String locale() default "DE";
 
     @AttributeDefinition(name = "Mqtt Types", description = "Possible MqttTypes, will be filled after activation")
-    String [] mqttTypes() default "";
+    String[] mqttTypes() default "";
+
+    @AttributeDefinition(name = "Mqtt Priorities", description = "MqttPriorities, will be filled automatically after activation")
+    String[] mqttPriorities() default "";
 
     boolean enabled() default true;
 
