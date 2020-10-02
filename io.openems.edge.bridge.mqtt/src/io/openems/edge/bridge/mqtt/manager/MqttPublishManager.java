@@ -18,11 +18,11 @@ public class MqttPublishManager extends AbstractMqttManager {
 
     private Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
 
-    public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqtt_broker, String mqtt_broker_url,
-                       String mqtt_username, String mqtt_password, String mqtt_client_id, int keepAlive,
+    public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker, String mqttBrokerUrl,
+                       String mqttUsername, String mqttPassword, int keepAlive, String mqttClientId,
                        boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
 
-        super(mqtt_broker, mqtt_broker_url, mqtt_username, mqtt_password, mqtt_client_id, keepAlive, publishTasks,
+        super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, publishTasks,
                 timeEnabled, formatter, true);
         //Create new Connection Publish
         for (int x = 0; x < 3; x++) {

@@ -37,18 +37,21 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     }
 
 
+   @Override
    public void createMqttSubscribeSession(String mqttBroker, String mqttClientId, String username, String mqttPassword, int keepAlive) throws MqttException {
         createMqttSessionBasicSetup(mqttBroker, mqttClientId, username, mqttPassword, false, keepAlive);
         connect();
     }
 
+    @Override
     public void createMqttPublishSession(String broker, String clientId, int keepAlive, String username,
-                                  String password, boolean cleanSession) throws MqttException {
+                                         String password, boolean cleanSession) throws MqttException {
 
         createMqttSessionBasicSetup(broker, clientId, username, password, cleanSession, keepAlive);
 
     }
 
+    @Override
     public void addLastWill(String topicLastWill, String payloadLastWill, int qosLastWill, boolean shouldAddTime, boolean retainedFlag, String time) {
         if (shouldAddTime) {
             payloadLastWill = addTimeToPayload(payloadLastWill, time);
@@ -62,6 +65,7 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         return payload;
     }
 
+    @Override
     public void connect() throws MqttException {
         System.out.println("Connecting to Broker");
         this.mqttClient.connect(this.mqttConnectOptions);
@@ -71,12 +75,14 @@ public abstract class AbstractMqttConnection implements MqttConnection {
 
     //TODO EXCEPTION HANDLING
 
+    @Override
     public void disconnect() throws MqttException {
 
         this.mqttClient.disconnect();
 
     }
 
+   @Override
    public MqttClient getMqttClient() {
         return this.mqttClient;
     }

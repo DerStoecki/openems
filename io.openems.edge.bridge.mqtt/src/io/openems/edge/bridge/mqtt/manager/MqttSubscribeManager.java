@@ -16,11 +16,11 @@ public class MqttSubscribeManager extends AbstractMqttManager {
     private Map<MqttType, MqttConnectionSubscribeImpl> connections = new HashMap<>();
 
 
-    public MqttSubscribeManager(Map<String, List<MqttTask>> subscribeTasks, String mqtt_broker, String mqtt_broker_url,
-                         String mqtt_username, String mqtt_password, String mqtt_client_id, int keepAlive,
-                         boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
+    public MqttSubscribeManager(Map<String, List<MqttTask>> subscribeTasks, String mqttBroker, String mqttBrokerUrl,
+                                String mqttUsername, String mqttPassword, String mqttClientId, int keepAlive,
+                                boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
 
-        super(mqtt_broker, mqtt_broker_url, mqtt_username, mqtt_password, mqtt_client_id, keepAlive, subscribeTasks,
+        super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, subscribeTasks,
                 timeEnabled, formatter, false);
         MqttType[] types = MqttType.values();
         for (int x = 0; x < types.length; x++) {

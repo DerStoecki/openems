@@ -48,7 +48,7 @@ public abstract class AbstractMqttComponent {
      * @param style         PayloadStyle of publish and Subscribe Message.
      */
     //Path/Qos/SpecifiedType/Payloadno     payloads     ComponentChannel
-    protected AbstractMqttComponent(String id, String servicePid, String configTarget, List<String> subConfigList,
+    public AbstractMqttComponent(String id, String servicePid, String configTarget, List<String> subConfigList,
                                     List<String> pubConfigList, List<String> payloads, List<Channel<?>> channelIds,
                                     boolean createdByOsgi, PayloadStyle style) {
         if (createdByOsgi) {
@@ -73,7 +73,7 @@ public abstract class AbstractMqttComponent {
         if (createdByOsgi) {
             createMqttTasksFromOsgi(channelIds);
         } else {
-            createMqttTasksFromJson();
+            createMqttTasksFromJson(channelIds);
         }
     }
 
@@ -318,7 +318,7 @@ public abstract class AbstractMqttComponent {
     }
 
 
-    private void createMqttTasksFromJson() {
+    private void createMqttTasksFromJson(List<Channel<?>> channelIds) {
     }
 
 

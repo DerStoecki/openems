@@ -28,6 +28,7 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
     }
 
 
+    @Override
     public void subscribeToTopic(String topic, int qos, String id) throws MqttException {
 
         super.mqttClient.subscribe(topic, qos);
@@ -50,6 +51,7 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
         }
     }
 
+    @Override
     public String getPayload(String topic) {
         if (this.subscriptions.containsKey(topic)) {
             return this.subscriptions.get(topic);
@@ -59,6 +61,7 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
     }
 
 
+    @Override
     public List<String> getTopic(String id) {
         return this.idsAndTopics.getOrDefault(id, null);
     }
@@ -82,6 +85,7 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
 
     }
 
+    @Override
     public boolean isConnectionLost() {
         return connectionLost;
     }
