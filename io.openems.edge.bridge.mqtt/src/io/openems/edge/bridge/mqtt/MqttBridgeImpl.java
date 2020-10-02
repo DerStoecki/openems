@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -70,7 +71,9 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     public void activate(ComponentContext context, Config config) throws OpenemsException, MqttException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
-        updateConfig();
+        if (config.mqttPriorities().length != MqttPriority.values().length || config.mqttTypes().length != MqttPriority.values().length) {
+            updateConfig();
+        }
         try {
             this.formatter = new SimpleDateFormat(config.timeFormat(), new Locale.Builder().setRegion(config.locale()).build());
             this.bridgePublisher = new MqttConnectionPublishImpl();
@@ -108,30 +111,27 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     private void updateConfig() {
         Configuration c;
-        boolean changesWereMade = false;
 
         try {
             c = ca.getConfiguration(this.servicePid(), "?");
             Dictionary<String, Object> properties = c.getProperties();
-            Object target = properties.get("mqttTypes");
-            Object target2 = properties.get("mqttPriorities");
-            String existingTarget = target.toString();
-            String existingTarget2 = target2.toString();
-            if (existingTarget.isEmpty()) {
-                properties.put("mqttTypes", Arrays.toString(MqttType.values()));
-                changesWereMade = true;
-                this.setMqttTypes().setNextValue(MqttType.values());
-            }
-            if (existingTarget2.isEmpty()) {
-                properties.put("mqttPriorities", Arrays.toString(MqttPriority.values()));
-                changesWereMade = true;
-            }
-            if (changesWereMade) {
-                c.update(properties);
-            }
+            String types = Arrays.toString(MqttType.values());
+
+            properties.put("mqttTypes", propertyInput(types));
+            this.setMqttTypes().setNextValue(MqttType.values());
+            types = Arrays.toString(MqttPriority.values());
+            properties.put("mqttPriorities", propertyInput(types));
+            c.update(properties);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String[] propertyInput(String types) {
+        types = types.replaceAll("\\[", "");
+        types = types.replaceAll("]", "");
+        return types.split(",");
     }
 
 

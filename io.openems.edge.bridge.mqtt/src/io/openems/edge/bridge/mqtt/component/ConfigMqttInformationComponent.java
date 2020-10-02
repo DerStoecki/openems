@@ -13,13 +13,13 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     String service_pid();
 
     @AttributeDefinition(name = "Mqtt Information Component - ID", description = "Id the Component.")
-    String id() default "Mqtt Information Component";
+    String id() default "MqttInformationComponent";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
 
     @AttributeDefinition(name = "mqttTypes", description = "mqttTypes available for configuration. Following Lists will be filled automatically on Activation!")
-    String[] mqttType() default "";
+    String[] mqttTypes() default "";
 
     @AttributeDefinition(name = "MqttCommandTypes", description = "MqttCommandTypes")
     String[] mqttCommandTypes() default "";

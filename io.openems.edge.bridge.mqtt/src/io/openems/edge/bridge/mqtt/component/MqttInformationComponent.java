@@ -31,63 +31,44 @@ public class MqttInformationComponent extends AbstractOpenemsComponent implement
     @Activate
     public void activate(ComponentContext context, ConfigMqttInformationComponent config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
-
-        update();
+        if (config.mqttCommandTypes().length != MqttCommandType.values().length
+                || config.mqttPriority().length != MqttPriority.values().length
+                || config.mqttEventTypes().length != MqttEventType.values().length
+                || config.mqttTypes().length != MqttType.values().length
+                || config.payloadStyle().length != PayloadStyle.values().length
+        ) {
+            update();
+        }
 
 
     }
 
     private void update() {
         Configuration c;
-        boolean changesWereMade = false;
+
 
         try {
             c = ca.getConfiguration(this.servicePid(), "?");
             Dictionary<String, Object> properties = c.getProperties();
-            Object target = properties.get("mqttTypes");
-            Object target2 = properties.get("mqttPriorities");
-            Object target3 = properties.get("mqttCommandTypes");
-            Object target4 = properties.get("mqttEventTypes");
-            Object target5 = properties.get("payloadStyle");
-            Object target6 = properties.get("mqttPriority");
-            final String existingTarget = target.toString();
-            final String existingTarget2 = target2.toString();
-            final String existingTarget3 = target3.toString();
-            final String existingTarget4 = target4.toString();
-            final String existingTarget5 = target5.toString();
-            final String existingTarget6 = target6.toString();
 
-            if (existingTarget.isEmpty()) {
-                properties.put("mqttTypes", Arrays.toString(MqttType.values()));
-                changesWereMade = true;
-            }
-            if (existingTarget2.isEmpty()) {
-                properties.put("mqttPriorities", Arrays.toString(MqttPriority.values()));
-                changesWereMade = true;
-            }
-            if (existingTarget3.isEmpty()) {
-                properties.put("mqttCommandTypes", Arrays.toString(MqttCommandType.values()));
-                changesWereMade = true;
-            }
-            if (existingTarget4.isEmpty()) {
-                properties.put("mqttEventTypes", Arrays.toString(MqttEventType.values()));
-                changesWereMade = true;
-            }
+            properties.put("mqttTypes", propertyInput(Arrays.toString(MqttType.values())));
+            properties.put("mqttPriorities", propertyInput(Arrays.toString(MqttPriority.values())));
+            properties.put("mqttCommandTypes", propertyInput(Arrays.toString(MqttCommandType.values())));
+            properties.put("mqttEventTypes", propertyInput(Arrays.toString(MqttEventType.values())));
+            properties.put("payloadStyle", propertyInput(Arrays.toString(PayloadStyle.values())));
+            properties.put("mqttPriority", propertyInput(Arrays.toString(MqttPriority.values())));
 
-            if (existingTarget5.isEmpty()) {
-                properties.put("payloadStyle", Arrays.toString(PayloadStyle.values()));
-                changesWereMade = true;
-            }
-            if (existingTarget6.isEmpty()) {
-                properties.put("mqttPriority", Arrays.toString(MqttPriority.values()));
-            }
+            c.update(properties);
 
-            if (changesWereMade) {
-                c.update(properties);
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String[] propertyInput(String types) {
+        types = types.replaceAll("\\[", "");
+        types = types.replaceAll("]", "");
+        return types.split(",");
     }
 
     @Deactivate
