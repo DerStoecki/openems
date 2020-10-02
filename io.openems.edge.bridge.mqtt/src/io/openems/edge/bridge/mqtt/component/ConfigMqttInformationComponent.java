@@ -1,4 +1,4 @@
-package io.openems.edge.common.component;
+package io.openems.edge.bridge.mqtt.component;
 
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -8,7 +8,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @ObjectClassDefinition(
         name = "Mqtt Information Component",
         description = "Mqtt Information Component Containing: MqttTypes, MqttCommandTypes, EventTypes, Priorities and PayloadStyle.")
-@interface Config {
+@interface ConfigMqttInformationComponent {
 
     String service_pid();
 

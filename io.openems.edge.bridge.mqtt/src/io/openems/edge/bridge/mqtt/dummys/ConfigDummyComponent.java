@@ -8,7 +8,7 @@ import java.util.List;
 @ObjectClassDefinition(
         name = "Mqtt Dummy Component",
         description = "Mqtt Dummy to test the functionality of AbstrtactMqttComponent and Tasks.")
-@interface Config {
+@interface ConfigDummyComponent {
 
     String service_pid();
 

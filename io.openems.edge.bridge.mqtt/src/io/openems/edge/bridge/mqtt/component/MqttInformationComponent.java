@@ -1,6 +1,8 @@
-package io.openems.edge.common.component;
+package io.openems.edge.bridge.mqtt.component;
 
 import io.openems.edge.bridge.mqtt.api.*;
+import io.openems.edge.common.component.AbstractOpenemsComponent;
+import io.openems.edge.common.component.OpenemsComponent;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -12,7 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Dictionary;
 
-@Designate(ocd = Config.class, factory = true)
+@Designate(ocd = ConfigMqttInformationComponent.class, factory = true)
 @Component(name = "Component.Mqtt.Information",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE
@@ -27,7 +29,7 @@ public class MqttInformationComponent extends AbstractOpenemsComponent implement
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, ConfigMqttInformationComponent config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         update();

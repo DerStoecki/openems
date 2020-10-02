@@ -8,9 +8,14 @@ Bundle-Description: \
 
 Export-Package:  \
 	io.openems.edge.bridge.mqtt.api,\
+	io.openems.edge.bridge.mqtt.component,\
 
 Private-Package:  \
 	io.openems.edge.bridge.mqtt,\
+	io.openems.edge.bridge.mqtt.connection,\
+	io.openems.edge.bridge.mqtt.dummys,\
+	io.openems.edge.bridge.mqtt.manager,\
+
 
 -includeresource: {readme.md}
 

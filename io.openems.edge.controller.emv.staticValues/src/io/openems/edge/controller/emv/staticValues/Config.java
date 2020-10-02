@@ -55,7 +55,7 @@ import org.osgi.service.metatype.annotations.Option;
                     @Option(label = "LED-YELLOW", value = "LED-YELLOW"),
                     @Option(label = "LED-GREEN", value = "LED-GREEN")}
     )
-    String[] sc16ChoiceList() default {};
+    String[] sc16ChoiceList() default {"LED-RED"};
 
     @AttributeDefinition(name = "Sc16Values", description = "Values for the Statuses")
     String sc16Values() default "100";

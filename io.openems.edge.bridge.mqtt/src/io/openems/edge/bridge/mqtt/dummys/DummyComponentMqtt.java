@@ -3,7 +3,7 @@ package io.openems.edge.bridge.mqtt.dummys;
 import io.openems.edge.bridge.mqtt.api.MqttComponent;
 import io.openems.edge.bridge.mqtt.api.PayloadStyle;
 import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.component.AbstractMqttComponent;
+import io.openems.edge.bridge.mqtt.component.AbstractMqttComponent;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -16,10 +16,9 @@ import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-@Designate(ocd = Config.class, factory = true)
+@Designate(ocd = ConfigDummyComponent.class, factory = true)
 @Component(name = "Dummy.Mqtt.Component",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE
@@ -38,7 +37,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) throws MqttException, ConfigurationException {
+    public void activate(ComponentContext context, ConfigDummyComponent config) throws MqttException, ConfigurationException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
 

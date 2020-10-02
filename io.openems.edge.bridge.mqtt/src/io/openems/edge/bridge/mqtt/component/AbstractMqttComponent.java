@@ -1,4 +1,4 @@
-package io.openems.edge.common.component;
+package io.openems.edge.bridge.mqtt.component;
 
 import java.io.IOException;
 import java.util.*;
