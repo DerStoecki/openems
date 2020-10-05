@@ -13,14 +13,14 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 //EventManager to alter Payload
 public abstract class AbstractMqttComponent {
-    @Reference
-    MqttBridge mqttBridge;
 
-    @Reference
-    ConfigurationAdmin ca;
+    private MqttBridge mqttBridge;
 
     private List<String> subConfigList;
     private List<String> pubConfigList;
@@ -33,28 +33,23 @@ public abstract class AbstractMqttComponent {
     private Map<String, Channel<?>> mapOfChannel = new ConcurrentHashMap<>();
     private String id;
     private boolean createdByOsgi;
-    private boolean hasBeenConfigured;
+    protected boolean hasBeenConfigured;
 
     /**
      * Initially update Config and after that set params for initTasks.
      *
      * @param id            id of this Component, usually from configuredDevice and it's config.
-     * @param servicePid    servicePid of the Concrete Component.
-     * @param configTarget  the Target to update usually something like ChannelList ... Usually from Component.
      * @param subConfigList Subscribe ConfigList, containing the Configuration for the subscribeTasks.
      * @param pubConfigList Publish Configlist, containing the Configuration for the publishTasks.
      * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.
-     * @param channelIds    List of all the Channels the Component has. This will not be saved, only the Map of used Channels.
      * @param createdByOsgi is this Component configured by OSGi or not. If not --> Read JSON File/Listen to Configuration Channel.
      * @param style         PayloadStyle of publish and Subscribe Message.
+     * @param mqttBridge    mqttBridge of this Component.
      */
     //Path/Qos/SpecifiedType/Payloadno     payloads     ComponentChannel
-    public AbstractMqttComponent(String id, String servicePid, String configTarget, List<String> subConfigList,
-                                 List<String> pubConfigList, List<String> payloads, List<Channel<?>> channelIds,
-                                 boolean createdByOsgi, PayloadStyle style) {
-        if (createdByOsgi) {
-            updateConfig(servicePid, configTarget, channelIds);
-        }
+    public AbstractMqttComponent(String id, List<String> subConfigList,
+                                 List<String> pubConfigList, List<String> payloads,
+                                 boolean createdByOsgi, PayloadStyle style, MqttBridge mqttBridge) {
 
         this.id = id;
         this.subConfigList = subConfigList;
@@ -62,6 +57,7 @@ public abstract class AbstractMqttComponent {
         this.payloads = payloads;
         this.payloadStyle = style;
         this.createdByOsgi = createdByOsgi;
+        this.mqttBridge = mqttBridge;
 
     }
 
@@ -93,8 +89,33 @@ public abstract class AbstractMqttComponent {
      */
     private void createMqttTasksFromOsgi(List<Channel<?>> channelIds) throws ConfigurationException, MqttException {
 
-        createTasks(this.subConfigList, true, channelIds);
         createTasks(this.pubConfigList, false, channelIds);
+        createTasks(this.subConfigList, true, channelIds);
+        MqttException[] exMqtt = {null};
+        this.subscribeTasks.forEach((key, value) -> {
+            try {
+                if (exMqtt[0] == null) {
+                    mqttBridge.addMqttTask(this.id, value);
+                    System.out.println("Added Task: " + value.getTopic());
+                }
+            } catch (MqttException e) {
+                exMqtt[0] = e;
+            }
+        });
+        this.publishTasks.forEach((key, value) -> {
+            try {
+                if (exMqtt[0] == null) {
+                    mqttBridge.addMqttTask(this.id, value);
+                    System.out.println("Added pub Task: " + value.getTopic());
+                }
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        });
+        if (exMqtt[0] != null) {
+            mqttBridge.removeMqttTasks(this.id);
+            throw exMqtt[0];
+        }
 
     }
 
@@ -111,7 +132,7 @@ public abstract class AbstractMqttComponent {
     private void createTasks(List<String> configList, boolean subTasks, List<Channel<?>> channelIds) throws ConfigurationException, MqttException {
         //
         ConfigurationException[] exConfig = {null};
-        MqttException[] exMqtt = {null};
+
         //For Each ConfigEntry (sub/pub) get the Channels and map them, create a task and add them at the end to the mqtt bridge.
         configList.forEach(entry -> {
             Map<String, Channel<?>> channelMapForTask;
@@ -176,31 +197,7 @@ public abstract class AbstractMqttComponent {
 
         if (exConfig[0] != null) {
             throw exConfig[0];
-        } else {
-            this.subscribeTasks.forEach((key, value) -> {
-                try {
-                    if (exMqtt[0] == null) {
-                        mqttBridge.addMqttTask(this.id, value);
-                    }
-                } catch (MqttException e) {
-                    exMqtt[0] = e;
-                }
-            });
-            this.publishTasks.forEach((key, value) -> {
-                try {
-                    if (exMqtt[0] == null) {
-                        mqttBridge.addMqttTask(this.id, value);
-                    }
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-            });
-            if (exMqtt[0] != null) {
-                mqttBridge.removeMqttTasks(this.id);
-                throw exMqtt[0];
-            }
         }
-
 
     }
 
@@ -229,11 +226,12 @@ public abstract class AbstractMqttComponent {
             } else {
                 channelIds.add(consumer);
             }
+            counter.getAndIncrement();
         });
         if (ids.size() != channelIds.size()) {
             throw new ConfigurationException("configurePayload " + payloadNo, "Payload incorrect");
         }
-
+        counter.set(0);
         while (counter.get() < ids.size()) {
             //ChannelID == key for Map
             String channelIdKey = channelIds.get(counter.get());
@@ -270,18 +268,38 @@ public abstract class AbstractMqttComponent {
         return this.subscribeTasks.get(topic).getPayload();
     }
 
+    /**
+     * Update method available for Components using MQTT.
+     *
+     * @param config        config of the Component, will be updated automatically.
+     * @param configTarget  target, where to put ChannelIds. Usually something like "ChannelIds".
+     * @param channelsGiven Channels of the Component, collected by this.channels, filtered by "_Property"
+     * @param length        length of the configTarget entries. If Length doesn't match ChannelSize --> Update.
+     */
+    public void update(Configuration config, String configTarget, List<Channel<?>> channelsGiven, int length) {
+        List<Channel<?>> channels =
+                channelsGiven.stream().filter(entry ->
+                        !entry.channelId().id().startsWith("_Property")
+                ).collect(Collectors.toList());
+        if (length != channels.size()) {
+            this.updateConfig(config, configTarget, channels);
+            hasBeenConfigured = false;
+
+        } else {
+            hasBeenConfigured = true;
+        }
+    }
+
 
     /**
      * Update Config and if successful you can initialize the MqttComponent.
      *
-     * @param servicePid   usually from Parent.
+     * @param config       Configuration of the OpenemsComponent
      * @param configTarget usually from Parent-->Config.
      * @param channels     usually from Parent --> Channels.
      */
 
-    private void updateConfig(String servicePid, String configTarget, List<Channel<?>> channels) {
-        this.hasBeenConfigured = true;
-        Configuration c;
+    private void updateConfig(Configuration config, String configTarget, List<Channel<?>> channels) {
         AtomicInteger counter = new AtomicInteger(0);
         String[] channelIdArray = new String[channels.size()];
         channels.forEach(channel -> {
@@ -289,18 +307,20 @@ public abstract class AbstractMqttComponent {
         });
 
         try {
-            c = ca.getConfiguration(servicePid, "?");
-            Dictionary<String, Object> properties = c.getProperties();
-            Object target = properties.get(configTarget);
-            String existingTarget = target.toString();
-            if (existingTarget.isEmpty()) {
-                this.hasBeenConfigured = false;
-                properties.put(configTarget, Arrays.toString(channelIdArray));
-                c.update(properties);
-            }
+            Dictionary<String, Object> properties = config.getProperties();
+            properties.put(configTarget, propertyInput(Arrays.toString(channelIdArray)));
+            config.update(properties);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String[] propertyInput(String types) {
+        types = types.replaceAll("\\[", "");
+        types = types.replaceAll("]", "");
+        types = types.replace(" ", "");
+        return types.split(",");
     }
 
     public Map<String, MqttPublishTask> getPublishTasks() {

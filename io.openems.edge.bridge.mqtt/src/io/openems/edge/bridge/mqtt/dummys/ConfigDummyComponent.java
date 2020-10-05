@@ -42,6 +42,8 @@ import java.util.List;
     @AttributeDefinition(name = "PayloadStyle", description = "PayloadStyle you want to use (See Mqtt Information Component for more options)")
     String payloadStyle() default "STANDARD";
 
+    boolean configurationDone() default false;
+
 
     boolean enabled() default true;
 

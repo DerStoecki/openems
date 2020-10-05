@@ -36,7 +36,7 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
             builder.append("sentOn : ").append(now).append(", \n\t");
         }
         builder.append("ID : ").append(super.id).append(",\n\t \"metrics\" : {");
-        String[] tokens = super.configuredPayload.split("!");
+        String[] tokens = super.configuredPayload.split(":");
         AtomicInteger counter = new AtomicInteger(0);
         Arrays.stream(tokens).forEachOrdered(consumer -> {
             if (counter.get() % 2 == 0) {
@@ -45,12 +45,12 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
             } else {
                 Channel<?> channel = super.channels.get(tokens[counter.get()]);
                 if (channel.value().isDefined()) {
-                    builder.append(channel.value().get()).append(" ").append(channel.channelDoc().getUnit().getSymbol()).append(",\n\t\t");
+                    builder.append(channel.value().get()).append(channel.channelDoc().getUnit().getSymbol());
                 } else {
-                    builder.append("Not Defined Yet ");
+                    builder.append("Not Defined Yet");
                     //prevent of adding , after last value
                     if (counter.get() < tokens.length - 1) {
-                        builder.append(",");
+                        builder.append(",\n\t\t");
                     }
                 }
             }

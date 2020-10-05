@@ -2,10 +2,11 @@ package io.openems.edge.bridge.mqtt.api;
 
 import io.openems.edge.common.channel.Channel;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask {
 
@@ -76,7 +77,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     private void standardResponse() {
 
         Map<String, String> idChannelValueMap = new HashMap<>();
-        String response = super.payloadToOrFromBroker.replaceAll(("[^A-Z][^a-z][^0-9.][^:]*"), "");
+        String response = super.payloadToOrFromBroker.replaceAll(("[^A-Za-z0-9.:]"), "");
         String[] tokens = response.split(":");
         for (int x = 0; x < tokens.length; ) {
             if (tokens[x].equals("metrics")) {
@@ -88,10 +89,13 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         }
         idChannelValueMap.forEach((key, value) -> {
             //index of nameIds is the same as for ChannelIds.
-            if (this.nameIdAndChannelIdMap.containsKey(key)) {
+            if (this.nameIdAndChannelIdMap.containsKey(key) && !value.equals("Not Defined Yet")) {
                 String channelId = this.nameIdAndChannelIdMap.get(key);
                 Channel<?> channel = super.channels.get(channelId);
                 channel.setNextValue(value);
+                System.out.println("Update Channel: " + channelId);
+            } else {
+                System.out.println("Value not defined yet for: " + key);
             }
         });
 

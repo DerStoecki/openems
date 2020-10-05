@@ -102,9 +102,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
                 true, false, 0, MqttPriority.LOW));
 
-        this.addMqttTask("Test", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1", MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
-        this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/#", MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
-        this.addMqttTask("Test3", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2", MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
+        this.addMqttTask("Test", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
+                MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
+        this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/#",
+                MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
+        this.addMqttTask("Test3", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
+                MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
 
 
     }
@@ -131,6 +134,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     private String[] propertyInput(String types) {
         types = types.replaceAll("\\[", "");
         types = types.replaceAll("]", "");
+        types = types.replaceAll(" ", "");
         return types.split(",");
     }
 
