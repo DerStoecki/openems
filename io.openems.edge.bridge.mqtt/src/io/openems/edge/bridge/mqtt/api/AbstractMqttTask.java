@@ -76,7 +76,7 @@ public abstract class AbstractMqttTask implements MqttTask {
     @Override
     public boolean isReady(long currentTime) {
         boolean isReady = false;
-        if (timeStamp - currentTime >= timeToWait) {
+        if ((currentTime - timeStamp) / 1000 >= timeToWait) {
             timeStamp = currentTime;
             isReady = true;
         }

@@ -66,7 +66,34 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             this.component.initTasks(channels);
         }
         this.getDummyOne().setNextValue(10);
+        this.mqttBridge.addMqttComponent(super.id(), this);
+    }
 
+    @Override
+    public void reactToEvent() {
+        if (this.getEvents().value().isDefined()) {
+            System.out.println(this.getEvents().value().get());
+        } else {
+            System.out.println("No Value for Events yet");
+        }
+    }
+
+    @Override
+    public void reactToCommand() {
+        if (this.getCommands().value().isDefined()) {
+            System.out.println(this.getCommands().value().get());
+        } else {
+            System.out.println("No Value for Commands yet");
+        }
+    }
+
+    @Override
+    public void updateJSONConfig() throws MqttException, ConfigurationException {
+        if (this.getConfiguration().value().isDefined()) {
+            String configuration = this.getConfiguration().value().get();
+            this.component.initJson(new ArrayList<>(this.channels()), configuration);
+            this.getConfiguration().setNextValue("");
+        }
     }
 
 
@@ -81,12 +108,19 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
          * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.
          * @param createdByOsgi is this Component configured by OSGi or not. If not --> Read JSON File/Listen to Configuration Channel.
          * @param style         PayloadStyle of publish and Subscribe Message.
+         * @param mqttBridge    The MqttBridge of this Component
          */
         MqttComponentDummyImpl(String id, List<String> subConfigList,
                                List<String> pubConfigList, List<String> payloads,
                                boolean createdByOsgi, PayloadStyle style, MqttBridge mqttBridge) {
             super(id, subConfigList, pubConfigList, payloads, createdByOsgi, style, mqttBridge);
         }
+    }
+
+    @Deactivate
+    public void deactivate() {
+        this.component.deactivate();
+        mqttBridge.removeMqttComponent(this.id());
     }
 
 }

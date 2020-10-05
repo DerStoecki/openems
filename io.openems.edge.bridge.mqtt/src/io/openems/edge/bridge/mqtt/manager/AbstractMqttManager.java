@@ -106,12 +106,12 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         List<MqttTask> collectionOfAllTasks = new ArrayList<>();
         this.allTasks.forEach((key, value) -> collectionOfAllTasks.addAll(value));
         //Add QoS 0 to CurrentToDo --> No Time Required
-        collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.getQos() == 0 && mqttTask.isReady(currentTime)).forEach(task -> {
+        collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.getQos() == 0 && mqttTask.isReady(this.currentTime)).forEach(task -> {
             this.currentToDo.add(task);
         });
         this.currentToDo.forEach(collectionOfAllTasks::remove);
         if (collectionOfAllTasks.size() > 0) {
-            return collectionOfAllTasks.stream().sorted(Comparator.comparing(MqttTask::getPriority)).collect(Collectors.toList());
+            return collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.isReady(this.currentTime)).sorted(Comparator.comparing(MqttTask::getPriority)).collect(Collectors.toList());
         } else {
             return null;
         }

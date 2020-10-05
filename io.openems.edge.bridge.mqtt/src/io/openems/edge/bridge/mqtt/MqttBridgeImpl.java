@@ -14,6 +14,7 @@ import io.openems.edge.common.event.EdgeEventConstants;
 import org.eclipse.paho.client.mqttv3.*;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.event.Event;
@@ -43,6 +44,8 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     //Add to Manager
     private Map<String, List<MqttTask>> publishTasks = new ConcurrentHashMap<>();
     private Map<String, List<MqttTask>> subscribeTasks = new ConcurrentHashMap<>();
+    //MqttComponentMap
+    private Map<String, MqttComponent> components = new ConcurrentHashMap<>();
 
     private MqttPublishManager publishManager;
     private MqttSubscribeManager subscribeManager;
@@ -93,7 +96,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         subscribeManager.activate(super.id() + "_subscribe");
 
         //TODO DELETE LATER ONLY FOR TEST
-        this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge",
+       /* this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 0, MqttPriority.LOW));
         this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
                 "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 1, MqttPriority.HIGH));
@@ -109,7 +112,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.addMqttTask("Test3", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
                 MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
 
-
+        */
     }
 
     private void updateConfig() {
@@ -266,20 +269,47 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     }
 
     @Override
+    public boolean addMqttComponent(String id, MqttComponent component) {
+        if (this.components.containsKey(id)) {
+            return false;
+        } else {
+            this.components.put(id, component);
+            return true;
+        }
+    }
+
+    @Override
+    public boolean removeMqttComponent(String id) {
+        this.components.remove(id);
+        this.removeMqttTasks(id);
+        return true;
+    }
+
+    @Override
     public void handleEvent(Event event) {
 
         if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
 
             this.subscribeManager.triggerNextRun();
             this.publishManager.triggerNextRun();
+            //System.out.println("Getting Message");
+            //this.bridgeSubscriberTest.getTopic(this.subscribeId).forEach(entry -> {
+            //    System.out.println(entry + this.bridgeSubscriberTest.getPayload(entry));
+            //});
+            ////System.out.println(this.bridgeSubscriberTest.getTopic(this.subscribeId) + this.bridgeSubscriberTest.getPayload(subscribeTopic));
+            //System.out.println("New Message Await");
 
-
-            System.out.println("Getting Message");
-            this.bridgeSubscriberTest.getTopic(this.subscribeId).forEach(entry -> {
-                System.out.println(entry + this.bridgeSubscriberTest.getPayload(entry));
+            this.components.forEach((key, value) -> {
+                if (value.getConfiguration().value().isDefined() && !value.getConfiguration().value().get().equals("")) {
+                    try {
+                        value.updateJSONConfig();
+                    } catch (MqttException | ConfigurationException e) {
+                        e.printStackTrace();
+                    }
+                }
+                value.reactToEvent();
+                value.reactToCommand();
             });
-            //System.out.println(this.bridgeSubscriberTest.getTopic(this.subscribeId) + this.bridgeSubscriberTest.getPayload(subscribeTopic));
-            System.out.println("New Message Await");
         }
     }
 }

@@ -19,8 +19,8 @@ public class MqttPublishManager extends AbstractMqttManager {
     private Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
 
     public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker, String mqttBrokerUrl,
-                       String mqttUsername, String mqttPassword, int keepAlive, String mqttClientId,
-                       boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
+                              String mqttUsername, String mqttPassword, int keepAlive, String mqttClientId,
+                              boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
 
         super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, publishTasks,
                 timeEnabled, formatter, true);
@@ -50,6 +50,8 @@ public class MqttPublishManager extends AbstractMqttManager {
                 this.connections.get(qos).sendMessage(task.getTopic(), task.getPayload(), qos, task.getRetainFlag());
                 time = System.nanoTime() - time;
                 time = TimeUnit.MILLISECONDS.convert(time, TimeUnit.NANOSECONDS);
+
+
                 AtomicInteger counter = super.counterForQos.get(qos);
                 super.timeForQos.get(qos).add(counter.get(), time);
                 counter.getAndIncrement();

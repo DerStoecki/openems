@@ -34,6 +34,7 @@ public abstract class AbstractMqttComponent {
     private String id;
     private boolean createdByOsgi;
     protected boolean hasBeenConfigured;
+    private String jsonConfig = "";
 
     /**
      * Initially update Config and after that set params for initTasks.
@@ -72,8 +73,6 @@ public abstract class AbstractMqttComponent {
     public void initTasks(List<Channel<?>> channelIds) throws MqttException, ConfigurationException {
         if (createdByOsgi) {
             createMqttTasksFromOsgi(channelIds);
-        } else {
-            createMqttTasksFromJson(channelIds);
         }
     }
 
@@ -352,6 +351,26 @@ public abstract class AbstractMqttComponent {
         return this.hasBeenConfigured;
     }
 
+    public void deactivate() {
+        this.mqttBridge.removeMqttTasks(this.id);
+    }
+
+    public void setJsonConfig(String s) {
+        this.jsonConfig = s;
+    }
+
+    public String getJsonConfig() {
+        return this.jsonConfig;
+    }
+
+    public void initJson(ArrayList<Channel<?>> channels, String jsonConfig) {
+        if (this.jsonConfig.equals(jsonConfig)) {
+            return;
+        } else {
+            this.jsonConfig = jsonConfig;
+            //TODO DO SOMETHING WITH CONFIG
+        }
+    }
 }
 
 

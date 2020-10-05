@@ -2,10 +2,8 @@ package io.openems.edge.bridge.mqtt.api;
 
 import io.openems.edge.common.channel.Channel;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask {
@@ -75,16 +73,35 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
      * </p>
      */
     private void standardResponse() {
-
+        String response = super.payloadToOrFromBroker;
+        if (response.equals("")) {
+            return;
+        }
         Map<String, String> idChannelValueMap = new HashMap<>();
-        String response = super.payloadToOrFromBroker.replaceAll(("[^A-Za-z0-9.:]"), "");
-        String[] tokens = response.split(":");
-        for (int x = 0; x < tokens.length; ) {
-            if (tokens[x].equals("metrics")) {
-                x++;
-            } else {
-                idChannelValueMap.put(tokens[x], tokens[x + 1]);
-                x += 2;
+        String[] tokensWithTime = {null};
+        if (response.contains("sentOn")) {
+            String responseContainsTime = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
+            tokensWithTime = responseContainsTime.split(",");
+            response = Arrays.stream(tokensWithTime).filter(entry -> !entry.contains("sentOn")).collect(Collectors.toList()).toString();
+        }
+        String[] tokens;
+        response = response.replaceAll(",", ":");
+        if (tokensWithTime.length > 0) {
+            response = response.replaceAll(("[^A-Za-z0-9.:]"), "");
+        }
+        tokens = response.split(":");
+        if (tokens.length > 0) {
+            for (int x = 0; x < tokens.length; ) {
+                if (tokens[x].equals("metrics")) {
+                    x++;
+                } else if (tokens[x].equals("sentOn")) {
+                    x += 3;
+                } else {
+                    if (!tokens[x].equals("ID")) {
+                        idChannelValueMap.put(tokens[x], tokens[x + 1]);
+                    }
+                    x += 2;
+                }
             }
         }
         idChannelValueMap.forEach((key, value) -> {
@@ -93,9 +110,9 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
                 String channelId = this.nameIdAndChannelIdMap.get(key);
                 Channel<?> channel = super.channels.get(channelId);
                 channel.setNextValue(value);
-                System.out.println("Update Channel: " + channelId);
+                System.out.println("Update Channel: " + channelId + "with Value: " + value);
             } else {
-                System.out.println("Value not defined yet for: " + key);
+                System.out.println("Value not defined yet for: " + this.nameIdAndChannelIdMap.get(key));
             }
         });
 
