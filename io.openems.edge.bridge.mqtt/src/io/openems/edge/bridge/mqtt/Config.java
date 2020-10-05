@@ -54,8 +54,9 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Topic Last Will", description = "Topic for Last Will")
     String topicLastWill() default "OpenEMS/Leaflet_0/Status/";
 
+
     @AttributeDefinition(name = "LastWill Payload", description = "Payload for the last Will")
-    String payloadLastWill() default "\"Status\": Connection Lost";
+    String payloadLastWill() default "\"Status\": Connected";
 
     @AttributeDefinition(name = "QoS of Last Will", description = "Quality of Service of last Will Msg")
     int qosLastWill() default 0;

@@ -4,8 +4,6 @@ import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.mqtt.api.*;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionPublishImpl;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionSubscribeImpl;
-import io.openems.edge.bridge.mqtt.dummys.PublishTaskDummy;
-import io.openems.edge.bridge.mqtt.dummys.SubscribeTaskDummy;
 import io.openems.edge.bridge.mqtt.manager.MqttPublishManager;
 import io.openems.edge.bridge.mqtt.manager.MqttSubscribeManager;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -26,7 +24,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -80,11 +77,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         try {
             this.formatter = new SimpleDateFormat(config.timeFormat(), new Locale.Builder().setRegion(config.locale()).build());
             this.bridgePublisher = new MqttConnectionPublishImpl();
-            this.bridgeSubscriberTest = new MqttConnectionSubscribeImpl();
             this.createMqttSession(config);
         } catch (MqttException e) {
             throw new OpenemsException(e.getMessage());
         }
+        //Important for last will.
+
 
         publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
                 this.mqttPassword, config.keepAlive(), this.mqttClientId, config.timeStampEnabled(), formatter);
@@ -94,27 +92,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
         publishManager.activate(super.id() + "_publish");
         subscribeManager.activate(super.id() + "_subscribe");
-
-        //TODO DELETE LATER ONLY FOR TEST
-       /* this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge",
-                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 0, MqttPriority.LOW));
-        this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
-                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 1, MqttPriority.HIGH));
-        this.addMqttTask("Test", new PublishTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
-                "{\"Arrived\": true}", MqttType.TELEMETRY, true, true, 2, MqttPriority.URGENT));
-        this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge", MqttType.TELEMETRY,
-                true, false, 0, MqttPriority.LOW));
-
-        this.addMqttTask("Test", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/1",
-                MqttType.TELEMETRY, false, false, 1, MqttPriority.LOW));
-        this.addMqttTask("Test2", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/#",
-                MqttType.TELEMETRY, false, false, 0, MqttPriority.LOW));
-        this.addMqttTask("Test3", new SubscribeTaskDummy("Consolinno/Test/FirstPublishTopic/Bridge/Qos/2",
-                MqttType.TELEMETRY, false, false, 2, MqttPriority.LOW));
-
-        */
     }
 
+    /**
+     * Updates Config --> MqttTypes and Priorities.
+     */
     private void updateConfig() {
         Configuration c;
 
@@ -134,6 +116,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         }
     }
 
+    /**
+     * Due to the fact that the inputs are arrays this needs to be done.
+     *
+     * @param types either mqttTypes or Priorities
+     * @return the String[] for update in OSGi
+     */
     private String[] propertyInput(String types) {
         types = types.replaceAll("\\[", "");
         types = types.replaceAll("]", "");
@@ -141,8 +129,15 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         return types.split(",");
     }
 
-
+    /**
+     * Creates the MQTT Session and connects to broker.
+     * TODO ENCRYPTION TCP socket
+     *
+     * @param config config of this mqttBridge
+     * @throws MqttException if somethings wrong like pw wrong or user etc.
+     */
     private void createMqttSession(Config config) throws MqttException {
+        //Create Broker URL/IP etc
         //TCP OR SSL
         String broker = config.connection().equals("Tcp") ? "tcp" : "ssl";
         boolean isTcp = broker.equals("tcp");
@@ -150,12 +145,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         this.mqttBroker = broker;
         this.mqttUsername = config.username();
 
-        //TODO ENCRYPT PASSWORD IF TCP NOT SSL!
+        //TODO ENCRYPT PASSWORD IF TCP NOT TLS!
         this.mqttPassword = config.password();
-
+        //ClientID will be automatically altered by Managers depending on what they're doing
         this.mqttClientId = config.clientId();
         this.mqttBrokerUrl = config.brokerUrl();
-
+        //BridgePublish set LastWill if configured
         this.bridgePublisher.createMqttPublishSession(this.mqttBroker, this.mqttClientId, config.keepAlive(),
                 this.mqttUsername, this.mqttPassword, config.cleanSessionFlag());
         if (config.lastWillSet()) {
@@ -166,36 +161,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         //External Call bc Last will can be set
         this.bridgePublisher.connect();
 
-        this.bridgePublisher.sendMessage(config.topicLastWill(), "\"Status\": Connected", 1,
-                config.retainedFlag());
-
-        //DEBUG AND TEST TODO DELETE LATER
-        this.subscribeId = this.mqttClientId + "_CLIENT_TEST_SUBSCRIBE";
-        this.bridgeSubscriberTest.createMqttSubscribeSession(this.mqttBroker, subscribeId,
-                this.mqttUsername, this.mqttPassword, config.keepAlive());
-
-        this.subscribeTopic = config.topicLastWill();
-
-        this.bridgeSubscriberTest.subscribeToTopic(subscribeTopic, 0, subscribeId);
-
     }
-
-    //TODO Password encryption etc --> Research etc; Public and private Keys etc etc on not Secure Connection.
-    // TODO AT THE END!
-    //TODO DO THIS IN AN EXTRA CLASS!
-    /*private char[] createHashedPassword(String password) throws NoSuchAlgorithmException {
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[16];
-        random.nextBytes(salt);
-        MessageDigest md = MessageDigest.getInstance("SHA-512");
-        md.update(salt);
-        byte[] hashedPassword = md.digest(password.getBytes(StandardCharsets.UTF_8));
-        return Arrays.toString(hashedPassword).toCharArray();
-    }*/
 
     @Deactivate
     public void deactivate() {
         try {
+            //Disconnect every connection
             this.bridgePublisher.disconnect();
             this.bridgeSubscriberTest.disconnect();
             this.publishManager.deactivate();
@@ -207,7 +178,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
 
     /**
-     * Add Mqtt Task.
+     * Add Mqtt Task. Usually called by AbstractMqttComponent.
      *
      * @param id       usually from MqttComponent / Same as component id
      * @param mqttTask usually created by MqttComponent
@@ -244,13 +215,14 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         return true;
     }
 
+    /**
+     * Removes the MqttTask by id. Usually Called by AbstractMqttComponent
+     * @param id usually from AbstractMqttComponent
+     */
     @Override
-    public boolean removeMqttTasks(String id) {
-        //TODO SEE IF MANAGER TASKS GET REMOVED
+    public void removeMqttTasks(String id) {
         this.subscribeTasks.remove(id);
         this.publishTasks.remove(id);
-
-        return true;
     }
 
     @Override
@@ -292,12 +264,6 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
             this.subscribeManager.triggerNextRun();
             this.publishManager.triggerNextRun();
-            //System.out.println("Getting Message");
-            //this.bridgeSubscriberTest.getTopic(this.subscribeId).forEach(entry -> {
-            //    System.out.println(entry + this.bridgeSubscriberTest.getPayload(entry));
-            //});
-            ////System.out.println(this.bridgeSubscriberTest.getTopic(this.subscribeId) + this.bridgeSubscriberTest.getPayload(subscribeTopic));
-            //System.out.println("New Message Await");
 
             this.components.forEach((key, value) -> {
                 if (value.getConfiguration().value().isDefined() && !value.getConfiguration().value().get().equals("")) {

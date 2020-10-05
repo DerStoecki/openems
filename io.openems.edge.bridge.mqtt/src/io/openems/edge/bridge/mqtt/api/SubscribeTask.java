@@ -80,6 +80,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         Map<String, String> idChannelValueMap = new HashMap<>();
         String[] tokensWithTime = {null};
         if (response.contains("sentOn")) {
+            //TODO SAVE THE TIME AND PUT IT TO A DATE TIME
             String responseContainsTime = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
             tokensWithTime = responseContainsTime.split(",");
             response = Arrays.stream(tokensWithTime).filter(entry -> !entry.contains("sentOn")).collect(Collectors.toList()).toString();

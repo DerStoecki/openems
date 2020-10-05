@@ -38,7 +38,7 @@ public interface MqttBridge extends OpenemsComponent {
 
     boolean addMqttTask(String id, MqttTask mqttTask) throws MqttException;
 
-    boolean removeMqttTasks(String id);
+    void removeMqttTasks(String id);
 
     default Channel<String> setMqttTypes() {
         return this.channel(ChannelId.MQTT_TYPES);
