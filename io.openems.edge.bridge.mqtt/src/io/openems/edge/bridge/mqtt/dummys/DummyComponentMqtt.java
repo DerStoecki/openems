@@ -71,8 +71,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     @Override
     public void reactToEvent() {
-        if (this.getEvents().value().isDefined()) {
-            System.out.println(this.getEvents().value().get());
+        if (this.getEvents().value().isDefined() && this.getEventValue().value().isDefined()) {
+            System.out.println("REACTING TO: " + this.getEvents().value().get() + " WITH VALUE: "
+                    + this.getEventValue().value().get());
         } else {
             System.out.println("No Value for Events yet");
         }
@@ -80,8 +81,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     @Override
     public void reactToCommand() {
-        if (this.getCommands().value().isDefined()) {
-            System.out.println(this.getCommands().value().get());
+        if (this.getCommands().value().isDefined() && this.getCommandsValue().value().isDefined()) {
+            System.out.println("REACTING TO: " + this.getCommands().value().get() + " WITH VALUE: "
+                    + this.getCommandsValue().value().get());
         } else {
             System.out.println("No Value for Commands yet");
         }

@@ -74,7 +74,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
     void foreverAbstract() {
         calculateAverageTimes();
-        this.currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
+        calculateCurrentTime();
         addToFutureAndCurrentToDo(sortTasks());
     }
 
@@ -154,5 +154,13 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
                 }
             }
         }
+    }
+
+    protected void calculateCurrentTime() {
+        this.currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
+    }
+
+    public long getCurrentTime() {
+        return this.currentTime;
     }
 }

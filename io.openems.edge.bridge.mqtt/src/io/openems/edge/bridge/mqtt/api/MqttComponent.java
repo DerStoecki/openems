@@ -70,6 +70,14 @@ public interface MqttComponent extends OpenemsComponent {
         return this.channel(ChannelId.CONFIGURATION);
     }
 
+    default Channel<String> getCommandsValue() {
+        return this.channel(ChannelId.COMMANDS_VALUE);
+    }
+
+    default Channel<String> getEventValue() {
+        return this.channel(ChannelId.EVENTS_VALUE);
+    }
+
     void reactToEvent();
 
     void reactToCommand();
