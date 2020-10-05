@@ -33,18 +33,19 @@ public class MqttSubscribeManager extends AbstractMqttManager {
     }
 
     @Override
-    public void forever() throws InterruptedException, MqttException {
+    public void forever() throws MqttException {
 
         checkLostConnections();
         super.calculateCurrentTime();
-        super.currentToDo.forEach(task -> {
-            if (task instanceof MqttSubscribeTask) {
-                if (task.isReady(super.getCurrentTime())) {
-                    ((MqttSubscribeTask) task).response(this.connections.get(task.getMqttType()).getPayload(task.getTopic()));
+        super.allTasks.forEach((key, value) -> {
+            value.forEach(task -> {
+                if (task instanceof MqttSubscribeTask) {
+                    if (task.isReady(super.getCurrentTime())) {
+                        ((MqttSubscribeTask) task).response(this.connections.get(task.getMqttType()).getPayload(task.getTopic()));
+                    }
                 }
-            }
+            });
         });
-
     }
 
     private void checkLostConnections() throws MqttException {
