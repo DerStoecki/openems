@@ -37,7 +37,6 @@ public abstract class AbstractMqttTask implements MqttTask {
 
     }
 
-
     @Override
     public int getQos() {
         return this.qos;
@@ -73,6 +72,12 @@ public abstract class AbstractMqttTask implements MqttTask {
         return this.mqttType;
     }
 
+    /**
+     * Checks if the task is ready --> Time is up.
+     *
+     * @param currentTime the currentTime, calculated each cycle by abstractManager
+     * @return aBoolean.
+     */
     @Override
     public boolean isReady(long currentTime) {
         boolean isReady = false;

@@ -2,7 +2,6 @@ package io.openems.edge.bridge.mqtt.dummys;
 
 import io.openems.edge.bridge.mqtt.api.MqttBridge;
 import io.openems.edge.bridge.mqtt.api.MqttComponent;
-import io.openems.edge.bridge.mqtt.api.PayloadStyle;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.bridge.mqtt.component.AbstractMqttComponent;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -60,7 +59,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         List<String> payloads = Arrays.asList(config.payloads());
         List<Channel<?>> channels = new ArrayList<>(this.channels());
         this.component = new MqttComponentDummyImpl(super.id(), subList, pubList, payloads,
-                config.createdByOsgiConfig(), PayloadStyle.valueOf(config.payloadStyle().toUpperCase()), mqttBridge);
+                config.createdByOsgiConfig(), mqttBridge);
         this.component.update(c, "channelIdList", channels, config.channelIdList().length);
         if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
             this.component.initTasks(channels);
@@ -109,13 +108,12 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
          * @param pubConfigList Publish Configlist, containing the Configuration for the publishTasks.
          * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.
          * @param createdByOsgi is this Component configured by OSGi or not. If not --> Read JSON File/Listen to Configuration Channel.
-         * @param style         PayloadStyle of publish and Subscribe Message.
          * @param mqttBridge    The MqttBridge of this Component
          */
         MqttComponentDummyImpl(String id, List<String> subConfigList,
                                List<String> pubConfigList, List<String> payloads,
-                               boolean createdByOsgi, PayloadStyle style, MqttBridge mqttBridge) {
-            super(id, subConfigList, pubConfigList, payloads, createdByOsgi, style, mqttBridge);
+                               boolean createdByOsgi, MqttBridge mqttBridge) {
+            super(id, subConfigList, pubConfigList, payloads, createdByOsgi,  mqttBridge);
         }
     }
 

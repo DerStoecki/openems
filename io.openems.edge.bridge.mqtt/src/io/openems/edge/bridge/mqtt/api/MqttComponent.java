@@ -7,6 +7,8 @@ import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.ConfigurationException;
 
+import java.util.stream.Stream;
+
 public interface MqttComponent extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {

@@ -25,7 +25,6 @@ public abstract class AbstractMqttComponent {
     private List<String> subConfigList;
     private List<String> pubConfigList;
     private List<String> payloads;
-    private PayloadStyle payloadStyle;
     //STRING = TOPIC as ID ---- TASK
     private Map<String, MqttPublishTask> publishTasks = new HashMap<>();
     private Map<String, MqttSubscribeTask> subscribeTasks = new HashMap<>();
@@ -33,7 +32,7 @@ public abstract class AbstractMqttComponent {
     private Map<String, Channel<?>> mapOfChannel = new ConcurrentHashMap<>();
     private String id;
     private boolean createdByOsgi;
-    protected boolean hasBeenConfigured;
+    private boolean hasBeenConfigured;
     private String jsonConfig = "";
 
     /**
@@ -44,19 +43,17 @@ public abstract class AbstractMqttComponent {
      * @param pubConfigList Publish Configlist, containing the Configuration for the publishTasks.
      * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.
      * @param createdByOsgi is this Component configured by OSGi or not. If not --> Read JSON File/Listen to Configuration Channel.
-     * @param style         PayloadStyle of publish and Subscribe Message.
      * @param mqttBridge    mqttBridge of this Component.
      */
     //Path/Qos/SpecifiedType/Payloadno     payloads     ComponentChannel
     public AbstractMqttComponent(String id, List<String> subConfigList,
                                  List<String> pubConfigList, List<String> payloads,
-                                 boolean createdByOsgi, PayloadStyle style, MqttBridge mqttBridge) {
+                                 boolean createdByOsgi, MqttBridge mqttBridge) {
 
         this.id = id;
         this.subConfigList = subConfigList;
         this.pubConfigList = pubConfigList;
         this.payloads = payloads;
-        this.payloadStyle = style;
         this.createdByOsgi = createdByOsgi;
         this.mqttBridge = mqttBridge;
 
@@ -125,10 +122,9 @@ public abstract class AbstractMqttComponent {
      * @param subTasks   is the current configList a sub/Pub task.
      * @param channelIds all the Channels that'll be configured
      * @throws ConfigurationException will be thrown if config is wrong/has an Error.
-     * @throws MqttException          will be thrown if there's a problem with the Broker.
      */
 
-    private void createTasks(List<String> configList, boolean subTasks, List<Channel<?>> channelIds) throws ConfigurationException, MqttException {
+    private void createTasks(List<String> configList, boolean subTasks, List<Channel<?>> channelIds) throws ConfigurationException {
         //
         ConfigurationException[] exConfig = {null};
 
@@ -136,7 +132,7 @@ public abstract class AbstractMqttComponent {
         configList.forEach(entry -> {
             Map<String, Channel<?>> channelMapForTask;
             //futurePayload
-            String payloadForTask = "";
+            String payloadForTask;
             //split the entry; Each ConfigEntry looks like this:
             //MqttType!Priority!Topic!QoS!RetainFlag!TimeStampEnabled!PayloadNo!TimeToWait
             String[] tokens = entry.split("!");
@@ -175,7 +171,7 @@ public abstract class AbstractMqttComponent {
                         payloadForTask = this.payloads.get(payloadNo);
                         //subtasks will use payload to match their input to channels
                         if (subTasks) {
-                            SubscribeTask task = new SubscribeTask(type, priority, topic, qos, retainFlag, useTime, timeToWait, channelMapForTask, payloadForTask, PayloadStyle.STANDARD, this.id);
+                            SubscribeTask task = new SubscribeTask(type, priority, topic, qos, retainFlag, useTime, timeToWait, channelMapForTask, payloadForTask, style, this.id);
                             this.subscribeTasks.put(topic, task);
                             //Create SubTasks
                         } else {
@@ -259,7 +255,7 @@ public abstract class AbstractMqttComponent {
     /**
      * Returns the Payload from a certain topic of a subscriber.
      *
-     * @param topic of the MqttSubscribetask.
+     * @param topic of the MqttSubscribeTask.
      * @return the corresponding subscribeTask.
      */
 

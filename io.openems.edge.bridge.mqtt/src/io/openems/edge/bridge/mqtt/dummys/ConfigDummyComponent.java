@@ -34,9 +34,9 @@ import java.util.List;
             "MqttType!Priority!Topic!QoS!RetainFlagBoolean!TimestampUseBoolean!PayloadNo!TimeToWait"};
 
     @AttributeDefinition(name = "PublishConfig", description = "This List is for configuring publishes, accepted form is: "
-            + "MqttType!Priority!Topic!QoS!RetainFlag!TimestampUseBoolean!PayloadNo!TimeToWait")
+            + "MqttType!Priority!Topic!QoS!RetainFlag!TimestampUseBoolean!PayloadNo!TimeToWait!PayloadStyle")
     String[] publishList() default {
-            "MqttType!Priority!Topic!Qos!RetainFlagBoolean!TimestampUseBoolean!PayloadNo!TimeToWait"
+            "MqttType!Priority!Topic!Qos!RetainFlagBoolean!TimestampUseBoolean!PayloadNo!TimeToWait!PayloadStyle"
     };
 
     @AttributeDefinition(name = "PayloadStyle", description = "PayloadStyle you want to use (See Mqtt Information Component for more options)")

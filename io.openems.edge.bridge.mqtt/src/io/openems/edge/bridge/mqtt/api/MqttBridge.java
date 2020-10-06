@@ -34,9 +34,22 @@ public interface MqttBridge extends OpenemsComponent {
         }
     }
 
-    //add and remove Task
 
-    boolean addMqttTask(String id, MqttTask mqttTask) throws MqttException;
+    /**
+     * Adds Task to the Bridge.
+     *
+     * @param id       usually from Config of a concrete MqttComponent, called by abstractMqttComponent.
+     * @param mqttTask MqttTask created by the AbstractMqttComponent.
+     * @throws MqttException if subscription fails.
+     */
+    void addMqttTask(String id, MqttTask mqttTask) throws MqttException;
+
+    /**
+     * Remove the MqttTask by their ID. Removes all Tasks with the same ID --> Usually called on deactivation
+     * of the Component or when Config is updated
+     *
+     * @param id ID of the Tasks usually from AbstractMqttComponent.
+     */
 
     void removeMqttTasks(String id);
 
@@ -50,9 +63,21 @@ public interface MqttBridge extends OpenemsComponent {
 
     String getSubscribePayloadFromTopic(String topic, MqttType type);
 
+    /**
+     * Adds the MqttComponent to the Bridge; Used for Update ; React to Events/ Controls / etc.
+     *
+     * @param id        id of the MqttComponent usually from config of the Component
+     * @param component the Component itself.
+     * @return false if the key is already in List. (Happens on not unique ID)
+     */
     boolean addMqttComponent(String id, MqttComponent component);
 
-    boolean removeMqttComponent(String id);
+    /**
+     * Removes the Mqtt  Component and their Tasks. Usually called on deactivation of the MqttComponent
+     *
+     * @param id id of the Component you want to remove.
+     */
+    void removeMqttComponent(String id);
 }
 
 

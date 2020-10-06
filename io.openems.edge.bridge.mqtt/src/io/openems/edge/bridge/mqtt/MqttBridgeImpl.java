@@ -19,6 +19,8 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -36,6 +38,8 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     @Reference
     ConfigurationAdmin ca;
+
+    private final Logger log = LoggerFactory.getLogger(MqttBridgeImpl.class);
 
 
     //Add to Manager
@@ -182,12 +186,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
      *
      * @param id       usually from MqttComponent / Same as component id
      * @param mqttTask usually created by MqttComponent
-     * @return true if add was successful
      * @throws MqttException if somethings wrong
      */
 
     @Override
-    public boolean addMqttTask(String id, MqttTask mqttTask) throws MqttException {
+    public void addMqttTask(String id, MqttTask mqttTask) throws MqttException {
 
         if (mqttTask instanceof MqttPublishTask) {
             if (this.publishTasks.containsKey(id)) {
@@ -211,12 +214,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             ((MqttSubscribeTask) mqttTask).putMessageId(subscribeIdCounter++);
             this.subscribeManager.subscribeToTopic(mqttTask, id);
         }
-
-        return true;
     }
 
     /**
      * Removes the MqttTask by id. Usually Called by AbstractMqttComponent
+     *
      * @param id usually from AbstractMqttComponent
      */
     @Override
@@ -251,26 +253,26 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     }
 
     @Override
-    public boolean removeMqttComponent(String id) {
+    public void removeMqttComponent(String id) {
         this.components.remove(id);
         this.removeMqttTasks(id);
-        return true;
     }
 
     @Override
     public void handleEvent(Event event) {
 
         if (event.getTopic().equals(EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)) {
-
+            //handle all Tasks
             this.subscribeManager.triggerNextRun();
             this.publishManager.triggerNextRun();
-
+            //Update the components Config if available
             this.components.forEach((key, value) -> {
                 if (value.getConfiguration().value().isDefined() && !value.getConfiguration().value().get().equals("")) {
                     try {
                         value.updateJSONConfig();
                     } catch (MqttException | ConfigurationException e) {
-                        e.printStackTrace();
+                        log.warn("Couldn't refresh the config of component " + value.id() + " Please check your"
+                                + " configuration or MqttConnection");
                     }
                 }
                 value.reactToEvent();
