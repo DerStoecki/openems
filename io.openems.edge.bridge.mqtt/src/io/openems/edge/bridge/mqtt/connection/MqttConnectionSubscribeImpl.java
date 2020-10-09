@@ -27,7 +27,14 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
         super();
     }
 
-
+    /**
+     * Subscribes to topic. Usually called by Mqtt Bridge if a new MqttSubscribeTask is created.
+     *
+     * @param topic Topic you want to subscribe to.
+     * @param qos   Quality of Service.
+     * @param id    ID of the Component .e.g chp01
+     * @throws MqttException if Callback is not working or Subscription fails.
+     */
     @Override
     public void subscribeToTopic(String topic, int qos, String id) throws MqttException {
 
@@ -40,7 +47,13 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
         addTopicList(id, topic);
     }
 
-
+    /**
+     * Adds Topic with an id to List. May be Useful later for Controller etc who r needing the complete Topic list of
+     * a component.
+     *
+     * @param id    id of the component
+     * @param topic topic the device is subscribing to.
+     */
     private void addTopicList(String id, String topic) {
         if (this.idsAndTopics.containsKey(id)) {
             this.idsAndTopics.get(id).add(topic);
@@ -67,12 +80,13 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
     }
 
 
-    //TODO
+    //TODO HANDLE CONNECTION LOST AND DELIVERY COMPLETE
     @Override
     public void connectionLost(Throwable throwable) {
         this.connectionLost = true;
     }
 
+    // REPLACE payload
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         this.subscriptions.replace(topic, new String(message.getPayload(), StandardCharsets.UTF_8));

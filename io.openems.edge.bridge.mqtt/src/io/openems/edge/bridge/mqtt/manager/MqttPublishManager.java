@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.openems.edge.bridge.mqtt.api.MqttTask;
 
 public class MqttPublishManager extends AbstractMqttManager {
-
+    //              QOS       MqttConnector
     private Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
 
     public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker, String mqttBrokerUrl,
@@ -25,6 +25,7 @@ public class MqttPublishManager extends AbstractMqttManager {
         super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, publishTasks,
                 timeEnabled, formatter, true);
         //Create new Connection Publish
+        //Magic numbers bc there're only 3 QoS available
         for (int x = 0; x < 3; x++) {
             this.connections.put(x, new MqttConnectionPublishImpl());
             this.connections.get(x).createMqttPublishSession(super.mqttBroker, super.mqttClientId + "_PUBLISH_" + x,
@@ -37,30 +38,33 @@ public class MqttPublishManager extends AbstractMqttManager {
     public void forever() throws InterruptedException, MqttException {
         super.foreverAbstract();
         this.checkLostConnections();
+        //Handle Tasks given by Parent
         super.currentToDo.forEach(task -> {
             try {
+                //Update Payload
                 if (task instanceof MqttPublishTask) {
                     MqttPublishTask task1 = ((MqttPublishTask) task);
                     String now = formatter.format(new Date(System.currentTimeMillis()));
                     task1.updatePayload(now);
                 }
-
+                //Sends message via mqttconnection start and stop time
                 int qos = task.getQos();
                 long time = System.nanoTime();
                 this.connections.get(qos).sendMessage(task.getTopic(), task.getPayload(), qos, task.getRetainFlag());
                 time = System.nanoTime() - time;
                 time = TimeUnit.MILLISECONDS.convert(time, TimeUnit.NANOSECONDS);
-
-
+                //Time Calculation
                 AtomicInteger counter = super.counterForQos.get(qos);
                 super.timeForQos.get(qos).add(counter.get(), time);
                 counter.getAndIncrement();
                 counter.set(counter.get() % 30);
             } catch (MqttException e) {
                 e.printStackTrace();
+                //On Error add the task to future tasks to try again.
                 super.toDoFuture.add(task);
             }
         });
+        //If currentToDo is handled clear.
         super.currentToDo.clear();
     }
 
@@ -76,6 +80,7 @@ public class MqttPublishManager extends AbstractMqttManager {
         });
     }
 
+    //Try to Reconnect if Connection is Lost.
     private void checkLostConnections() throws MqttException {
         MqttException[] exceptions = {null};
         this.connections.forEach((key, value) -> {

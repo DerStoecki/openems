@@ -10,7 +10,15 @@ public class MqttConnectionPublishImpl extends AbstractMqttConnection implements
         super();
     }
 
-    //TODO MAYBE MORE STUFF
+    /**
+     * Sends a message to broker, with defined params.
+     *
+     * @param topic      Topic of the payload.
+     * @param message    Payload of the message.
+     * @param qos        Quality of Service of this Message.
+     * @param retainFlag Should the message be retained.
+     * @throws MqttException if broker not available or somethings bad configured in the mqtt message.
+     */
     @Override
     public void sendMessage(String topic, String message, int qos, boolean retainFlag) throws MqttException {
         MqttMessage messageMqtt;
@@ -20,10 +28,6 @@ public class MqttConnectionPublishImpl extends AbstractMqttConnection implements
         messageMqtt.setRetained(retainFlag);
         super.mqttClient.publish(topic, messageMqtt);
         System.out.println("Message published: " + messageMqtt);
-    }
-
-    void sendMessage(String topic, String message, int qos) throws MqttException {
-        sendMessage(topic, message, qos, false);
     }
 
 }

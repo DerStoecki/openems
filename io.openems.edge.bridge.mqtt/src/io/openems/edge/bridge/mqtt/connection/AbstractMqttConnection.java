@@ -10,9 +10,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-
+/**
+ * A Mqtt Connection Created by either the mqttBridge, subscribe or publish-manager.
+ */
 public abstract class AbstractMqttConnection implements MqttConnection {
-
+    //MqttClient, Informations by MqttBridge
     MqttClient mqttClient;
     //TODO RESEARCH MEMORYPERSISTENCE!
     //TODO INFLIGHT MESSAGES
@@ -27,6 +29,17 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         this.mqttConnectOptions = new MqttConnectOptions();
     }
 
+    /**
+     * BasicSetup for a Mqtt connection.
+     *
+     * @param mqttBroker   Broker URL with tcp:// or ssl:// prefix
+     * @param mqttClientId Client ID usually from Bridge.
+     * @param username     username usually from Bridge.
+     * @param mqttPassword password for broker usually from Bridge.
+     * @param cleanSession cleanSession flag.
+     * @param keepAlive    keepAlive of the Session.
+     * @throws MqttException is throw if somethings wrong with the Client/Options.
+     */
     private void createMqttSessionBasicSetup(String mqttBroker, String mqttClientId, String username, String mqttPassword,
                                              boolean cleanSession, int keepAlive) throws MqttException {
         this.mqttClient = new MqttClient(mqttBroker, mqttClientId, this.persistence);
@@ -37,12 +50,33 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     }
 
 
-   @Override
-   public void createMqttSubscribeSession(String mqttBroker, String mqttClientId, String username, String mqttPassword, int keepAlive) throws MqttException {
+    /**
+     * Creates the MqttSubscribe session.
+     *
+     * @param mqttBroker   URL of Broker usually from manager/bridge.
+     * @param mqttClientId ClientID of the Connection.
+     * @param username     username.
+     * @param mqttPassword password.
+     * @param keepAlive    keepalive.
+     * @throws MqttException if connection fails or other problems occured with mqtt.
+     */
+    @Override
+    public void createMqttSubscribeSession(String mqttBroker, String mqttClientId, String username, String mqttPassword, int keepAlive) throws MqttException {
         createMqttSessionBasicSetup(mqttBroker, mqttClientId, username, mqttPassword, false, keepAlive);
         connect();
     }
 
+    /**
+     * Creates the publish connection. Connection not already occurres bc a last will flag could be set.
+     *
+     * @param broker       URL of Broker usually from manager/bridge.
+     * @param clientId     ClientID of the Connection.
+     * @param keepAlive    keepaliv flag.
+     * @param username     username.
+     * @param password     password.
+     * @param cleanSession clean session flag.
+     * @throws MqttException if connection fails or other problems occured with mqtt.
+     */
     @Override
     public void createMqttPublishSession(String broker, String clientId, int keepAlive, String username,
                                          String password, boolean cleanSession) throws MqttException {
@@ -51,6 +85,16 @@ public abstract class AbstractMqttConnection implements MqttConnection {
 
     }
 
+    /**
+     * Adds last will to the    Connection.
+     *
+     * @param topicLastWill   topic of the last will.
+     * @param payloadLastWill payload.
+     * @param qosLastWill     Quality of service.
+     * @param shouldAddTime   add Time to payload
+     * @param retainedFlag    retained flag.
+     * @param time            time as string.
+     */
     @Override
     public void addLastWill(String topicLastWill, String payloadLastWill, int qosLastWill, boolean shouldAddTime, boolean retainedFlag, String time) {
         if (shouldAddTime) {
@@ -65,6 +109,11 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         return payload;
     }
 
+    /**
+     * Connects with it's mqttConnectOptions to the broker.
+     *
+     * @throws MqttException will be thrown if configs are wrong or connection not available.
+     */
     @Override
     public void connect() throws MqttException {
         System.out.println("Connecting to Broker");
@@ -82,8 +131,8 @@ public abstract class AbstractMqttConnection implements MqttConnection {
 
     }
 
-   @Override
-   public MqttClient getMqttClient() {
+    @Override
+    public MqttClient getMqttClient() {
         return this.mqttClient;
     }
 
