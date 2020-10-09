@@ -4,6 +4,10 @@ import io.openems.edge.bridge.mqtt.api.MqttPriority;
 import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
 import io.openems.edge.bridge.mqtt.api.MqttType;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSubscribeTask {
 
     private int messageId = -1;
@@ -28,6 +32,26 @@ public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSub
     @Override
     public int getMessageId() {
         return messageId;
+    }
+
+    @Override
+    public void convertTime(SimpleDateFormat formatter) throws ParseException {
+
+    }
+
+    @Override
+    public Date getTime() {
+        return null;
+    }
+
+    @Override
+    public boolean timeAvailable() {
+        return false;
+    }
+
+    @Override
+    public void setTime(Date date) {
+
     }
 
 }

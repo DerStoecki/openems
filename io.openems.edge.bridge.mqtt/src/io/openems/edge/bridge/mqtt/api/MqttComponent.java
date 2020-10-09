@@ -45,14 +45,6 @@ public interface MqttComponent extends OpenemsComponent {
         return this.channel(ChannelId.TELEMETRY);
     }
 
-    /**
-     * Gets the Commands entry of the Channel (Usually broker publishes here).
-     *
-     * @return the Channel.
-     */
-    default Channel<String> getSubscribe() {
-        return this.channel(ChannelId.COMMANDS);
-    }
 
     /**
      * Gets the Event from the Channel (Usually broker publishes here).
@@ -64,26 +56,59 @@ public interface MqttComponent extends OpenemsComponent {
         return this.channel(ChannelId.EVENTS);
     }
 
+    /**
+     * Gets the Commands entry of the Channel (Usually broker publishes here).
+     *
+     * @return the Channel.
+     */
     default Channel<String> getCommands() {
         return this.channel(ChannelId.COMMANDS);
     }
 
+    /**
+     * get the Configuration Channel, if configured by REST/ or json file.
+     *
+     * @return the channel
+     */
     default Channel<String> getConfiguration() {
         return this.channel(ChannelId.CONFIGURATION);
     }
 
+    /**
+     * The Value, corresponding to set command of the component.
+     *
+     * @return the Channel.
+     */
     default Channel<String> getCommandsValue() {
         return this.channel(ChannelId.COMMANDS_VALUE);
     }
 
+    /**
+     * gets the value of the corresponding set event.
+     *
+     * @return the channel.
+     */
     default Channel<String> getEventValue() {
         return this.channel(ChannelId.EVENTS_VALUE);
     }
 
+    /**
+     * Called By Mqtt Bridge. Component has to implement what to do with Events (Either a event happened internally and
+     * tells the broker or vice versa).
+     */
     void reactToEvent();
 
+    /**
+     * Called By Mqtt Bridge. Component has to implement what to do on commands set by mqtt bridge.
+     */
     void reactToCommand();
 
-    void updateJSONConfig() throws MqttException, ConfigurationException;
+    /**
+     * Updates the JSON Config. Called by MqttBridge.
+     *
+     * @throws MqttException          If a problem occured with the mqtt connection.
+     * @throws ConfigurationException if the configuration is wrong.
+     */
+    void updateJsonConfig() throws MqttException, ConfigurationException;
 
 }

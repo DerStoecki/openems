@@ -2,6 +2,8 @@ package io.openems.edge.bridge.mqtt.api;
 
 import io.openems.edge.common.channel.Channel;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,7 +15,12 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     private List<String> nameIds;
     //original channelId position
     private List<String> channelIds;
-
+    //time as String, usually from payload
+    private String time;
+    //converted timestamp
+    private Date timeDate;
+    //                                               //name in Broker   // ID of channel
+    //Map of ID For Broker and ChannelID --> e.g. roomTemperature: temperature.channelId.id();
     private Map<String, String> nameIdAndChannelIdMap;
 
     public SubscribeTask(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
@@ -26,6 +33,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         //ChannelID --> Used to identify value the pub tasks get / value to put for sub task
         this.channelIds = new ArrayList<>();
         this.nameIdAndChannelIdMap = new HashMap<>();
+        //Important for Telemetry --> Mapping
         String[] tokens = payloadForTask.split(":");
 
         for (int x = 0; x < tokens.length; x += 2) {
@@ -35,7 +43,6 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
 
     @Override
     public void response(String payload) {
-        //TODO PAYLOAD update
         super.payloadToOrFromBroker = payload;
         switch (super.style) {
 
@@ -74,23 +81,33 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
      */
     private void standardResponse() {
         String response = super.payloadToOrFromBroker;
-        if (response.equals("")) {
+        //Events and Commands need to be handled by Component itself, only telemetry is allowed to update Channels directly.
+        if (response.equals("") || !super.getMqttType().equals(MqttType.TELEMETRY)) {
             return;
         }
+        // ID of Name in mqtt  , VALUE for the channel
         Map<String, String> idChannelValueMap = new HashMap<>();
         String[] tokensWithTime = {null};
+        //Contains Time
         if (response.contains("sentOn")) {
-            //TODO SAVE THE TIME AND PUT IT TO A DATE TIME
             String responseContainsTime = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
+            //split after each entry
             tokensWithTime = responseContainsTime.split(",");
+            //first entry is always sentOn in standard response
+            this.time = tokensWithTime[0].substring(tokensWithTime[0].indexOf(':'));
+
             response = Arrays.stream(tokensWithTime).filter(entry -> !entry.contains("sentOn")).collect(Collectors.toList()).toString();
+
         }
         String[] tokens;
-        response = response.replaceAll(",", ":");
-        if (tokensWithTime.length > 0) {
-            response = response.replaceAll(("[^A-Za-z0-9.:]"), "");
+
+        if (tokensWithTime[0] != null) {
+            //"New response" --> no timestamp
+            response = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
         }
+        response = response.replaceAll(",", ":");
         tokens = response.split(":");
+        //handle tokenValues
         if (tokens.length > 0) {
             for (int x = 0; x < tokens.length; ) {
                 if (tokens[x].equals("metrics")) {
@@ -105,6 +122,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
                 }
             }
         }
+        //Set the Value of this channel for each entry
         idChannelValueMap.forEach((key, value) -> {
             //index of nameIds is the same as for ChannelIds.
             if (this.nameIdAndChannelIdMap.containsKey(key) && !value.equals("Not Defined Yet")) {
@@ -127,5 +145,27 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     @Override
     public int getMessageId() {
         return this.messageId;
+    }
+
+    @Override
+    public void convertTime(SimpleDateFormat formatter) throws ParseException {
+        if (!this.time.equals("")) {
+            this.timeDate = formatter.parse(this.time);
+        }
+    }
+
+    @Override
+    public Date getTime() {
+        return timeDate;
+    }
+
+    @Override
+    public boolean timeAvailable() {
+        return this.timeDate == null;
+    }
+
+    @Override
+    public void setTime(Date date) {
+        this.timeDate = date;
     }
 }

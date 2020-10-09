@@ -89,7 +89,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
     }
 
     @Override
-    public void updateJSONConfig() throws MqttException, ConfigurationException {
+    public void updateJsonConfig() throws MqttException, ConfigurationException {
         if (this.getConfiguration().value().isDefined()) {
             String configuration = this.getConfiguration().value().get();
             this.component.initJson(new ArrayList<>(this.channels()), configuration);

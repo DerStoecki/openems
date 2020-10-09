@@ -65,7 +65,6 @@ public class MqttSubscribeManager extends AbstractMqttManager {
         }
     }
 
-    //CHANGE TO WILDCARD AND RESPONSE --> PUT IDS etc etc
     public void subscribeToTopic(MqttTask task, String id) throws MqttException {
         this.connections.get(task.getMqttType()).subscribeToTopic(task.getTopic(), task.getQos(), id);
 

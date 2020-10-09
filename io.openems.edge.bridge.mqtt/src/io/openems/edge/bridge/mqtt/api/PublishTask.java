@@ -7,6 +7,12 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
+/**
+ * The concrete Implementation of the AbstractMqttTask. This component handles it's payload by getting a map of
+ * the Channels it has to publish.
+ * See Code for details.
+ */
 public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
 
 
@@ -17,6 +23,11 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
 
     }
 
+    /**
+     * Updates the Payload. Usually called from MqttManager.
+     *
+     * @param now the Timestamp as a string.
+     */
     @Override
     public void updatePayload(String now) {
         switch (super.style) {
@@ -28,6 +39,11 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
         }
     }
 
+    /**
+     * Creates the StandardPayload from a Config.
+     *
+     * @param now if Time should be added, now is added to the Payload.
+     */
     private void createStandardPayload(String now) {
 
         StringBuilder builder = new StringBuilder();
@@ -39,14 +55,18 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
         String[] tokens = super.configuredPayload.split(":");
         AtomicInteger counter = new AtomicInteger(0);
         Arrays.stream(tokens).forEachOrdered(consumer -> {
+            //The counter is either by ID or by a channel therefore appends either the ID and the : or the channelvalue
             if (counter.get() % 2 == 0) {
                 builder.append("\n\t\t");
                 builder.append(tokens[counter.get()]).append(" : ");
             } else {
+                //Get the Channel by the ChannelID
                 Channel<?> channel = super.channels.get(tokens[counter.get()]);
+                //Value
                 if (channel.value().isDefined()) {
                     builder.append(channel.value().get()).append(channel.channelDoc().getUnit().getSymbol());
                 } else {
+                    //If no Value defined
                     builder.append("Not Defined Yet");
                     //prevent of adding , after last value
                     if (counter.get() < tokens.length - 1) {
@@ -57,7 +77,7 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
             counter.getAndIncrement();
         });
         builder.append("\n\t}\n}");
-
+        //UPDATED PAYLOAD saved.
         super.payloadToOrFromBroker = builder.toString();
     }
 

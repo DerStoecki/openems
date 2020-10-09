@@ -6,15 +6,19 @@ import java.util.Map;
 
 public abstract class AbstractMqttTask implements MqttTask {
     private String topic;
+    //Either the configured payload that will be published OR the payload from the broker this is how the subscriber gets the message
     String payloadToOrFromBroker = "";
+    //COMMAND/EVENT/TELEMETRY/etc
     private MqttType mqttType;
     private boolean retainFlag;
     private boolean addTime;
     private int qos;
     private MqttPriority mqttPriority;
+    //Map of Names Channels: ChannelID is key.
     Map<String, Channel<?>> channels;
     private long timeStamp = -1;
     private int timeToWait;
+    //Payload either for the Pub task that needs to be changed for broker OR the handled sub task payload.
     String configuredPayload;
     PayloadStyle style;
     String id;
