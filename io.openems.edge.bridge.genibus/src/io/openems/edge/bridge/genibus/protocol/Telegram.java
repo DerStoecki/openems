@@ -24,7 +24,18 @@ public class Telegram {
     Map<Integer, ArrayList<GenibusTask>> telegramTaskList = new HashMap<>();
     private PumpDevice pumpDevice;
 
+    // This variable is used to store the estimate, as well as the actual. What it is depends on the timing.
+    private int answerTelegramLength = 0;
+
     private final Logger log = LoggerFactory.getLogger(Telegram.class);
+
+    public void setAnswerTelegramLength(int answerTelegramLength) {
+        this.answerTelegramLength = answerTelegramLength;
+    }
+
+    public int getAnswerTelegramLength() {
+        return answerTelegramLength;
+    }
 
     public void setPumpDevice(PumpDevice pumpDevice) {
         this.pumpDevice = pumpDevice;

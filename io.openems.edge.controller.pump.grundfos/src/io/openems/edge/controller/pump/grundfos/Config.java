@@ -42,5 +42,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Write pump status to log", description = "Write pump status parameters in the log.")
     boolean printPumpStatus() default false;
 
+    @AttributeDefinition(name = "Only read", description = "Only reads values from the pump, do not send commands.")
+    boolean onlyRead() default false;
+
     String webconsole_configurationFactory_nameHint() default "Controller Pump Grundfos [{id}]";
 }

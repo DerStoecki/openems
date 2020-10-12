@@ -27,6 +27,7 @@ class GenibusWorker extends AbstractCycleWorker {
     private int currentDeviceCounter = 0;
     private final GenibusImpl parent;
     private long cycleTimeMs = 1000;    // Start with 1000 ms, then measure the actual cycle time.
+    private long lastExecutionMillis;
 
 
     protected GenibusWorker(GenibusImpl parent) {
@@ -61,6 +62,9 @@ class GenibusWorker extends AbstractCycleWorker {
     // device will then not create a telegram but only switch to the next device (increase currentDeviceCounter).
     protected void createTelegram() {
         if (deviceList.isEmpty()) {
+            if (parent.getDebug()) {
+                this.parent.logInfo(this.log, "No devices registered for the GENIbus bridge.");
+            }
             return;
         }
 
@@ -70,137 +74,77 @@ class GenibusWorker extends AbstractCycleWorker {
         }
         PumpDevice currentDevice = deviceList.get(currentDeviceCounter);
 
-        // Remaining bytes that can be put in this telegram. Calculated by getting the buffer length of the device
-        // and subtracting the telegram header (4 bytes) and the crc (2 bytes).
-        int telegramRemainingBytes = currentDevice.getDeviceByteBufferLength() - 6;
+        // Remaining bytes that can be put in this telegram. More bytes will result in a buffer overflow in the device
+        // and there will be no answer.
+        // Calculated by getting the buffer length of the device and subtracting the telegram header (4 bytes) and the
+        // crc (2 bytes).
+        int telegramSendRemainingBytes = currentDevice.getDeviceReadBufferLengthBytes() - 6;
+
+        // Remaining bytes that the answer telegram can have. You can cause an output buffer overflow in the device too.
+        // This is achieved by sending lots of tasks that can have more bytes in the answer than in the request such as
+        // INFO and ASCII. An INFO answer can be 1 or 4 bytes (for 8 bit tasks), an ASCII answer any amount of bytes.
+        // Because of that, ASCII tasks are put in a telegram all by themselves. INFO tasks are assumed to have the
+        // maximum byte count.
+        // Calculated by getting the buffer length of the device and subtracting the telegram header (4 bytes) and the
+        // crc (2 bytes).
+        int telegramAnswerRemainingBytes = currentDevice.getDeviceSendBufferLengthBytes() - 6;
+
+        // A timestamp is done on the first execution in a cycle (per device). So this is the time since the last first
+        // execution. Used to track if more than one telegram is sent to the same device in a cycle.
+        lastExecutionMillis = System.currentTimeMillis() - currentDevice.getTimestamp();
+        // Rollover backup. Just in case this software actually runs that long...
+        if (lastExecutionMillis < 0) {
+            lastExecutionMillis = cycleTimeMs;
+        }
+
+        // If connection to pump is lost (pump turned off for example), send an empty telegram to test if the pump is
+        // back online. If an answer is received, isConnectionOk() returns true next time and normal execution will resume.
+        if (currentDevice.isConnectionOk() == false) {
+            if (lastExecutionMillis > cycleTimeMs - 50) {
+                currentDevice.setTimestamp();
+                sendEmptyTelegram(currentDevice);
+            }
+            return;
+        }
 
         // Estimate how big the telegram can be to still fit in this cycle.
         long remainingCycleTime = cycleTimeMs - 60 - cycleStopwatch.elapsed(TimeUnit.MILLISECONDS);  // Include 60 ms buffer.
         if (remainingCycleTime < 0) {
             remainingCycleTime = 0;
         }
-        // An telegram with no tasks takes ~33 ms to send and receive. Each additional byte in the send telegram adds ~3 ms to that.
-        // A buffer of 60 ms was used in the time calculation. The 33 ms base time for a telegram is included in that buffer.
-        int cycleRemainingBytes = (int) (remainingCycleTime / currentDevice.getMillisecondsPerByte());
+        // Each byte adds a certain time to the telegram execution length. The remaining time in the cycle can then be
+        // expressed as "cycleRemainingBytes".
+        // A telegram with no tasks takes ~33 ms to send and receive. Each additional byte in the telegrams (request and
+        // answer) adds ~1 ms to that. We only calculate for the request bytes here, so divide by 2 as a good estimate.
+        // A buffer of 60 ms was used in the time calculation, the 33 ms base time for a telegram is included in that buffer.
+        int cycleRemainingBytes = (int) (remainingCycleTime / (currentDevice.getMillisecondsPerByte() * 2));
         if (cycleRemainingBytes < 5) {
-            // Not enough time left. Exit the method without changing the device, so that this device is not skipped.
+            // Not enough time left. The telegram would be so small that it is not worth sending.
+            // Exit the method without changing the device.
+            if (parent.getDebug()) {
+                this.parent.logInfo(this.log, "Not enough time left this cycle to send a telegram.");
+            }
             return;
         }
         // Reduce telegram byte count if time is too short
-        if (cycleRemainingBytes < telegramRemainingBytes) {
-            // If this telegram has a greatly reduced bytecount because of time constraints, don't switch to the next
-            // device. So the device is guaranteed to have a full size telegram in the next cycle.
-            if (cycleRemainingBytes / (telegramRemainingBytes * 1.0) < 0.3) {
+        if (cycleRemainingBytes < telegramSendRemainingBytes) {
+            // If this is the first telegram to that device this cycle and the telegram has a greatly reduced byte count
+            // because of time constraints, don't switch to the next device. So the device is guaranteed to have a full
+            // size telegram in the next cycle. This avoids one device being stuck at the end of the cycle and thus only
+            // getting small telegram sizes.
+            if (lastExecutionMillis > cycleTimeMs - 50 && cycleRemainingBytes / (telegramSendRemainingBytes * 1.0) < 0.3) {
                 currentDeviceCounter--;
             }
-            telegramRemainingBytes = cycleRemainingBytes;   // This assumes header and crc are not time consuming.
+            double divisor = cycleRemainingBytes / telegramSendRemainingBytes;
+            telegramSendRemainingBytes = cycleRemainingBytes;
+            telegramAnswerRemainingBytes = (int) Math.round(telegramAnswerRemainingBytes * divisor);
         }
         currentDeviceCounter++;
 
-        long lastExecutionMillis = System.currentTimeMillis() - currentDevice.getTimestamp();
-        // Rollover backup. Just in case this software actually runs that long...
-        if (lastExecutionMillis < 0) {
-            lastExecutionMillis = cycleTimeMs;
-        }
+        fillTaskQueue(currentDevice, telegramSendRemainingBytes);
 
-        // Get taskQueue from the device. Contains all tasks that couldn't fit in the last telegram.
+        // Get taskQueue from the device. Tasks that couldn't fit in the last telegram stayed in the queue.
         List<GenibusTask> tasksQueue = currentDevice.getTaskQueue();
-
-        // Priority low tasks are added with .getOneTask(), which starts from 0 when the end of the list is reached.
-        // Make sure the number of low tasks added per telegram is not longer than the list to prevent adding a task twice.
-        int lowTasksToAdd = currentDevice.getLowPrioTasksPerCycle();
-        int numberOfLowTasks = currentDevice.getTaskManager().getAllTasks(Priority.LOW).size();
-        if (lowTasksToAdd <= 0) {
-            lowTasksToAdd = 1;
-        }
-        if (lowTasksToAdd > numberOfLowTasks) {
-            lowTasksToAdd = numberOfLowTasks;
-        }
-
-        if (lastExecutionMillis > cycleTimeMs - 50) {
-            // This checks if this was already executed this cycle. This part should execute once per cycle only.
-
-            currentDevice.setTimestamp();
-            currentDevice.setAllLowPrioTasksAdded(false);
-
-            // Check content of taskQueue. If length is longer than numberOfHighTasks + lowTasksToAdd (=number of tasks
-            // this method would add), all high tasks are already in the queue and don't need to be added again.
-            int numberOfHighTasks = currentDevice.getTaskManager().getAllTasks(Priority.HIGH).size();
-            if (tasksQueue.size() <= numberOfHighTasks + lowTasksToAdd) {
-                // Add all high tasks
-                tasksQueue.addAll(currentDevice.getTaskManager().getAllTasks(Priority.HIGH));
-
-                // Add all once tasks that need a second execution because the first execution was only INFO. This list
-                // should be empty after the second or third cycle and won't be refilled.
-                List<GenibusTask> onceTasksWithInfo = currentDevice.getOnceTasksWithInfo();
-                for (int i = 0; i < onceTasksWithInfo.size(); i++) {
-                    GenibusTask currentTask = onceTasksWithInfo.get(i);
-                    if (currentTask.InformationDataAvailable()) {
-                        tasksQueue.add(currentTask);
-                        onceTasksWithInfo.remove(i);
-                        i--;
-                    }
-                }
-
-                // Add all once Tasks. Only done on the first run or after a device reset.
-                if (currentDevice.isAddAllOnceTasks()) {
-                    currentDevice.getTaskManager().getAllTasks(Priority.ONCE).forEach(onceTask -> {
-                        tasksQueue.add(onceTask);
-                        // Tasks with INFO need two executions. First to get INFO, second for GET and/or SET.
-                        switch (onceTask.getHeader()) {
-                            case 2:
-                            case 4:
-                            case 5:
-                                currentDevice.getOnceTasksWithInfo().add(onceTask);
-                        }
-                    });
-                    currentDevice.setAddAllOnceTasks(false);
-                }
-
-                // Add a number of low tasks.
-                for (int i = 0; i < lowTasksToAdd; i++) {
-                    GenibusTask currentTask = currentDevice.getTaskManager().getOneTask(Priority.LOW);
-                    if (currentTask == null) {
-                        break;
-                    } else {
-                        tasksQueue.add(currentTask);
-                    }
-                }
-            }
-
-        } else {
-            // This executes if a telegram was already sent to this pumpDevice in this cycle.
-            // First, check if the connection is ok. If not, don't try to send another telegram. Then look at the
-            // taskQueue. If the taskQueue is empty, fill the telegram with any remaining low priority tasks. If that
-            // was already done this cycle, exit the method.
-            if (currentDevice.isConnectionOk() == false) { return; }
-            if (tasksQueue.isEmpty()) {
-                if (currentDevice.isAllLowPrioTasksAdded() == false) {
-                    currentDevice.setAllLowPrioTasksAdded(true);
-                    // The amount lowTasksToAdd was already added in the normal cycle. The number of tasks before they
-                    // repeat is then numberOfLowTasks - lowTasksToAdd.
-                    int lowTaskFill = numberOfLowTasks - lowTasksToAdd;
-                    // Compare that number with the bytes allowed in this telegram. We want to fill this telegram up
-                    // with low tasks, but we don't want to add more tasks than can be sent with this telegram. Anything
-                    // left in taskQueue is executed in the next telegram and reduces the space there for high tasks.
-                    // One task = one byte
-                    // The math is not exact but a good enough estimate. 1-2 low tasks remaining in taskQueue is not a big deal.
-                    if ((telegramRemainingBytes - 2) < lowTaskFill) {    // -2 to account for at least one apdu header.
-                        lowTaskFill = (telegramRemainingBytes - 2);
-                    }
-
-                    for (int i = 0; i < lowTaskFill; i++) {
-                        GenibusTask currentTask = currentDevice.getTaskManager().getOneTask(Priority.LOW);
-                        if (currentTask == null) {
-                            // This should not happen, but checked just in case to prevent null pointer exception.
-                            break;
-                        } else {
-                            tasksQueue.add(currentTask);
-                        }
-                    }
-                }
-            }
-        }
 
         if (tasksQueue.isEmpty()) {
             // Nothing useful left to do. No tasks could be found that were not already executed this cycle.
@@ -232,7 +176,7 @@ class GenibusWorker extends AbstractCycleWorker {
         Map<Integer, ApplicationProgramDataUnit> telegramApduList = new HashMap<>();
 
         if (parent.getDebug()) {
-            this.parent.logInfo(this.log, "Bytes allowed: " + telegramRemainingBytes + ", task queue size: "
+            this.parent.logInfo(this.log, "Bytes allowed: " + telegramSendRemainingBytes + ", task queue size: "
                     + tasksQueue.size() + ".");
             this.parent.logInfo(this.log, "Tasks are listed with \"apduIdentifier, address\". The apduIdentifier "
                     + "is a three digit number where the 100 digit is the HeadClass of the apdu, the 10 digit is the "
@@ -240,11 +184,28 @@ class GenibusWorker extends AbstractCycleWorker {
                     + "one apdu of this type exists.");
         }
 
+        // Need separate counter as start count of telegramAnswerRemainingBytes is dynamic.
+        int answerByteCounter = 0;
+
+        // This loop fills the telegramTaskList and telegramApduList with tasks and bytes. Here it is decided if a task is
+        // executed as INFO, GET or SET. SET is not executed if there is no value in the write channel. When a SET task
+        // is added to the telegram, the write channel is reset. Something needs to be written in the channel again
+        // before SET is executed once more for this task.
         while (tasksQueue.isEmpty() == false) {
+            // Get task from position 0.
             GenibusTask currentTask = tasksQueue.get(0);
-            int byteSize = checkTaskByteSize(currentTask, telegramApduList);
-            if (byteSize == 0) {
-                // When byteSize is 0, this task does nothing (for example a command task with no command to send). Skip this task.
+
+            // Check how many bytes this task would add to the telegram. This check also decides if the task is INFO, GET
+            // or SET and saves that decision as the apduIdentifier. It is also checked if the task needs to be executed
+            // at all. If no, a 0 is returned.
+            int sendByteSize = checkTaskByteSize(currentTask, telegramApduList);
+
+            // Calculate how many bytes this task would add to the answer telegram.
+            int answerBytes = checkAnswerByteSize(currentTask, sendByteSize);
+
+            // When sendByteSize is 0, this task does nothing (for example a command task with no command to send). Skip this task.
+            if (sendByteSize == 0) {
+                // Remove this task from the queue.
                 checkGetOrRemove(tasksQueue, 0);
                 if (parent.getDebug()) {
                     this.parent.logInfo(this.log, "Skipping task: " + currentTask.getApduIdentifier() + ", "
@@ -253,42 +214,62 @@ class GenibusWorker extends AbstractCycleWorker {
                 continue;
             }
 
-            if (telegramRemainingBytes - byteSize >= 0) {
-                telegramRemainingBytes = telegramRemainingBytes - byteSize;
+            // Check if there are enough bytes left in the telegram for this task.
+            if (telegramSendRemainingBytes - sendByteSize >= 0
+                    && telegramAnswerRemainingBytes - answerBytes >= 0) {
+                // The task can be added. Update byte counter.
+                telegramSendRemainingBytes = telegramSendRemainingBytes - sendByteSize;
+                telegramAnswerRemainingBytes = telegramAnswerRemainingBytes - answerBytes;
+                answerByteCounter += answerBytes;
+
+                // Add the task to telegramTaskList and telegramApduList. This also creates the apdu if necessary and
+                // writes the bytes into the apdu.
                 addTaskToApdu(currentTask, telegramTaskList, telegramApduList);
+
+                // Check if this task has SET and GET. SET is done first, then it is decided if this task is also GET.
+                // If yes, the task is left in the queue and flagged for GET. In the next loop iteration it will be
+                // added as a GET, removed from queue and the GET-flag reset.
                 checkGetOrRemove(tasksQueue, 0);
                 if (parent.getDebug()) {
                     this.parent.logInfo(this.log, "Adding task: " + currentTask.getApduIdentifier() + ", "
-                            + Byte.toUnsignedInt(currentTask.getAddress()) + " - bytes added: " + byteSize + " - bytes remaining: "
-                            + telegramRemainingBytes + " - Task queue size: " + tasksQueue.size());
+                            + Byte.toUnsignedInt(currentTask.getAddress()) + " - bytes added: " + sendByteSize + " - bytes remaining: "
+                            + telegramSendRemainingBytes + " - Task queue size: " + tasksQueue.size());
                 }
-                if (telegramRemainingBytes == 0) {
-                    // Telegramm is full, but tasksQueue is probably not yet empty. Need break to escape the loop.
+                if (telegramSendRemainingBytes == 0) {
+                    // Telegramm is full. In case tasksQueue is not yet empty, need break to escape the loop.
                     break;
                 }
                 continue;
             }
 
-            if (telegramRemainingBytes >= 1) {
-                // byteSize of currentTask is too big to fit. Try to find one more task with small byte count that might fit.
+            // You land here if the sendByteSize or answerBytes of the task is too big to fit. Leave that task in the queue.
+            // If there is still room in the telegram, check the sendByteSize of the other tasks in the queue to find one
+            // that might still fit. After that, exit the loop.
+            if (telegramSendRemainingBytes >= 1 && telegramAnswerRemainingBytes >= 1) {
                 for (int i = 1; i < tasksQueue.size(); i++) {
                     currentTask = tasksQueue.get(i);
-                    int byteSizeSmall = checkTaskByteSize(currentTask, telegramApduList);
-                    if (byteSizeSmall != 0 && telegramRemainingBytes - byteSizeSmall >= 0) {
-                        telegramRemainingBytes = telegramRemainingBytes - byteSizeSmall;
-                        addTaskToApdu(currentTask, telegramTaskList, telegramApduList);
-                        checkGetOrRemove(tasksQueue, i);
-                        if (parent.getDebug()) {
-                            this.parent.logInfo(this.log, "Adding last small task: " + currentTask.getApduIdentifier() + ", "
-                                    + Byte.toUnsignedInt(currentTask.getAddress()) + " - bytes added: " + byteSizeSmall + " - bytes remaining: "
-                                    + telegramRemainingBytes + " - Task queue size: " + tasksQueue.size());
+                    sendByteSize = checkTaskByteSize(currentTask, telegramApduList);
+                    answerBytes = checkAnswerByteSize(currentTask, sendByteSize);
+                    if (sendByteSize != 0) {
+                        if (telegramSendRemainingBytes - sendByteSize >= 0
+                                && telegramAnswerRemainingBytes - answerBytes >= 0) {
+                            telegramSendRemainingBytes = telegramSendRemainingBytes - sendByteSize;
+                            telegramAnswerRemainingBytes = telegramAnswerRemainingBytes - answerBytes;
+                            answerByteCounter += answerBytes;
+                            addTaskToApdu(currentTask, telegramTaskList, telegramApduList);
+                            checkGetOrRemove(tasksQueue, i);
+                            if (parent.getDebug()) {
+                                this.parent.logInfo(this.log, "Adding last small task: " + currentTask.getApduIdentifier() + ", "
+                                        + Byte.toUnsignedInt(currentTask.getAddress()) + " - bytes added: " + sendByteSize + " - bytes remaining: "
+                                        + telegramSendRemainingBytes + " - Task queue size: " + tasksQueue.size());
+                            }
+                            // Telegramm is full. In case tasksQueue is not yet empty, need break to escape the loop.
+                            break;
                         }
-                        // Telegramm is full, but tasksQueue is probably not yet empty. Need break to escape the loop.
-                        break;
                     }
                 }
             }
-            // Telegramm is full, but tasksQueue is probably not yet empty. Need break to escape the loop.
+            // Telegramm is full. In case tasksQueue is not yet empty, need break to escape the loop.
             break;
         }
 
@@ -299,6 +280,9 @@ class GenibusWorker extends AbstractCycleWorker {
         telegram.setSourceAddress(0x01);
         telegram.setPumpDevice(currentDevice);
 
+        // Upper limit estimate. Not the actual length. That is set once the answer telegram has been received. +2 for crc.
+        telegram.setAnswerTelegramLength(answerByteCounter + 2);
+
         telegramApduList.forEach((key, apdu) -> {
             telegram.getProtocolDataUnit().putAPDU(apdu);
         });
@@ -307,22 +291,159 @@ class GenibusWorker extends AbstractCycleWorker {
         telegramQueue.add(telegram);
     }
 
+    private void sendEmptyTelegram(PumpDevice currentDevice) {
+        currentDevice.setFirstTelegram(true);
+        Telegram telegram = new Telegram();
+        telegram.setStartDelimiterDataRequest();
+        telegram.setDestinationAddress(currentDevice.getGenibusAddress());
+        telegram.setSourceAddress(0x01);
+        telegram.setPumpDevice(currentDevice);
+        telegramQueue.add(telegram);
+        if (parent.getDebug()) {
+            this.parent.logInfo(this.log, "Sending empty telegram to test if device " + currentDevice.getPumpDeviceId() + " is online.");
+        }
+    }
+
+    /**
+     * This method fills the taskQueue of the pump device with tasks. Once per cycle, all high tasks are added (if the
+     * queue does not already contain them). Then a configurable amount of low tasks are added as well. If it is the
+     * first telegram sent to this device (true after a connection loss), then all priority once tasks are added too.
+     * Using a timestamp, the method recognizes if it was already called this cycle for this device. If it is not the
+     * first call, no tasks are added to the queue if the queue is not empty. If the queue is empty, the remaining low
+     * tasks are added. The logic of the method should prevent a task from being executed more than once per cycle.
+     * @param currentDevice
+     * @param telegramRemainingBytes
+     */
+    private void fillTaskQueue(PumpDevice currentDevice, int telegramRemainingBytes) {
+        List<GenibusTask> tasksQueue = currentDevice.getTaskQueue();
+
+        // Priority low tasks are added with .getOneTask(), which starts from 0 when the end of the list is reached.
+        // Make sure the number of low tasks added per telegram is not longer than the list to prevent adding a task twice.
+        int lowTasksToAdd = currentDevice.getLowPrioTasksPerCycle();
+        int numberOfLowTasks = currentDevice.getTaskManager().getAllTasks(Priority.LOW).size();
+        if (lowTasksToAdd <= 0) {
+            lowTasksToAdd = 1;
+        }
+        if (lowTasksToAdd > numberOfLowTasks) {
+            lowTasksToAdd = numberOfLowTasks;
+        }
+
+        if (lastExecutionMillis > cycleTimeMs - 50 || currentDevice.isFirstTelegram()) {
+            // Check if this was already executed this cycle. This part should execute once per cycle only.
+            // isFirstTelegram is true when connection was lost and has just been reestablished.
+
+            currentDevice.setTimestamp();
+            currentDevice.setAllLowPrioTasksAdded(false);
+            currentDevice.setFirstTelegram(false);
+
+            // Check content of taskQueue. If length is longer than numberOfHighTasks + lowTasksToAdd (=number of tasks
+            // this method would add), all high tasks are already in the queue and don't need to be added again.
+            int numberOfHighTasks = currentDevice.getTaskManager().getAllTasks(Priority.HIGH).size();
+            if (tasksQueue.size() <= numberOfHighTasks + lowTasksToAdd) {
+                // Add all high tasks
+                tasksQueue.addAll(currentDevice.getTaskManager().getAllTasks(Priority.HIGH));
+
+                // Add all once tasks that need a second execution because the first execution was only INFO. This list
+                // should be empty after the second or third cycle and won't be refilled.
+                List<GenibusTask> onceTasksWithInfo = currentDevice.getOnceTasksWithInfo();
+                for (int i = 0; i < onceTasksWithInfo.size(); i++) {
+                    GenibusTask currentTask = onceTasksWithInfo.get(i);
+                    if (currentTask.informationDataAvailable()) {
+                        tasksQueue.add(currentTask);
+                        onceTasksWithInfo.remove(i);
+                        i--;
+                    }
+                }
+
+                // Add all once Tasks. Only done on the first run or after a device reset.
+                if (currentDevice.isAddAllOnceTasks()) {
+                    currentDevice.getTaskManager().getAllTasks(Priority.ONCE).forEach(onceTask -> {
+                        tasksQueue.add(onceTask);
+                        // Tasks with INFO need two executions. First to get INFO, second for GET and/or SET.
+                        switch (onceTask.getHeader()) {
+                            case 2:
+                            case 4:
+                            case 5:
+                                currentDevice.getOnceTasksWithInfo().add(onceTask);
+                        }
+                    });
+                    currentDevice.setAddAllOnceTasks(false);
+                }
+
+                // Add a number of low tasks.
+                for (int i = 0; i < lowTasksToAdd; i++) {
+                    GenibusTask currentTask = currentDevice.getTaskManager().getOneTask(Priority.LOW);
+                    if (currentTask == null) {
+                        break;
+                    } else {
+                        tasksQueue.add(currentTask);
+                    }
+                }
+            }
+        } else {
+            // This executes if a telegram was already sent to this pumpDevice in this cycle.
+            // If the taskQueue is empty, fill the telegram with any remaining low priority tasks. If that was already
+            // done this cycle, exit the method.
+            if (tasksQueue.isEmpty()) {
+                if (currentDevice.isAllLowPrioTasksAdded() == false) {
+                    currentDevice.setAllLowPrioTasksAdded(true);
+                    // The amount lowTasksToAdd was already added in the first telegram this cycle. The number of tasks
+                    // before they repeat is then numberOfLowTasks - lowTasksToAdd.
+                    int lowTaskFill = numberOfLowTasks - lowTasksToAdd;
+                    // Compare that number with the bytes allowed in this telegram. We want to fill this telegram up
+                    // with low tasks, but we don't want to add more tasks than can be sent with this telegram. Anything
+                    // left in taskQueue is executed in the next telegram and reduces the space there for high tasks.
+                    // Assume one task = one byte.
+                    // The math is not exact but a good enough estimate. 1-2 low tasks remaining in taskQueue is not a big deal.
+                    if ((telegramRemainingBytes - 2) < lowTaskFill) {    // -2 to account for at least one apdu header.
+                        lowTaskFill = (telegramRemainingBytes - 2);
+                    }
+
+                    for (int i = 0; i < lowTaskFill; i++) {
+                        GenibusTask currentTask = currentDevice.getTaskManager().getOneTask(Priority.LOW);
+                        if (currentTask == null) {
+                            // This should not happen, but checked just in case to prevent null pointer exception.
+                            break;
+                        } else {
+                            tasksQueue.add(currentTask);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // This is how GET for a writeTask (HeadClass 4 or 5) is handled. Checks if the task is a writeTask and if not the
     // task is removed. If it is a writeTask, it will set the sendGet boolean to true and leaves the task in the queue
     // so that it is added to a GET apdu. If sendGet is true that is reset to false and the task is removed from the
     // queue. That means every writeTask will perform a SET and a GET.
     private void checkGetOrRemove(List<GenibusTask> tasksQueue, int position) {
         GenibusTask currentTask = tasksQueue.get(position);
-        if (currentTask instanceof GenibusWriteTask && currentTask.InformationDataAvailable()) {
-            if (((GenibusWriteTask) currentTask).getSendGet() == false) {
+        if (currentTask instanceof GenibusWriteTask && currentTask.informationDataAvailable()) {
 
-                // ToDo: Add code here to check if a GET is needed. Right now GET is always done.
+            // Do GET next cycle. sendGet is set to 2 by getRequest() in PumpWriteTask16bitOrMore. When SET is done for
+            // a write task, do a GET the next cycle to update the channel by getting the value from the device.
+            if (((GenibusWriteTask) currentTask).getSendGet() == 2) {
+                ((GenibusWriteTask) currentTask).setSendGet(1);
+                tasksQueue.remove(position);
+                return;
+            }
+            // This task was executed as GET. Set GET to false (=0) and leave task in queue to see if SET needs to be done.
+            if (((GenibusWriteTask) currentTask).getSendGet() == 1) {
+                ((GenibusWriteTask) currentTask).setSendGet(0);
+                return;
+            }
 
-                ((GenibusWriteTask) currentTask).setSendGet(true);
+            // This was code to do GET every time. Need to remove "sendGet = 2" in getRequest() in PumpWriteTask16bitOrMore
+            // for this code to work as intended.
+            /*
+            if (((GenibusWriteTask) currentTask).getSendGet() == 0) {
+                ((GenibusWriteTask) currentTask).setSendGet(1);
                 return;
             } else {
-                ((GenibusWriteTask) currentTask).setSendGet(false);
+                ((GenibusWriteTask) currentTask).setSendGet(0);
             }
+            */
         }
         tasksQueue.remove(position);
     }
@@ -345,7 +466,7 @@ class GenibusWorker extends AbstractCycleWorker {
                 return 2 + dataByteSize;
             case 2:
                 // Check if INFO has already been received. If yes this task is GET, if not this task is INFO.
-                if (task.InformationDataAvailable()) {
+                if (task.informationDataAvailable()) {
                     // See if an apdu exists and if yes check remaining space.
                     // Key is 2*100 for HeadClass 2, 0*10 for GET and 0 for first apdu.
                     return checkAvailableApdu(task, 200, 63, telegramApduList);
@@ -372,10 +493,10 @@ class GenibusWorker extends AbstractCycleWorker {
             case 4:
             case 5:
                 // Check if INFO has already been received. INFO is needed for both GET and SET.
-                if (task.InformationDataAvailable()) {
+                if (task.informationDataAvailable()) {
                     if (task instanceof GenibusWriteTask) {
-                        // Check boolean if this is GET or SET.
-                        if (((GenibusWriteTask) task).getSendGet()) {
+                        // Check if this is GET or SET.
+                        if (((GenibusWriteTask) task).getSendGet() == 1) {
                             // Check apdu for GET. Key is HeadClass*100, 0*10 for GET and 0 for first apdu.
                             return checkAvailableApdu(task, headClass * 100, 63, telegramApduList);
                         } else {
@@ -438,6 +559,26 @@ class GenibusWorker extends AbstractCycleWorker {
         return 2 + dataByteSize;
     }
 
+    // Returns how many bytes this task would need in the answer telegram if it were added to the send telegram. This is
+    // an upper estimate and not an accurate value. For example, INFO can be a 1 or 4 byte answer -> upper limit is 4 bytes.
+    // Additional bytes needed for an apdu header are taken from "sendByteSize". If the request is in a new apdu, so is
+    // the answer.
+    private int checkAnswerByteSize(GenibusTask task, int sendByteSize) {
+        int operationSpecifier = (task.getApduIdentifier() % 100) / 10;
+        if (task.getHeader() == 7) {    // ASCII. Don't know how long that answer will be, 30 is a conservative guess.
+            return 30;
+        }
+        switch (operationSpecifier) {
+            case 0: // GET
+                return sendByteSize;
+            case 2: // SET
+                return sendByteSize - task.getDataByteSize();   // >0 if it is a new apdu. Otherwise 0.
+            case 3: // INFO
+                return sendByteSize + 3;
+        }
+        return 0;
+    }
+
 
     // Adds a task to the telegramTaskList and the telegramApduList.
     private void addTaskToApdu(GenibusTask currentTask, Map<Integer, ArrayList<GenibusTask>> telegramTaskList, Map<Integer, ApplicationProgramDataUnit> telegramApduList) {
@@ -475,60 +616,6 @@ class GenibusWorker extends AbstractCycleWorker {
                     break;
             }
         }
-
-
-        /*
-        // telegramApduList should have the same keys as telegramTaskList, so only need to check one.
-        if (telegramTaskList.containsKey(apduIdentifier)) {
-            telegramTaskList.get(apduIdentifier).add(currentTask);
-
-            // For tasks with more than 8 bit, put more than one byte in the apdu.
-            for (int i = 0; i < currentTask.getDataByteSize(); i++) {
-                telegramApduList.get(apduIdentifier).putDataField(currentTask.getAddress() + i);
-                // Add write value for write task.
-                switch (currentTask.getHeader()) {
-                    case 3:
-                        // Reset channel write value to send command just once.
-                        currentTask.getRequest(i, true);
-                        break;
-                    case 4:
-                    case 5:
-                        if (((apduIdentifier % 100) / 10) == 2) {
-                            int valueRequest = currentTask.getRequest(i, true);
-                            telegramApduList.get(apduIdentifier).putDataField((byte) valueRequest);
-                        }
-                        break;
-                }
-            }
-        } else {
-            ArrayList<GenibusTask> apduTaskList = new ArrayList<GenibusTask>();
-            apduTaskList.add(currentTask);
-            telegramTaskList.put(apduIdentifier, apduTaskList);
-            ApplicationProgramDataUnit newApdu = new ApplicationProgramDataUnit();
-            newApdu.setHeadClass(apduIdentifier / 100);
-            newApdu.setHeadOSACK((apduIdentifier % 100) / 10);
-
-            // For tasks with more than 8 bit, put more than one byte in the apdu.
-            for (int i = 0; i < currentTask.getDataByteSize(); i++) {
-                newApdu.putDataField(currentTask.getAddress() + i);
-                // Add write value for write task.
-                switch (currentTask.getHeader()) {
-                    case 3:
-                        // Reset channel write value to send command just once.
-                        currentTask.getRequest(i, true);
-                        break;
-                    case 4:
-                    case 5:
-                        if (((apduIdentifier % 100) / 10) == 2) {
-                            int valueRequest = currentTask.getRequest(i, true);
-                            newApdu.putDataField((byte) valueRequest);
-                        }
-                }
-            }
-
-            telegramApduList.put(apduIdentifier, newApdu);
-        }
-        */
     }
 
 
@@ -561,9 +648,9 @@ class GenibusWorker extends AbstractCycleWorker {
                 // If checkStatus() returns false, the connection is lost. Try to reconnect
                 parent.connectionOk = parent.handler.start(parent.portName);
                 deviceList.forEach(pumpDevice -> {
-                    pumpDevice.setConnectionOk(parent.connectionOk);
                     if (parent.connectionOk == false) {
                         // Reset device in case pump was changed or restarted.
+                        pumpDevice.setConnectionOk(false);
                         pumpDevice.resetDevice();
                     }
                 });
@@ -576,24 +663,39 @@ class GenibusWorker extends AbstractCycleWorker {
                         this.parent.logInfo(this.log, "Stopwatch 1: " + cycleStopwatch.elapsed(TimeUnit.MILLISECONDS));
                     }
                     parent.handleTelegram(telegram);
-                    // Measure how long it took to execute that telegram and store it in the pump device. This value is
-                    // later retrieved to check if a telegram for this pump could still fit into the remaining time of
-                    // the cycle.
-                    long executionDuration = cycleStopwatch.elapsed(TimeUnit.MILLISECONDS) - timeCounterTimestamp;
-                    int telegramByteLength = Byte.toUnsignedInt(telegram.getLength()) - 2;  // Subtract crc
                     if (parent.getDebug()) {
                         this.parent.logInfo(this.log, "Stopwatch 2: " + cycleStopwatch.elapsed(TimeUnit.MILLISECONDS));
-                        this.parent.logInfo(this.log, "Estimated telegram execution time was: "
-                                + (33 + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte())
-                                + " ms. Actual time: " + executionDuration + " ms.");
                     }
-                    telegram.getPumpDevice().setExecutionDuration(executionDuration);
-                    // A telegram with no tasks takes ~33 ms to send and receive. Each additional byte in the send telegram adds ~3 ms.
-                    telegram.getPumpDevice().setMillisecondsPerByte((executionDuration - 33) / (telegramByteLength * 1.0));
+
+                    // If the telegram was executed successfully, measure how long it took. Calculate time per byte and
+                    // store it in the pump device. This value is later retrieved to check if a telegram for this pump
+                    // could still fit into the remaining time of the cycle.
+                    if (telegram.getPumpDevice().isConnectionOk()) {
+                        long executionDuration = cycleStopwatch.elapsed(TimeUnit.MILLISECONDS) - timeCounterTimestamp;
+                        int telegramByteLength = Byte.toUnsignedInt(telegram.getLength()) - 2 // Subtract crc
+                                + telegram.getAnswerTelegramLength() - 2;
+                        if (parent.getDebug()) {
+                            this.parent.logInfo(this.log, "Estimated telegram execution time was: "
+                                    + (33 + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte())
+                                    + " ms. Actual time: " + executionDuration + " ms. Ms/byte = "
+                                    + telegram.getPumpDevice().getMillisecondsPerByte());
+                        }
+                        telegram.getPumpDevice().setExecutionDuration(executionDuration);
+
+                        // Check if the telegram is suitable for timing calculation. Calculation error gets bigger the
+                        // smaller the telegram, so exclude tiny telegrams.
+                        if (telegramByteLength > 5 && executionDuration > 33) {
+                            // Calculate "millisecondsPerByte", then store it in the pump device.
+                            // Calculation: An empty telegram with no tasks takes ~33 ms to send and receive. When tasks
+                            // are added to the telegram, the additional time is then proportional to the amount of bytes
+                            // the tasks added (request and answer). "millisecondsPerByte" is the average amount of time
+                            // each byte of a task adds to the telegram.
+                            telegram.getPumpDevice().setMillisecondsPerByte((executionDuration - 33) / (telegramByteLength * 1.0));
+                        }
+                    }
                 } catch (InterruptedException e) {
                     this.parent.logWarn(this.log, "Couldn't get telegram. " + e);
                 }
-
 
                 // Check if there is enough time for another telegram. The telegram length is dynamic and adjusts depending
                 // on time left in the cycle. A short telegram can be sent and received in ~50 ms.

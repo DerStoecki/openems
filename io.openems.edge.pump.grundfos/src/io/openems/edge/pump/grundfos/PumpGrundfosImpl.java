@@ -71,6 +71,45 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     /** Creates a PumpDevice object containing all the tasks the GENIbus should send to this device. The PumpDevice is
      * then added to the GENIbus bridge.
      *
+     * Tasks automatically decide if they are GET, SET or INFO. (If you don't know what that means, read the GENIbus specs.)
+     * Right now only headclasses 0, 2, 3, 4, 5 and 7 are supported. Assuming a task is priority high:
+     * - INFO is done when needed before any GET or SET.
+     * - GET is done every cycle for all "Measured Data" tasks (= headclass 2), "Protocol Data" tasks (= headclass 0)
+     *   and "ASCII" tasks (= headclass 7).
+     * - SET is done every cycle for all "Command" tasks (= headclass 3), "Configuration Parameter" tasks (= headclass 4)
+     *   and "Reference Value" tasks (= headclass 5) when there is a value in the "nextWrite" of the channel.
+     *   The "nextWrite" of the channel is reset to "null" once the SET is executed. This means a SET is done just once.
+     *   For repeated execution of SET, you need to repeatedly write in "nextWrite" of the channel.
+     * - GET for headclass 4 and 5 (3 has no GET) is done once at the start, and then only after a SET to update the
+     *   value. The result of the GET is written in the "nextValue" of the channel.
+     * If the connection to a device is lost (pump switched off, serial connection unplugged), the controller will
+     * attempt to reestablish the connection. If that succeeds, the device is treated as if it is a new device, meaning
+     * all INFO is requested again, all once tasks done again etc.
+     *
+     * Suggestions for priority settings.
+     * - Headclass 0 and 7:     once.
+     * - Headclass 2:           high or low.
+     * - Headclass 3, 4 and 5:  high.
+     *
+     * Tasks with more than 8 bit are handled as one task using "PumpReadTask16bitOrMore()" and "PumpWriteTask16bitOrMore()".
+     * The address to put is the one of the "hi" value. The "low" values are always on the consecutive addresses. You also
+     * need to specify how many bytes the task has (16 bit = 2 bytes, 24 bit = 3 bytes, 32 bit = 4 bytes). The byte
+     * number is equivalent to the number of addresses a task has (two addresses = one hi, one low; means 16 bit = 2 bytes).
+     * You can also use "PumpReadTask16bitOrMore()" and "PumpWriteTask16bitOrMore()" for 8 bit tasks by setting the byte
+     * number to 1. "PumpReadTask8bit()" and "PumpWriteTask8bit()" function in that way, they map to the "16bitOrMore"
+     * tasks.
+     *
+     * Data of a task is automatically converted according to the INFO of the task, but also according to OpenEMS
+     * conventions. A pressure reading with unit "m" will be converted to "bar" in the OpenEMS channel. Temperature
+     * readings will be converted to dC° in the channel. The channel unit is set accordingly.
+     * For write tasks that are not boolean (headclass 4 and 5), the unit of INFO is used for the write as well.
+     * Example: ref_rem (5, 1)
+     * The unit of INFO is %, the range is 0% to 100%. The channel than has values between 0 and 1.0, and for sending a
+     * SET with value 100%, write in the "nextWrite" of the channel "1.0".
+     *
+     * The tasks also allow for an optional "channel multiplier" as the last argument. This is a fixed value that is
+     * used as a multiplier when reading a GET and as a divisor when writing a SET.
+     *
      * @param deviceId
      * @param pumpAddress
      */
@@ -93,10 +132,11 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         // So if there are 10 low tasks and lowPrioTasksPerCycle=10, the low tasks behave like high tasks.
         // If in the same situation lowPrioTasksPerCycle=5, a priority low task is executed at half the rate of a
         // priority high task.
-        pumpDevice = new PumpDevice(deviceId, pumpAddress, 20,
+        pumpDevice = new PumpDevice(deviceId, pumpAddress, 4,
 
 
-                // Commands. If true is sent to to conflicting channels at the same time (e.g. start and stop), the pump
+                // Commands.
+                // If true is sent to to conflicting channels at the same time (e.g. start and stop), the pump
                 // device will act on the command that was sent first. The command list is executed from top to bottom
                 // in the order they are listed here.
                 new io.openems.edge.bridge.genibus.api.task.PumpCommandsTask(this.pumpType.getRemote(),
@@ -156,31 +196,36 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                 new PumpReadTask8bit(166, 2, getAlarmLog4(), "Standard", Priority.LOW),
                 new PumpReadTask8bit(167, 2, getAlarmLog5(), "Standard", Priority.LOW),
 
-                // Config parameters tasks high
+                // Config parameters tasks.
+                // Class 4 tasks should always be priority high. They have special code to decide if they are sent or not.
+                // Since the values in them are static unless changed by the user, they are read once at the start and
+                // then only after a write. If a class 4 task is never written to, it essentially behaves like priority
+                // once. It should be priority high so any writes are executed immediately.
                 new PumpWriteTask8bit(this.pumpType.gethConstRefMax(), this.pumpType.gethConstRefMaxHeadClass(),
                         setConstRefMaxH(), "Standard", Priority.HIGH),
                 new PumpWriteTask8bit(this.pumpType.gethConstRefMin(), this.pumpType.gethConstRefMinHeadClass(),
                         setConstRefMinH(), "Standard", Priority.HIGH),
+                // The channel multiplier is also available for write tasks. For a GET it is a multiplier, for a SET it
+                // is a divisor. Apparently all frequencies in the MAGNA3 are off by a factor of 2.
+                new PumpWriteTask8bit(30, 4, setFupper(), "Standard", Priority.HIGH, 0.5),
                 new PumpWriteTask8bit(34, 4, setFmin(), "Standard", Priority.HIGH),
                 new PumpWriteTask8bit(35, 4, setFmax(), "Standard", Priority.HIGH),
-
-                // Config parameters tasks low
-                new PumpWriteTask8bit(31, 4, setFnom(), "Standard", Priority.LOW, 0.5),
+                // Apparently all frequencies in the MAGNA3 are off by a factor of 2.
+                new PumpWriteTask8bit(31, 4, setFnom(), "Standard", Priority.HIGH, 0.5),
                 new PumpWriteTask16bitOrMore(2, this.pumpType.gethMaxHi(), this.pumpType.gethMaxHiHeadClass(),
-                        setMaxPressure(), "Standard", Priority.LOW),
+                        setMaxPressure(), "Standard", Priority.HIGH),
                 new PumpWriteTask16bitOrMore(2, this.pumpType.getqMaxHi(), this.pumpType.getqMaxHiHeadClass(),
-                        setPumpMaxFlow(), "Standard", Priority.LOW),
-                new PumpWriteTask8bit(254, 4, setHrange(), "Standard", Priority.LOW),
+                        setPumpMaxFlow(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(254, 4, setHrange(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(this.pumpType.getDeltaH(), this.pumpType.getDeltaHheadClass(), setPressureDelta(), "Standard", Priority.HIGH),
 
-                // Config parameters tasks once
-                new PumpWriteTask8bit(30, 4, setFupper(), "Standard", Priority.ONCE, 0.5),
 
                 // Sensor configuration
-                //new PumpWriteTask8bit(229, 4, setSensor1Func(), "Standard", Priority.LOW),
-                //new PumpWriteTask8bit(226, 4, setSensor1Applic(), "Standard", Priority.LOW),
-                //new PumpWriteTask8bit(208, 4, setSensor1Unit(), "Standard", Priority.LOW),
-                //new PumpWriteTask16bitOrMore(2, 209, 4, setSensor1Min(), "Standard", Priority.LOW),
-                //new PumpWriteTask16bitOrMore(2, 211, 4, setSensor1Max(), "Standard", Priority.LOW),
+                new PumpWriteTask8bit(229, 4, setSensor1Func(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(226, 4, setSensor1Applic(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(208, 4, setSensor1Unit(), "Standard", Priority.HIGH),
+                new PumpWriteTask16bitOrMore(2, 209, 4, setSensor1Min(), "Standard", Priority.HIGH),
+                new PumpWriteTask16bitOrMore(2, 211, 4, setSensor1Max(), "Standard", Priority.HIGH),
 
                 //new PumpReadTask8bit(127, 2, getSensorGsp(), "Standard", Priority.LOW),
                 //new PumpWriteTask8bit(238, 4, setSensorGspFunc(), "Standard", Priority.LOW),
@@ -195,36 +240,6 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         );
         genibus.addDevice(pumpDevice);
     }
-
-    /**
-     * Creates all Tasks needed for the Magna 3. They'll be added to the GeniBusBridge Tasks.
-     * <p>
-     * Commands: can either be set or get Information (not recommended).
-     * Commands can be set via boolean.
-     * Read Tasks == Measured Data.
-     * Measured Data: Get Data or Information. Further Information to Channels in Class: PumpGrundfosChannels.
-     * Write Task:
-     * Config Params and Reference Values: Get Data, Set, Information.
-     *
-     *
-     * </p>
-     */
-
-    /*
-    private void createMagna3Tasks() {
-        // foreach Channel create Task
-        // ------------
-
-
-        ///////////////CONFIG PARAMS/////////////////
-
-
-        this.genibus.addTask(super.id(), new PumpWriteTask(this.pumpType.getDeltaH(),
-                this.pumpType.getDeltaHheadClass(), setPressureDelta(), "Standard"));
-
-
-    }
-    */
 
     @Deactivate
     public void deactivate() {

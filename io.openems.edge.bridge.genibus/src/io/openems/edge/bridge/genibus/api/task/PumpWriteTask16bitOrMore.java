@@ -9,7 +9,8 @@ import io.openems.edge.common.taskmanager.Priority;
 public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements GenibusWriteTask{
 
     private WriteChannel<Double> channel;
-    private boolean sendGet = false;
+    //private boolean sendGet = false;
+    private int sendGet = 1;
 
     // Zum Vergleichen, ob get was anderes ist als send.
     private byte byteGet0;
@@ -38,7 +39,7 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
     }
 
     @Override
-    public int getRequest(int byteCounter, boolean write) {
+    public int getRequest(int byteCounter, boolean clearChannel) {
 
         // Maybe add option "direct" that passes channel value directly to GENIbus. Not sure if needed.
 
@@ -46,7 +47,7 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
         if (byteCounter > dataByteSize - 1) {
             return request;
         }
-        if (super.InformationDataAvailable() && this.channel.getNextWriteValue().isPresent()) {
+        if (super.informationDataAvailable() && this.channel.getNextWriteValue().isPresent()) {
             byte returnValue;
 
             // For values of type scaled or extended precision:
@@ -78,9 +79,11 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
                     break;
             }
 
-            // If the write task is added to a telegram, reset channel to null to send write once.
-            if (write) {
+            // If the write task is added to a telegram, reset channel to null to send write just once.
+            // Also, do GET next cycle to update value.
+            if (clearChannel) {
                 this.channel.getNextWriteValueAndReset();
+                sendGet = 2;
             }
             return returnValue;
 
@@ -124,12 +127,12 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
     }
 
     @Override
-    public void setSendGet(boolean value) {
+    public void setSendGet(int value) {
         sendGet = value;
     }
 
     @Override
-    public boolean getSendGet() {
+    public int getSendGet() {
         return sendGet;
     }
 

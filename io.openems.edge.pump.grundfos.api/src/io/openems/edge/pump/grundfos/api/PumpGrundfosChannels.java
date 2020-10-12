@@ -260,9 +260,8 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         //WRITE//
 
         // config params //
-        //Hi and Lo Value with specific calc. == pump flow
         /**
-         * Pump maximum flow. Hi value
+         * Pump maximum flow.
          * <ul>
          *        <li> Interface: PumpGrundfosChannels
          *        <li> Type: Double

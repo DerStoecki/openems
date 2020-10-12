@@ -209,7 +209,7 @@ public abstract class AbstractPumpTask implements GenibusTask {
     }
 
     @Override
-    public boolean InformationDataAvailable() {
+    public boolean informationDataAvailable() {
         return informationAvailable;
     }
 

@@ -15,7 +15,8 @@ public interface PumpGrundfosControllerChannels extends OpenemsComponent {
         STOP_PUMP(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         PUMP_WINK(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         PRESSURE_SETPOINT(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
-        FREQUENCY_SETPOINT(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE));
+        FREQUENCY_SETPOINT(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
+        ONLY_READ(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
 
         private final Doc doc;
 
@@ -48,6 +49,10 @@ public interface PumpGrundfosControllerChannels extends OpenemsComponent {
 
     default WriteChannel<Double> setFrequencySetpoint() {
         return channel(ChannelId.FREQUENCY_SETPOINT);
+    }
+
+    default WriteChannel<Boolean> setOnlyRead() {
+        return channel(ChannelId.ONLY_READ);
     }
 }
 

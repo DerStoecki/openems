@@ -1,6 +1,7 @@
 package io.openems.edge.bridge.genibus.api;
 
 import io.openems.edge.bridge.genibus.api.task.GenibusTask;
+import io.openems.edge.bridge.genibus.api.task.GenibusWriteTask;
 import io.openems.edge.common.taskmanager.TasksManager;
 
 import java.util.ArrayList;
@@ -32,7 +33,8 @@ public class PumpDevice {
      */
     private final List<GenibusTask> onceTasksWithInfo = new ArrayList<>();
 
-    private int deviceByteBufferLength = 70;
+    private int deviceReadBufferLengthBytes = 70;
+    private int deviceSendBufferLengthBytes = 102;
     private int genibusAddress;
     private int lowPrioTasksPerCycle;
     private boolean connectionOk = true;    // Initialize with true, to avoid "no connection" message on startup.
@@ -40,12 +42,13 @@ public class PumpDevice {
     private long executionDuration = 200;    // Milliseconds. This information is currently not used.
     private boolean allLowPrioTasksAdded;
     private boolean addAllOnceTasks = true;
-    private double[] millisecondsPerByte = {3.0, 3.0, 3.0};    // Rough estimate. Exact value measured at runtime.
+    private double[] millisecondsPerByte = {2.0, 2.0, 2.0, 2.0, 2.0};    // Rough estimate. Exact value measured at runtime.
     private int arrayTracker = 0;
+    private boolean firstTelegram = true;
 
     // These are needed to calculate the setpoint, since GENIbus setpoints are relative to the sensor range.
-    private double pressureSensorMinBar;
-    private double pressureSensorRangeBar;
+    private double pressureSensorMinBar = 0;
+    private double pressureSensorRangeBar = 0;
 
     public PumpDevice(String deviceId, int genibusAddress, int lowPrioTasksPerCycle, GenibusTask... tasks) {
         this.genibusAddress = genibusAddress;
@@ -57,7 +60,7 @@ public class PumpDevice {
         timestamp = System.currentTimeMillis() - 1000;
     }
 
-    public synchronized void addTask(GenibusTask task) {
+    public void addTask(GenibusTask task) {
         task.setPumpDevice(this);
         this.taskManager.addTask(task);
     }
@@ -70,21 +73,29 @@ public class PumpDevice {
 
     public List<GenibusTask> getOnceTasksWithInfo() { return onceTasksWithInfo; }
 
-    public synchronized void setDeviceByteBufferLength(int value) {
+    public void setDeviceReadBufferLengthBytes(int value) {
         // 70 is minimum buffer length.
         if (value >= 70) {
-            deviceByteBufferLength = value;
+            deviceReadBufferLengthBytes = value;
         }
     }
 
     /**
-     * Gets the buffer length of this GENIbus device in byte. The buffer length is the maximum length a telegram can
-     * have that is sent to this device.
+     * Gets the read buffer length of this GENIbus device in byte. The buffer length is the maximum length a telegram
+     * can have that is sent to this device. If this buffer overflows, the device won't answer.
      * @return
      */
-    public int getDeviceByteBufferLength() {
-        return deviceByteBufferLength;
+    public int getDeviceReadBufferLengthBytes() {
+        return deviceReadBufferLengthBytes;
     }
+
+    /**
+     * Gets the send buffer length of this GENIbus device in byte. The buffer length is the maximum length a telegram
+     * can have that the device sends as answer telegram. This buffer can overflow when tasks are sent that have more
+     * return byte than send byte such as INFO and ASCII.
+     * @return
+     */
+    public int getDeviceSendBufferLengthBytes() { return deviceSendBufferLengthBytes; }
 
     public int getGenibusAddress() {
         return genibusAddress;
@@ -135,9 +146,15 @@ public class PumpDevice {
      */
     public void setMillisecondsPerByte(double millisecondsPerByte) {
         // Save three values so we can average and the value won't jump that much.
+        if (millisecondsPerByte > 10) {
+            millisecondsPerByte = 10;   // Failsafe.
+        }
+        if (millisecondsPerByte < 0.5) {
+            millisecondsPerByte = 0.5;   // Failsafe.
+        }
         this.millisecondsPerByte[arrayTracker] = millisecondsPerByte;
         arrayTracker++;
-        if (arrayTracker >= 3) {
+        if (arrayTracker >= 5) {
             arrayTracker = 0;
         }
     }
@@ -149,12 +166,12 @@ public class PumpDevice {
      * @return
      */
     public double getMillisecondsPerByte() {
-        // Average over the three entries.
+        // Average over the five entries.
         double returnValue = 0;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             returnValue += millisecondsPerByte[i];
         }
-        return returnValue / 3;
+        return returnValue / 5;
     }
 
     public void setAllLowPrioTasksAdded(boolean allLowPrioTasksAdded) {
@@ -202,11 +219,26 @@ public class PumpDevice {
     public void resetDevice() {
         taskManager.getAllTasks().forEach(task -> {
             task.resetInfo();
+            if (task instanceof GenibusWriteTask) {
+                ((GenibusWriteTask) task).setSendGet(1);
+            }
         });
         addAllOnceTasks = true;
-        deviceByteBufferLength = 70;
-        millisecondsPerByte[0] = 3.0;
-        millisecondsPerByte[1] = 3.0;
-        millisecondsPerByte[2] = 3.0;
+        pressureSensorMinBar = 0;
+        pressureSensorRangeBar = 0;
+        deviceReadBufferLengthBytes = 70;
+        millisecondsPerByte[0] = 2.0;
+        millisecondsPerByte[1] = 2.0;
+        millisecondsPerByte[2] = 2.0;
+        millisecondsPerByte[3] = 2.0;
+        millisecondsPerByte[4] = 2.0;
+    }
+
+    public boolean isFirstTelegram() {
+        return firstTelegram;
+    }
+
+    public void setFirstTelegram(boolean firstTelegram) {
+        this.firstTelegram = firstTelegram;
     }
 }

@@ -3,7 +3,7 @@ package io.openems.edge.bridge.genibus.api.task;
 
 public interface GenibusWriteTask {
 
-    void setSendGet(boolean value);
+    void setSendGet(int value);
 
-    boolean getSendGet();
+    int getSendGet();
 }

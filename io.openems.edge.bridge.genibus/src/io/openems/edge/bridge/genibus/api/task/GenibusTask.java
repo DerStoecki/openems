@@ -7,11 +7,13 @@ import io.openems.edge.common.taskmanager.ManagedTask;
 public interface GenibusTask extends ManagedTask {
 
 
-    // The point of the boolean "write" is to tell the method if this is an actual write or just a test to see if there
-    // is something to write. If it is a write, the write channel associated with the task will have it's nextWriteValue
-    // reset to null. Any further calls of the method will then return "nothing to write" (-1 or -256), unless a
-    // value was put in nextWriteValue of the channel again.
-    default int getRequest(int byteCounter, boolean write) {
+    // This method is used to see if this task has a SET to send, as well as to get the value of a SET. This is tied to
+    // the contents of the associated write channel. If "nextWrite" of the channel is empty/false, the method returns
+    // "nothing to write" (-1 or -256).
+    // The point of "clearChannel" is then to tell the task that it has been added to a telegram (with SET) and the
+    // command is executed. The channel is cleared and further getRequests will return "nothing to write", until
+    // something is written in the channel again.
+    default int getRequest(int byteCounter, boolean clearChannel) {
         return -1;
     };
 
@@ -25,7 +27,7 @@ public interface GenibusTask extends ManagedTask {
 
     void setFourByteInformation(int vi, int bo, int sif, byte unitIndex, byte scaleFactorZeroOrHigh, byte scaleFactorRangeOrLow);
 
-    boolean InformationDataAvailable();
+    boolean informationDataAvailable();
 
     void resetInfo();
 

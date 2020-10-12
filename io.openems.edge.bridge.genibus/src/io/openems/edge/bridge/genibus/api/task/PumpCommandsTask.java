@@ -14,13 +14,13 @@ public class PumpCommandsTask extends AbstractPumpTask {
     }
 
     @Override
-    public int getRequest(int byteCounter, boolean write) {
+    public int getRequest(int byteCounter, boolean clearChannel) {
         if (this.channel.getNextWriteValue().isPresent()) {
             //for REST
             this.channel.setNextValue(this.channel.getNextWriteValue().get());
             if (this.channel.getNextWriteValue().get()) {
                 // If the command is added to a telegram, reset channel to false to send command only once.
-                if (write) {
+                if (clearChannel) {
                     try {
                         this.channel.setNextWriteValue(false);
                     } catch (OpenemsError.OpenemsNamedException e) {

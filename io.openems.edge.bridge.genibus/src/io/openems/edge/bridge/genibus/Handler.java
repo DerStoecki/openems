@@ -24,6 +24,7 @@ public class Handler {
     private SerialPort serialPort;
     protected String portName;
     LocalDateTime errorTimestamp;
+    LocalDateTime errorTimestamp2;
 
     OutputStream os;
     InputStream is;
@@ -95,7 +96,8 @@ public class Handler {
             } catch (IOException e) {
 
                 // So that error message is only sent once.
-                if (parent.connectionOk) {
+                if (parent.connectionOk || ChronoUnit.SECONDS.between(errorTimestamp, LocalDateTime.now()) >= 5) {
+                    errorTimestamp2 = LocalDateTime.now();
                     this.parent.logError(this.log, "Serial connection lost on port " + portName + ". Attempting to reconnect...");
                 }
 
@@ -223,18 +225,31 @@ public class Handler {
     private Telegram handleResponse(long timeout, boolean debug) {
         try {
             long startTime = System.currentTimeMillis();
+            //timeout = 500;
 
             // This "while" only tests for timeout as long as is.available() <= 0, since there is a break at the end.
-            // Timeout time is the estimated time it should take to send and receive the telegram, + the timeout length
-            // of the GENIbus which is 60 ms according to GENIbus spec.
+            // Timeout time is the estimated time it should take for a response to arrive. One would think that this is
+            // the time it takes to send the request telegram + some process time. However, testing revealed that the
+            // response is buffered and there is a delay between data arriving and "is.available() != 0".
+            // From the tests it was found that a practical timeout time is the estimated telegram execution time
+            // (request + answer). Add 60 ms to that, as that is the suggested GENIbus Master timeout duration.
             while ((System.currentTimeMillis() - startTime) < timeout + 60) {
                 if (is.available() <= 0) {
                     continue;
+                }
+                if (debug) {
+                    this.parent.logInfo(this.log, "Telegram answer time: " + (System.currentTimeMillis() - startTime)
+                            + ", timeout: " + (timeout + 60));
                 }
                 int numRead;
                 byte[] readBuffer = new byte[1024];
                 List<Byte> completeInput = new ArrayList<>();
                 boolean transferOk = false;
+                // Reset timer. This timeout exits the loop in case the telegram is corrupted and transferOk will not
+                // become true. The timeout length should be greater than the expected telegram transfer time. Tests have
+                // shown that the received data is buffered, greatly reducing the time the code has to wait. For small
+                // telegrams the "answer transmit clock" will show 0 ms.
+                startTime = System.currentTimeMillis();
                 while (transferOk == false && (System.currentTimeMillis() - startTime) < timeout + 60) {
                     if (is.available() <= 0) {
                         continue;
@@ -254,6 +269,10 @@ public class Handler {
                         counter2++;
                     }
                     transferOk = packageOK(receivedDataTemp, false);
+                    if (debug && transferOk) {
+                        this.parent.logInfo(this.log, "Telegram answer transmit time: " + (System.currentTimeMillis() - startTime)
+                                + ", timeout: " + (timeout + 60));
+                    }
                 }
                 byte[] receivedData = new byte[completeInput.size()];
                 int counter2 = 0;
@@ -274,9 +293,8 @@ public class Handler {
                     if (debug) {
                         this.parent.logInfo(this.log, "CRC Check ok.");
                     }
-                    // if all done create telegram
-                    Telegram answerTelegram = Telegram.parseEventStream(receivedData);
-                    return answerTelegram;
+                    // if all done, return the response telegram.
+                    return Telegram.parseEventStream(receivedData);
                 }
                 break;
             }
