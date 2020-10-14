@@ -342,9 +342,12 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "GENIbus address: " + pumpChannels.getPumpDevice().getGenibusAddress()
                 + ", product number: " + pumpChannels.getProductNumber().value().get() + ", "
                 + "serial number: " + pumpChannels.getSerialNumber().value().get());
+        this.logInfo(this.log, "Multipump Status: " + pumpChannels.getMultipumpStatusString().value().get());
         this.logInfo(this.log, "Power consumption: " + formatter2.format(pumpChannels.getPowerConsumption().value().orElse(0.0)) + " W");
         this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
+        this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
+                + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
         this.logInfo(this.log, "Pump pressure: " + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0)) + " bar or "
                 + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0) * 10) + " m");
         //this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
@@ -381,8 +384,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
                 break;
             case CONST_FREQUENCY:
                 this.logInfo(this.log, "Actual setpoint (pump internal): " + formatter2.format(pumpChannels.getRefAct().value().orElse(0.0) * 100) + "% of interval range.");
-                this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
-                        + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
                 this.logInfo(this.log, "Motor frequency setpoint maximum: " + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz or "
                         + formatter2.format(pumpChannels.setFnom().value().orElse(0.0) * 60) + " rpm");
                 this.logInfo(this.log, "Minimum pump speed: " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum.");
@@ -414,7 +415,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "ana_in_1_min: " + pumpChannels.setSensor1Min().value().get());
         this.logInfo(this.log, "ana_in_1_max: " + pumpChannels.setSensor1Max().value().get());
 
-         */
+
 
         this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
         this.logInfo(this.log, "f_upper: " + pumpChannels.setFupper().value().get());
@@ -426,6 +427,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "h_range: " + pumpChannels.setHrange().value().get());
         this.logInfo(this.log, "ref_rem: " + pumpChannels.setRefRem().value().get());
         //this.logInfo(this.log, "ref_rem write: " + pumpChannels.setRefRem().getNextWriteValue().get());
+        */
 
 
         // Motor übertakten.

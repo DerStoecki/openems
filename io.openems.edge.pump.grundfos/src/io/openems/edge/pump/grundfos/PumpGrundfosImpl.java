@@ -21,6 +21,8 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -45,7 +47,11 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     private PumpType pumpType;
     private WarnBits warnBits;
     private PumpDevice pumpDevice;
+    private boolean broadcast = false;
+    private boolean changeAddress;
+    private double newAddress;
 
+    private final Logger log = LoggerFactory.getLogger(PumpGrundfosImpl.class);
 
     public PumpGrundfosImpl() {
         super(OpenemsComponent.ChannelId.values(), PumpGrundfosChannels.ChannelId.values());
@@ -56,8 +62,16 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     public void activate(ComponentContext context, Config config) {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        allocatePumpType(config.pumpType());
-        createTaskList(super.id(), config.pumpAddress());
+        //allocatePumpType(config.pumpType());
+        allocatePumpType("Magna3");
+        this.broadcast = config.broadcast();
+        changeAddress = config.changeAddress();
+        newAddress = config.newAddress();
+        if (broadcast) {
+            createTaskList(super.id(), 254);
+        } else {
+            createTaskList(super.id(), config.pumpAddress());
+        }
     }
 
     private void allocatePumpType(String pumpType) {
@@ -114,6 +128,22 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
      * @param pumpAddress
      */
     private void createTaskList(String deviceId, int pumpAddress) {
+        // Broadcast mode is just to find the address of a unit. Not suitable for sending commands.
+        if (broadcast) {
+            pumpDevice = new PumpDevice(deviceId, pumpAddress, 4,
+                    new PumpReadTask8bit(2, 0, getBufferLength(), "Standard", Priority.ONCE),
+                    new PumpReadTask8bit(3, 0, getUnitBusMode(), "Standard", Priority.ONCE),
+
+                    new PumpReadTask8bit(148, 2, getUnitFamily(), "Standard", Priority.ONCE),
+                    new PumpReadTask8bit(149, 2, getUnitType(), "Standard", Priority.ONCE),
+                    new PumpReadTask8bit(150, 2, getUnitVersion(), "Standard", Priority.ONCE),
+
+                    new PumpWriteTask8bit(46, 4, setUnitAddr(), "Standard", Priority.ONCE),
+                    new PumpWriteTask8bit(47, 4, setGroupAddr(), "Standard", Priority.ONCE)
+                    );
+            genibus.addDevice(pumpDevice);
+            return;
+        }
 
         // The variable "lowPrioTasksPerCycle" lets you tune how fast the low priority tasks are executed. A higher
         // number means faster execution, up to the same execution speed as high priority tasks.
@@ -160,6 +190,10 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
                 // Read tasks priority once
                 new PumpReadTask8bit(2, 0, getBufferLength(), "Standard", Priority.ONCE),
+                new PumpReadTask8bit(3, 0, getUnitBusMode(), "Standard", Priority.ONCE),
+                new PumpReadTask8bit(148, 2, getUnitFamily(), "Standard", Priority.ONCE),
+                new PumpReadTask8bit(149, 2, getUnitType(), "Standard", Priority.ONCE),
+                new PumpReadTask8bit(150, 2, getUnitVersion(), "Standard", Priority.ONCE),
 
                 // Read tasks priority high
                 new PumpReadTask8bit(48, 2, getRefAct(), "Standard", Priority.HIGH),
@@ -188,6 +222,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                 new PumpReadTask8bit(this.pumpType.gethDiff(), this.pumpType.gethDiffHeadClass(), getDiffPressureHead(), "Standard", Priority.LOW),
                 new PumpReadTask8bit(this.pumpType.gettE(), this.pumpType.gettEheadClass(), getElectronicsTemperature(), "Standard", Priority.LOW),
                 new PumpReadTask8bit(this.pumpType.getiMo(), this.pumpType.getImoHeadClass(), getCurrentMotor(), "Standard", Priority.LOW),
+                new PumpReadTask8bit(2, 2, getMultipumpStatus(), "Standard", Priority.LOW),
 
                 new PumpReadTask8bit(this.pumpType.getAlarmCodePump(), this.pumpType.getAlarmCodePumpHeadClass(), getAlarmCodePump(), "Standard", Priority.LOW),
                 new PumpReadTask8bit(163, 2, getAlarmLog1(), "Standard", Priority.LOW),
@@ -218,7 +253,8 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                         setPumpMaxFlow(), "Standard", Priority.HIGH),
                 new PumpWriteTask8bit(254, 4, setHrange(), "Standard", Priority.HIGH),
                 new PumpWriteTask8bit(this.pumpType.getDeltaH(), this.pumpType.getDeltaHheadClass(), setPressureDelta(), "Standard", Priority.HIGH),
-
+                new PumpWriteTask8bit(46, 4, setUnitAddr(), "Standard", Priority.HIGH),
+                new PumpWriteTask8bit(47, 4, setGroupAddr(), "Standard", Priority.HIGH),
 
                 // Sensor configuration
                 new PumpWriteTask8bit(229, 4, setSensor1Func(), "Standard", Priority.HIGH),
@@ -301,6 +337,112 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             getControlSource().setNextValue("Command source: " + source + ", priority: " + priorityBits);
         }
 
+        // Parse unit family, type and version
+        StringBuilder allInfo = new StringBuilder();
+        if (getUnitFamily().value().isDefined()) {
+            allInfo.append("Unit family: ");
+            int unitFamily = (int)Math.round(getUnitFamily().value().get());
+            switch (unitFamily) {
+                case 1:
+                    allInfo.append("UPE/MAGNA, ");
+                    break;
+                case 2:
+                    allInfo.append("MGE, ");
+                    break;
+                case 38:
+                    allInfo.append("MAGNA Multi-pump, ");
+                    break;
+                case 39:
+                    allInfo.append("MGE Multi-pump, ");
+                    break;
+                default:
+                    allInfo.append(unitFamily).append(", ");
+                    break;
+            }
+        }
+        if (getUnitType().value().isDefined()) {
+            allInfo.append("Unit type: ");
+            int unitType = (int)Math.round(getUnitType().value().get());
+            switch (unitType) {
+                case 10:
+                    allInfo.append("MAGNA3, ");
+                    break;
+                case 7:
+                    allInfo.append("MGE model H/I, ");
+                    break;
+                default:
+                    allInfo.append(unitType).append(", ");
+                    break;
+            }
+        }
+        if (getUnitVersion().value().isDefined()) {
+            allInfo.append("Unit version: ");
+            int unitVersion = (int)Math.round(getUnitVersion().value().get());
+            switch (unitVersion) {
+                case 1:
+                    allInfo.append("Naked MGE, ");
+                    break;
+                case 2:
+                    allInfo.append("Multi stage without sensor (CRE), ");
+                    break;
+                case 3:
+                    allInfo.append("Multi stage with sensor (CRE), ");
+                    break;
+                case 4:
+                    allInfo.append("Single stage Series 1000 (LME), ");
+                    break;
+                case 5:
+                    allInfo.append("Single stage Series 2000 (LME), ");
+                    break;
+                case 6:
+                    allInfo.append("Single stage Collect Series 1000 (MGE motor with MAGNA3 hydraulic), ");
+                    break;
+                case 7:
+                    allInfo.append("Single stage Collect Series 2000 (MGE motor with MAGNA3 hydraulic), ");
+                    break;
+                case 8:
+                    allInfo.append("Home booster, ");
+                    break;
+                default:
+                    allInfo.append(unitVersion).append(", ");
+                    break;
+            }
+        }
+        if (allInfo.length() > 2) {
+            allInfo.delete(allInfo.length() - 2, allInfo.length());
+            allInfo.append(".");
+            getUnitInfo().setNextValue(allInfo);
+        }
+
+        // Parse multipump status value to a string.
+        if (getMultipumpStatus().value().isDefined()) {
+            int multipumpStatusValue = (int)Math.round(getMultipumpStatus().value().get());
+            String multipumpStatusString;
+            switch (multipumpStatusValue) {
+                case 0:
+                    multipumpStatusString = "Single pump. Not part of a multi pump.";
+                    break;
+                case 1:
+                    multipumpStatusString = "Twin-pump master. Contact to twin pump slave OK.";
+                    break;
+                case 2:
+                    multipumpStatusString = "Twin-pump master. No contact to twin pump slave.";
+                    break;
+                case 3:
+                    multipumpStatusString = "Twin-pump slave. Contact to twin pump master OK.";
+                    break;
+                case 4:
+                    multipumpStatusString = "Twin-pump slave. No contact to twin pump master.";
+                    break;
+                case 5:
+                    multipumpStatusString = "Self appointed twin-pump master. No contact to twin pump master.";
+                    break;
+                default:
+                    multipumpStatusString = "unknown";
+            }
+            getMultipumpStatusString().setNextValue(multipumpStatusString);
+        }
+
         // Parse warn messages and put them all in one channel.
         StringBuilder allErrors = new StringBuilder();
         List<String> errorValue;
@@ -341,6 +483,51 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             }
         }
         getWarnMessage().setNextValue(allErrors);
+
+        if (broadcast) {
+            boolean signalReceived = isConnectionOk().value().isDefined() && isConnectionOk().value().get();
+            this.logInfo(this.log, "--GENIbus broadcast--");
+            if (signalReceived == false) {
+                this.logInfo(this.log, "No signal received so far.");
+            } else {
+                String genibusAddress = "null";
+                if (setUnitAddr().value().isDefined()) {
+                    genibusAddress = "" + Math.round(setUnitAddr().value().get());
+                }
+                String groupAddress = "null";
+                if (setGroupAddr().value().isDefined()) {
+                    groupAddress = "" + Math.round(setGroupAddr().value().get());
+                }
+                String bufferLength = "null";
+                if (getBufferLength().value().isDefined()) {
+                    bufferLength = "" + Math.round(getBufferLength().value().get());
+                }
+                String busMode = "null";
+                if (getUnitBusMode().value().isDefined()) {
+                    busMode = "" + Math.round(getUnitBusMode().value().get());
+                }
+
+                this.logInfo(this.log, "Pump found - " + getUnitInfo().value().get());
+                this.logInfo(this.log, "GENIbus address: " + genibusAddress);
+                this.logInfo(this.log, "Group address: " + groupAddress);
+                this.logInfo(this.log, "Buffer length: " + bufferLength);
+                this.logInfo(this.log, "Bus mode: " + busMode);
+            }
+        } else if (changeAddress) {
+            if (newAddress > 31 && newAddress < 232) {
+                try {
+                    setUnitAddr().setNextWriteValue(newAddress);
+                    this.logInfo(this.log, "Pump address changed. New address = " + (Math.round(newAddress)) + ".");
+                } catch (OpenemsError.OpenemsNamedException e) {
+                    this.logError(this.log, "Address change failed!");
+                    e.printStackTrace();
+                }
+            } else {
+                this.logError(this.log, "Value for new address = " + (Math.round(newAddress)) + " is not in the valid range (32 - 231). "
+                        + "Not executing address change!");
+            }
+            changeAddress = false;
+        }
 
     }
 

@@ -127,9 +127,11 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
 
         telegram.setAnswerTelegramLength(responseTelegram.getLength());
         
-        int requestTelegramAddress = telegram.getDestinationAddress();
-        int responseTelegramAddress = responseTelegram.getSourceAddress();
-        if (requestTelegramAddress != responseTelegramAddress) {
+        int requestTelegramAddress = Byte.toUnsignedInt(telegram.getDestinationAddress());
+        int responseTelegramAddress = Byte.toUnsignedInt(responseTelegram.getSourceAddress());
+
+        // Broadcast (= request address 254) will have different address in response. Let that through.
+        if (requestTelegramAddress != responseTelegramAddress && requestTelegramAddress != 254) {
             this.logWarn(this.log, "Telegram address mismatch! Request telegram was sent to address " + requestTelegramAddress
                     + ", but response telegram is from address " + responseTelegramAddress + ". This is not the right response telegram. Cannot process, resetting connection.");
             telegram.getPumpDevice().setConnectionOk(false);

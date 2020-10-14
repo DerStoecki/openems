@@ -36,52 +36,42 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * </ul>
          * */
         BUF_LEN(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * In which bus mode (slave, master) is the device.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: boolean
+         * <li> Magna3: 8 bit Measured Data: 0, 3 unit_bus_mode
+         * </ul>
+         * */
+        UNIT_BUS_MODE(Doc.of(OpenemsType.DOUBLE)),
 
         // Measured Data //
         /**
-         * Currently used setpoint.
+         * Multipump status.
+         * 0: Single pump. Not part of a multi pump
+         * 1: Twin-pump master. Contact to twin pump slave OK
+         * 2: Twin-pump master. No contact to twin pump slave
+         * 3: Twin-pump slave. Contact to twin pump master OK
+         * 4: Twin-pump slave. No contact to twin pump master
+         * 5: Self appointed twin-pump master. No contact to twin pump master
          * <ul>
          * <li>Interface: PumpGrundfosChannels
          * <li>Type: Double
-         * <li> Magna3: 8 bit Measured Data: 2, 48 ref_act
+         * <li> Magna3: 8 bit Measured Data: 2, 2 tp_status
          * </ul>
          * */
-        REF_ACT(Doc.of(OpenemsType.DOUBLE)),
+        TP_STATUS(Doc.of(OpenemsType.DOUBLE)),
         /**
-         * Normalized setpoint.
-         * <ul>
-         * <li>Interface: PumpGrundfosChannels
-         * <li>Type: Double
-         * <li> Magna3: 8 bit Measured Data: 2, 49 ref_norm
-         * </ul>
+         * Multipump status, parsed to a string.
          * */
-        REF_NORM(Doc.of(OpenemsType.DOUBLE)),
-        /**
-         * Control source bits.
-         * Currently active control source. From which source the pump is currently taking commands.
-         * <ul>
-         * <li>Interface: PumpGrundfosChannels
-         * <li>Type: Double
-         * <li> Magna3: 8 bit Measured Data: 2, 90  contr_source
-         * </ul>
-         * */
-        CONTR_SOURCE(Doc.of(OpenemsType.DOUBLE)),
-        /**
-         * Currently active control source. From which source the pump is currently taking commands.
-         * The control source bits parsed to a text message.
-         * <ul>
-         * <li>Interface: PumpGrundfosChannels
-         * <li>Type: Double
-         * <li> Magna3: 8 bit Measured Data: 2, 90  contr_source
-         * </ul>
-         * */
-        CONTR_SOURCE_STRING(Doc.of(OpenemsType.STRING)),
+        TP_STATUS_STRING(Doc.of(OpenemsType.STRING)),
         /**
          * Differential Pressure Head.
          * <ul>
          * <li>Interface: PumpGrundfosChannels
          * <li>Type: Double
-         * <li> Magna3: 8 bit Measured Data: 2,23 h_diff
+         * <li> Magna3: 8 bit Measured Data: 2, 23 h_diff
          * </ul>
          * */
         DIFFERENTIAL_PRESSURE_HEAD(Doc.of(OpenemsType.DOUBLE)),
@@ -91,7 +81,7 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          *     <li> Interface: PumpGrundfosChannels
          *     <li> Type: Double
          *     <li> Unit: dC
-         *     <li> Magna3: 8 bit Measured Data: 2,28 t_e
+         *     <li> Magna3: 8 bit Measured Data: 2, 28 t_e
          * </ul>
          * */
         ELECTRONICS_TEMPERATURE(Doc.of(OpenemsType.DOUBLE).unit(Unit.DEZIDEGREE_CELSIUS)),
@@ -105,12 +95,22 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * */
         CURRENT_MOTOR(Doc.of(OpenemsType.DOUBLE)),
         /**
+         * Relative speed/frequency applied to motor.
+         * <ul>
+         *      <li> Interface: PumpGrundfosChannels
+         *      <li> Type: Double
+         *      <li> Unit: Hz
+         *      <li> Magna3: 8 bit Measured Data: 2, 32 f_act
+         * </ul>
+         * */
+        MOTOR_FREQUENCY(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ)),
+        /**
          * Power Consumption.
          * <ul>
          *      <li> Interface: PumpGrundfosChannels
          *      <li> Type: Double
          *      <li> Unit: Watt
-         *      <li> Magna3: 8 bit Measured Data: 2,34 p_lo
+         *      <li> Magna3: 8 bit Measured Data: 2, 34 p_lo
          * </ul>
          *
          * */
@@ -132,50 +132,117 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          *      <li> Interface: PumpGrundfosChannels
          *      <li> Type: Double
          *      <li> Unit: m³/h
-         *      <li> Magna3: 8 bit Measured Data: 2,39 q
+         *      <li> Magna3: 8 bit Measured Data: 2, 39 q
          * </ul>
          * */
         CURRENT_PUMP_FLOW(Doc.of(OpenemsType.DOUBLE).unit(Unit.CUBICMETER_PER_HOUR)),
+        /**
+         * Currently used setpoint.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 48 ref_act
+         * </ul>
+         * */
+        REF_ACT(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Normalized setpoint.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 49 ref_norm
+         * </ul>
+         * */
+        REF_NORM(Doc.of(OpenemsType.DOUBLE)),
         /**
          * Pumped water medium Temperature.
          * <ul>
          *      <li> Interface: PumpGrundfosChannels
          *      <li> Type: Double
          *      <li> Unit: dC
-         *      <li> Magna3: 8 bit Measured Data: 2,58 t_w
+         *      <li> Magna3: 8 bit Measured Data: 2, 58 t_w
          * </ul>
          * */
         PUMPED_WATER_MEDIUM_TEMPERATURE(Doc.of(OpenemsType.DOUBLE).unit(Unit.DEZIDEGREE_CELSIUS)),
         /**
-         * Relative speed/frequency applied to motor.
+         * Minimum allowed reference setting.
          * <ul>
-         *      <li> Interface: PumpGrundfosChannels
-         *      <li> Type: Double
-         *      <li> Unit: Hz
-         *      <li> Magna3: 8 bit Measured Data: 2, 32 f_act
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Double
+         *       <li> Magna3: 8 bit Measured Data: 2, 76 r_min
          * </ul>
          * */
-        MOTOR_FREQUENCY(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ)),
+        R_MIN(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Maximum allowed reference setting.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Double
+         *       <li> Magna3: 8 bit Measured Data: 2, 77 r_max
+         * </ul>
+         * */
+        R_MAX(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Control source bits.
+         * Currently active control source. From which source the pump is currently taking commands.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 90  contr_source
+         * </ul>
+         * */
+        CONTR_SOURCE(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Currently active control source. From which source the pump is currently taking commands.
+         * The control source bits parsed to a text message.
+         * */
+        CONTR_SOURCE_STRING(Doc.of(OpenemsType.STRING)),
         /**
          * Actual Control Mode bits.
          * <ul>
          *      <li> Interface: PumpGrundfosChannels
          *      <li> Type: Double
-         *      <li> Magna3: 8 bit Measured Data: 2,112, control_mode
+         *      <li> Magna3: 8 bit Measured Data: 2, 112, control_mode
          * </ul>
          *
          * */
         ACTUAL_CONTROL_MODE(Doc.of(OpenemsType.DOUBLE)),
         /**
          * The Actual Control Mode bits parsed to a text message.
-         * <ul>
-         *      <li> Interface: PumpGrundfosChannels
-         *      <li> Type: Double
-         *      <li> Magna3: 8 bit Measured Data: 2,112, control_mode
-         * </ul>
          *
          * */
         ACTUAL_CONTROL_MODE_ENUM(Doc.of(ControlMode.values())),
+        /**
+         * Unit family code
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 148  unit_family
+         * </ul>
+         * */
+        UNIT_FAMILY(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Unit type code
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 149  unit_type
+         * </ul>
+         * */
+        UNIT_TYPE(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Unit version code
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 150  unit_version
+         * </ul>
+         * */
+        UNIT_VERSION(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Unit family, type and version parsed to a string.
+         * */
+        UNIT_INFO_STRING(Doc.of(OpenemsType.STRING)),
         /**
          * Alarm Code Pump. Manual says this is just for setups with multiple pumps.
          * <ul>
@@ -237,79 +304,10 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         ALARM_LOG_4(Doc.of(OpenemsType.DOUBLE)),
         ALARM_LOG_5(Doc.of(OpenemsType.DOUBLE)),
 
-        // reference Values //
-        /**
-         * Minimum allowed reference setting.
-         * <ul>
-         *       <li> Interface: PumpGrundfosChannels
-         *       <li> Type: Double
-         *       <li> Magna3: 8 bit Measured Data: 2,76 r_min
-         * </ul>
-         * */
-        R_MIN(Doc.of(OpenemsType.DOUBLE)),
-        /**
-         * Maximum allowed reference setting.
-         * <ul>
-         *       <li> Interface: PumpGrundfosChannels
-         *       <li> Type: Double
-         *       <li> Magna3: 8 bit Measured Data: 2,77 r_max
-         * </ul>
-         * */
-        R_MAX(Doc.of(OpenemsType.DOUBLE)),
 
         //WRITE//
 
         // config params //
-        /**
-         * Pump maximum flow.
-         * <ul>
-         *        <li> Interface: PumpGrundfosChannels
-         *        <li> Type: Double
-         *        <li> Unit: m³/h
-         *        <li> Magna3: 16 bit split into two 8 bit Configuration Parameters: 4, 105 q_max_hi and 106 q_max_lo
-         * </ul>
-         * */
-        SET_PUMP_MAX_FLOW(Doc.of(OpenemsType.DOUBLE).unit(Unit.CUBICMETER_PER_HOUR).accessMode(AccessMode.READ_WRITE)),
-        /**
-         * Low flow stop dead band relative to actual setpoint.
-         * <ul>
-         *       <li> Interface: PumpGrundfosChannels
-         *       <li> Type: Double
-         *       <li> Unit: Percent
-         *       <li> Magna3: 8bit Configuration Parameters: 4,101 delta_h
-         * </ul>
-         * */
-        SET_PRESSURE_DELTA(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
-        /**
-         * Pump maximum head/pressure.
-         * <ul>
-         *        <li> Interface: PumpGrundfosChannels
-         *        <li> Type: Double
-         *        <li> Unit: Bar
-         *        <li> Magna3: 16 bit split into two 8 bit Configuration Parameters: 4,103 h_max_hi and 104 h_max_lo
-         * </ul>
-         * */
-        SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
-        /**
-         * Constant Pressure Mode minimum reference. INFO reads unit = 30 = 1%, min = 0, range = 100.
-         * Values for this parameter are 0% - 100% (write 0 - 1.0 in channel), where % is % of the range interval
-         * of the pressure sensor. The range interval of the pressure sensor is the one transmitted by INFO for h_diff.
-         * <ul>
-         *        <li> Interface: PumpGrundfosChannels
-         *        <li> Type: Double
-         *        <li> Magna3: 8 bit Configuration Parameters:  4, 83 h_const_ref_min
-         * </ul>
-         *
-         * */
-        H_CONST_REF_MIN(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
-        /**
-         * <ul>
-         *        <li> Interface: PumpGrundfosChannels
-         *        <li> Type: Double
-         *        <li> Magna3: 8 bit Configuration Parameters: 4, 84 h_const_ref_max
-         * </ul>
-         * */
-        H_CONST_REF_MAX(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
         /**
          * Pump rotation frequency f_upper. Maximum frequency, hardware limit.
          * <ul>
@@ -346,6 +344,74 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * </ul>
          * */
         FREQUENCY_F_MAX(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Pump GENIbus address.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 46 unit_addr
+         * </ul>
+         * */
+        UNIT_ADDR(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * GENIbus group address.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 47 group_addr
+         * </ul>
+         * */
+        GROUP_ADDR(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Constant Pressure Mode minimum reference. INFO reads unit = 30 = 1%, min = 0, range = 100.
+         * Values for this parameter are 0% - 100% (write 0 - 1.0 in channel), where % is % of the range interval
+         * of the pressure sensor. The range interval of the pressure sensor is the one transmitted by INFO for h_diff.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters:  4, 83 h_const_ref_min
+         * </ul>
+         *
+         * */
+        H_CONST_REF_MIN(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 84 h_const_ref_max
+         * </ul>
+         * */
+        H_CONST_REF_MAX(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Low flow stop dead band relative to actual setpoint.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Double
+         *       <li> Unit: Percent
+         *       <li> Magna3: 8bit Configuration Parameters: 4,101 delta_h
+         * </ul>
+         * */
+        SET_PRESSURE_DELTA(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
+        /**
+         * Pump maximum head/pressure.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Unit: Bar
+         *        <li> Magna3: 16 bit split into two 8 bit Configuration Parameters: 4,103 h_max_hi and 104 h_max_lo
+         * </ul>
+         * */
+        SET_MAX_PRESSURE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.BAR)),
+        /**
+         * Pump maximum flow.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Unit: m³/h
+         *        <li> Magna3: 16 bit split into two 8 bit Configuration Parameters: 4, 105 q_max_hi and 106 q_max_lo
+         * </ul>
+         * */
+        SET_PUMP_MAX_FLOW(Doc.of(OpenemsType.DOUBLE).unit(Unit.CUBICMETER_PER_HOUR).accessMode(AccessMode.READ_WRITE)),
 
         // Sensor configuration
         /**
@@ -582,6 +648,18 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.BUF_LEN);
     }
 
+    default Channel<Double> getUnitBusMode() {
+        return this.channel(ChannelId.UNIT_BUS_MODE);
+    }
+
+    default Channel<Double> getMultipumpStatus() {
+        return this.channel(ChannelId.TP_STATUS);
+    }
+
+    default Channel<String> getMultipumpStatusString() {
+        return this.channel(ChannelId.TP_STATUS_STRING);
+    }
+
     default Channel<Double> getRefAct() {
         return this.channel(ChannelId.REF_ACT);
     }
@@ -634,6 +712,22 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
 
     default Channel<String> getActualControlMode() {
         return this.channel(ChannelId.ACTUAL_CONTROL_MODE_ENUM);
+    }
+
+    default Channel<Double> getUnitFamily() {
+        return this.channel(ChannelId.UNIT_FAMILY);
+    }
+
+    default Channel<Double> getUnitType() {
+        return this.channel(ChannelId.UNIT_TYPE);
+    }
+
+    default Channel<Double> getUnitVersion() {
+        return this.channel(ChannelId.UNIT_VERSION);
+    }
+
+    default Channel<String> getUnitInfo() {
+        return this.channel(ChannelId.UNIT_INFO_STRING);
     }
 
     default Channel<Double> getAlarmCodePump() {
@@ -715,6 +809,14 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
 
     default WriteChannel<Double> setConstRefMaxH() {
         return this.channel(ChannelId.H_CONST_REF_MAX);
+    }
+
+    default WriteChannel<Double> setUnitAddr() {
+        return this.channel(ChannelId.UNIT_ADDR);
+    }
+
+    default WriteChannel<Double> setGroupAddr() {
+        return this.channel(ChannelId.GROUP_ADDR);
     }
 
     // Sensor configuration

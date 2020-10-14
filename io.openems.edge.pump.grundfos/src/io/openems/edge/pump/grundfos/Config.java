@@ -20,8 +20,23 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "PumpAddress", description = "Address of the Pump.")
     int pumpAddress() default 231;
 
-    @AttributeDefinition(name = "PumpType", description = "Denotation of the Pump.")
-    String pumpType() default "Magna3";
+    @AttributeDefinition(name = "Broadcast", description = "Use this when you don't know the address of the pump. "
+            + "This will send a broadcast signal to which any connected pump will respond that is not already communicating "
+            + "via GENIbus. If there is more than one pump that could respond, which pump it is will be random. The "
+            + "address of the responding pump will be printed to the log, as well as some information about it. The "
+            + "broadcast mode should not be used to send commands to the pump.")
+    boolean broadcast() default false;
+
+    @AttributeDefinition(name = "Change address", description = "Change the GENIbus address of the pump. Won't work when "
+            + "\"broadcast\" is active. You need to restart the pump module and enter the new address after using this, "
+            + "so the new address is correctly saved in the config of Apache Felix.")
+    boolean changeAddress() default false;
+
+    @AttributeDefinition(name = "New address", description = "A value between 32 and 231 (inclusive).")
+    int newAddress() default 231;
+
+    //@AttributeDefinition(name = "PumpType", description = "Denotation of the Pump.")
+    //String pumpType() default "Magna3";
 
     String webconsole_configurationFactory_nameHint()default"Pump Grundfos [{id}]";
 }
