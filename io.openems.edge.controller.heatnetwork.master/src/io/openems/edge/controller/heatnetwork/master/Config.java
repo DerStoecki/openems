@@ -25,7 +25,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Heatnetwork Heater Id", description = "Allocated Controller Id")
     String allocatedController() default "ControlCenter0";
 
-    @AttributeDefinition(name = "Set Point Temperature", description = "Temperature to be set when HeatingRequest is incoming: Unit is dC.")
+    @AttributeDefinition(name = "SetPointTemperature", description = "Temperature to be set when HeatingRequest is incoming: Unit is dC.")
             int temperatureSetPoint() default 800;
 
     boolean enabled() default true;

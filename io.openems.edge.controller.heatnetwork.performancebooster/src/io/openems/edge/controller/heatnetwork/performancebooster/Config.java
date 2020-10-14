@@ -23,10 +23,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "DelayTime", description = "wait seconds after activation switches")
     int waitingAfterActive() default 300;
 
-    @AttributeDefinition(name = "MinTemperatureSetPoint", description = "Min Temperature --> min threshold in dC! for Buffer")
-    int minTemp() default 400;
 
-    @AttributeDefinition(name = "MaxTemperatureSetPoint", description = "Max Temperature --> max threshold in dC! for Buffer")
+    @AttributeDefinition(name = "MaxTemperatureSetPoint", description = "Max Temperature --> max in dC! for Buffer")
     int maxTemp() default 500;
 
     @AttributeDefinition(name = "MaxLiter in Buffer", description = "Max Litres in Buffer possible")
@@ -41,23 +39,21 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Heat Mixer addition", description = "Percentage increase if Error occurred in primary Heater ")
     int valvePercentAdditional() default 20;
 
+    @AttributeDefinition(name = "Percent Increase Performance Heater 2 Error", description = "If Secondary Heater got a Error this Percent will In/Decrease (negative Numbers if it should decrease).")
+    int valvePercentSubtraction() default -10;
+
     @AttributeDefinition(name = "Heater Backup Performance", description = "If the Temperature drops, the backup heater will be set to this %.")
     int backUpPercent() default 30;
 
     @AttributeDefinition(name = "Percent Increase Performance", description = "Additional Percentage Increase if Error occurred in Primary Heater.")
     int backUpPercentAdditionalHeater1Error() default 20;
 
-    @AttributeDefinition(name = "Percent Increase Performance Heater 2 Error", description = "If Secondary Heater got a Error this Percent will In/Decrease (negative Numbers if it should decrease).")
-    int backUpPercentAdditionalHeater2Error() default -10;
 
     @AttributeDefinition(name = "TemperatureSensors", description = "Temperaturesensors to overlook the Temperature.")
     String[] thermometer() default {"TemperatureSensor0", "TemperatureSensor1"};
 
     @AttributeDefinition(name = "Reference Thermometer", description = "Reference Thermometer to be a start/endpoint for activation")
     String referenceThermometer() default "NotDefined";
-
-    @AttributeDefinition(name = "Temperature Reference SetPoint", description = "Temperature for Activation")
-    int activationTemp() default 450;
 
     @AttributeDefinition(name = "TemperatureSensors at SecondaryHeater", description = "Like Primary/Secondary Forward/Rewind-->ORDER: pF,pR,sF,sR")
     String [] primaryAndSecondary() default {"NotDefined"};
@@ -68,7 +64,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "ErrorInputHeater Type 1", description = "ErrorInputs via SignalSensorsSpi for Heater Type 1 ( e.g. GasBoiler)")
     String[] backUpPercentHeater2Error() default {"SignalSensorSpi0", "SignalSensorSpi1", "SignalSensorSpi2"};
 
-    @AttributeDefinition(name = "Heat Mixer (== Valve)", description = "Temperature to be set when HeatingRequest is incoming: Unit is dC.")
+    @AttributeDefinition(name = "Heat Mixer (== Valve)", description = "Valve to connect to")
     String valve() default "Valve0";
 
     @AttributeDefinition(name = "HeaterIds Controlled by Relay or 10V", description = "Id of Devices on Relay or 0-10V module.")
@@ -77,6 +73,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Timeout", description = "After which time Should the Controller definetly deactivate. Time in s")
             int sleepTime() default 1000;
 
+    @AttributeDefinition(name = "Temperature Reference SetPoint Offset", description = "SetPoint Temperature When the Controller should Activate offset to controller")
+    int activationTempOffset() default 5;
 
     boolean enabled() default true;
 

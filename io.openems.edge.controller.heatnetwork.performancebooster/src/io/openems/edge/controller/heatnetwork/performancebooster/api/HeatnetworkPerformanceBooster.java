@@ -13,7 +13,7 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         /**
-         * SetPoint Temperature When the Controller should Activate.
+         * SetPoint Temperature When the Controller should Activate offset to controller.
          *
          * <ul>
          * <li>Interface: HeatnetworkPerformanceBooster
@@ -21,7 +21,7 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
          * <li> Unit: Dezidegree Celsius
          * </ul>
          */
-        SET_POINT_TEMPERATURE_ACTIVATE(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.DEZIDEGREE_CELSIUS).onInit(
+        SET_POINT_TEMPERATURE_ACTIVATE_OFFSET(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.DEZIDEGREE_CELSIUS).onInit(
                 channel -> {
                     ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 }
@@ -147,8 +147,10 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
          * </ul>
          */
         SECONDARY_REWIND(Doc.of(OpenemsType.INTEGER) //
-                .unit(Unit.DEZIDEGREE_CELSIUS));
+                .unit(Unit.DEZIDEGREE_CELSIUS)),
 
+        BOOSTER_ACTIVE(Doc.of(OpenemsType.BOOLEAN) //
+                );
         private final Doc doc;
 
         ChannelId(Doc doc) {
@@ -206,8 +208,12 @@ public interface HeatnetworkPerformanceBooster extends OpenemsComponent {
         return this.channel(ChannelId.SECONDARY_REWIND);
     }
 
-    default WriteChannel<Integer> temperatureSetPoint() {
-        return this.channel(ChannelId.SET_POINT_TEMPERATURE_ACTIVATE);
+    default Channel<Integer> isBoosterActive() {
+        return this.channel(ChannelId.BOOSTER_ACTIVE);
+    }
+
+    default WriteChannel<Integer> temperatureSetPointOffset() {
+        return this.channel(ChannelId.SET_POINT_TEMPERATURE_ACTIVATE_OFFSET);
     }
 
     default WriteChannel<Integer> valveSetPointStandard() {

@@ -9,6 +9,8 @@ import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.heatnetwork.master.api.HeatNetworkMaster;
 import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenterChannel;
 import io.openems.edge.rest.remote.device.general.api.RestRemoteDevice;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -18,8 +20,10 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.List;
 
 
@@ -95,12 +99,31 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         super.deactivate();
 
     }
+    @Reference
+    ConfigurationAdmin ca;
+    private void updateConfig() {
+        Configuration c;
 
+        try {
+            int channelTemp = this.temperatureSetPointChannel().value().get();
+            c = ca.getConfiguration(this.servicePid(), "?");
+            Dictionary<String, Object> properties = c.getProperties();
+            int setPointTemperature = (int) properties.get("temperatureSetPoint");
+            if (setPointTemperature != channelTemp) {
+                properties.put("temperatureSetPoint", channelTemp);
+                c.update(properties);
+            }
+        } catch (IOException e) {
+        }
+    }
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //NO DEMAND!
         // Equals 1 because Rest Get request returns 0 or 1 at boolean
-
+        if(this.temperatureSetPointChannel().getNextWriteValueAndReset().isPresent())
+        {
+            updateConfig();
+        }
         if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("1"))) {
             this.heatNetworkReady.forEach(consumer -> consumer.setValue("false"));
             this.lastTemperature = -1;

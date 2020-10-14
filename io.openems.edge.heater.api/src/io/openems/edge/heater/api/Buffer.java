@@ -72,13 +72,7 @@ public interface Buffer extends OpenemsComponent {
 
     }
 
-    default WriteChannel<Integer> temperatureSetPointMin() {
-        return this.channel(ChannelId.SET_POINT_TEMPERATURE_MIN);
-    }
 
-    default WriteChannel<Integer> temperatureSetPointMax() {
-        return this.channel(ChannelId.SET_POINT_TEMPERATURE_MAX);
-    }
 
     default WriteChannel<Integer> bufferSetPointMaxPercent() {
         return this.channel(ChannelId.SET_POINT_BUFFER_MAX_PERCENT);

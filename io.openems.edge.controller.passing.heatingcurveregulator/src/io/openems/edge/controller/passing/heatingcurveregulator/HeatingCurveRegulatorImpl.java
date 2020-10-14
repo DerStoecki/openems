@@ -7,6 +7,8 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.passing.heatingcurveregulator.api.HeatingCurveRegulatorChannel;
 import io.openems.edge.thermometer.api.Thermometer;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
@@ -14,10 +16,13 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This is the Consolinno weather dependent heating controller.
@@ -59,11 +64,11 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
                 HeatingCurveRegulatorChannel.ChannelId.values(),
                 Controller.ChannelId.values());
     }
-
+private boolean initial=true;
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
-
+		initial=true;
         activationTemp = config.activation_temp();
         roomTemp = config.room_temp();
         // Activation temperature can not be higher than desired room temperature, otherwise the function will crash.
@@ -101,6 +106,10 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
         }
 
 
+		this.getRoomTemperature().setNextValue(config.room_temp());
+		this.getActivationTemperature().setNextValue(config.activation_temp());
+		this.getSlope().setNextValue(config.slope());
+		this.getOffset().setNextValue(config.offset());
     }
 
 
@@ -109,10 +118,50 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
         super.deactivate();
         turnOnHeater(false);
     }
+	@Reference
+	ConfigurationAdmin ca;
+	private void updateConfig() {
+		Configuration c;
 
+		try {
+			c = ca.getConfiguration(this.servicePid(), "?");
+			Dictionary<String, Object> properties = c.getProperties();
+			Optional t = this.getRoomTemperature().getNextWriteValueAndReset();
+			if(t.isPresent())
+			{
+				properties.put("room.temp",t.get());
+			}
+			t = this.getActivationTemperature().getNextWriteValueAndReset();
+			if(t.isPresent())
+			{
+				properties.put("activation.temp",t.get());
+			}
+			t = this.getSlope().getNextWriteValueAndReset();
+			if(t.isPresent())
+			{
+				properties.put("slope",t.get());
+			}
+			t = this.getOffset().getNextWriteValueAndReset();
+			if(t.isPresent())
+			{
+				properties.put("offset",t.get());
+			}
+			c.update(properties);
+
+		} catch (IOException e) {
+		}
+	}
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
+		boolean restchange = this.getActivationTemperature().getNextWriteValue().isPresent();
+		restchange |= this.getRoomTemperature().getNextWriteValue().isPresent();
+		restchange |= this.getSlope().getNextWriteValue().isPresent();
+		restchange |= this.getOffset().getNextWriteValue().isPresent();
+		if(restchange)
+		{
+			updateConfig();
+		}
         // Transfer channel data to local variables for better readability of logic code.
         tempSensorSendsData = outsideTempSensor.getTemperature().value().isDefined();
         if (tempSensorSendsData) {
@@ -146,7 +195,8 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 					measurementData.clear();
 				}
 			}
-			if (shouldBeHeating == false && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > minimumStateTimeMinutes) {
+			if (initial || (shouldBeHeating == false && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > minimumStateTimeMinutes)) {
+				initial=false;
 				// Check if temperature is below activationTemp
 				if (outsideTemperature <= activationTemp) {
 					measureAverage = true;
@@ -173,13 +223,13 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
 
 					// Shortcut if average of one minute is 5k above or below activationTemp.
 					if (shouldBeHeating) {
-						if (average > activationTemp + 50) {
+						if (average > activationTemp + 30) {
 							shouldBeHeating = false;
 							timestamp = LocalDateTime.now();
 							measureAverage = false;
 						}
 					} else {
-						if (average <= activationTemp - 50) {
+						if (average <= activationTemp - 30) {
 							shouldBeHeating = true;
 							timestamp = LocalDateTime.now();
 							measureAverage = false;

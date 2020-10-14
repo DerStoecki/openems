@@ -7,6 +7,8 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.signalhotwater.api.SignalHotWaterChannel;
 import io.openems.edge.thermometer.api.Thermometer;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
@@ -14,8 +16,10 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Dictionary;
 
 
 /**
@@ -114,10 +118,34 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
     public void deactivate() {
         super.deactivate();
     }
+    @Reference
+    ConfigurationAdmin ca;
+    private void updateConfig() {
+        Configuration c;
 
+        try {
+            c = ca.getConfiguration(this.servicePid(), "?");
+            Dictionary<String, Object> properties = c.getProperties();
+            if(this.maxTempLower().value().isDefined())
+            {
+                properties.put("max_temp_lower",this.maxTempLower().value().get());
+            }
+            if(this.minTempUpper().value().isDefined())
+            {
+                properties.put("min_temp_upper",this.minTempUpper().value().get());
+            }
+            c.update(properties);
+        } catch (IOException e) {
+        }
+    }
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-
+        boolean restchange = this.maxTempLower().getNextWriteValueAndReset().isPresent();
+        restchange |= this.minTempUpper().getNextWriteValueAndReset().isPresent();
+        if(restchange)
+        {
+            updateConfig();
+        }
         // Sensor checks and error handling.
         if (watertankTempSensorUpperChannel.getTemperature().value().isDefined()) {
             if (watertankTempSensorLowerChannel.getTemperature().value().isDefined()) {

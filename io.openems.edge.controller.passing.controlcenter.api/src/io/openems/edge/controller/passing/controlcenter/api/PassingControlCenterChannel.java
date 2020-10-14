@@ -96,13 +96,8 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
         return this.channel(ChannelId.ACTIVATE_HEATER);
     }
 
-    /**
-     * Controller output. If the heater should activate or not.
-     *
-     * @return the Channel
-     */
 
-    default Channel<Boolean> temperatureHeating() {
+    default Channel<Integer> temperatureHeating() {
         return this.channel(ChannelId.TEMPERATURE_HEATING);
     }
 

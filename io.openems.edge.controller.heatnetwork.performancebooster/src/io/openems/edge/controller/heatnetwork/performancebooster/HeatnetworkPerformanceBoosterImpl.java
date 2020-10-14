@@ -1,8 +1,7 @@
 package io.openems.edge.controller.heatnetwork.performancebooster;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openems.common.exceptions.OpenemsError;
@@ -19,6 +18,8 @@ import io.openems.edge.temperature.passing.api.PassingActivateNature;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenterChannel;
 import io.openems.edge.thermometer.api.Thermometer;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -69,23 +70,23 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
                 Buffer.ChannelId.values());
 
     }
-
+    private int maxTemp = 0;
     @Activate
     void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        this.temperatureSetPointMin().setNextValue(config.minTemp());
-        this.temperatureSetPointMax().setNextValue(config.maxTemp());
+        maxTemp=config.maxTemp();
         this.valveSetPointStandard().setNextValue(config.valvePercent());
+        this.temperatureSetPointOffset().setNextValue(config.activationTempOffset());
         this.valveSetPointAddition().setNextValue(config.valvePercentAdditional());
-        this.valveSetPointSubtraction().setNextValue(config.backUpPercentAdditionalHeater2Error());
+        this.valveSetPointSubtraction().setNextValue(config.valvePercentSubtraction());
         this.heaterSetPointStandard().setNextValue(config.backUpPercent());
         this.heaterSetPointAddition().setNextValue(config.backUpPercentAdditionalHeater1Error());
-        this.temperatureSetPoint().setNextValue(config.activationTemp());
         this.storageLitreMax().setNextValue(config.litres());
         this.bufferSetPointMaxPercent().setNextValue(config.maxBufferThreshold());
         this.waitExternalSeconds =config.waitingAfterActive();
+
         allocatePrimaryAndSecondary(config.primaryAndSecondary());
         allocateComponents(config.thermometer(), "Thermometer");
         allocateComponent(config.referenceThermometer(), "ref");
@@ -96,7 +97,6 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         allocateComponents(config.heaters(), "LucidOrRelay");
 
         this.getOnOff().setNextValue(false);
-        this.deltaT = config.maxTemp() - config.minTemp();
         this.sleepTime = config.sleepTime() * 1000;
 
     }
@@ -239,11 +239,62 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     public void deactivate() {
         super.deactivate();
     }
+    @Reference
+    ConfigurationAdmin ca;
+    private void updateConfig() {
+        Configuration c;
 
+        try {
+            c = ca.getConfiguration(this.servicePid(), "?");
+            Dictionary<String, Object> properties = c.getProperties();
+            Optional t = this.valveSetPointStandard().getNextWriteValueAndReset();
+            if(t.isPresent())
+            {
+                properties.put("valvePercent",t.get());
+            }
+            t = this.valveSetPointAddition().getNextWriteValueAndReset();
+            if(t.isPresent())
+            {
+                properties.put("valvePercentAdditional",t.get());
+            }
+            t = this.valveSetPointSubtraction().getNextWriteValueAndReset();
+            if(t.isPresent())
+            {
+                properties.put("valvePercentSubtraction",t.get());
+            }
+            t = this.heaterSetPointStandard().getNextWriteValueAndReset();
+            if(t.isPresent())
+            {
+                properties.put("backUpPercent",t.get());
+            }
+            t = this.heaterSetPointAddition().getNextWriteValueAndReset();
+            if(t.isPresent())
+            {
+                properties.put("backUpPercentAdditionalHeater1Error",t.get());
+            }
+            t = this.temperatureSetPointOffset().getNextWriteValueAndReset();
+            if(t.isPresent())
+            {
+                properties.put("activationTempOffset",t.get());
+            }
+            c.update(properties);
+        } catch (IOException e) {
+        }
+    }
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
+        boolean configChanges = this.valveSetPointStandard().getNextWriteValue().isPresent();
+        configChanges |=  this.valveSetPointAddition().getNextWriteValue().isPresent();
+        configChanges |=  this.valveSetPointSubtraction().getNextWriteValue().isPresent();
+        configChanges |=  this.heaterSetPointStandard().getNextWriteValue().isPresent();
+        configChanges |=  this.heaterSetPointAddition().getNextWriteValue().isPresent();
+        configChanges |=  this.temperatureSetPointOffset().getNextWriteValue().isPresent();
+        if(configChanges)
+        {
+            updateConfig();
+        }
         averageTemperatureCalculation();
         assignCurrentTemperature();
         boolean isHeatNeeded = this.controlCenter.activateHeater().value().isDefined() && this.controlCenter.activateHeater().value().get();
@@ -267,7 +318,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         }
         this.getWaitTillStart().setNextValue(0);
         //Reference < SetPoint Temperature
-        boolean shouldActivate = this.referenceThermometer.getTemperature().value().get() < this.temperatureSetPoint().value().get();
+        boolean shouldActivate = this.referenceThermometer.getTemperature().value().get() < this.controlCenter.temperatureHeating().value().get() + this.temperatureSetPointOffset().value().get();
         boolean timeIsOver = false;
         if(this.sleepTime>0)
         {
@@ -275,12 +326,12 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         }
         //next Value bc of averageTemperatureCalculation
         boolean shouldDeactivate = (this.storagePercent().getNextValue().get() >= this.bufferSetPointMaxPercent().value().get())
-                && (this.referenceThermometer.getTemperature().value().get() > this.temperatureSetPointMax().value().get());
+                && (this.referenceThermometer.getTemperature().value().get() > this.temperatureSetPointOffset().value().get()  + this.controlCenter.temperatureHeating().value().get());
         this.getOnOff().setNextValue(shouldActivate);
 
         //Reference < SetPoint
         if (shouldActivate == true && timeIsOver == false) {
-
+            this.isBoosterActive().setNextValue(true);
             int openValvePercent = this.heatMixer.getPowerLevel().value().get().intValue();
             //Init basic Percentage for Valve and FallbackHEater
             AtomicInteger percentIncreaseValve = new AtomicInteger(this.valveSetPointStandard().value().get());
@@ -327,6 +378,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     }
     private void deactiveBooster()
     {
+        this.isBoosterActive().setNextValue(false);
         //Deactivate and force heatmixer e.g. Valve to close
         this.getOnOff().setNextValue(false);
         this.heatMixer.forceClose();
@@ -390,9 +442,14 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
         //Set AverageTemperature to calculated temp.
         this.averageTemperature().setNextValue(tempAverage.get());
         // w / p = G/100
-        int w = tempAverage.get() - this.temperatureSetPointMin().value().get();
+        int w = tempAverage.get() - this.controlCenter.temperatureHeating().value().get() + this.temperatureSetPointOffset().value().get();
         //can change during runtime
-        deltaT = this.temperatureSetPointMax().value().get() - this.temperatureSetPointMin().value().get();
+        int mintemp =this.controlCenter.temperatureHeating().value().get() + this.temperatureSetPointOffset().value().get();
+        if(this.controlCenter.temperatureHeating().value().get() + this.temperatureSetPointOffset().value().get()+20 >this.maxTemp)
+        {
+            mintemp =this.maxTemp-20;
+        }
+        deltaT = this.maxTemp - mintemp;
         //Calculate Performance etc
         int percentage = ((100 * w) / deltaT);
         this.storagePercent().setNextValue(percentage);
