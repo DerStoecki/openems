@@ -127,6 +127,7 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (componentIsMissing()) {
+            log.warn("Missing component in: " + super.id());
             return;
         }
         // Sensor checks and error handling.
@@ -245,9 +246,20 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 
     private boolean componentIsMissing() {
         try {
-            allocateComponents();
+            if (this.waermetauscherVorlauf.isEnabled() == false) {
+                this.waermetauscherVorlauf = cpm.getComponent(config.temperatureSensorVlId());
+            }
+            if (this.signalHotWaterChannel.isEnabled() == false) {
+                this.signalHotWaterChannel = cpm.getComponent(config.signalHotWaterId());
+            }
+            if (this.valvePumpControlChannel.isEnabled() == false) {
+                this.valvePumpControlChannel = cpm.getComponent(config.valveUS01overrideId());
+            }
+            if (this.valveTL01.isEnabled() == false) {
+                this.valveTL01 = cpm.getComponent(config.valveTL01Id());
+            }
             return false;
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+        } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
             return true;
         }
