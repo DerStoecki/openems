@@ -8,6 +8,7 @@ import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
@@ -15,6 +16,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -24,8 +26,29 @@ import java.util.concurrent.TimeUnit;
 )
 public class ValveImpl extends AbstractOpenemsComponent implements OpenemsComponent, Valve {
 
-    private ActuatorRelaysChannel closing;
-    private ActuatorRelaysChannel opens;
+    @Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    protected void setClosingRelay(ActuatorRelaysChannel relay) {
+        closing.set(relay);
+    }
+
+    protected void unsetClosingRelay(ActuatorRelaysChannel relay) throws OpenemsError.OpenemsNamedException {
+        this.deactivate();
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    protected void setOpeningRelay(ActuatorRelaysChannel relay) {
+        opens.set(relay);
+    }
+
+    protected void unsetOpeningRelay(ActuatorRelaysChannel relay) {
+        this.deactivate();
+    }
+
+
+    private AtomicReference<ActuatorRelaysChannel> closing = new AtomicReference<>();
+    private AtomicReference<ActuatorRelaysChannel> opens = new AtomicReference<>();
+    private ActuatorRelaysChannel closes;
+    private ActuatorRelaysChannel open;
     private double secondsPerPercentage;
     private long timeStampValveInitial;
     private long timeStampValveCurrent = -1;
@@ -36,6 +59,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     private boolean wasAlreadyReset = false;
     private boolean isForced;
 
+    private Config config;
+
+    @Reference
+    ConfigurationAdmin cm;
 
     @Reference
     ComponentManager cpm;
@@ -52,13 +79,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
         super.activate(context, config.id(), config.alias(), config.enabled());
-
-        if (cpm.getComponent(config.closing_Relays()) instanceof ActuatorRelaysChannel) {
-            closing = cpm.getComponent(config.closing_Relays());
-        }
-        if (cpm.getComponent(config.opening_Relays()) instanceof ActuatorRelaysChannel) {
-            opens = cpm.getComponent(config.opening_Relays());
-        }
         this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getLastPowerLevel().setNextValue(0);
@@ -67,21 +87,27 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         this.getTimeNeeded().setNextValue(0);
         this.setPowerLevelPercent().setNextValue(-1);
         this.setGoalPowerLevel().setNextValue(0);
-        if (config.shouldCloseOnActivation()) {
+        this.config = config;
+
+        if (OpenemsComponent.updateReferenceFilter(cm, this.servicePid(), "ClosingRelay", config.closing_Relays()) == false) {
+            this.closes = this.closing.get();
+        }
+
+        if (OpenemsComponent.updateReferenceFilter(cm, this.servicePid(), "OpeningRelay", config.opening_Relays()) == false) {
+            this.open = this.opens.get();
+        }
+
+        if (this.open != null && this.closes != null && config.shouldCloseOnActivation() == true) {
             this.forceClose();
         }
+
     }
 
     @Deactivate
     public void deactivate() {
-        try {
             super.deactivate();
-            //in case somethings happening; the Valve will be closed.
-            closing.getRelaysChannel().setNextWriteValue(closing.isCloser().getNextValue().get());
-            opens.getRelaysChannel().setNextWriteValue(!opens.isCloser().getNextValue().get());
-        } catch (OpenemsError.OpenemsNamedException e) {
-            e.printStackTrace();
-        }
+            this.closes = null;
+            this.open = null;
         this.managerValve.removeValve(super.id());
     }
 
@@ -379,17 +405,18 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         try {
             switch (whichRelays) {
                 case "Open":
-                    this.opens.getRelaysChannel().setNextWriteValue(activate);
+                    this.open.getRelaysChannel().setNextWriteValue(activate);
                     break;
 
                 case "Closed":
-                    this.closing.getRelaysChannel().setNextWriteValue(activate);
+                    this.closes.getRelaysChannel().setNextWriteValue(activate);
                     break;
             }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
     }
+
 
 
     // --------- UTILITY -------------//
