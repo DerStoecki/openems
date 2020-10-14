@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is the Consolinno weather dependent heating controller.
@@ -46,14 +47,14 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
     private int roomTemp;
     private double slope;
     private int offset;
-	private LocalDateTime timestamp;
-	private int measurementTimeMinutes;
-	private int minimumStateTimeMinutes;
-	private boolean measureAverage = false;
-	private int measurementCounter = 0;
-	private int[] measurementDataOneMinute = new int[60];
-	private List<Integer> measurementData = new ArrayList<>();
-	private boolean shouldBeHeating = false;
+    private LocalDateTime timestamp;
+    private int measurementTimeMinutes;
+    private int minimumStateTimeMinutes;
+    private boolean measureAverage = false;
+    private int measurementCounter = 0;
+    private int[] measurementDataOneMinute = new int[60];
+    private List<Integer> measurementData = new ArrayList<>();
+    private boolean shouldBeHeating = false;
 
     // Variables for channel readout
     private boolean tempSensorSendsData;
@@ -64,11 +65,21 @@ public class HeatingCurveRegulatorImpl extends AbstractOpenemsComponent implemen
                 HeatingCurveRegulatorChannel.ChannelId.values(),
                 Controller.ChannelId.values());
     }
-private boolean initial=true;
+
+    private boolean initial = true;
+
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        AtomicBoolean instanceFound = new AtomicBoolean(false);
+
+        cpm.getAllComponents().stream().filter(component -> component.id().equals(config.id())).findFirst().ifPresent(consumer -> {
+            instanceFound.set(true);
+        });
+        if (instanceFound.get() == true) {
+            return;
+        }
         super.activate(context, config.id(), config.alias(), config.enabled());
-		initial=true;
+        initial = true;
         activationTemp = config.activation_temp();
         roomTemp = config.room_temp();
         // Activation temperature can not be higher than desired room temperature, otherwise the function will crash.
@@ -82,18 +93,18 @@ private boolean initial=true;
 
         this.noError().setNextValue(true);
 
-		// Set timestamp so that logic part 1 executes right away.
-		timestamp = LocalDateTime.now().minusMinutes(minimumStateTimeMinutes);
+        // Set timestamp so that logic part 1 executes right away.
+        timestamp = LocalDateTime.now().minusMinutes(minimumStateTimeMinutes);
 
-		measurementTimeMinutes = config.measurement_time_minutes();
-		minimumStateTimeMinutes = config.minimum_state_time_minutes();
-		if (measurementTimeMinutes > minimumStateTimeMinutes) {
-			measurementTimeMinutes = minimumStateTimeMinutes;
-		}
+        measurementTimeMinutes = config.measurement_time_minutes();
+        minimumStateTimeMinutes = config.minimum_state_time_minutes();
+        if (measurementTimeMinutes > minimumStateTimeMinutes) {
+            measurementTimeMinutes = minimumStateTimeMinutes;
+        }
 
-		measureAverage = false;
-		measurementCounter = 0;
-		measurementData.clear();
+        measureAverage = false;
+        measurementCounter = 0;
+        measurementData.clear();
 
         // Allocate temperature sensor.
 
@@ -106,10 +117,10 @@ private boolean initial=true;
         }
 
 
-		this.getRoomTemperature().setNextValue(config.room_temp());
-		this.getActivationTemperature().setNextValue(config.activation_temp());
-		this.getSlope().setNextValue(config.slope());
-		this.getOffset().setNextValue(config.offset());
+        this.getRoomTemperature().setNextValue(config.room_temp());
+        this.getActivationTemperature().setNextValue(config.activation_temp());
+        this.getSlope().setNextValue(config.slope());
+        this.getOffset().setNextValue(config.offset());
     }
 
 
@@ -118,50 +129,48 @@ private boolean initial=true;
         super.deactivate();
         turnOnHeater(false);
     }
-	@Reference
-	ConfigurationAdmin ca;
-	private void updateConfig() {
-		Configuration c;
 
-		try {
-			c = ca.getConfiguration(this.servicePid(), "?");
-			Dictionary<String, Object> properties = c.getProperties();
-			Optional t = this.getRoomTemperature().getNextWriteValueAndReset();
-			if(t.isPresent())
-			{
-				properties.put("room.temp",t.get());
-			}
-			t = this.getActivationTemperature().getNextWriteValueAndReset();
-			if(t.isPresent())
-			{
-				properties.put("activation.temp",t.get());
-			}
-			t = this.getSlope().getNextWriteValueAndReset();
-			if(t.isPresent())
-			{
-				properties.put("slope",t.get());
-			}
-			t = this.getOffset().getNextWriteValueAndReset();
-			if(t.isPresent())
-			{
-				properties.put("offset",t.get());
-			}
-			c.update(properties);
+    @Reference
+    ConfigurationAdmin ca;
 
-		} catch (IOException e) {
-		}
-	}
+    private void updateConfig() {
+        Configuration c;
+
+        try {
+            c = ca.getConfiguration(this.servicePid(), "?");
+            Dictionary<String, Object> properties = c.getProperties();
+            Optional t = this.getRoomTemperature().getNextWriteValueAndReset();
+            if (t.isPresent()) {
+                properties.put("room.temp", t.get());
+            }
+            t = this.getActivationTemperature().getNextWriteValueAndReset();
+            if (t.isPresent()) {
+                properties.put("activation.temp", t.get());
+            }
+            t = this.getSlope().getNextWriteValueAndReset();
+            if (t.isPresent()) {
+                properties.put("slope", t.get());
+            }
+            t = this.getOffset().getNextWriteValueAndReset();
+            if (t.isPresent()) {
+                properties.put("offset", t.get());
+            }
+            c.update(properties);
+
+        } catch (IOException e) {
+        }
+    }
+
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 
-		boolean restchange = this.getActivationTemperature().getNextWriteValue().isPresent();
-		restchange |= this.getRoomTemperature().getNextWriteValue().isPresent();
-		restchange |= this.getSlope().getNextWriteValue().isPresent();
-		restchange |= this.getOffset().getNextWriteValue().isPresent();
-		if(restchange)
-		{
-			updateConfig();
-		}
+        boolean restchange = this.getActivationTemperature().getNextWriteValue().isPresent();
+        restchange |= this.getRoomTemperature().getNextWriteValue().isPresent();
+        restchange |= this.getSlope().getNextWriteValue().isPresent();
+        restchange |= this.getOffset().getNextWriteValue().isPresent();
+        if (restchange) {
+            updateConfig();
+        }
         // Transfer channel data to local variables for better readability of logic code.
         tempSensorSendsData = outsideTempSensor.getTemperature().value().isDefined();
         if (tempSensorSendsData) {
@@ -181,97 +190,96 @@ private boolean initial=true;
         }
 
 
-		// Control logic. Execution starts at part 1, which decides if the next part executes or not.
+        // Control logic. Execution starts at part 1, which decides if the next part executes or not.
         if (tempSensorSendsData) {
 
-			// Part 1. Test temperature. Execution blocked by timestamp that is set when state changes (heating or no
-			// heating). This means once state changes, it will keep that state for at least minimumStateTimeMinutes.
-			if (shouldBeHeating && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > minimumStateTimeMinutes) {
-				// Check if temperature is above activationTemp
-				if (outsideTemperature > activationTemp) {
-					measureAverage = true;
-					timestamp = LocalDateTime.now();
-					measurementCounter = 0;
-					measurementData.clear();
-				}
-			}
-			if (initial || (shouldBeHeating == false && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > minimumStateTimeMinutes)) {
-				initial=false;
-				// Check if temperature is below activationTemp
-				if (outsideTemperature <= activationTemp) {
-					measureAverage = true;
-					timestamp = LocalDateTime.now();
-					measurementCounter = 0;
-					measurementData.clear();
-				}
-			}
+            // Part 1. Test temperature. Execution blocked by timestamp that is set when state changes (heating or no
+            // heating). This means once state changes, it will keep that state for at least minimumStateTimeMinutes.
+            if (shouldBeHeating && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > minimumStateTimeMinutes) {
+                // Check if temperature is above activationTemp
+                if (outsideTemperature > activationTemp) {
+                    measureAverage = true;
+                    timestamp = LocalDateTime.now();
+                    measurementCounter = 0;
+                    measurementData.clear();
+                }
+            }
+            if (initial || (shouldBeHeating == false && ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > minimumStateTimeMinutes)) {
+                initial = false;
+                // Check if temperature is below activationTemp
+                if (outsideTemperature <= activationTemp) {
+                    measureAverage = true;
+                    timestamp = LocalDateTime.now();
+                    measurementCounter = 0;
+                    measurementData.clear();
+                }
+            }
+            // Part 2. Get average temperature over a set time period (entered in config). Use that average to decide
+            // heating state. Has a shortcut that decides faster if average temperature of 60 cycles is well above or
+            // below activation temperature. The shortcut is for a controller restart in winter, so heating starts faster.
+            if (measureAverage) {
+                measurementDataOneMinute[measurementCounter] = outsideTemperature;
+                measurementCounter++;
+                if (measurementCounter >= 60) {
+                    double average = 0;
+                    for (int i = 0; i < 60; i++) {
+                        average += measurementDataOneMinute[i];
+                    }
+                    average = average / 60.0;
+                    measurementData.add((int) Math.round(average));
+                    measurementCounter = 0;
 
-			// Part 2. Get average temperature over a set time period (entered in config). Use that average to decide
-			// heating state. Has a shortcut that decides faster if average temperature of 60 cycles is well above or
-			// below activation temperature. The shortcut is for a controller restart in winter, so heating starts faster.
-			if (measureAverage) {
-				measurementDataOneMinute[measurementCounter] = outsideTemperature;
-				measurementCounter++;
-				if (measurementCounter >= 60) {
-					double average = 0;
-					for (int i = 0; i < 60; i++) {
-						average += measurementDataOneMinute[i];
-					}
-					average = average / 60.0;
-					measurementData.add((int)Math.round(average));
-					measurementCounter = 0;
+                    // Shortcut if average of one minute is 5k above or below activationTemp.
+                    if (shouldBeHeating) {
+                        if (average > activationTemp + 30) {
+                            shouldBeHeating = false;
+                            timestamp = LocalDateTime.now();
+                            measureAverage = false;
+                        }
+                    } else {
+                        if (average <= activationTemp - 30) {
+                            shouldBeHeating = true;
+                            timestamp = LocalDateTime.now();
+                            measureAverage = false;
+                        }
+                    }
+                }
 
-					// Shortcut if average of one minute is 5k above or below activationTemp.
-					if (shouldBeHeating) {
-						if (average > activationTemp + 30) {
-							shouldBeHeating = false;
-							timestamp = LocalDateTime.now();
-							measureAverage = false;
-						}
-					} else {
-						if (average <= activationTemp - 30) {
-							shouldBeHeating = true;
-							timestamp = LocalDateTime.now();
-							measureAverage = false;
-						}
-					}
-				}
+                // Part 3. Evaluation at end of measurement time.
+                // Fail safe: needs at least one entry in measurementData, meaning at least 60 cycles have passed.
+                if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > measurementTimeMinutes
+                        && measurementData.size() >= 1) {
+                    double sum = 0;
+                    for (Integer entry : measurementData) {
+                        sum += entry;
+                    }
+                    int totalAverage = (int) Math.round(sum / measurementData.size());
 
-				// Part 3. Evaluation at end of measurement time.
-				// Fail safe: needs at least one entry in measurementData, meaning at least 60 cycles have passed.
-				if (ChronoUnit.MINUTES.between(timestamp, LocalDateTime.now()) > measurementTimeMinutes
-						&& measurementData.size() >= 1) {
-					double sum = 0;
-					for (Integer entry : measurementData) {
-						sum += entry;
-					}
-					int totalAverage = (int) Math.round(sum / measurementData.size());
-
-					if (shouldBeHeating) {
-						// Is heating right now. Should heating be turned off?
-						if (totalAverage > activationTemp) {
-							shouldBeHeating = false;
-							timestamp = LocalDateTime.now();
-						} else {
-							// Set timestamp so that part 1 executes again right away.
-							timestamp = LocalDateTime.now().minusMinutes(minimumStateTimeMinutes);
-						}
-					} else {
-						// Is not heating right now. Should heating be turned on?
-						if (totalAverage <= activationTemp) {
-							shouldBeHeating = true;
-							timestamp = LocalDateTime.now();
-						} else {
-							// Set timestamp so that part 1 executes again right away.
-							timestamp = LocalDateTime.now().minusMinutes(minimumStateTimeMinutes);
-						}
-					}
-					measureAverage = false;
-				}
-			}
+                    if (shouldBeHeating) {
+                        // Is heating right now. Should heating be turned off?
+                        if (totalAverage > activationTemp) {
+                            shouldBeHeating = false;
+                            timestamp = LocalDateTime.now();
+                        } else {
+                            // Set timestamp so that part 1 executes again right away.
+                            timestamp = LocalDateTime.now().minusMinutes(minimumStateTimeMinutes);
+                        }
+                    } else {
+                        // Is not heating right now. Should heating be turned on?
+                        if (totalAverage <= activationTemp) {
+                            shouldBeHeating = true;
+                            timestamp = LocalDateTime.now();
+                        } else {
+                            // Set timestamp so that part 1 executes again right away.
+                            timestamp = LocalDateTime.now().minusMinutes(minimumStateTimeMinutes);
+                        }
+                    }
+                    measureAverage = false;
+                }
+            }
 
 
-			if (shouldBeHeating) {
+            if (shouldBeHeating) {
                 turnOnHeater(true);
 
                 // Calculate heating temperature. Function calculates everything in degree, not dezidegree!

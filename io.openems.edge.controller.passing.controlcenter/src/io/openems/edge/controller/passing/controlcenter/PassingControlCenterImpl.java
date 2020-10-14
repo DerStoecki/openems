@@ -17,6 +17,8 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * This is the Consolinno Passing Control Center module. It manages the hierarchy of heating controllers.
  * - The output of a heating controller is a temperature and a boolean to signal if the controller wants to heat or not.
@@ -48,6 +50,8 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
     private boolean heatingCurveRegulatorNoError;
     private int heatingCurveRegulatorTemperature;
 
+    private Config config;
+
 
     public PassingControlCenterImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -57,36 +61,19 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        AtomicBoolean instanceFound = new AtomicBoolean(false);
+
+        cpm.getAllComponents().stream().filter(component -> component.id().equals(config.id())).findFirst().ifPresent(consumer -> {
+            instanceFound.set(true);
+        });
+        if (instanceFound.get() == true) {
+            return;
+        }
         super.activate(context, config.id(), config.alias(), config.enabled());
-
+        this.config = config;
         //allocate components
-        if (cpm.getComponent(config.allocated_Pid_Controller()) instanceof PidForPassingNature) {
-            pidControllerChannel = cpm.getComponent(config.allocated_Pid_Controller());
-        } else {
-            throw new ConfigurationException(config.allocated_Pid_Controller(),
-                    "Allocated Passing Controller not a Pid for Passing Controller; Check if Name is correct and try again.");
-        }
-        if (cpm.getComponent(config.allocated_Warmup_Controller()) instanceof ControllerWarmupChannel) {
-            this.warmupControllerChannel = cpm.getComponent(config.allocated_Warmup_Controller());
-        } else {
-            throw new ConfigurationException(config.allocated_Warmup_Controller(),
-                    "Allocated Warmup Controller not a WarmupPassing Controller; Check if Name is correct and try again.");
-        }
-        if (cpm.getComponent(config.allocated_Heating_Curve_Regulator()) instanceof HeatingCurveRegulatorChannel) {
-            this.heatingCurveRegulatorChannel = cpm.getComponent(config.allocated_Heating_Curve_Regulator());
-        } else {
-            throw new ConfigurationException(config.allocated_Warmup_Controller(),
-                    "Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
-        }
-        if (cpm.getComponent(config.allocated_Pump()) instanceof ActuatorRelaysChannel) {
-            this.pump = cpm.getComponent(config.allocated_Pump());
-        } else {
-            throw new ConfigurationException(config.allocated_Warmup_Controller(),
-                    "Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
-        }
-
+        this.allocateComponents();
         this.activateHeater().setNextValue(false);
-
         // This allows to start the warmupController from this module.
         if (config.run_warmup_program()) {
             warmupControllerChannel.playPauseWarmupController().setNextWriteValue(true);
@@ -100,7 +87,9 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-
+        if (componentIsMissing()) {
+            return;
+        }
         // For the Overrides, copy values from the WriteValue to the NextValue fields.
         if (this.activateTemperatureOverride().getNextWriteValue().isPresent()) {
             this.activateTemperatureOverride().setNextValue(this.activateTemperatureOverride().getNextWriteValue().get());
@@ -152,6 +141,20 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
         }
     }
 
+    /**
+     * Because Components can be updated, get new Instances of Components.
+     *
+     * @return true if every component could be reached etc.
+     */
+    private boolean componentIsMissing() {
+        try {
+            allocateComponents();
+            return false;
+        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+            return true;
+        }
+    }
+
 
     private void turnOnHeater(int temperatureInDezidegree) throws OpenemsError.OpenemsNamedException {
         this.activateHeater().setNextValue(true);
@@ -166,6 +169,34 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
         this.temperatureHeating().setNextValue(0);
         pidControllerChannel.turnOn().setNextWriteValue(false);
         pump.getRelaysChannel().setNextWriteValue(false);
+    }
+
+    void allocateComponents() throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        if (cpm.getComponent(config.allocated_Pid_Controller()) instanceof PidForPassingNature) {
+            pidControllerChannel = cpm.getComponent(config.allocated_Pid_Controller());
+        } else {
+            throw new ConfigurationException(config.allocated_Pid_Controller(),
+                    "Allocated Passing Controller not a Pid for Passing Controller; Check if Name is correct and try again.");
+        }
+        if (cpm.getComponent(config.allocated_Warmup_Controller()) instanceof ControllerWarmupChannel) {
+            this.warmupControllerChannel = cpm.getComponent(config.allocated_Warmup_Controller());
+        } else {
+            throw new ConfigurationException(config.allocated_Warmup_Controller(),
+                    "Allocated Warmup Controller not a WarmupPassing Controller; Check if Name is correct and try again.");
+        }
+        if (cpm.getComponent(config.allocated_Heating_Curve_Regulator()) instanceof HeatingCurveRegulatorChannel) {
+            this.heatingCurveRegulatorChannel = cpm.getComponent(config.allocated_Heating_Curve_Regulator());
+        } else {
+            throw new ConfigurationException(config.allocated_Warmup_Controller(),
+                    "Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
+        }
+        if (cpm.getComponent(config.allocated_Pump()) instanceof ActuatorRelaysChannel) {
+            this.pump = cpm.getComponent(config.allocated_Pump());
+        } else {
+            throw new ConfigurationException(config.allocated_Warmup_Controller(),
+                    "Allocated Heating Controller not a Heating Curve Regulator; Check if Name is correct and try again.");
+        }
+
     }
 
 }

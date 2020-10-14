@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Dictionary;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -75,8 +76,9 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
     private boolean heatNetworkReady;
     private int watertankTempUpperSensor;
     private int watertankTempLowerSensor;
-    private long startTimeNotTooCold =0;
-    private int heatingDelay =0;
+    private long startTimeNotTooCold = 0;
+    private int heatingDelay = 0;
+
     public SignalHotWaterImpl() {
         super(OpenemsComponent.ChannelId.values(),
                 SignalHotWaterChannel.ChannelId.values(),
@@ -85,11 +87,19 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        AtomicBoolean instanceFound = new AtomicBoolean(false);
+
+        cpm.getAllComponents().stream().filter(component -> component.id().equals(config.id())).findFirst().ifPresent(consumer -> {
+            instanceFound.set(true);
+        });
+        if (instanceFound.get() == true) {
+            return;
+        }
         super.activate(context, config.id(), config.alias(), config.enabled());
 
         minTempUpper = config.min_temp_upper() * 10;    // Convert to dezidegree.
         maxTempLower = config.max_temp_lower() * 10;
-        heatingDelay = config.getHeatingDelay()*1000;
+        heatingDelay = config.getHeatingDelay() * 1000;
         responseTimeout = config.response_timeout();
         this.heatTankRequest().setNextValue(false);
         this.needHotWater().setNextValue(false);
@@ -118,32 +128,32 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
     public void deactivate() {
         super.deactivate();
     }
+
     @Reference
     ConfigurationAdmin ca;
+
     private void updateConfig() {
         Configuration c;
 
         try {
             c = ca.getConfiguration(this.servicePid(), "?");
             Dictionary<String, Object> properties = c.getProperties();
-            if(this.maxTempLower().value().isDefined())
-            {
-                properties.put("max_temp_lower",this.maxTempLower().value().get());
+            if (this.maxTempLower().value().isDefined()) {
+                properties.put("max_temp_lower", this.maxTempLower().value().get());
             }
-            if(this.minTempUpper().value().isDefined())
-            {
-                properties.put("min_temp_upper",this.minTempUpper().value().get());
+            if (this.minTempUpper().value().isDefined()) {
+                properties.put("min_temp_upper", this.minTempUpper().value().get());
             }
             c.update(properties);
         } catch (IOException e) {
         }
     }
+
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         boolean restchange = this.maxTempLower().getNextWriteValueAndReset().isPresent();
         restchange |= this.minTempUpper().getNextWriteValueAndReset().isPresent();
-        if(restchange)
-        {
+        if (restchange) {
             updateConfig();
         }
         // Sensor checks and error handling.
@@ -177,7 +187,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
         if (tempSensorsSendData) {
 
             // Check if water tank is above max temperature.
-            if (watertankTempLowerSensor > maxTempLower && (startTimeNotTooCold!=0) && (startTimeNotTooCold + heatingDelay < System.currentTimeMillis())) {
+            if (watertankTempLowerSensor > maxTempLower && (startTimeNotTooCold != 0) && (startTimeNotTooCold + heatingDelay < System.currentTimeMillis())) {
                 // Stop heating
                 this.heatTankRequest().setNextValue(false);
                 this.needHotWater().setNextValue(false);
@@ -230,7 +240,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
                 }
             } else {
-                if(startTimeNotTooCold==0) {
+                if (startTimeNotTooCold == 0) {
                     startTimeNotTooCold = System.currentTimeMillis();
                 }
                 // If water tank temperature is not too low, check remote for "off" signal.
