@@ -13,6 +13,7 @@ public interface ValvePumpControlChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+        VALVE_CLOSING(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
         /**
          * Open or close the valve. True means open, false means close. Override needs to be active for this to do anything.
          * <ul>
@@ -99,6 +100,10 @@ public interface ValvePumpControlChannel extends OpenemsComponent {
 
     default Channel<Boolean> noError() {
         return this.channel(ChannelId.NO_ERROR);
+    }
+
+    default WriteChannel<Integer> valveClosing() {
+        return this.channel(ChannelId.VALVE_CLOSING);
     }
 
 }

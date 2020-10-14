@@ -1,15 +1,18 @@
 package io.openems.edge.controller.signalhotwater.valvecontroller.api;
 
 import io.openems.common.channel.AccessMode;
+import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface SignalHotWaterValvecontrollerChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+        VALVE_OPENING(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
 
         /**
          * No error in this controller.
@@ -44,6 +47,10 @@ public interface SignalHotWaterValvecontrollerChannel extends OpenemsComponent {
 
     default Channel<Boolean> noError() {
         return this.channel(ChannelId.NO_ERROR);
+    }
+
+    default WriteChannel<Integer> valveOpening() {
+        return this.channel(ChannelId.VALVE_OPENING);
     }
 
 }

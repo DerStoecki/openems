@@ -10,6 +10,8 @@ import io.openems.edge.controller.signalhotwater.api.SignalHotWaterChannel;
 import io.openems.edge.controller.signalhotwater.valvecontroller.api.SignalHotWaterValvecontrollerChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.thermometer.api.Thermometer;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
@@ -17,8 +19,10 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Dictionary;
 
 /**
  * This controller receives the "needHotWater" signal from the "SignalHotWater" controller. This controller is
@@ -110,9 +114,31 @@ public class SignalHotWaterValveControllerImpl extends AbstractOpenemsComponent 
 	public void deactivate() {super.deactivate();}
 
 
+	@Reference
+	ConfigurationAdmin ca;
+	private void updateConfig() {
+		Configuration c;
+
+		try {
+			c = ca.getConfiguration(this.servicePid(), "?");
+			Dictionary<String, Object> properties = c.getProperties();
+			if(this.valveOpening().value().isDefined())
+			{
+				properties.put("getValvePercent",this.valveOpening().value().get());
+				valvePercentOpen =this.valveOpening().value().get();
+			}
+			c.update(properties);
+		} catch (IOException e) {
+		}
+	}
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
+		boolean restchange = this.valveOpening().getNextWriteValueAndReset().isPresent();
 
+		if(restchange)
+		{
+			updateConfig();
+		}
 		// Sensor checks and error handling.
 		if (waermetauscherVorlauf.getTemperature().value().isDefined()) {
 			if (signalHotWaterChannel.waterTankTemp().value().isDefined()) {

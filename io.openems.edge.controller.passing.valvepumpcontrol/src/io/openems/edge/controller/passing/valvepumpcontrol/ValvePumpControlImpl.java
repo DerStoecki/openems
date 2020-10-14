@@ -9,12 +9,17 @@ import io.openems.edge.controller.passing.controlcenter.api.PassingControlCenter
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 import io.openems.edge.controller.passing.valvepumpcontrol.api.ValvePumpControlChannel;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Dictionary;
 
 
 /**
@@ -36,6 +41,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 	private PassingControlCenterChannel heatingController;
 	private Valve valveUS01;
 	private Pump pumpHK01;
+	private int closeValvePercent=20;
 
 	// Variables for channel readout
 	private boolean heaterWantsToHeat;
@@ -54,7 +60,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 		super.activate(context, config.id(), config.alias(), config.enabled());
 
 		this.noError().setNextValue(true);
-
+		this.closeValvePercent = config.closeValvePercent();
 		//allocate components
 
 			if (cpm.getComponent(config.allocated_Heating_Controller()) instanceof PassingControlCenterChannel) {
@@ -85,6 +91,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 	@Deactivate
 	public void deactivate() {
 		super.deactivate();
+
 		valveUS01.forceClose();
 		if(pumpHK01 !=null)
 		{
@@ -93,10 +100,31 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 		}
 	}
 
+	@Reference
+	ConfigurationAdmin ca;
+	private void updateConfig() {
+		Configuration c;
 
+		try {
+			c = ca.getConfiguration(this.servicePid(), "?");
+			Dictionary<String, Object> properties = c.getProperties();
+			if(this.valveClosing().value().isDefined())
+			{
+				properties.put("closeValvePercent",this.valveClosing().value().get());
+				closeValvePercent =this.valveClosing().value().get();
+			}
+			c.update(properties);
+		} catch (IOException e) {
+		}
+	}
 	@Override
 	public void run() throws OpenemsError.OpenemsNamedException {
+		boolean restchange = this.valveClosing().getNextWriteValueAndReset().isPresent();
 
+		if(restchange)
+		{
+			updateConfig();
+		}
 		// Transfer channel data to local variables for better readability of logic code.
 		heaterWantsToHeat = heatingController.activateHeater().value().orElse(false);	// Null in channel is counted as false.
 		valveOverrideActive = activateValveOverride().value().orElse(false); // Null in channel is counted as false.
@@ -111,7 +139,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 				valveOpen();
 			} else {
 				//
-				valveClose(0);
+				valveClose(closeValvePercent);
 			}
 		}
 		if (heaterWantsToHeat) {
@@ -155,7 +183,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 
 	private void stopPump() {
 		// Check if pump has already stopped.
-		if (pumpHK01!= null && pumpHK01.getPowerLevel().value().orElse(0.0) > 0) {
+		if (closeValvePercent==0 && pumpHK01!= null && pumpHK01.getPowerLevel().value().orElse(0.0) > 0) {
 			pumpHK01.changeByPercentage(-101); // = deactivate. Use 101 because variable is double and math with double is not accurate.
 		}
 	}
@@ -185,7 +213,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 			if (setValveOverrideOpenClose().value().get()) {
 				valveOpen();
 			} else {
-				valveClose(20);
+				valveClose(closeValvePercent);
 			}
 		}
 	}

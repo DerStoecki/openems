@@ -26,6 +26,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "heating circuit pump HK01", description = "The pump operating the heating circuit HK01.")
     String pumpHK01Id() default "HK01";
 
+    @AttributeDefinition(name = "minimumClosingValve", description = "Closing the US01 to minimum percent")
+    int closeValvePercent() default 20;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Controller Consolinno Valve and Pump Control [{id}]";
