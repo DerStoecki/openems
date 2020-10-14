@@ -18,6 +18,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -25,6 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Controller.Passing.Pid")
 public class PidForPassingStationController extends AbstractOpenemsComponent implements OpenemsComponent, Controller, PidForPassingNature {
+
+    private final Logger log = LoggerFactory.getLogger(PidForPassingStationController.class);
 
     @Reference
     ComponentManager cpm;
@@ -126,6 +130,7 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (componentIsMissing()) {
+            log.warn("A Component is Missing in the Controller : " + super.id());
             return;
         }
         counter++;
@@ -182,9 +187,17 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
     private boolean componentIsMissing() {
         try {
-            allocateComponents();
+            if (this.passingForPid.isEnabled() == false) {
+                this.passingForPid = cpm.getComponent(config.allocatedPassingDevice());
+            }
+            if (config.useDependency() == true && this.passing.isEnabled() == false) {
+                this.passing = cpm.getComponent(config.passingControllerId());
+            }
+            if (this.thermometer.isEnabled() == false) {
+                this.thermometer = cpm.getComponent(config.temperatureSensorId());
+            }
             return false;
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+        } catch (OpenemsError.OpenemsNamedException e) {
             return true;
         }
     }

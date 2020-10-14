@@ -111,6 +111,7 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (componentIsMissing()) {
+            log.warn("A Component is missing in: " + super.id());
             return;
         }
         // Transfer channel data to local variables for better readability of logic code.
@@ -139,9 +140,17 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 
     private boolean componentIsMissing() {
         try {
-            allocateComponents();
+            if (this.heatingController.isEnabled() == false) {
+                this.heatingController = cpm.getComponent(config.allocated_Heating_Controller());
+            }
+            if (this.valveUS01.isEnabled() == false) {
+                this.valveUS01 = cpm.getComponent(config.valveUS01Id());
+            }
+            if (this.pumpHK01.isEnabled() == false) {
+                this.pumpHK01 = cpm.getComponent(config.pumpHK01Id());
+            }
             return false;
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+        } catch (OpenemsError.OpenemsNamedException e) {
             return true;
         }
     }

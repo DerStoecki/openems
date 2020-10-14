@@ -88,6 +88,7 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (componentIsMissing()) {
+            log.warn("A Component is missing in: " + super.id());
             return;
         }
         // For the Overrides, copy values from the WriteValue to the NextValue fields.
@@ -148,9 +149,20 @@ public class PassingControlCenterImpl extends AbstractOpenemsComponent implement
      */
     private boolean componentIsMissing() {
         try {
-            allocateComponents();
+            if (this.pidControllerChannel.isEnabled() == false) {
+                this.pidControllerChannel = cpm.getComponent(config.allocated_Pid_Controller());
+            }
+            if (this.warmupControllerChannel.isEnabled() == false) {
+                this.warmupControllerChannel = cpm.getComponent(config.allocated_Warmup_Controller());
+            }
+            if (this.heatingCurveRegulatorChannel.isEnabled() == false) {
+                this.heatingCurveRegulatorChannel = cpm.getComponent(config.allocated_Heating_Curve_Regulator());
+            }
+            if (this.pump.isEnabled() == false) {
+                this.pump = cpm.getComponent(config.allocated_Pump());
+            }
             return false;
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
+        } catch (OpenemsError.OpenemsNamedException e) {
             return true;
         }
     }

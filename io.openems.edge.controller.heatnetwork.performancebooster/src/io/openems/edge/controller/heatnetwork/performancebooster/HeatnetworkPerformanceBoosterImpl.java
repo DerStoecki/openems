@@ -28,11 +28,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Controller.Heatnetwork.Performancebooster")
 public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent implements OpenemsComponent, HeatnetworkPerformanceBooster, Controller, PassingActivateNature, Buffer {
+
+    private final Logger log = LoggerFactory.getLogger(HeatnetworkPerformanceBoosterImpl.class);
 
     @Reference
     ComponentManager cpm;
@@ -298,6 +302,7 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         if (componentIsMissing()) {
+            log.warn("A Component is missing in: " + super.id());
             return;
         }
         boolean configChanges = this.valveSetPointStandard().getNextWriteValue().isPresent();
@@ -388,12 +393,103 @@ public class HeatnetworkPerformanceBoosterImpl extends AbstractOpenemsComponent 
     }
 
     private boolean componentIsMissing() {
+        AtomicBoolean error = new AtomicBoolean(false);
+        //CHECK THERMOMETER
         try {
-            allocateComponent(config.valve(), "Valve");
-            return true;
+            //thermometer
+            updateThermometerList(error);
+            if (error.get() == true) {
+                return error.get();
+            }
+            updateFallbackSignalSensors(error);
+            if (error.get() == true) {
+                return error.get();
+            }
+            updatePrimarySignalSensors(error);
+            if (error.get() == true) {
+                return error.get();
+            }
+            updateHeaterControl(error);
+            if (error.get() == true) {
+                return error.get();
+            }
+            updateHeaterControlRelay(error);
+            if (error.get() == true) {
+                return error.get();
+            }
+            if (this.heatMixer.isEnabled() == false) {
+                allocateComponent(config.valve(), "Valve");
+            }
         } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            return false;
+            error.set(true);
         }
+        return error.get();
+    }
+
+    private void updateHeaterControlRelay(AtomicBoolean error) {
+        this.heaterControlRelay.stream().filter(component -> component.isEnabled() == false).forEach(component -> {
+            try {
+                int index = this.heaterControlRelay.indexOf(component);
+                component = cpm.getComponent(component.id());
+                this.heaterControlRelay.set(index, component);
+
+            } catch (OpenemsError.OpenemsNamedException e) {
+                error.set(true);
+            }
+        });
+    }
+
+    private void updateHeaterControl(AtomicBoolean error) {
+        this.heaterControl.stream().filter(component -> component.isEnabled() == false).forEach(component -> {
+            try {
+                int index = this.heaterControl.indexOf(component);
+                component = cpm.getComponent(component.id());
+                this.heaterControl.set(index, component);
+
+            } catch (OpenemsError.OpenemsNamedException e) {
+                error.set(true);
+            }
+        });
+
+    }
+
+    private void updatePrimarySignalSensors(AtomicBoolean error) {
+        this.heaterPrimarySignalSensors.stream().filter(component -> component.isEnabled() == false).forEach(component -> {
+            try {
+                int index = this.heaterPrimarySignalSensors.indexOf(component);
+                component = cpm.getComponent(component.id());
+                this.heaterPrimarySignalSensors.set(index, component);
+
+            } catch (OpenemsError.OpenemsNamedException e) {
+                error.set(true);
+            }
+        });
+    }
+
+    private void updateFallbackSignalSensors(AtomicBoolean error) {
+        this.heaterFallbackSignalSensors.stream().filter(component -> component.isEnabled() == false).forEach(component -> {
+            try {
+                int index = this.heaterFallbackSignalSensors.indexOf(component);
+                component = cpm.getComponent(component.id());
+                this.heaterFallbackSignalSensors.set(index, component);
+
+            } catch (OpenemsError.OpenemsNamedException e) {
+                error.set(true);
+            }
+        });
+    }
+
+    private void updateThermometerList(AtomicBoolean error) {
+        this.thermometerList.stream().filter(component -> component.isEnabled() == false).forEach(component -> {
+            try {
+                int index = this.thermometerList.indexOf(component);
+                component = cpm.getComponent(component.id());
+                this.thermometerList.set(index, component);
+
+            } catch (OpenemsError.OpenemsNamedException e) {
+                error.set(true);
+            }
+        });
     }
 
     private void deactiveBooster() {
