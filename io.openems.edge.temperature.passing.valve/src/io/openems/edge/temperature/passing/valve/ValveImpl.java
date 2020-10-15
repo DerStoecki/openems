@@ -105,9 +105,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
     @Deactivate
     public void deactivate() {
-            super.deactivate();
-            this.closes = null;
-            this.open = null;
+        super.deactivate();
+        this.closes = null;
+        this.open = null;
         this.managerValve.removeValve(super.id());
     }
 
@@ -131,7 +131,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             this.wasAlreadyReset = false;
             this.isForced = false;
         }
-        this.timeStampValveCurrent = -1;
+        if (this.isChanging == false) {
+            this.timeStampValveCurrent = -1;
+        }
         return true;
 
     }
@@ -214,7 +216,11 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             long elapsedTime = getMilliSecondTime();
             //If it's the first update of PowerLevel
             if (this.timeStampValveCurrent == -1) {
-                elapsedTime -= timeStampValveInitial;
+                //only important for ForceClose/Open
+                timeStampValveInitial = getMilliSecondTime();
+                //First time in change
+                elapsedTime = 0;
+
                 //was updated before
             } else {
                 elapsedTime -= timeStampValveCurrent;
@@ -260,8 +266,8 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         reached = reached && this.readyToChange();
         if (reached) {
             isChanging = false;
+            timeStampValveCurrent = -1;
             shutdownRelays();
-
         }
         return reached;
     }
@@ -371,8 +377,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
         controlRelays(false, "Open");
         controlRelays(true, "Closed");
-        timeStampValveInitial = getMilliSecondTime();
-        this.isClosing = true;
+        if (this.isClosing == false) {
+            timeStampValveCurrent = -1;
+            this.isClosing = true;
+        }
 
     }
 
@@ -385,8 +393,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
 
         controlRelays(false, "Closed");
         controlRelays(true, "Open");
-        timeStampValveInitial = getMilliSecondTime();
-        this.isClosing = false;
+        if (this.isClosing == true) {
+            timeStampValveCurrent = -1;
+            this.isClosing = false;
+        }
     }
     //-------------------------------------
 
@@ -416,7 +426,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             e.printStackTrace();
         }
     }
-
 
 
     // --------- UTILITY -------------//
