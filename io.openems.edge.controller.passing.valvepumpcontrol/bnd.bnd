@@ -21,6 +21,7 @@ Private-Package:  \
     io.openems.edge.temperature.passing.valve.api;version=latest,\
     io.openems.edge.temperature.passing.pump.api;version=latest,\
     io.openems.edge.temperature.passing.api;version=latest,\
+    io.openems.edge.thermometer.api;version=latest,\
     io.openems.edge.controller.passing.valvepumpcontrol.api;version=latest,\
 
 -testpath: \

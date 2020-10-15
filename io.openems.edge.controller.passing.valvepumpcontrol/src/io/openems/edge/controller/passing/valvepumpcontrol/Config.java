@@ -29,6 +29,14 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "minimumClosingValve", description = "Closing the US01 to minimum percent")
     int closeValvePercent() default 20;
 
+    @AttributeDefinition(name = "TemperatureSensorFLow", description = "The Temperaturesensor in Flow direction")
+    String temperatureSensorFlow() default "";
+    @AttributeDefinition(name = "TemperatureSensorReturn", description = "The Temperaturesensor in Return direction")
+    String temperatureSensorReturn() default "";
+
+    @AttributeDefinition(name = "timeToResetSeconds", description = "if no Temperaturedifference over this time reset valve")
+    int timeToResetSeconds() default 60;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Controller Consolinno Valve and Pump Control [{id}]";

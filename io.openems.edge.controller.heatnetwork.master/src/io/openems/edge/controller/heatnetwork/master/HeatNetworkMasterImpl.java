@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -48,6 +49,14 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        AtomicBoolean instanceFound = new AtomicBoolean(false);
+
+        cpm.getAllComponents().stream().filter(component -> component.id().equals(config.id())).findFirst().ifPresent(consumer -> {
+            instanceFound.set(true);
+        });
+        if (instanceFound.get() == true) {
+            return;
+        }
         super.activate(context, config.id(), config.alias(), config.enabled());
         OpenemsError.OpenemsNamedException[] ex = {null};
         ConfigurationException[] exC = {null};
@@ -99,8 +108,10 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         super.deactivate();
 
     }
+
     @Reference
     ConfigurationAdmin ca;
+
     private void updateConfig() {
         Configuration c;
 
@@ -116,12 +127,12 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
         } catch (IOException e) {
         }
     }
+
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //NO DEMAND!
         // Equals 1 because Rest Get request returns 0 or 1 at boolean
-        if(this.temperatureSetPointChannel().getNextWriteValueAndReset().isPresent())
-        {
+        if (this.temperatureSetPointChannel().getNextWriteValueAndReset().isPresent()) {
             updateConfig();
         }
         if (this.heatTankRequests.stream().noneMatch(consumer -> consumer.getValue().equals("1"))) {
@@ -143,7 +154,7 @@ public class HeatNetworkMasterImpl extends AbstractOpenemsComponent implements O
                         lastTemperature = this.temperatureSetPointChannel().value().get();
                         return;
                         //If Controlcenter is active but SetPointTemperature has changed.
-                    } else if (controlCenterIsActive == true ) {
+                    } else if (controlCenterIsActive == true) {
                         this.allocatedController.activateTemperatureOverride().setNextValue(true);
                         this.allocatedController.setOverrideTemperature().setNextWriteValue(temperatureSetPointChannel().value().get());
                         lastTemperature = this.temperatureSetPointChannel().value().get();

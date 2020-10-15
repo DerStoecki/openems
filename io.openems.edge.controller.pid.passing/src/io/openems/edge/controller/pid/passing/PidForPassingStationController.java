@@ -18,11 +18,17 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Controller.Passing.Pid")
 public class PidForPassingStationController extends AbstractOpenemsComponent implements OpenemsComponent, Controller, PidForPassingNature {
+
+    private final Logger log = LoggerFactory.getLogger(PidForPassingStationController.class);
 
     @Reference
     ComponentManager cpm;
@@ -33,10 +39,11 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
     private boolean isPump;
     private PidFilter pidFilter;
     private int offPercentage = 0;
-    private int counter=0;
-    private int waitticks=10;
+    private int counter = 0;
+    private int waitticks = 10;
     private double intervalTime = 2000;
     private double timestamp = 0;
+    private Config config;
 
     public PidForPassingStationController() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values(), PidForPassingNature.ChannelId.values());
@@ -44,19 +51,33 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
-        super.activate(context, config.id(), config.alias(), config.enabled());
-        allocateComponent(config.temperatureSensorId());
-        allocateComponent(config.allocatedPassingDevice());
+        AtomicBoolean instanceFound = new AtomicBoolean(false);
 
-        if (config.useDependency()) {
-            allocateComponent(config.passingControllerId());
+        cpm.getAllComponents().stream().filter(component -> component.id().equals(config.id())).findFirst().ifPresent(consumer -> {
+            instanceFound.set(true);
+        });
+        if (instanceFound.get() == true) {
+            return;
         }
+        this.config = config;
+        super.activate(context, config.id(), config.alias(), config.enabled());
+        allocateComponents();
+
         this.pidFilter = new PidFilter(config.proportionalGain(), config.integralGain(), config.derivativeGain());
         pidFilter.setLimits(-200, 200);
 
         this.setMinTemperature().setNextValue(config.setPoint_Temperature());
 
         this.offPercentage = config.offPercentage();
+    }
+
+    private void allocateComponents() throws OpenemsError.OpenemsNamedException, ConfigurationException {
+        allocateComponent(config.temperatureSensorId());
+        allocateComponent(config.allocatedPassingDevice());
+
+        if (config.useDependency()) {
+            allocateComponent(config.passingControllerId());
+        }
     }
 
     /**
@@ -108,15 +129,16 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
      */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-
-        counter++;
-        if(counter%waitticks!=0)
-        {
+        if (componentIsMissing()) {
+            log.warn("A Component is Missing in the Controller : " + super.id());
             return;
         }
-        if(counter%waitticks ==0)
-        {
-            counter=waitticks;
+        counter++;
+        if (counter % waitticks != 0) {
+            return;
+        }
+        if (counter % waitticks == 0) {
+            counter = waitticks;
         }
         boolean activeDependency = true;
         if (this.passing != null) {
@@ -160,6 +182,23 @@ public class PidForPassingStationController extends AbstractOpenemsComponent imp
                     this.passingForPid.changeByPercentage(offPercentage);
                 }
             }
+        }
+    }
+
+    private boolean componentIsMissing() {
+        try {
+            if (this.passingForPid.isEnabled() == false) {
+                this.passingForPid = cpm.getComponent(config.allocatedPassingDevice());
+            }
+            if (config.useDependency() == true && this.passing.isEnabled() == false) {
+                this.passing = cpm.getComponent(config.passingControllerId());
+            }
+            if (this.thermometer.isEnabled() == false) {
+                this.thermometer = cpm.getComponent(config.temperatureSensorId());
+            }
+            return false;
+        } catch (OpenemsError.OpenemsNamedException e) {
+            return true;
         }
     }
 }
