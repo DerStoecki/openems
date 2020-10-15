@@ -83,6 +83,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         String response = super.payloadToOrFromBroker;
         //Events and Commands need to be handled by Component itself, only telemetry is allowed to update Channels directly.
         if (response.equals("") || !super.getMqttType().equals(MqttType.TELEMETRY)) {
+            super.configuredPayload = response;
             return;
         }
         // ID of Name in mqtt  , VALUE for the channel
