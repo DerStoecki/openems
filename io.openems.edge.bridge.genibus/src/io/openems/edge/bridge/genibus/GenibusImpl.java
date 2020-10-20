@@ -1,7 +1,6 @@
 package io.openems.edge.bridge.genibus;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.bridge.genibus.api.GenibusChannel;
 import io.openems.edge.bridge.genibus.api.Genibus;
 import io.openems.edge.bridge.genibus.api.PumpDevice;
 import io.openems.edge.bridge.genibus.api.task.GenibusTask;
@@ -33,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
                 EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE, //
                 EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE //
         })
-public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChannel, OpenemsComponent, EventHandler, Genibus {
+public class GenibusImpl extends AbstractOpenemsComponent implements OpenemsComponent, EventHandler, Genibus {
 
 
     private final Logger log = LoggerFactory.getLogger(GenibusImpl.class);
@@ -47,8 +46,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     protected Handler handler;
 
     public GenibusImpl() {
-        super(OpenemsComponent.ChannelId.values(),
-                GenibusChannel.ChannelId.values());
+        super(OpenemsComponent.ChannelId.values());
         handler = new Handler(this);
     }
 
@@ -56,21 +54,11 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
     public void activate(ComponentContext context, Config config) throws OpenemsException {
         super.activate(context, config.id(), config.alias(), config.enabled());
         debug = config.debug();
-        applyDefaultApduHeaderOperation();
         portName = config.portName();
         connectionOk = handler.start(portName);
         if (this.isEnabled()) {
             this.worker.activate(config.id());
         }
-        //default
-
-    }
-
-    private void applyDefaultApduHeaderOperation() {
-        getApduConfigurationParameters().setNextValue(2);
-        getApduMeasuredData().setNextValue(0);
-        getApduReferenceValues().setNextValue(2);
-        getAsciiStrings().setNextValue(0);
     }
 
     @Deactivate
@@ -136,7 +124,7 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         }
 
         telegram.setAnswerTelegramLength(responseTelegram.getLength());
-        
+
         int requestTelegramAddress = Byte.toUnsignedInt(telegram.getDestinationAddress());
         int responseTelegramAddress = Byte.toUnsignedInt(responseTelegram.getSourceAddress());
 

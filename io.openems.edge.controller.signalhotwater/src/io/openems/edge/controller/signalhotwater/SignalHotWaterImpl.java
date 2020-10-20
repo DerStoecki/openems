@@ -72,7 +72,7 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
 
     // Variables for channel readout
     private boolean tempSensorsSendData;
-    private boolean heatNetworkSignalReveived;
+    private boolean heatNetworkSignalReceived;
     private boolean heatNetworkReady;
     private int watertankTempUpperSensor;
     private int watertankTempLowerSensor;
@@ -180,8 +180,8 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
         }
 
         // Transfer channel data to local variables for better readability of logic code.
-        heatNetworkSignalReveived = this.heatNetworkReadySignal().value().isDefined();
-        if (heatNetworkSignalReveived) {
+        heatNetworkSignalReceived = this.heatNetworkReadySignal().value().isDefined();
+        if (heatNetworkSignalReceived) {
             heatNetworkReady = this.heatNetworkReadySignal().value().get();
         }
 
@@ -192,12 +192,11 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
             if (watertankTempLowerSensor > maxTempLower && (startTimeNotTooCold != 0) && (startTimeNotTooCold + heatingDelay < System.currentTimeMillis())) {
                 // Stop heating
                 this.heatTankRequest().setNextValue(false);
-                this.needHotWater().setNextValue(false);
             } else {
 
                 // When water tank temperature is below max, check remote for "on" signal.
                 // heatNetworkReady changes from false to true -> start heating.
-                if (heatNetworkSignalReveived && heatNetworkReady && (heatNetworkStateTracker == false)) {
+                if (heatNetworkSignalReceived && heatNetworkReady && (heatNetworkStateTracker == false)) {
                     this.heatTankRequest().setNextValue(true);
                     heatNetworkStateTracker = true;
 
@@ -210,26 +209,20 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
                 if (this.heatTankRequest().value().get()) {
 
                     // Wait for "heatNetworkReady == true" or execute after timeout.
-                    if ((heatNetworkSignalReveived && heatNetworkReady)
+                    if ((heatNetworkSignalReceived && heatNetworkReady)
                             || ChronoUnit.SECONDS.between(timestamp, LocalDateTime.now()) >= responseTimeout) {
 
                         // Check if we got here by timeout.
-                        if ((heatNetworkSignalReveived && heatNetworkReady) == false) {
-                            if (this.needHotWater().value().get() == false) {
+                        if ((heatNetworkSignalReceived && heatNetworkReady) == false) {
+                            if (this.heatTankRequest().value().get() == false) {
                                 this.logWarn(this.log, "Warning: heat network response timeout.");
                             }
                         }
 
-                        this.needHotWater().setNextValue(true);
+                        this.heatTankRequest().setNextValue(true);
                     }
                 }
             }
-
-            // Anmerkung an PauL:
-            // Soll die "too cold" Abfrage zur besseren Lesbarkeit vor der "too hot" Abfrage stehen muss etwas Code
-            // geändert werden. Genauer: this.needHotWater().setNextValue(false) in Zeile 272 muss verschoben werden
-            // in ein "else" in Zeile 251.
-
 
             // Check if water tank is too cold.
             if (watertankTempUpperSensor < minTempUpper) {
@@ -247,9 +240,8 @@ public class SignalHotWaterImpl extends AbstractOpenemsComponent implements Open
                 }
                 // If water tank temperature is not too low, check remote for "off" signal.
                 // heatNetworkReady changes from true to false -> turn off heating.
-                if (heatNetworkSignalReveived && (heatNetworkReady == false) && heatNetworkStateTracker) {
+                if (heatNetworkSignalReceived && (heatNetworkReady == false) && heatNetworkStateTracker) {
                     this.heatTankRequest().setNextValue(false);
-                    this.needHotWater().setNextValue(false);
                     heatNetworkStateTracker = false;
                 }
             }

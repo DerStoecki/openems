@@ -45,7 +45,7 @@ public class PumpReadTask16bitOrMore extends AbstractPumpTask {
 
         // Data is complete, now calculate value and put it in the channel.
         if (byteCounter >= dataByteSize - 1) {
-           byteCounter = 0;
+            byteCounter = 0;
 
             // When vi == 0 (false), then 0xFF means "data not available".
             if (super.vi == false) {

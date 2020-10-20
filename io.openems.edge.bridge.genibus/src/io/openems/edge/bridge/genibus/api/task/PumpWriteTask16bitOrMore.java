@@ -12,16 +12,6 @@ public class PumpWriteTask16bitOrMore extends PumpReadTask16bitOrMore implements
     //private boolean sendGet = false;
     private int sendGet = 1;
 
-    // Zum Vergleichen, ob get was anderes ist als send.
-    private byte byteGet0;
-    private byte byteGet1;
-    private byte byteGet2;
-    private byte byteGet3;
-    private byte byteSent0;
-    private byte byteSent1;
-    private byte byteSent2;
-    private byte byteSent3;
-
     public PumpWriteTask16bitOrMore(int numberOfBytes, int address, int headerNumber, WriteChannel<Double> channel, String unitString, Priority priority, double channelMultiplier) {
         super(numberOfBytes, address, headerNumber, channel, unitString, priority, channelMultiplier);
         this.channel = channel;

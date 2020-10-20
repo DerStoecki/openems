@@ -129,47 +129,41 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
 
 	@Reference
 	ConfigurationAdmin ca;
+
 	private void updateConfig() {
 		Configuration c;
 
 		try {
 			c = ca.getConfiguration(this.servicePid(), "?");
 			Dictionary<String, Object> properties = c.getProperties();
-			if(this.valveClosing().value().isDefined())
-			{
+			if (this.valveClosing().value().isDefined()) {
 				properties.put("closeValvePercent",this.valveClosing().value().get());
-				closeValvePercent =this.valveClosing().value().get();
+				closeValvePercent = this.valveClosing().value().get();
 			}
 			c.update(properties);
 		} catch (IOException e) {
 		}
 	}
+
 	private long nochangeTime = 0;
-	private void checkRestart()
-    {
-        if(thermometerFlow != null && thermometerReturn !=null)
-        {
-            if(20>thermometerFlow.getTemperature().value().get() - thermometerReturn.getTemperature().value().get())
-            {
-                if(nochangeTime ==0)
-                {
-                    nochangeTime= System.currentTimeMillis();
-                }
-                else
-                {
-                    if(System.currentTimeMillis() - nochangeTime > timeToResetSeconds*1000)
-                    {
+
+	private void checkRestart() {
+        if (thermometerFlow != null && thermometerReturn != null) {
+            if (20 > thermometerFlow.getTemperature().value().get() - thermometerReturn.getTemperature().value().get()) {
+                if (nochangeTime == 0) {
+                    nochangeTime = System.currentTimeMillis();
+                } else {
+                    if (System.currentTimeMillis() - nochangeTime > timeToResetSeconds * 1000) {
                         valveUS01.reset();
-                        nochangeTime=0;
+                        nochangeTime = 0;
                     }
                 }
-            }
-            else
-            {
-                nochangeTime=0;
+            } else {
+                nochangeTime = 0;
             }
         }
     }
+
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
 		boolean restchange = this.valveClosing().getNextWriteValueAndReset().isPresent();
@@ -177,16 +171,15 @@ public class ValvePumpControlImpl extends AbstractOpenemsComponent implements Op
             log.warn("A Component is missing in: " + super.id());
             return;
         }
-		if(restchange)
-		{
+		if(restchange) {
 			updateConfig();
 		}
+
         // Transfer channel data to local variables for better readability of logic code.
         heaterWantsToHeat = heatingController.activateHeater().value().orElse(false);    // Null in channel is counted as false.
         valveOverrideActive = activateValveOverride().value().orElse(false); // Null in channel is counted as false.
         int actualValvePercent = valveUS01.getPowerLevel().value().get().intValue();
-        if( actualValvePercent == openedPercentLast)
-        {
+        if (actualValvePercent == openedPercentLast) {
             checkRestart();
         }
         // Control logic.

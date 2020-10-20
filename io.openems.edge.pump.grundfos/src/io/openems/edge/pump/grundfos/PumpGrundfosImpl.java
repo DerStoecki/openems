@@ -160,7 +160,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
                     new PumpWriteTask8bit(46, 4, setUnitAddr(), "Standard", Priority.ONCE),
                     new PumpWriteTask8bit(47, 4, setGroupAddr(), "Standard", Priority.ONCE)
-                    );
+            );
             genibus.addDevice(pumpDevice);
             return;
         }

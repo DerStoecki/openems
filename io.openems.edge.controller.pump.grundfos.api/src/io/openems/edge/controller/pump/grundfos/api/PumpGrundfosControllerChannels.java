@@ -11,10 +11,11 @@ import io.openems.edge.common.component.OpenemsComponent;
 public interface PumpGrundfosControllerChannels extends OpenemsComponent {
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        H_REF_MAX(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
-        H_REF_MIN(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
-        R_REM(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE));
-
+        CONTROL_MODE(Doc.of(ControlModeSetting.values()).accessMode(AccessMode.READ_WRITE)),
+        STOP_PUMP(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        PRESSURE_SETPOINT(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR).accessMode(AccessMode.READ_WRITE)),
+        FREQUENCY_SETPOINT(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)),
+        ONLY_READ(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
 
         private final Doc doc;
 
@@ -29,16 +30,24 @@ public interface PumpGrundfosControllerChannels extends OpenemsComponent {
 
     }
 
-    default WriteChannel<Double> sethIntervalMax() {
-        return channel(ChannelId.H_REF_MAX);
+    default WriteChannel<Integer> setControlMode() {
+        return channel(ChannelId.CONTROL_MODE);
     }
 
-    default WriteChannel<Double> sethIntervalMin() {
-        return channel(ChannelId.H_REF_MIN);
+    default WriteChannel<Boolean> setStopPump() {
+        return channel(ChannelId.STOP_PUMP);
     }
 
-    default WriteChannel<Double> setPumpingHead() {
-        return channel(ChannelId.R_REM);
+    default WriteChannel<Double> setPressureSetpoint() {
+        return channel(ChannelId.PRESSURE_SETPOINT);
+    }
+
+    default WriteChannel<Double> setFrequencySetpoint() {
+        return channel(ChannelId.FREQUENCY_SETPOINT);
+    }
+
+    default WriteChannel<Boolean> setOnlyRead() {
+        return channel(ChannelId.ONLY_READ);
     }
 }
 
