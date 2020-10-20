@@ -7,6 +7,8 @@ Bundle-Description: \
 
 Export-Package:  \
 	io.openems.edge.consolinno.leaflet.mainmodule.api,\
+	io.openems.edge.consolinno.leaflet.mainmodule.api.sc16,\
+	io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature,\
 
 
 -includeresource: {readme.md}
@@ -15,7 +17,7 @@ Export-Package:  \
 	osgi.enroute.base.api;version=2.1,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	pi4j-core,\
+	io.openems.edge.generic.pi4j;version=latest,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \

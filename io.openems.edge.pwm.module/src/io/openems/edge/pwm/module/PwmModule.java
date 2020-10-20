@@ -66,10 +66,17 @@ public class PwmModule extends AbstractOpenemsComponent implements OpenemsCompon
      */
     private void allocateGpioProvider(Config config) {
         try {
+            int address;
+            if (config.pwm_address().contains("0x")) {
+                String[] usedAddress = config.pwm_address().split("0x");
+                address = Integer.parseInt(usedAddress[1],16);
+            } else {
+                address = Integer.parseInt(config.pwm_address(), 16);
+            }
             //more to come with further versions
             switch (config.version()) {
                 case "1":
-                    provider = new Pca9685GpioProvider(this.i2CBus, config.pwm_address(),
+                    provider = new Pca9685GpioProvider(this.i2CBus, address,
                             this.frequency, this.frequencyCorrectionFactor);
                     this.refI2cBridge.addGpioDevice(super.id(), provider);
                     break;

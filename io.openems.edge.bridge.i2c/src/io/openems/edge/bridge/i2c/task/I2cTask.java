@@ -19,4 +19,8 @@ public interface I2cTask {
 
     String getDeviceId();
 
+    boolean hasLed();
+
+    int ledPosition();
+
 }

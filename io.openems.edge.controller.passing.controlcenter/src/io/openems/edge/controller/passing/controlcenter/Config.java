@@ -20,6 +20,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Allocated Pid Controller", description = "Unique Name of the Pid Controller, allocated with this Control Center.")
     String allocated_Pid_Controller() default "PidController0";
 
+    @AttributeDefinition(name = "Allocated Pump", description = "Pump to activate")
+    String allocated_Pump() default "RelayPump";
+
     @AttributeDefinition(name = "Allocated Warmup Controller", description = "Unique Name of the Warmup Controller, allocated with this Control Center.")
     String allocated_Warmup_Controller() default "ControllerWarmupPassing0";
 

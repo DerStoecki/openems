@@ -20,11 +20,20 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "TemperatureSensor", description = "The Temperaturesensor allocated to this controller")
     String temperatureSensorId() default "TemperatureSensor5";
 
-    @AttributeDefinition(name = "Activation temperature", description = "If the temperature measured by the sensor falls below this value, heating starts. Unit is °C and the values needs to be equal or lower than the room temperature set in the next option.")
+    @AttributeDefinition(name = "Activation temperature", description = "Unit is °C. If the temperature measured by the sensor falls below this value, heating starts. The value needs to be equal or lower than the room temperature set in the next option.")
     int activation_temp() default 18;
 
-    @AttributeDefinition(name = "Curve parameter: room temperature", description = "The desired room temperature, in °C.")
+    @AttributeDefinition(name = "Curve parameter: room temperature", description = "The desired room temperature, in °C. Needs to be higher than activation temperature.")
     int room_temp() default 20;
+
+    @AttributeDefinition(name = "Averaging time temperature measurement", description = "Unit is minutes. When a temperature threshold is reached, "
+            + "the controller will take measurements over this period of time and decide what to do based on the average. Will not wait that long if "
+            + "the average of one minute has 5k difference to the threshold temperature. Needs to be equal or lower than minimum state time.")
+    int measurement_time_minutes() default 10;
+
+    @AttributeDefinition(name = "Minimum state time", description = "Unit is minutes. When the controller changes state (heating or no heating), it "
+            + "will keep that state for at least this amount of time to prevent flip flopping.")
+    int minimum_state_time_minutes() default 60;
 
     @AttributeDefinition(name = "Curve parameter: slope", description = "Slope of the heating curve.")
     double slope() default 1;

@@ -3,19 +3,28 @@ package io.openems.edge.temperature.passing.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PassingChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+        /**
+         * Current Power Level Of Valve.
+         * <ul>
+         *     <li>Interfce: PassingChannel
+         *     <li>Type: Double
+         *     <li>Unit: Percentage
+         *     <p> Indicates the Current Power Level.
+         *     </ul>
+         */
+        CURRENT_POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).unit(Unit.PERCENT)),
+
 
         // TODO: Why is this a write channel? It does not seem it needs to be. Can it be changed to a read channel if that is sufficient?
         /**
-         * PowerLevel.
+         * PowerLevel Goal. == Future PowerLevel that needs to be reached.
          *
          * <ul>
          * <li>Interface: PassingChannel
@@ -24,7 +33,9 @@ public interface PassingChannel extends OpenemsComponent {
          * </ul>
          */
 
-        POWER_LEVEL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT)),
+        POWER_LEVEL_GOAL(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(
+                channel -> ((DoubleWriteChannel) channel).onSetNextWrite(channel::setNextValue)
+        )),
 
         /**
          * LastPowerLevel.
@@ -46,6 +57,28 @@ public interface PassingChannel extends OpenemsComponent {
          */
 
         BUSY(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+
+        /**
+         * Set Power Level of e.g. Valve.
+         * Handled before Controllers.
+         * <ul>
+         *     <li> Type: Integer
+         * </ul>
+         */
+        SET_POWER_LEVEL(Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE).unit(Unit.PERCENT).onInit(channel ->
+                ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
+
+        /**
+         * Reset the Valve.
+         * <ul>
+         *     <li> Type: Boolean
+         * </ul>
+         */
+
+        RESET_VALVE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(
+                channel -> ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue))),
+
+
         /**
          * How Long does the Device need to do something(e.g. Valve Opening/Closing time)
          *
@@ -53,6 +86,7 @@ public interface PassingChannel extends OpenemsComponent {
          * <li>Type: Double
          * </ul>
          */
+
 
         TIME(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_ONLY).unit(Unit.SECONDS));
 
@@ -79,8 +113,8 @@ public interface PassingChannel extends OpenemsComponent {
      * @return the Channel
      */
 
-    default WriteChannel<Double> getPowerLevel() {
-        return this.channel(ChannelId.POWER_LEVEL);
+    default Channel<Double> getPowerLevel() {
+        return this.channel(ChannelId.CURRENT_POWER_LEVEL);
     }
 
     /**
@@ -109,13 +143,44 @@ public interface PassingChannel extends OpenemsComponent {
     }
 
     /**
+     * Set the Valve PowerLevel by a Percent Value.
+     *
+     * @return the Channel
+     */
+    default WriteChannel<Integer> setPowerLevelPercent() {
+        return this.channel(ChannelId.SET_POWER_LEVEL);
+    }
+
+    /**
+     * Future PowerLevel.
+     *
+     * @return the channel
+     */
+    default WriteChannel<Double> setGoalPowerLevel() {
+        return this.channel(ChannelId.POWER_LEVEL_GOAL);
+    }
+
+    /**
+     * Resets Valve if set to true
+     *
+     * @return this Channel
+     */
+    default WriteChannel<Boolean> shouldForceClose() {
+        return this.channel(ChannelId.RESET_VALVE);
+    }
+
+
+    /**
      * Tells how much time is needed for e.g. Valve to Open or Close 100%.
      * <li> Type: Double
      *
      * @return the Channel
      */
 
+
     default Channel<Double> getTimeNeeded() {
         return this.channel(ChannelId.TIME);
     }
+
+
 }

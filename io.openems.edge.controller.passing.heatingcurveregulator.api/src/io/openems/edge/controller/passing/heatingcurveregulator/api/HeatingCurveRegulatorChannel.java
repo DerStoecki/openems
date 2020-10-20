@@ -13,6 +13,10 @@ public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
 
+        ROOM_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
+        ACTIVATION_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
+        OFFSET(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
+        SLOPE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
         /**
          * Heating Temperature.
          * <ul>
@@ -58,7 +62,17 @@ public interface HeatingCurveRegulatorChannel extends OpenemsComponent {
 
     }
 
-
+    default WriteChannel<Integer> getRoomTemperature() {
+        return this.channel(ChannelId.ROOM_TEMPERATURE);
+    }
+    default WriteChannel<Integer> getActivationTemperature() {
+        return this.channel(ChannelId.ACTIVATION_TEMPERATURE);
+    }
+    default WriteChannel<Integer> getOffset() {
+        return this.channel(ChannelId.OFFSET);
+    } default WriteChannel<Double> getSlope() {
+        return this.channel(ChannelId.SLOPE);
+    }
     /**
      * Read the output temperature of the heating curve regulator. To output this number is the main purpose of the
      * controller.

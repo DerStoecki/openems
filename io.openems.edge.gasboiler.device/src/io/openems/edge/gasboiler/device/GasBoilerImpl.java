@@ -2,6 +2,7 @@ package io.openems.edge.gasboiler.device;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
+import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.DummyRegisterElement;
@@ -11,6 +12,7 @@ import io.openems.edge.bridge.modbus.api.task.FC2ReadInputsTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC4ReadInputRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.gasboiler.device.api.GasBoiler;
@@ -20,6 +22,10 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "GasBoiler",
@@ -32,6 +38,10 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
 
     GasBoilerType gasBoilerType;
 
+    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    protected void setModbus(BridgeModbus modbus) {
+        super.setModbus(modbus);
+    }
 
     @Reference
     protected ConfigurationAdmin cm;
@@ -44,19 +54,19 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
 
     @Activate
     public void activate(ComponentContext context, Config config) {
+        allocateGasBoilerType(config.gasBoilerType());
         super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus", config.modbusBridgeId());
         if (config.maxThermicalOutput() != 0) {
             this.thermicalOutput = config.maxThermicalOutput();
         }
-        allocateGasBoilerType(config.gasBoilerType());
     }
 
     private void allocateGasBoilerType(String gasBoilerType) {
 
         switch (gasBoilerType) {
-
             case "Placeholder":
             case "VITOTRONIC_100":
+            default:
                 this.gasBoilerType = GasBoilerType.VITOTRONIC_100;
         }
     }
@@ -271,5 +281,20 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
     public void setOffline() throws OpenemsError.OpenemsNamedException {
         getHeatBoilerPerformanceSetPointValue().setNextWriteValue(0);
         getHeatBoilerPerformanceSetPointValuePercent().setNextValue(0);
+    }
+
+
+    @Override
+    public String debugLog() {
+        String out = "";
+        System.out.println("--------------" + super.id() + "--------------");
+        List<Channel<?>> all = new ArrayList<>();
+        Arrays.stream(GasBoilerData.ChannelId.values()).forEach(consumer -> {
+            all.add(this.channel(consumer));
+        });
+        all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
+        //TODO: Error/Warning status etc
+        System.out.println("----------------------------------");
+        return "ok";
     }
 }

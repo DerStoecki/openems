@@ -9,6 +9,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.temperature.passing.api.PassingActivateNature;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
@@ -24,7 +25,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Controller.Passing.Main")
-public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller {
+public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, PassingActivateNature, Controller {
 
     @Reference
     protected ComponentManager cpm;
@@ -53,7 +54,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     private int startingTemperature;
     //T in dC
     private static int ROUND_ABOUT_TEMP = 20;
-    private static int WAITING_FOR_TOO_HOT = 100 * 1000;
+    private static int WAITING_FOR_TOO_HOT = 30 * 1000;
     //ty
     private long timeStampHeating;
 
@@ -64,6 +65,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
         super(OpenemsComponent.ChannelId.values(),
                 ControllerPassingChannel.ChannelId.values(),
+                PassingActivateNature.ChannelId.values(),
                 Controller.ChannelId.values());
     }
 
@@ -91,8 +93,11 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     }
 
     private void defaultOptions() {
-
-        this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
+        if (this.primaryRewind.getTemperature().getNextValue().isDefined()) {
+            this.startingTemperature = this.primaryRewind.getTemperature().getNextValue().get();
+        } else {
+            this.startingTemperature = 0;
+        }
         valve.changeByPercentage(-100);
         this.pump.controlRelays(false, "");
     }
@@ -100,7 +105,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        this.getOnOff_PassingController().setNextValue(false);
+        this.getOnOff().setNextValue(false);
         this.valve.forceClose();
         this.pump.changeByPercentage(-100);
     }
@@ -116,11 +121,10 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (this.getMinTemperature().getNextWriteValue().isPresent()
-                && this.getOnOff_PassingController().getNextWriteValue().isPresent()) {
-            this.getMinTemperature().setNextValue(this.getMinTemperature().getNextWriteValue().get());
-            if (this.noError().getNextValue().get()
-                    && this.getOnOff_PassingController().getNextWriteValue().get()) {
+        if (this.getMinTemperature().value().isDefined()
+                && this.getOnOff().value().isDefined()) {
+            if (this.noError().value().get()
+                    && this.getOnOff().value().get()) {
                 try {
                     if (!isOpen) {
                         if (isClosed && valve.readyToChange()) {
@@ -150,26 +154,31 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
                         pump.changeByPercentage(-100);
                         pumpActive = false;
                         this.noError().setNextValue(false);
+                        getErrorCode().setNextValue(2);
                         throw new NoHeatNeededException("Heat is not needed;"
                                 + "Shutting down pump and Valves");
                     } else { //Check if there's something wrong with Valve or Heat to low
-                        if (isOpen && !timeSetHeating) {
-                            timeStampHeating = System.currentTimeMillis();
-                            timeSetHeating = true;
-                            return;
-                        }
-                        if (shouldBeHeatingByNow()) {
+                        if (primaryForwardReadyToHeat() == false) {
+                            if (isOpen && !timeSetHeating) {
+                                timeStampHeating = System.currentTimeMillis();
+                                timeSetHeating = true;
+                                return;
+                            }
+                            if (shouldBeHeatingByNow()) {
 
-                            this.noError().setNextValue(false);
+                                this.noError().setNextValue(false);
 
-                            if (Math.abs(primaryRewind.getTemperature().getNextValue().get()
-                                    - startingTemperature) <= ROUND_ABOUT_TEMP) {
-                                throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
+                                if (Math.abs(primaryRewind.getTemperature().getNextValue().get()
+                                        - startingTemperature) <= ROUND_ABOUT_TEMP) {
+                                    getErrorCode().setNextValue(0);
+                                    throw new ValveDefectException("Temperature barely Changed --> Valve Defect!");
 
-                            } else {
-                                throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; "
-                                        + "Closing Valve");
+                                } else {
+                                    getErrorCode().setNextValue(1);
+                                    throw new HeatToLowException("Heat is too low; Min Temperature will not be reached; "
+                                            + "Closing Valve");
 
+                                }
                             }
                         }
                     }
@@ -278,15 +287,14 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      */
     private boolean tooHot() {
         if (System.currentTimeMillis() - this.timeStampWarmthPump > WAITING_FOR_TOO_HOT) {
-            if (this.secondaryForward.getTemperature().getNextValue().get() >= this.getMinTemperature().getNextValue().get()) {
-                return this.secondaryRewind.getTemperature().getNextValue().get() + TOLERANCE_TEMPERATURE
-                        > this.secondaryForward.getTemperature().getNextValue().get();
+            if (this.secondaryForward.getTemperature().value().get() >= this.getMinTemperature().value().get()) {
+                return this.secondaryRewind.getTemperature().value().get() + TOLERANCE_TEMPERATURE
+                        > this.secondaryForward.getTemperature().value().get();
             }
             return false;
         }
         return false;
     }
-
 
 
 }

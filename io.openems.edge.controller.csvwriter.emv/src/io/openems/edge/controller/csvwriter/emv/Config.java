@@ -129,14 +129,8 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String[] relaysDeviceList();
 
-    @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
-            options = {
-                    @Option(label = "DacDevice0", value = "DacDevice0"),
-                    @Option(label = "DacDevice1", value = "DacDevice1"),
-                    @Option(label = "DacDevice2", value = "DacDevice2"),
-                    @Option(label = "DacDevice3", value = "DacDevice3")
-            })
-    String[] DacDeviceList();
+    @AttributeDefinition(name = "GPIO Pi INPUT", description = "Select Gpios on Raspberry PI")
+    String [] GpioDeviceList();
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices",
             options = {
@@ -156,17 +150,12 @@ import org.osgi.service.metatype.annotations.Option;
             options = {
                     @Option(label = "meter0", value = "meter0"),
                     @Option(label = "meter1", value = "meter1"),
+                    @Option(label = "meterABB", value = "meterABB")
             })
     String[] meterList();
 
-    @AttributeDefinition(name = "Pca", description = "Select Pca from Main module")
-    String[] pcaList()default {"IO0"};
-
-    @AttributeDefinition(name = "Gpio", description = "Selects the remapped Gpios")
-    String [] gpioList() default {"ChpOnOffStatus0"};
-
-    @AttributeDefinition(name = "Time Interval", description = "Interval of Time in seconds")
-    double timeInterval() default 1;
+    @AttributeDefinition(name = "Sc16Devices", description = "Select Sc16Device")
+    String[] doubleUartList()default {"LeafletSc16"};
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Csv Writer [{id}]";
 

@@ -151,11 +151,6 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
             if (!entry.unitWasSet()) {
                 handleUnitGet(entry, connection);
             }
-            if (entry.isAutoAdapt()) {
-                if (!autoAdaptSuccess(entry)) {
-                    return;
-                }
-            }
             String msg = entry.getPostMessage();
             if (!entry.valueHasChanged() || msg.equals("NoValueDefined") || msg.equals("NotReadyToWrite")) {
                 return;
@@ -255,50 +250,6 @@ public class RestBridgeImpl extends AbstractOpenemsComponent implements RestBrid
         }
     }
 
-    /**
-     * Called if WriteRequest has autoAdapt set to true.
-     *
-     * @param entry current RestRequest entry.
-     * @return true if autoAdapt was sucessfully set.
-     * @throws IOException if URL Incorrect or ConnectionFails etc.
-     *
-     *                     <p>
-     *                     AutoAdaptSucces is used by Remote devices who access a Relays; to get their IsCloser channel and see if
-     *                     the device isACloser, if not --> inverse Logic
-     *                     However this will only happens one time (one success time), after that always return true.
-     *                     </p>
-     */
-
-    private boolean autoAdaptSuccess(RestRequest entry) throws IOException {
-        if (entry.isInverseSet()) {
-            return true;
-        }
-        URL url = new URL("http://" + this.ipAddressAndPort + "/rest/channel/" + entry.getAutoAdaptRequest());
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestProperty("Authorization", this.loginData);
-
-        RestWriteRequest temp = (RestWriteRequest) entry;
-        connection.setRequestMethod("GET");
-        int responseCode = connection.getResponseCode();
-
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            String readLine;
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-
-            StringBuilder response = new StringBuilder();
-            while ((readLine = in.readLine()) != null) {
-                response.append(readLine);
-            }
-            in.close();
-            //---------------------//
-            return temp.setAutoAdaptResponse(true, response.toString());
-            //---------------------//
-        } else {
-            temp.setAutoAdaptResponse(false, "ERROR WITH CONNECTION");
-            return false;
-        }
-    }
 
     @Override
     public void handleEvent(Event event) {

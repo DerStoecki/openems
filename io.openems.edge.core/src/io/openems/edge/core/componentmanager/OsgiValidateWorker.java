@@ -37,7 +37,7 @@ public class OsgiValidateWorker extends AbstractWorker {
 	private final static int INITIAL_CYCLE_TIME = 5_000; // in ms
 	private final static int REGULAR_CYCLE_TIME = 60_000; // in ms
 
-	private final static int RESTART_PERIOD = 2; // in minutes
+	private final static int RESTART_PERIOD = 10; // in seconds
 	private final static int FIRST_RESTART_PERIOD = RESTART_PERIOD - 1; // in minutes
 	private final static int ANNOUNCE_FAULT_AFTER = 5; // in minutes
 
@@ -50,7 +50,7 @@ public class OsgiValidateWorker extends AbstractWorker {
 		public DefectiveComponent() {
 			this.defectiveSince = LocalDateTime.now();
 			// wait only 1 minute till first restart
-			this.lastTryToRestart = this.defectiveSince.minusMinutes(FIRST_RESTART_PERIOD);
+			this.lastTryToRestart = this.defectiveSince.minusSeconds(FIRST_RESTART_PERIOD);
 		}
 
 		public void updateLastTryToRestart() {
@@ -105,7 +105,7 @@ public class OsgiValidateWorker extends AbstractWorker {
 			for (Entry<String, DefectiveComponent> entry : this.componentDefectiveSince.entrySet()) {
 				DefectiveComponent defectiveComponent = entry.getValue();
 
-				if (defectiveComponent.lastTryToRestart.isBefore(LocalDateTime.now().minusMinutes(RESTART_PERIOD))) {
+				if (defectiveComponent.lastTryToRestart.isBefore(LocalDateTime.now().minusSeconds(RESTART_PERIOD))) {
 					try {
 						this.parent.logInfo(this.log, "Trying to restart Component [" + entry.getKey() + "]");
 						Configuration config = this.parent.getExistingConfigForId(entry.getKey());

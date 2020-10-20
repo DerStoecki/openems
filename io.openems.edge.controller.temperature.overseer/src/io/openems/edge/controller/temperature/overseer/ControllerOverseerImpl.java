@@ -19,7 +19,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -29,6 +28,8 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
     protected ControllerPassingChannel passing;
     protected List<Thermometer> temperatureSensor = new ArrayList<>();
     private int tolerance;
+    private long coolDownTime;
+    private boolean coolDownTimeSet;
 
     public ControllerOverseerImpl() {
         super(OpenemsComponent.ChannelId.values(), Controller.ChannelId.values());
@@ -52,7 +53,7 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
         super.deactivate();
         try {
-            this.passing.getOnOff_PassingController().setNextWriteValue(false);
+            this.passing.getOnOff().setNextWriteValue(false);
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
@@ -99,15 +100,36 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
 
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
+        boolean heatingReached = this.heatingReached();
+        boolean passingStationNoError = this.passing.noError().getNextValue().get();
 
         if (passing == null) {
             throw new RuntimeException("The Allocated Passing Controller is not active, please Check.");
-        } else if (!heatingReached() && passing.noError().getNextValue().get()) {
-            this.passing.getOnOff_PassingController().setNextWriteValue(true);
-        } else if (heatingReached() && passing.noError().getNextValue().get()) {
-            this.passing.getOnOff_PassingController().setNextWriteValue(false);
+        } else if (heatingReached == false && passingStationNoError == true) {
+
+            this.passing.getOnOff().setNextWriteValue(true);
+        } else if (heatingReached == true && passingStationNoError == true) {
+
+            this.passing.getOnOff().setNextWriteValue(false);
+
         } else {
-            throw new OpenemsException("The Passing Controller got an Error!");
+            passing.getOnOff().setNextWriteValue(false);
+
+            if (coolDownTimeSet == false && this.passing.getErrorCode().getNextValue().get() == 2) {
+                this.coolDownTime = System.currentTimeMillis();
+                coolDownTimeSet = true;
+            }
+            //After Cooldown set Value to true; Only happens if ErrorCode was 2.
+            if (coolDownTimeSet == true) {
+                if (System.currentTimeMillis() - coolDownTime > 30 * 1000) {
+                    passing.noError().setNextValue(true);
+                    passing.getOnOff().setNextWriteValue(true);
+                    this.coolDownTimeSet = false;
+                    return;
+                }
+            }
+            throw new OpenemsException("The Passing Controller got an Error! With ErrorCode: "
+                    + this.passing.getErrorCode().getNextValue().get());
         }
     }
 
@@ -117,9 +139,9 @@ public class ControllerOverseerImpl extends AbstractOpenemsComponent implements 
      * @return a boolean depending if heat is reached or not.
      */
     private boolean heatingReached() {
-        if (passing.getMinTemperature().getNextWriteValue().isPresent()) {
+        if (passing.getMinTemperature().value().isDefined()) {
             return this.temperatureSensor.stream().noneMatch(
-                    thermometer -> thermometer.getTemperature().getNextValue().get() <= passing.getMinTemperature().getNextWriteValue().get());
+                    thermometer -> thermometer.getTemperature().getNextValue().get() <= passing.getMinTemperature().value().get());
 
         }
         return true;

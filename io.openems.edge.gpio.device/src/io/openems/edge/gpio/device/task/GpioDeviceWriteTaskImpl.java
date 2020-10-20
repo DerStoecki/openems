@@ -27,7 +27,6 @@ public class GpioDeviceWriteTaskImpl implements GpioBridgeWriteTask {
             return this.writeError.getNextWriteValue().get();
         }
         return false;
-
     }
 
     @Override

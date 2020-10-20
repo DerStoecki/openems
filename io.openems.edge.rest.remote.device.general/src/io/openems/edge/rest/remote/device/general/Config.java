@@ -33,11 +33,6 @@ import org.osgi.service.metatype.annotations.Option;
             + "Uppercase is: First Letter and the one after a _ e.g. Channel ON_OFF will be OnOff")
     String deviceChannel() default "Temperature";
 
-    @AttributeDefinition(name = "AutoAdapting of Relays", description = "In case you don't know if the Relays is "
-            + "Normally Open or Normally Closed the Remote Device can Adapt automatically for you"
-            + "Meaning if you want to Activate something it will depend on Opener Or Closer")
-    boolean autoAdapt();
-
     @AttributeDefinition(name = "OperationType", description = "Do you want to Read or Write",
             options = {
                     @Option(label = "Read", value = "Read"),

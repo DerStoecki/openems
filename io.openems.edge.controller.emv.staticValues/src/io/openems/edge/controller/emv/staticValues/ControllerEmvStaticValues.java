@@ -6,9 +6,9 @@ import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.consolinno.leaflet.maindevice.api.PcaDevice;
+
+import io.openems.edge.consolinno.leaflet.mainmodule.api.sc16.nature.Sc16Nature;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.gpio.device.api.GpioDevice;
 import io.openems.edge.pwm.device.api.PwmPowerLevelChannel;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import org.osgi.service.cm.ConfigurationException;
@@ -41,10 +41,12 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     private boolean[] relaysValues;
     private double[] dacValues;
     private float[] pwmValues;
-    private List<PcaDevice> pcaList = new ArrayList<>();
-    private boolean[] pcaValue;
-    private List<GpioDevice> gpioList = new ArrayList<>();
-    private boolean[] gpioValues;
+    private int counter = 0;
+
+
+    private List<Sc16Nature> uartList = new ArrayList<>();
+    private List<Integer> gpioList = new ArrayList<>();
+    private boolean[] uartValues;
 
     public ControllerEmvStaticValues() {
         super(OpenemsComponent.ChannelId.values(),
@@ -58,15 +60,34 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         allocateComponents(config.relaysDeviceList(), "Relays");
         allocateComponents(config.DacDeviceList(), "Dac");
         allocateComponents(config.PwmDeviceList(), "Pwm");
-        allocateComponents(config.pcaDevice(), "Pca");
-        allocateComponents(config.gpioDevices(), "Gpio");
+        allocateComponents(config.mainModuleId(), "DoubleUart");
         //contains String --> boolean values --> bc of bug from OSGi / Apache Felix
-        allocateValues(config.relaysValues(), "Relays");
-        allocateValues(config.gpioDeviceValues(), "Gpio");
-        allocateValues(config.pcaDeviceValue(), "Pca");
-        //allocateRelaysValues(config.relaysValues());
+        if (this.relaysList.size() > 0) {
+            allocateValues(config.relaysValues(), "Relays");
+        }
+        if (this.uartList.size() > 0) {
+            allocateUart(config.sc16ChoiceList(), config.sc16Values());
+        }
         this.dacValues = config.dacValues();
         this.pwmValues = config.pwmValues();
+    }
+
+    private void allocateUart(String[] sc16ChoiceList, String sc16Values) {
+        for (String s : sc16ChoiceList) {
+            switch (s) {
+                case "LED-RED":
+                    this.gpioList.add(0);
+                    break;
+                case "LED-YELLOW":
+                    this.gpioList.add(1);
+                    break;
+                case "LED-GREEN":
+                    this.gpioList.add(2);
+                    break;
+            }
+
+        }
+        allocateValues(sc16Values, "DoubleUart");
     }
 
     /**
@@ -84,15 +105,14 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
 
             case "Relays":
                 tempTrueValues = new boolean[this.relaysList.size()];
+                break;
 
-                break;
-            case "Pca":
-                tempTrueValues = new boolean[this.pcaList.size()];
-                break;
+            case "DoubleUart":
             default:
-            case "Gpio":
                 tempTrueValues = new boolean[this.gpioList.size()];
+                break;
         }
+
         if (tempTrueValues.length > tempCharValues.length) {
             this.logInfo(this.log, "Attention Not enough Values for: " + identifier
                     + "Missing Values: " + (tempTrueValues.length - tempCharValues.length)
@@ -110,57 +130,11 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
             case "Relays":
                 this.relaysValues = tempTrueValues;
                 break;
-            case "Pca":
-                this.pcaValue = tempTrueValues;
+            case "DoubleUart":
+                this.uartValues = tempTrueValues;
                 break;
-
-            case "Gpio":
-                this.gpioValues = tempTrueValues;
         }
-        //        this.relaysValues = new boolean[this.relaysList.size()];
-        //        for (int counter = 0; counter < tempCharValues.length && counter < this.relaysList.size(); counter++) {
-        //            this.relaysValues[counter] = tempCharValues[counter] == '1';
-        //        }
     }
-
-    //    private void allocatePcaValue(String pcaDeviceValue) {
-    //
-    //        AtomicInteger counter = new AtomicInteger(0);
-    //
-    //        Arrays.stream(pcaDeviceValue).forEach(pca -> {
-    //            this.pcaValue[counter.intValue()] = pca == 1;
-    //            counter.getAndIncrement();
-    //        });
-    //        //ensures Values
-    //        if (counter.intValue() < pcaList.size()) {
-    //            for (counter.intValue(); counter.intValue() < pcaList.size(); ) {
-    //                this.pcaValue[counter.intValue()] = false;
-    //                counter.getAndIncrement();
-    //            }
-    //        }
-    //    }
-
-
-    /*
-     * Due to problems with a boolean array; a new function with int array needed to be implemented.
-     *
-     * @param relaysValues usually from config ; 1 == ACTIVATE; 0 == DEACTIVATE
-     */
-    //    private void allocateRelaysValues(String relaysValues) {
-    //
-    //        char[] tempRelaysValues = relaysValues.toCharArray();
-    //
-    //        if (this.relaysList.size() > tempRelaysValues.length) {
-    //            this.logInfo(this.log, "Attention! Not enough RelaysValues! Missing Values: " + (this.relaysList.size() - tempRelaysValues.length)
-    //                    + " Following Relays Values will be 0 == false == deactivate");
-    //        }
-    //        this.relaysValues = new boolean[this.relaysList.size()];
-    //        for (int counter = 0; counter < tempRelaysValues.length && counter < this.relaysList.size(); counter++) {
-    //            this.relaysValues[counter] = tempRelaysValues[counter] == '1';
-    //        }
-    //
-    //    }
-
 
     /**
      * Allocate given Components and checks if they're correct.
@@ -170,7 +144,8 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
      * @throws ConfigurationException             if the Component exists but is the wrong instance
      * @throws OpenemsError.OpenemsNamedException if the component isn't loaded yet.
      */
-    private void allocateComponents(String[] deviceList, String identifier) throws ConfigurationException, OpenemsError.OpenemsNamedException {
+    private void allocateComponents(String[] deviceList, String identifier) throws
+            ConfigurationException, OpenemsError.OpenemsNamedException {
 
         AtomicInteger counter = new AtomicInteger();
         counter.set(0);
@@ -178,50 +153,43 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         ConfigurationException[] configurationExceptions = {null};
         Arrays.stream(deviceList).forEach(string -> {
             try {
-                switch (identifier) {
-                    case "Relays":
-                        if (cpm.getComponent(string) instanceof ActuatorRelaysChannel) {
-                            this.relaysList.add(counter.intValue(), cpm.getComponent(string));
+                if (!string.equals("")) {
+                    switch (identifier) {
+                        case "Relays":
+                            if (cpm.getComponent(string) instanceof ActuatorRelaysChannel) {
+                                this.relaysList.add(counter.intValue(), cpm.getComponent(string));
 
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Relays " + string,
-                                    "Config error; Check your Config --> Relays");
-                        }
-                        break;
-                    case "Dac":
-                        if (cpm.getComponent(string) instanceof ChpPowerPercentage) {
-                            this.dacList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Dac " + string,
-                                    "Config error; Check your Config --> Dac");
-                        }
-                        break;
-                    case "Pwm":
-                        if (cpm.getComponent(string) instanceof PwmPowerLevelChannel) {
-                            this.pwmList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Pwm " + string,
-                                    "Config error; Check your Config --> Pwm Device");
-                        }
-                        break;
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Relays " + string,
+                                        "Config error; Check your Config --> Relays");
+                            }
+                            break;
+                        case "Dac":
+                            if (cpm.getComponent(string) instanceof ChpPowerPercentage) {
+                                this.dacList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Dac " + string,
+                                        "Config error; Check your Config --> Dac");
+                            }
+                            break;
+                        case "Pwm":
+                            if (cpm.getComponent(string) instanceof PwmPowerLevelChannel) {
+                                this.pwmList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Pwm " + string,
+                                        "Config error; Check your Config --> Pwm Device");
+                            }
+                            break;
 
-                    case "Pca":
-                        if (cpm.getComponent(string) instanceof PcaDevice) {
-                            this.pcaList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: Dac " + string,
-                                    "Config error; Check your Config --> Dac");
-                        }
-                        break;
-
-                    case "Gpio":
-                        if (cpm.getComponent(string) instanceof GpioDevice) {
-                            this.gpioList.add(counter.intValue(), cpm.getComponent(string));
-                        } else {
-                            throw new ConfigurationException("Could not allocate Component: GPIO : " + string,
-                                    "Config error; Check your Config for GPIO");
-                        }
-                        break;
+                        case "DoubleUart":
+                            if (cpm.getComponent(string) instanceof Sc16Nature) {
+                                this.uartList.add(counter.intValue(), cpm.getComponent(string));
+                            } else {
+                                throw new ConfigurationException("Could not allocate Component: Dac " + string,
+                                        "Config error; Check your Config --> Dac");
+                            }
+                            break;
+                    }
                 }
                 counter.getAndIncrement();
             } catch (ConfigurationException e) {
@@ -245,8 +213,8 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
         IntStream.range(0, this.relaysValues.length).forEach(x -> this.relaysValues[x] = false);
         Arrays.stream(this.dacValues).forEach(value -> value = 0);
         IntStream.range(0, this.pwmValues.length).forEach(x -> this.pwmValues[x] = 0.f);
-        IntStream.range(0, this.pcaValue.length).forEach(x -> this.pcaValue[x] = false);
-        IntStream.range(0, this.gpioValues.length).forEach(x -> this.gpioValues[x] = false);
+        IntStream.range(0, this.uartValues.length).forEach(x -> this.uartValues[x] = false);
+        //IntStream.range(0, this.gpioValues.length).forEach(x -> this.gpioValues[x] = false);
         writeValueToChannel();
     }
 
@@ -279,23 +247,28 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                 e.printStackTrace();
             }
         });
-        this.pcaList.forEach(pca -> {
-            try {
-                pca.getOnOff().setNextWriteValue(this.pcaValue[counter.getAndIncrement()]);
-            } catch (OpenemsError.OpenemsNamedException e) {
-                e.printStackTrace();
-            }
-        });
         counter.set(0);
-        this.gpioList.forEach(pca -> {
+        this.uartList.forEach(uart -> {
+            counter.set(0);
             try {
-                pca.getWriteError().setNextWriteValue(gpioValues[counter.getAndIncrement()]);
+                while (counter.get() < gpioList.size()) {
+                    switch (this.gpioList.get(counter.intValue())) {
+                        case 0:
+                            uart.ledRedStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                            break;
+                        case 1:
+                            uart.ledYellowStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                            break;
+                        case 2:
+                            uart.ledGreenStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                            break;
+                    }
+                }
+
             } catch (OpenemsError.OpenemsNamedException e) {
                 e.printStackTrace();
             }
         });
-
-
     }
 
     private Integer calculateAmpereToPercent(double dacValue) {
@@ -306,5 +279,19 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         writeValueToChannel();
+        for (int x = 0; x < this.relaysValues.length; x++) {
+            this.relaysValues[x] = !this.relaysValues[x];
+        }
+        if (counter == 0) {
+            boolean[] newUartValues = new boolean[3];
+            newUartValues[0] = this.uartValues[2];
+            newUartValues[1] = this.uartValues[0];
+            newUartValues[2] = this.uartValues[1];
+
+            System.arraycopy(newUartValues, 0, this.uartValues, 0, this.uartValues.length);
+
+            counter %= 5;
+        }
+        counter++;
     }
 }

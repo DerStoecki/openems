@@ -1,6 +1,7 @@
 package io.openems.edge.controller.signalhotwater.api;
 
 import io.openems.common.channel.AccessMode;
+import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
@@ -12,7 +13,8 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-
+        MIN_TEMP_UPPER(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE).accessMode(AccessMode.READ_WRITE)),
+        MAX_TEMP_LOWER(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE).accessMode(AccessMode.READ_WRITE)),
         /**
          * Controller output, request to heat the water tank. Low temperature detected in the water tank, requesting to
          * turn on the heat network so the tank can be heated.
@@ -83,7 +85,12 @@ public interface SignalHotWaterChannel extends OpenemsComponent {
 
     }
 
-
+    default WriteChannel<Integer> minTempUpper() {
+        return this.channel(ChannelId.MIN_TEMP_UPPER);
+    }
+    default WriteChannel<Integer> maxTempLower() {
+        return this.channel(ChannelId.MAX_TEMP_LOWER);
+    }
     /**
      * Controller output, request to heat the water tank. Low temperature detected in the water tank, requesting to turn
      * on the heat network so the tank can be heated.

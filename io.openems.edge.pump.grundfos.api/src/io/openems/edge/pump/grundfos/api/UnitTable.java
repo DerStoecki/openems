@@ -11,7 +11,7 @@ public enum UnitTable {
     /**
      * The Standard Unit Table for Grundfos pumps.
      * Beneath is a list of the Standard unit tables supporting only temperature, active power and pressure values.
-     * The Number is written in the information Data of each HeatPump Task.
+     * The Number is written in the information Data of each Pump Task.
      * Needed by the task for calculating the correct value to the Channel.
      * */
     //only pressure,temperature watt and rotations/time atm.

@@ -174,11 +174,11 @@ public interface SymmetricMeter extends OpenemsComponent {
 
         //Consolinno Channel:
 
-        POSITIVE_ACTIVE_ENERGY_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+        POSITIVE_ACTIVE_ENERGY_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.KILOWATT_HOURS)),
         POSITIVE_ACTIVE_ENERGY_TARIF_ONE(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
         POSITIVE_ACTIVE_ENERGY_TARIF_TWO(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
         ELECTRICITY_EFFECTIVE_VALUE(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT)),
-        NEGATIVE_ACTIVE_ENERGY_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+        NEGATIVE_ACTIVE_ENERGY_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.KILOWATT_HOURS)),
         NEGATIVE_ACTIVE_ENERGY_TARIF_ONE(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
         NEGATIVE_ACTIVE_ENERGY_TARIF_TWO(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
         INSTANTANEOUS_VOLTAGE_PHASE_ONE(Doc.of(OpenemsType.FLOAT).unit(Unit.VOLT)),

@@ -6,6 +6,8 @@ import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.valve.api.Valve;
 
+import java.util.Optional;
+
 public class DummyValve extends AbstractOpenemsComponent implements Valve, OpenemsComponent {
     /*
      * This Class works the same way as the ValveImpl except it's constructor and lacking of the
@@ -29,6 +31,7 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
         this.getLastPowerLevel().setNextValue(0);
         this.getPowerLevel().setNextValue(0);
         this.getTimeNeeded().setNextValue(0);
+        this.getIsBusy().setNextValue(false);
     }
 
 
@@ -126,8 +129,35 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
 
     // Added because of changes to valve interface. Won't compile otherwise.
     @Override
-    public void forceOpen() {}
+    public void forceOpen() {
+    }
 
     @Override
-    public void forceClose() {}
+    public void updatePowerLevel() {
+
+    }
+
+    @Override
+    public boolean powerLevelReached() {
+        return false;
+    }
+
+    @Override
+    public boolean isChanging() {
+        return false;
+    }
+
+    @Override
+    public void reset() {
+
+    }
+
+    @Override
+    public boolean shouldReset() {
+        return false;
+    }
+
+    @Override
+    public void forceClose() {
+    }
 }

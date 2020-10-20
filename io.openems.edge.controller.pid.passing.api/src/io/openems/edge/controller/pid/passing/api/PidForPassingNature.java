@@ -3,10 +3,7 @@ package io.openems.edge.controller.pid.passing.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.BooleanWriteChannel;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PidForPassingNature extends OpenemsComponent {
@@ -25,9 +22,7 @@ public interface PidForPassingNature extends OpenemsComponent {
         ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
                 .onInit(channel -> { //
                     // on each Write to the channel -> set the value
-                    ((BooleanWriteChannel) channel).onSetNextWrite(value -> {
-                        channel.setNextValue(value);
-                    });
+                    ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue);
                 })),
 
 
@@ -40,7 +35,10 @@ public interface PidForPassingNature extends OpenemsComponent {
          * </ul>
          */
 
-        MIN_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE));
+        MIN_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE).onInit(channel -> {
+                    ((IntegerWriteChannel) channel).onSetNextWrite(channel::setNextValue);
+                }
+        ));
 
 
         private final Doc doc;
@@ -73,7 +71,6 @@ public interface PidForPassingNature extends OpenemsComponent {
     default WriteChannel<Integer> setMinTemperature() {
         return this.channel(ChannelId.MIN_TEMPERATURE);
     }
-
 
 
 }

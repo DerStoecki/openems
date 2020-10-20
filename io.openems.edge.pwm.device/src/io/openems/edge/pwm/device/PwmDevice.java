@@ -41,7 +41,7 @@ public class PwmDevice extends AbstractOpenemsComponent implements OpenemsCompon
 
         try {
             refI2cBridge.addI2cTask(super.id(), new PwmDeviceTaskImpl(super.id(), this.getPwmPowerLevelChannel(),
-                    config.pwm_module(), config.pinPosition(), config.isInverse()));
+                    config.pwm_module(), config.pinPosition(), config.isInverse(), config.hasLed(), config.pinPosition()));
 
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
@@ -52,6 +52,11 @@ public class PwmDevice extends AbstractOpenemsComponent implements OpenemsCompon
     public void deactivate() {
         refI2cBridge.removeI2cTask(super.id());
         super.deactivate();
+    }
+
+    @Override
+    public String debugLog() {
+        return "Pwm Device: " + super.id() + " running at: " + this.getPwmPowerLevelChannel().getNextValue().get() + " %";
     }
 
 }

@@ -19,10 +19,14 @@ import org.osgi.service.metatype.annotations.Option;
     boolean enabled() default true;
 
     @AttributeDefinition(name = "RelaysId", description = "Select RelaysDevices")
-    String[] relaysDeviceList() default {"M6"};
+    String[] relaysDeviceList() default {
+            "Relays0", "Relays1", "Relays2", "Relays3", "Relays4", "Relays5", "Relays6", "Relays7",
+            "Relays8", "Relays9", "Relays10", "Relays11", "Relays12", "Relays13", "Relays14", "Relays15",
+            "Relays16", "Relays17", "Relays18", "Relays19", "Relays20", "Relays21", "Relays22", "Relays23",
+            "Relays24", "Relays25", "Relays26", "Relays27", "Relays28", "Relays29", "Relays30", "Relays31"};
 
     @AttributeDefinition(name = "RelaysValues", description = "RelaysValues can be changed via 1 and 0 ")
-    String relaysValues() default "1";
+    String relaysValues() default "10011010100110101001101010011010";
 
     @AttributeDefinition(name = "DacDeviceId", description = "Select DacDevices",
             options = {
@@ -37,22 +41,24 @@ import org.osgi.service.metatype.annotations.Option;
     double[] dacValues() default {7, 15, 20, 10};
 
     @AttributeDefinition(name = "PwmDeviceId", description = "Select PwmDevices")
-    String[] PwmDeviceList()default{"PM6"};
+    String[] PwmDeviceList() default {"PwmDevice1", "PwmDevice2", "PwmDevice3", "PwmDevice4"};
 
     @AttributeDefinition(name = "PwmValues", description = "PwmValues in %")
-    float[] pwmValues() default {25, 100, 75, 40, 80, 50, 100, 10};
+    float[] pwmValues() default {25, 100, 75, 40};
 
-    @AttributeDefinition(name = "PcaDevices", description = "Select PcaDevices")
-    String[] pcaDevice() default {"IO1"};
+    @AttributeDefinition(name = "Sc16Id", description = "Id of the Mainmodule for the Sc16")
+    String[] mainModuleId() default "LeafletSc16";
 
-    @AttributeDefinition(name = "PcaValue", description = "What would you like to write in the PcaDevice.")
-    String pcaDeviceValue() default "1";
+    @AttributeDefinition(name = "Sc16States", description = "What Sc16 states you want to control",
+            options = {
+                    @Option(label = "LED-RED", value = "LED-RED"),
+                    @Option(label = "LED-YELLOW", value = "LED-YELLOW"),
+                    @Option(label = "LED-GREEN", value = "LED-GREEN")}
+    )
+    String[] sc16ChoiceList() default {"LED-GREEN"};
 
-    @AttributeDefinition(name = "GpioWriteDevice", description = "What GPIO Devices do you want to use.")
-            String [] gpioDevices() default {"ChpOnOffStatus0"};
-
-     @AttributeDefinition(name = "GpioWriteValues", description = "Add the Values e.g. ErrorFlags")
-             String gpioDeviceValues () default "111";
+    @AttributeDefinition(name = "Sc16Values", description = "Values for the Statuses")
+    String sc16Values() default "100";
 
     String webconsole_configurationFactory_nameHint() default "Controller Emv Static Values [{id}]";
 

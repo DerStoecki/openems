@@ -3,10 +3,7 @@ package io.openems.edge.controller.passing.controlcenter.api;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.BooleanWriteChannel;
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.*;
 import io.openems.edge.common.component.OpenemsComponent;
 
 public interface PassingControlCenterChannel extends OpenemsComponent {
@@ -23,7 +20,8 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
          * </ul>
          */
 
-        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)),
+        TEMPERATURE_OVERRIDE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_WRITE)
+        .onInit(channel -> ((IntegerWriteChannel)channel).onSetNextWrite(channel::setNextValue))),
 
         /**
          * Tells the controller to use the temperature override.
@@ -34,7 +32,13 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
          * </ul>
          */
 
-        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        ACTIVATE_OVERRIDE(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)
+                .onInit(channel -> ((BooleanWriteChannel)channel).onSetNextWrite(channel::setNextValue))),
+
+        /**
+         * Heating temperature.
+         */
+        TEMPERATURE_HEATING(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS).accessMode(AccessMode.READ_ONLY)),
 
         /**
          * Controller output. If the heater should activate or not.
@@ -46,6 +50,8 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
          */
 
         ACTIVATE_HEATER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
+
+
 
         private final Doc doc;
 
@@ -88,6 +94,11 @@ public interface PassingControlCenterChannel extends OpenemsComponent {
 
     default Channel<Boolean> activateHeater() {
         return this.channel(ChannelId.ACTIVATE_HEATER);
+    }
+
+
+    default Channel<Integer> temperatureHeating() {
+        return this.channel(ChannelId.TEMPERATURE_HEATING);
     }
 
 

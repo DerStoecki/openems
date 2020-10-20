@@ -24,5 +24,15 @@ public interface Valve extends PassingForPid {
 
     void forceOpen();
 
+    void updatePowerLevel();
 
+    boolean powerLevelReached();
+
+    boolean isChanging();
+
+    void reset();
+
+    boolean shouldReset();
+
+    //void shutdownRelays();
 }
