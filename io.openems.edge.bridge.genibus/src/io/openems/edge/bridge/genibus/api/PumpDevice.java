@@ -42,9 +42,15 @@ public class PumpDevice {
     private long executionDuration = 200;    // Milliseconds. This information is currently not used.
     private boolean allLowPrioTasksAdded;
     private boolean addAllOnceTasks = true;
-    private double[] millisecondsPerByte = {2.0, 2.0, 2.0, 2.0, 2.0};    // Rough estimate. Exact value measured at runtime.
+    private double[] millisecondsPerByte = {2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};    // Rough estimate. Exact value measured at runtime.
     private int arrayTracker = 0;
+
+    // Value measured with a laptop is 33 ms. Leaflet timing seems to be slower, so setting a more conservative 40 ms.
+    private int[] emptyTelegramTime = {40, 40, 40, 40, 40};
+    private int arrayTracker2 = 0;
+
     private boolean firstTelegram = true;
+    private boolean emptyTelegramSent = false;
 
     // These are needed to calculate the setpoint, since GENIbus setpoints are relative to the sensor range.
     private double pressureSensorMinBar = 0;
@@ -145,7 +151,7 @@ public class PumpDevice {
      * @param millisecondsPerByte
      */
     public void setMillisecondsPerByte(double millisecondsPerByte) {
-        // Save three values so we can average and the value won't jump that much.
+        // Save seven values so we can average and the value won't jump that much.
         if (millisecondsPerByte > 10) {
             millisecondsPerByte = 10;   // Failsafe.
         }
@@ -154,7 +160,7 @@ public class PumpDevice {
         }
         this.millisecondsPerByte[arrayTracker] = millisecondsPerByte;
         arrayTracker++;
-        if (arrayTracker >= 5) {
+        if (arrayTracker >= 7) {
             arrayTracker = 0;
         }
     }
@@ -166,12 +172,44 @@ public class PumpDevice {
      * @return
      */
     public double getMillisecondsPerByte() {
-        // Average over the five entries.
+        // Average over the seven entries.
         double returnValue = 0;
         for (int i = 0; i < 5; i++) {
             returnValue += millisecondsPerByte[i];
         }
+        return returnValue / 7;
+    }
+
+    public void setEmptyTelegramTime(int emptyTelegramTime) {
+        // Save five values so we can average and the value won't jump that much.
+        if (emptyTelegramTime > 100) {
+            emptyTelegramTime = 100;   // Failsafe.
+        }
+        if (emptyTelegramTime < 10) {
+            emptyTelegramTime = 10;   // Failsafe.
+        }
+        this.emptyTelegramTime[arrayTracker2] = emptyTelegramTime;
+        arrayTracker2++;
+        if (arrayTracker2 >= 5) {
+            arrayTracker2 = 0;
+        }
+    }
+
+    public int getEmptyTelegramTime() {
+        // Average over the five entries.
+        int returnValue = 0;
+        for (int i = 0; i < 5; i++) {
+            returnValue += emptyTelegramTime[i];
+        }
         return returnValue / 5;
+    }
+
+    public boolean isEmptyTelegramSent() {
+        return emptyTelegramSent;
+    }
+
+    public void setEmptyTelegramSent(boolean emptyTelegramSent) {
+        this.emptyTelegramSent = emptyTelegramSent;
     }
 
     public void setAllLowPrioTasksAdded(boolean allLowPrioTasksAdded) {
@@ -232,6 +270,8 @@ public class PumpDevice {
         millisecondsPerByte[2] = 2.0;
         millisecondsPerByte[3] = 2.0;
         millisecondsPerByte[4] = 2.0;
+        millisecondsPerByte[5] = 2.0;
+        millisecondsPerByte[6] = 2.0;
     }
 
     public boolean isFirstTelegram() {

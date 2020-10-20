@@ -95,9 +95,10 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
      *                   answer to the request telegram. By
      *                   </p>
      */
-    protected void handleTelegram(Telegram telegram) {
+    protected void handleTelegram(Telegram telegram, long cycletimeLeft) {
         List<ApplicationProgramDataUnit> requestApdu = telegram.getProtocolDataUnit().getApplicationProgramDataUnitList();
 
+        int emptyTelegramTime = telegram.getPumpDevice().getEmptyTelegramTime();
         int telegramByteLength = Byte.toUnsignedInt(telegram.getLength()) - 2 // Subtract crc
                 + telegram.getAnswerTelegramLength() - 2;   // Stored value in answerTelegramLength is the estimated upper limit, not the actual value.
 
@@ -110,7 +111,16 @@ public class GenibusImpl extends AbstractOpenemsComponent implements GenibusChan
         // answer time clock, + 60 ms (GENIbus timeout length, added in "handleResponse()" method). The same time is
         // then also used as timeout for the transmission time clock. Not accurate, but good enough. Just to have a not
         // too long timer that scales with the telegram length.
-        int telegramEstimatedTimeMillis = (int) (33 + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte());
+        int telegramEstimatedTimeMillis = (int) (emptyTelegramTime + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte());
+
+        // When testing on the leaflet I saw weird random connection problems. I guess the leaflet has hangups that
+        // cause an execution delay. Adding more time to the timeout to counter this problem. Adding just 100 is not enough.
+        if (cycletimeLeft > telegramEstimatedTimeMillis + 180) {
+            telegramEstimatedTimeMillis += 100;
+        }
+        if (cycletimeLeft > telegramEstimatedTimeMillis + 180) {
+            telegramEstimatedTimeMillis += 100;
+        }
         Telegram responseTelegram = handler.writeTelegram(telegramEstimatedTimeMillis, telegram, debug);
 
         // No answer received -> error handling

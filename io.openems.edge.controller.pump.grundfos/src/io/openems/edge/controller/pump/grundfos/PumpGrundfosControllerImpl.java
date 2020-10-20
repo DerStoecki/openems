@@ -7,7 +7,6 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.pump.grundfos.api.ControlModeSetting;
 import io.openems.edge.controller.pump.grundfos.api.PumpGrundfosControllerChannels;
-import io.openems.edge.pump.grundfos.api.ControlMode;
 import io.openems.edge.pump.grundfos.api.PumpGrundfosChannels;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
@@ -29,7 +28,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
 
     @Reference(policy = ReferencePolicy.STATIC,
             policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-    PumpGrundfosChannels needsThisToBeActive;
+    PumpGrundfosChannels pumpChannels;
 
     @Reference
     ComponentManager cpm;
@@ -43,8 +42,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     double frequencySetpoint;
     private ControlModeSetting controlModeSetting;
     private boolean stopPump;
-    private boolean pumpWink;
-    private PumpGrundfosChannels pumpChannels;
     private boolean verbose;
     private boolean onlyRead;
     private int testCounter = 0;
@@ -56,21 +53,18 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        try {
-            if (cpm.getComponent(config.pumpId()) instanceof PumpGrundfosChannels) {
-                this.pumpChannels = cpm.getComponent(config.pumpId());
-            } else {
-                throw new ConfigurationException("Pump not correct instance, check Id!", "Incorrect Id in Config");
-            }
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            e.printStackTrace();
+        // Allocate components.
+        if (cpm.getComponent(config.pumpId()) instanceof PumpGrundfosChannels) {
+            this.pumpChannels = cpm.getComponent(config.pumpId());
+        } else {
+            throw new ConfigurationException("Pump not correct instance, check Id!", "Incorrect Id in Config");
         }
+
         controlModeSetting = config.controlMode();
         stopPump = config.stopPump();
-        pumpWink = config.pumpWink();
         pressureSetpoint = config.pressureSetpoint();
         frequencySetpoint = config.frequencySetpoint();
         onlyRead = config.onlyRead();
@@ -83,9 +77,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             setStopPump().setNextWriteValue(stopPump);
             setStopPump().setNextValue(stopPump);
             setStopPump().nextProcessImage();
-            setFlashLed().setNextWriteValue(pumpWink);
-            setFlashLed().setNextValue(pumpWink);
-            setFlashLed().nextProcessImage();
             setPressureSetpoint().setNextWriteValue(pressureSetpoint);
             setPressureSetpoint().setNextValue(pressureSetpoint);
             setPressureSetpoint().nextProcessImage();
@@ -99,7 +90,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             if (onlyRead == false) {
                 changeControlMode();
                 startStopPump();
-                pumpFlashLed();
             }
 
         } catch (OpenemsError.OpenemsNamedException e) {
@@ -116,29 +106,31 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     }
 
     private void changeControlMode() throws OpenemsError.OpenemsNamedException {
-        switch (controlModeSetting) {
-            case MIN_MOTOR_CURVE:
-                this.pumpChannels.setMinMotorCurve().setNextWriteValue(true);
-                break;
-            case MAX_MOTOR_CURVE:
-                this.pumpChannels.setMaxMotorCurve().setNextWriteValue(true);
-                break;
-            case AUTO_ADAPT:
-                this.pumpChannels.setAutoAdapt().setNextWriteValue(true);
-                break;
-            case CONST_FREQUENCY:
-                this.pumpChannels.setConstFrequency().setNextWriteValue(true);
-                // Set interval to maximum. Change this if more precision is needed. Fmin minimum is 52% for MAGNA3.
-                // You can set Fmin lower than that, but this will have no effect. Motor can't run slower than 52%.
-                this.pumpChannels.setFmin().setNextWriteValue(0.52);
-                this.pumpChannels.setFmax().setNextWriteValue(1.0);
-                break;
-            case CONST_PRESSURE:
-                this.pumpChannels.setConstPressure().setNextWriteValue(true);
-                // Set interval to sensor interval. Change this if more precision is needed.
-                this.pumpChannels.setConstRefMinH().setNextWriteValue(0.0);
-                this.pumpChannels.setConstRefMaxH().setNextWriteValue(1.0);
-                break;
+        if (stopPump == false) {
+            switch (controlModeSetting) {
+                case MIN_MOTOR_CURVE:
+                    this.pumpChannels.setMinMotorCurve().setNextWriteValue(true);
+                    break;
+                case MAX_MOTOR_CURVE:
+                    this.pumpChannels.setMaxMotorCurve().setNextWriteValue(true);
+                    break;
+                case AUTO_ADAPT:
+                    this.pumpChannels.setAutoAdapt().setNextWriteValue(true);
+                    break;
+                case CONST_FREQUENCY:
+                    this.pumpChannels.setConstFrequency().setNextWriteValue(true);
+                    // Set interval to maximum. Change this if more precision is needed. Fmin minimum is 52% for MAGNA3.
+                    // You can set Fmin lower than that, but this will have no effect. Motor can't run slower than 52%.
+                    this.pumpChannels.setFmin().setNextWriteValue(0.52);
+                    this.pumpChannels.setFmax().setNextWriteValue(1.0);
+                    break;
+                case CONST_PRESSURE:
+                    this.pumpChannels.setConstPressure().setNextWriteValue(true);
+                    // Set interval to sensor interval. Change this if more precision is needed.
+                    this.pumpChannels.setConstRefMinH().setNextWriteValue(0.0);
+                    this.pumpChannels.setConstRefMaxH().setNextWriteValue(1.0);
+                    break;
+            }
         }
     }
 
@@ -147,14 +139,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             this.pumpChannels.setStop().setNextWriteValue(true);
         } else {
             this.pumpChannels.setStart().setNextWriteValue(true);
-        }
-    }
-
-    private void pumpFlashLed() throws OpenemsError.OpenemsNamedException {
-        if (pumpWink) {
-            this.pumpChannels.setWinkOn().setNextWriteValue(true);
-        } else {
-            this.pumpChannels.setWinkOff().setNextWriteValue(true);
         }
     }
 
@@ -167,14 +151,12 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         // Copy "write" to "nextValue".
         boolean writeChannelsHaveValues = setControlMode().getNextWriteValue().isPresent()
                 && setStopPump().getNextWriteValue().isPresent()
-                && setFlashLed().getNextWriteValue().isPresent()
                 && setPressureSetpoint().getNextWriteValue().isPresent()
                 && setFrequencySetpoint().getNextWriteValue().isPresent()
                 && setOnlyRead().getNextWriteValue().isPresent();
         if (writeChannelsHaveValues) {
             setControlMode().setNextValue(setControlMode().getNextWriteValue().get());
             setStopPump().setNextValue(setStopPump().getNextWriteValue().get());
-            setFlashLed().setNextValue(setFlashLed().getNextWriteValue().get());
             setPressureSetpoint().setNextValue(setPressureSetpoint().getNextWriteValue().get());
             setFrequencySetpoint().setNextValue(setFrequencySetpoint().getNextWriteValue().get());
             setOnlyRead().setNextValue(setOnlyRead().getNextWriteValue().get());
@@ -186,7 +168,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
 
             boolean channelsHaveValues =  setControlMode().value().isDefined()
                     && setStopPump().value().isDefined()
-                    && setFlashLed().value().isDefined()
                     && setPressureSetpoint().value().isDefined()
                     && setFrequencySetpoint().value().isDefined()
                     && pumpChannels.isConnectionOk().value().isDefined();
@@ -195,7 +176,6 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
                 // Copy values from channels
                 controlModeSetting = setControlMode().value().asEnum();
                 stopPump = setStopPump().value().get();
-                pumpWink = setFlashLed().value().get();
                 pressureSetpoint = setPressureSetpoint().value().get();
                 frequencySetpoint = setFrequencySetpoint().value().get();
 
@@ -213,114 +193,95 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
                         if (pumpChannels.getMotorFrequency().value().orElse(0.0) <= 0) {
                             startStopPump();
                         }
-                    }
-                    switch (controlModeSetting) {
-                        case CONST_PRESSURE:
-                            if (pumpChannels.getActualControlMode().value().asEnum() != ControlMode.CONST_PRESS) {
-                                changeControlMode();
-                            }
-                            break;
-                        case CONST_FREQUENCY:
-                            double frequency = pumpChannels.getMotorFrequency().value().orElse(0.0);
-                            double maxFrequency = pumpChannels.setFnom().value().orElse(0.0);
-
-                            // Need to allow some leeway since 8 bit conversion introduces inaccuracies.
-                            boolean frequencyOk = frequency > (setpoint - 0.02) * maxFrequency && frequency < (setpoint + 0.02) * maxFrequency;
-                            if (frequencyOk == false || pumpChannels.getActualControlMode().value().asEnum() != ControlMode.CONST_FREQ) {
-                                changeControlMode();
-
-                            }
-                            break;
-                        case MIN_MOTOR_CURVE:
-                            // Min motor curve does not have a control mode display. Control mode readout stays at whatever
-                            // it was set to before.
-                            frequency = pumpChannels.getMotorFrequency().value().orElse(0.0);
-                            double minFrequency = pumpChannels.setFnom().value().orElse(0.0)
-                                    * pumpChannels.setFmin().value().orElse(0.0);
-
-                            // Need to allow some leeway since 8 bit conversion introduces inaccuracies.
-                            frequencyOk = frequency > minFrequency - 1 && frequency < minFrequency + 1;
-                            if (frequencyOk == false) {
-                                changeControlMode();
-                            }
-                            break;
-                        case MAX_MOTOR_CURVE:
-                            // Max motor curve does not have a control mode display. Control mode readout stays at whatever
-                            // it was set to before.
-                            frequency = pumpChannels.getMotorFrequency().value().orElse(0.0);
-                            maxFrequency = pumpChannels.setFnom().value().orElse(0.0);
-
-                            // Need to allow some leeway since 8 bit conversion introduces inaccuracies.
-                            frequencyOk = frequency > maxFrequency - 1 && frequency < maxFrequency + 1;
-                            if (frequencyOk == false) {
-                                changeControlMode();
-                            }
-                            break;
-                        case AUTO_ADAPT:
-                            if (pumpChannels.getActualControlMode().value().asEnum() != ControlMode.AUTO_ADAPT) {
-                                changeControlMode();
-                            }
-                            break;
-                    }
-
-                    // Send setpoint to pump, depending on control mode. Do this every cycle.
-                    switch (controlModeSetting) {
-                        case MIN_MOTOR_CURVE:
-                        case MAX_MOTOR_CURVE:
-                        case AUTO_ADAPT:
-                            break;
-                        case CONST_FREQUENCY:
-                            double minFrequencySetpoint = pumpChannels.setFmin().value().orElse(0.0);;
-                            if (frequencySetpoint < minFrequencySetpoint) {
-                                frequencySetpoint = minFrequencySetpoint;
-                                setFrequencySetpoint().setNextWriteValue(frequencySetpoint);  // Update both containers to have correct values next cycle.
-                                setFrequencySetpoint().setNextValue(frequencySetpoint);
-                            }
-                            if (frequencySetpoint > 100) {
-                                frequencySetpoint = 100;
-                                setFrequencySetpoint().setNextWriteValue(100.0);
-                                setFrequencySetpoint().setNextValue(100.0);
-                            }
-                            setpoint = frequencySetpoint / 100.0;
-                            this.pumpChannels.setRefRem().setNextWriteValue(setpoint);
-                            break;
-                        case CONST_PRESSURE:
-                            double intervalHrange = pumpChannels.getPumpDevice().getPressureSensorRangeBar();
-                            double intervalHmin = pumpChannels.getPumpDevice().getPressureSensorMinBar();
-
-                            // Test if INFO of pressure sensor is available. If yes, range is not 0.
-                            if (intervalHrange > 0) {
-                                if (pressureSetpoint > intervalHrange + intervalHmin) {
-                                    this.logWarn(this.log, "Value for pressure setpoint = " + pressureSetpoint + " bar is above the interval range. "
-                                            + "Resetting to maximum valid value " + intervalHrange + intervalHmin + " bar.");
-                                    pressureSetpoint = intervalHrange + intervalHmin;
-                                    setPressureSetpoint().setNextWriteValue(pressureSetpoint);
-                                    setPressureSetpoint().setNextValue(pressureSetpoint);   // Need to set this, otherwise warn message is displayed twice.
+                        switch (controlModeSetting) {
+                            case CONST_PRESSURE:
+                                if (pumpChannels.getActualControlMode().value().get().equals("Constant pressure") == false) {
+                                    changeControlMode();
                                 }
-                                if (pressureSetpoint < intervalHmin) {
-                                    this.logWarn(this.log, "Value for pressure setpoint = " + pressureSetpoint + " bar is below the interval range. "
-                                            + "Resetting to minimum valid value " + intervalHmin + " bar.");
-                                    pressureSetpoint = intervalHmin;
-                                    setPressureSetpoint().setNextWriteValue(pressureSetpoint);
-                                    setPressureSetpoint().setNextValue(pressureSetpoint);
+                                break;
+                            case CONST_FREQUENCY:
+                                if (pumpChannels.getActualControlMode().value().get().equals("Constant frequency") == false) {
+                                    changeControlMode();
                                 }
+                                break;
+                            case MIN_MOTOR_CURVE:
+                                if (pumpChannels.getActualControlMode().value().get().equals("Constant frequency - Min") == false) {
+                                    changeControlMode();
+                                }
+                                break;
+                            case MAX_MOTOR_CURVE:
+                                if (pumpChannels.getActualControlMode().value().get().equals("Constant frequency - Max") == false) {
+                                    changeControlMode();
+                                }
+                                break;
+                            case AUTO_ADAPT:
+                                if (pumpChannels.getActualControlMode().value().get().equals("AutoAdapt") == false) {
+                                    changeControlMode();
+                                }
+                                break;
+                        }
 
-                                // Don't need to convert to 0-254. The GENIbus bridge does that.
-                                // ref_rem is a percentage value and you write the percentage in the channel. To send 100%, write 1.00
-                                // to the channel.
-                                setpoint = (pressureSetpoint - intervalHmin) / intervalHrange;
+                        // Send setpoint to pump, depending on control mode. Do this every cycle.
+                        switch (controlModeSetting) {
+                            case MIN_MOTOR_CURVE:
+                            case MAX_MOTOR_CURVE:
+                            case AUTO_ADAPT:
+                                break;
+                            case CONST_FREQUENCY:
+                                double minFrequencySetpoint = pumpChannels.setFmin().value().orElse(0.0);;
+                                if (frequencySetpoint < minFrequencySetpoint) {
+                                    frequencySetpoint = minFrequencySetpoint;
+                                    setFrequencySetpoint().setNextWriteValue(frequencySetpoint);  // Update both containers to have correct values next cycle.
+                                    setFrequencySetpoint().setNextValue(frequencySetpoint);
+                                }
+                                if (frequencySetpoint > 100) {
+                                    frequencySetpoint = 100;
+                                    setFrequencySetpoint().setNextWriteValue(100.0);
+                                    setFrequencySetpoint().setNextValue(100.0);
+                                }
+                                setpoint = frequencySetpoint / 100.0;
                                 this.pumpChannels.setRefRem().setNextWriteValue(setpoint);
-                            } else {
-                                this.logWarn(this.log, "Can't send pressure setpoint to pump. INFO of pressure "
-                                        + "sensor not yet available, but needed to calculate setpoint.");
-                            }
-                            break;
+                                break;
+                            case CONST_PRESSURE:
+                                double intervalHrange = pumpChannels.getPumpDevice().getPressureSensorRangeBar();
+                                double intervalHmin = pumpChannels.getPumpDevice().getPressureSensorMinBar();
+
+                                // Test if INFO of pressure sensor is available. If yes, range is not 0.
+                                if (intervalHrange > 0) {
+                                    if (pressureSetpoint > intervalHrange + intervalHmin) {
+                                        this.logWarn(this.log, "Value for pressure setpoint = " + pressureSetpoint + " bar is above the interval range. "
+                                                + "Resetting to maximum valid value " + intervalHrange + intervalHmin + " bar.");
+                                        pressureSetpoint = intervalHrange + intervalHmin;
+                                        setPressureSetpoint().setNextWriteValue(pressureSetpoint);
+                                        setPressureSetpoint().setNextValue(pressureSetpoint);   // Need to set this, otherwise warn message is displayed twice.
+                                    }
+                                    if (pressureSetpoint < intervalHmin) {
+                                        this.logWarn(this.log, "Value for pressure setpoint = " + pressureSetpoint + " bar is below the interval range. "
+                                                + "Resetting to minimum valid value " + intervalHmin + " bar.");
+                                        pressureSetpoint = intervalHmin;
+                                        setPressureSetpoint().setNextWriteValue(pressureSetpoint);
+                                        setPressureSetpoint().setNextValue(pressureSetpoint);
+                                    }
+
+                                    // Don't need to convert to 0-254. The GENIbus bridge does that.
+                                    // ref_rem is a percentage value and you write the percentage in the channel. To send 100%, write 1.00
+                                    // to the channel.
+                                    setpoint = (pressureSetpoint - intervalHmin) / intervalHrange;
+                                    this.pumpChannels.setRefRem().setNextWriteValue(setpoint);
+                                } else {
+                                    this.logWarn(this.log, "Can't send pressure setpoint to pump. INFO of pressure "
+                                            + "sensor not yet available, but needed to calculate setpoint.");
+                                }
+                                break;
+                        }
                     }
+
                     if (verbose) {
                         channelOutput();
                     }
                 } else {
-
+                    this.logWarn(this.log, "Warning: Pump " + pumpChannels.getPumpDevice().getPumpDeviceId()
+                            + " at GENIbus address " + pumpChannels.getPumpDevice().getGenibusAddress() + " has no connection.");
                 }
             }
         } else {
@@ -354,7 +315,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "Pump flow: " + formatter2.format(pumpChannels.getCurrentPumpFlow().value().orElse(0.0)) + " m³/h");
         //this.logInfo(this.log, "Pump flow max: " + formatter2.format(pumpChannels.setPumpMaxFlow().value().orElse(0.0)) + " m³/h");
         this.logInfo(this.log, "Pumped medium temperature: " + formatter1.format(pumpChannels.getPumpedWaterMediumTemperature().value().orElse(0.0) / 10) + "°C");
-        this.logInfo(this.log, "Control mode: " + pumpChannels.getActualControlMode().value().asEnum().getName());
+        this.logInfo(this.log, "Control mode: " + pumpChannels.getActualControlMode().value().get());
         this.logInfo(this.log, pumpChannels.getControlSource().value().orElse("Command source:"));
         //this.logInfo(this.log, "Buffer length: " + pumpChannels.getBufferLength().value().get());
         this.logInfo(this.log, "AlarmCode: " + pumpChannels.getAlarmCode().value().get());

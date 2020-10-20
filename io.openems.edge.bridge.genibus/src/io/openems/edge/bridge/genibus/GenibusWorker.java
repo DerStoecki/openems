@@ -102,6 +102,10 @@ class GenibusWorker extends AbstractCycleWorker {
         if (currentDevice.isConnectionOk() == false) {
             if (lastExecutionMillis > cycleTimeMs - 50) {
                 currentDevice.setTimestamp();
+                currentDevice.setFirstTelegram(true);
+                if (parent.getDebug()) {
+                    this.parent.logInfo(this.log, "Sending empty telegram to test if device " + currentDevice.getPumpDeviceId() + " is online.");
+                }
                 sendEmptyTelegram(currentDevice);
             }
             return;
@@ -147,6 +151,13 @@ class GenibusWorker extends AbstractCycleWorker {
         List<GenibusTask> tasksQueue = currentDevice.getTaskQueue();
 
         if (tasksQueue.isEmpty()) {
+            // Don't send when it's broadcast.
+            if (currentDevice.isEmptyTelegramSent() == false && currentDevice.getGenibusAddress() != 254) {
+                currentDevice.setEmptyTelegramSent(true);
+                sendEmptyTelegram(currentDevice);
+                return;
+            }
+
             // Nothing useful left to do. No tasks could be found that were not already executed this cycle.
             if (parent.getDebug()) {
                 this.parent.logInfo(this.log, "No tasks left this cycle for pump number "
@@ -292,16 +303,12 @@ class GenibusWorker extends AbstractCycleWorker {
     }
 
     private void sendEmptyTelegram(PumpDevice currentDevice) {
-        currentDevice.setFirstTelegram(true);
         Telegram telegram = new Telegram();
         telegram.setStartDelimiterDataRequest();
         telegram.setDestinationAddress(currentDevice.getGenibusAddress());
         telegram.setSourceAddress(0x01);
         telegram.setPumpDevice(currentDevice);
         telegramQueue.add(telegram);
-        if (parent.getDebug()) {
-            this.parent.logInfo(this.log, "Sending empty telegram to test if device " + currentDevice.getPumpDeviceId() + " is online.");
-        }
     }
 
     /**
@@ -335,6 +342,7 @@ class GenibusWorker extends AbstractCycleWorker {
             currentDevice.setTimestamp();
             currentDevice.setAllLowPrioTasksAdded(false);
             currentDevice.setFirstTelegram(false);
+            currentDevice.setEmptyTelegramSent(false);
 
             // Check content of taskQueue. If length is longer than numberOfHighTasks + lowTasksToAdd (=number of tasks
             // this method would add), all high tasks are already in the queue and don't need to be added again.
@@ -662,7 +670,8 @@ class GenibusWorker extends AbstractCycleWorker {
                     if (parent.getDebug()) {
                         this.parent.logInfo(this.log, "Stopwatch 1: " + cycleStopwatch.elapsed(TimeUnit.MILLISECONDS));
                     }
-                    parent.handleTelegram(telegram);
+                    long cycletimeLeft = cycleTimeMs - timeCounterTimestamp;
+                    parent.handleTelegram(telegram, cycletimeLeft);
                     if (parent.getDebug()) {
                         this.parent.logInfo(this.log, "Stopwatch 2: " + cycleStopwatch.elapsed(TimeUnit.MILLISECONDS));
                     }
@@ -674,9 +683,10 @@ class GenibusWorker extends AbstractCycleWorker {
                         long executionDuration = cycleStopwatch.elapsed(TimeUnit.MILLISECONDS) - timeCounterTimestamp;
                         int telegramByteLength = Byte.toUnsignedInt(telegram.getLength()) - 2 // Subtract crc
                                 + telegram.getAnswerTelegramLength() - 2;
+                        int emptyTelegramTime = telegram.getPumpDevice().getEmptyTelegramTime();
                         if (parent.getDebug()) {
                             this.parent.logInfo(this.log, "Estimated telegram execution time was: "
-                                    + (33 + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte())
+                                    + (emptyTelegramTime + telegramByteLength * telegram.getPumpDevice().getMillisecondsPerByte())
                                     + " ms. Actual time: " + executionDuration + " ms. Ms/byte = "
                                     + telegram.getPumpDevice().getMillisecondsPerByte());
                         }
@@ -684,13 +694,20 @@ class GenibusWorker extends AbstractCycleWorker {
 
                         // Check if the telegram is suitable for timing calculation. Calculation error gets bigger the
                         // smaller the telegram, so exclude tiny telegrams.
-                        if (telegramByteLength > 5 && executionDuration > 33) {
+                        if (telegramByteLength > 10 && executionDuration > emptyTelegramTime) {
                             // Calculate "millisecondsPerByte", then store it in the pump device.
                             // Calculation: An empty telegram with no tasks takes ~33 ms to send and receive. When tasks
                             // are added to the telegram, the additional time is then proportional to the amount of bytes
                             // the tasks added (request and answer). "millisecondsPerByte" is the average amount of time
                             // each byte of a task adds to the telegram.
-                            telegram.getPumpDevice().setMillisecondsPerByte((executionDuration - 33) / (telegramByteLength * 1.0));
+                            telegram.getPumpDevice().setMillisecondsPerByte((executionDuration - emptyTelegramTime) / (telegramByteLength * 1.0));
+                        }
+                        if (telegramByteLength == 0) {
+                            telegram.getPumpDevice().setEmptyTelegramTime((int)executionDuration);
+                            if (parent.getDebug()) {
+                                this.parent.logInfo(this.log, "Empty Telegram detected. Updating emptyTelegramTime (currently "
+                                        + emptyTelegramTime + " ms).");
+                            }
                         }
                     }
                 } catch (InterruptedException e) {

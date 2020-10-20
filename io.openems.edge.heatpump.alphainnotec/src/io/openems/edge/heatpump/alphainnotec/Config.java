@@ -15,7 +15,7 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "HeatPump-Device ID", description = "Unique Id of the HeatPump.")
     String id() default "HeatPump0";
 
-    @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you what to allocate to this device.")
+    @AttributeDefinition(name = "ModBus-Bridge Id", description = "The Unique Id of the modBus-Bridge you want to allocate to this device.")
     String modbusBridgeId() default "modbus0";
 
     // Not yet implemented. Not all Modbus calls are supported by all heat pump models. This option will be used to

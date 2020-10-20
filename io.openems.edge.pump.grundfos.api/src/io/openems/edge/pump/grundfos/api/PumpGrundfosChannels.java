@@ -211,7 +211,7 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * The Actual Control Mode bits parsed to a text message.
          *
          * */
-        ACTUAL_CONTROL_MODE_ENUM(Doc.of(ControlMode.values())),
+        ACTUAL_CONTROL_MODE_STRING(Doc.of(OpenemsType.STRING)),
         /**
          * Unit family code
          * <ul>
@@ -711,7 +711,7 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     }
 
     default Channel<String> getActualControlMode() {
-        return this.channel(ChannelId.ACTUAL_CONTROL_MODE_ENUM);
+        return this.channel(ChannelId.ACTUAL_CONTROL_MODE_STRING);
     }
 
     default Channel<Double> getUnitFamily() {

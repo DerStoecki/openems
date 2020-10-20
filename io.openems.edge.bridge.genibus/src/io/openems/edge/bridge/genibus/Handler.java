@@ -49,15 +49,21 @@ public class Handler {
             }
             return false;
         }
+        StringBuilder portList = new StringBuilder();
         for (String entry : serialPortsOfSystem) {
-            this.parent.logInfo(this.log, "--Starting serial connection--");
-            this.parent.logInfo(this.log, "Found serial port: " + entry);
+            portList.append(entry).append(", ");
             if (entry.contains(this.portName)) {
                 portFound = true;
             }
         }
+        // Delete ", " at end
+        if (portList.length() > 2) {
+            portList.delete(portList.length() - 2, portList.length());
+        }
 
         if (portFound) {
+            this.parent.logInfo(this.log, "--Starting serial connection--");
+            this.parent.logInfo(this.log, "Ports found: " + portList);
             try {
                 serialPort = SerialPortBuilder.newBuilder(portName).setBaudRate(9600)
                         .setDataBits(DataBits.DATABITS_8).setParity(Parity.NONE).setStopBits(StopBits.STOPBITS_1).build();
@@ -80,6 +86,7 @@ public class Handler {
                 this.parent.logError(this.log, "Configuration error: The specified serial port " + portName
                         + " does not match any of the available ports or nothing is plugged in. " +
                         "Please check configuration and/or make sure the connector is plugged in.");
+                this.parent.logError(this.log, "Ports found: " + portList);
             }
             return false;
         }
@@ -175,11 +182,11 @@ public class Handler {
         os = null;
         is = null;
         if (serialPort == null) {
-            this.parent.logError(this.log, "serialPort is null. This should never happen.");
+            //this.parent.logError(this.log, "serialPort is null. This should never happen."); // Happens when no valid serial port was selected when starting the module.
             return;
         }
         if (serialPort.isClosed()) {
-            this.parent.logInfo(this.log, "serialPort is already closed.");
+            //this.parent.logInfo(this.log, "serialPort is already closed.");
             return;
         }
         try {
@@ -199,6 +206,29 @@ public class Handler {
      */
     public Telegram writeTelegram(long timeout, Telegram telegram, boolean debug) {
 
+        // Make sure the input is empty before sending a new telegram
+        try {
+            if (is.available() > 0) {
+                this.parent.logWarn(this.log, "Input buffer should be empty, but it is not. Trying to clear it.");
+                long startTime = System.currentTimeMillis();
+                int numRead;
+                byte[] readBuffer = new byte[1024];
+                while (is.available() > 0 || (System.currentTimeMillis() - startTime) < 60) {
+                    numRead = is.available();
+                    if (numRead > 1024) {
+                        numRead = 1024; // readBuffer is size 1024.
+                    }
+                    is.read(readBuffer, 0, numRead);
+                }
+                if (is.available() > 0) {
+                    this.parent.logError(this.log, "Can't send telegram, something is flooding the input buffer!");
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            this.parent.logError(this.log, "Error while receiving data: " + e.getMessage());
+            e.printStackTrace();
+        }
         /*
          * Send data and save return handling telegram
          */

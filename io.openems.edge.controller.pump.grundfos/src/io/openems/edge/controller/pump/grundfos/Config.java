@@ -6,7 +6,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(//
         name = "Controller Pump Grundfos", //
-        description = "Controller to operate a Gundfos pump in constant pressure mode over GENIbus.")
+        description = "Controller to operate a Gundfos pump over GENIbus.  IMPORTANT: This module requires "
+                + "\"Bridge GeniBus\" and \"Pump Grundfos\" to be active. It won't start if that is not the case!")
 @interface Config {
 
     @AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component")
@@ -35,9 +36,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Stop the pump", description = "Stops the pump")
     boolean stopPump() default false;
-
-    @AttributeDefinition(name = "Flash LED", description = "Continuous flashing of center LED, useful for pump identification.")
-    boolean pumpWink() default false;
 
     @AttributeDefinition(name = "Write pump status to log", description = "Write pump status parameters in the log.")
     boolean printPumpStatus() default false;

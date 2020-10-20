@@ -15,6 +15,7 @@ import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.pump.grundfos.api.PumpGrundfosChannels;
 import io.openems.edge.pump.grundfos.api.PumpType;
 import io.openems.edge.pump.grundfos.api.WarnBits;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.event.Event;
@@ -47,6 +48,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     private PumpType pumpType;
     private WarnBits warnBits;
     private PumpDevice pumpDevice;
+    private boolean pumpWink;
     private boolean broadcast = false;
     private boolean changeAddress;
     private double newAddress;
@@ -59,11 +61,20 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
+
+        // Allocate components.
+        if (cpm.getComponent(config.genibusBridgeId()) instanceof Genibus) {
+            genibus = cpm.getComponent(config.genibusBridgeId());
+        } else {
+            throw new ConfigurationException(config.genibusBridgeId(), "The GENIbus bridge " + config.genibusBridgeId()
+                    + " is not a (configured) GENIbus bridge.");
+        }
 
         //allocatePumpType(config.pumpType());
         allocatePumpType("Magna3");
+        pumpWink = config.pumpWink();
         this.broadcast = config.broadcast();
         changeAddress = config.changeAddress();
         newAddress = config.newAddress();
@@ -72,6 +83,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         } else {
             createTaskList(super.id(), config.pumpAddress());
         }
+        pumpFlashLed();
     }
 
     private void allocatePumpType(String pumpType) {
@@ -79,6 +91,14 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             case "Magna3":
                 this.pumpType = PumpType.MAGNA_3;
                 break;
+        }
+    }
+
+    private void pumpFlashLed() throws OpenemsError.OpenemsNamedException {
+        if (pumpWink) {
+            this.setWinkOn().setNextWriteValue(true);
+        } else {
+            this.setWinkOff().setNextWriteValue(true);
         }
     }
 
@@ -303,11 +323,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         // Get connection status from pump, put it in the channel.
         isConnectionOk().setNextValue(pumpDevice.isConnectionOk());
 
-        // Parse ActualControlMode value to an enum.
-        if (getActualControlModeBits().value().isDefined()) {
-            int controlModeValue = (int)Math.round(getActualControlModeBits().value().get());
-            getActualControlMode().setNextValue(controlModeValue);
-        }
+
 
         // Parse ControlSource value to a string.
         if (getControlSourceBits().value().isDefined()) {
@@ -335,6 +351,62 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                     source = "unknown";
             }
             getControlSource().setNextValue("Command source: " + source + ", priority: " + priorityBits);
+
+            // Parse ActualControlMode value to an enum.
+            if (getActualControlModeBits().value().isDefined()) {
+                int controlModeValue = (int)Math.round(getActualControlModeBits().value().get());
+                String mode;
+                switch (priorityBits) {
+                    case 7:
+                        mode = "Stopp";
+                        break;
+                    case 8:
+                        mode = "Constant frequency - Max";
+                        break;
+                    case 9:
+                        mode = "Constant frequency - Min";
+                        break;
+                    default:
+                        switch (controlModeValue) {
+                            case 0:
+                                mode = "Constant pressure";
+                                break;
+                            case 1:
+                                mode = "Proportional pressure";
+                                break;
+                            case 2:
+                                mode = "Constant frequency";
+                                break;
+                            case 5:
+                                mode = "AutoAdapt";
+                                break;
+                            case 6:
+                                mode = "Constant temperature";
+                                break;
+                            case 7:
+                                mode = "Closed loop sensor control";
+                                break;
+                            case 8:
+                                mode = "Constant flow";
+                                break;
+                            case 9:
+                                mode = "Constant level";
+                                break;
+                            case 10:
+                                mode = "FlowAdapt";
+                                break;
+                            case 11:
+                                mode = "Constant differential pressure";
+                                break;
+                            case 12:
+                                mode = "Constant differential temperature";
+                                break;
+                            default:
+                                mode = "unknown";
+                        }
+                }
+                getActualControlMode().setNextValue(mode);
+            }
         }
 
         // Parse unit family, type and version

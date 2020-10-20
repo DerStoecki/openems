@@ -5,7 +5,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(//
         name = "Pump Grundfos", //
-        description = "This module maps GENIbus calls to OpenEMS channels for a Grundfos pump.")
+        description = "This module maps GENIbus calls to OpenEMS channels for a Grundfos pump. IMPORTANT: This module "
+                + "requires \"Bridge GeniBus\" to be active. It won't start if that is not the case!")
 @interface Config {
 
     @AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component")
@@ -17,8 +18,14 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
     boolean enabled() default true;
 
+    @AttributeDefinition(name = "GENIbus-Bridge Id", description = "The Unique Id of the GENIbus-Bridge you want to allocate to this device.")
+    String genibusBridgeId() default "genibus0";
+
     @AttributeDefinition(name = "PumpAddress", description = "Address of the Pump.")
     int pumpAddress() default 231;
+
+    @AttributeDefinition(name = "Flash LED", description = "Continuous flashing of center LED, useful for pump identification.")
+    boolean pumpWink() default false;
 
     @AttributeDefinition(name = "Broadcast", description = "Use this when you don't know the address of the pump. "
             + "This will send a broadcast signal to which any connected pump will respond that is not already communicating "
