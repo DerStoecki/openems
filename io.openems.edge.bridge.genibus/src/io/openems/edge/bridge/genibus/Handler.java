@@ -10,11 +10,14 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+/*
 import org.openmuc.jrxtx.DataBits;
 import org.openmuc.jrxtx.Parity;
 import org.openmuc.jrxtx.SerialPort;
 import org.openmuc.jrxtx.SerialPortBuilder;
 import org.openmuc.jrxtx.StopBits;
+*/
+import com.fazecast.jSerialComm.SerialPort;
 
 import io.openems.edge.bridge.genibus.protocol.Telegram;
 
@@ -37,6 +40,60 @@ public class Handler {
         this.parent = parent;
     }
 
+    // Trying fazecast library for serial port. jrxrx library could not find port sc1 on leaflet.
+    public boolean start(String portName) {
+        this.portName = portName;
+        SerialPort[] serialPortsOfSystem = SerialPort.getCommPorts();
+        boolean serialPortFound = false;
+        if (serialPortsOfSystem.length == 0) {
+            // So that error message is only sent once.
+            if (parent.connectionOk || ChronoUnit.SECONDS.between(errorTimestamp, LocalDateTime.now()) >= 5) {
+                errorTimestamp = LocalDateTime.now();
+                this.parent.logError(this.log, "Couldn't start serial connection. No serial ports found or nothing plugged in.");
+            }
+            return false;
+        }
+        StringBuilder portList = new StringBuilder();
+        for (SerialPort tmpSerialPort : serialPortsOfSystem) {
+            String systemPortName = "/dev/" + tmpSerialPort.getSystemPortName();
+            portList.append(tmpSerialPort).append(", ");
+            if (systemPortName.equals(portName)) {
+                serialPort = tmpSerialPort;
+                serialPortFound = true;
+            }
+        }
+        // Delete ", " at end
+        if (portList.length() > 2) {
+            portList.delete(portList.length() - 2, portList.length());
+        }
+
+        if (serialPortFound) {
+            this.parent.logInfo(this.log, "--Starting serial connection--");
+            this.parent.logInfo(this.log, "Ports found: " + portList);
+            serialPort.setNumDataBits(8);
+            serialPort.setParity(SerialPort.NO_PARITY);
+            serialPort.setNumStopBits(1);
+            serialPort.setBaudRate(9600);
+            serialPort.openPort();
+
+            is = serialPort.getInputStream();
+            os = serialPort.getOutputStream();
+
+            this.parent.logInfo(this.log, "Connection opened on port " + portName);
+            return true;
+        } else {
+            if (parent.connectionOk || ChronoUnit.SECONDS.between(errorTimestamp, LocalDateTime.now()) >= 5) {
+                errorTimestamp = LocalDateTime.now();
+                this.parent.logError(this.log, "Configuration error: The specified serial port " + portName
+                        + " does not match any of the available ports or nothing is plugged in. " +
+                        "Please check configuration and/or make sure the connector is plugged in.");
+                this.parent.logError(this.log, "Ports found: " + portList);
+            }
+            return false;
+        }
+    }
+
+    /* // Old serial port handling, uses jrxtx libraries
     public boolean start(String portName) {
         this.portName = portName;
         String[] serialPortsOfSystem =  SerialPortBuilder.getSerialPortNames();
@@ -92,6 +149,8 @@ public class Handler {
         }
 
     }
+    */
+
 
     public boolean checkStatus() {
         if (os != null) {
@@ -109,11 +168,14 @@ public class Handler {
                 }
 
                 if (serialPort != null) {
+                    serialPort.closePort();
+                    /*
                     try {
                         serialPort.close();
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
+                    */
                 }
                 return false;
 
@@ -185,15 +247,24 @@ public class Handler {
             //this.parent.logError(this.log, "serialPort is null. This should never happen."); // Happens when no valid serial port was selected when starting the module.
             return;
         }
+
+        if (serialPort.isOpen() == false) {
+            return;
+        }
+        serialPort.closePort();
+
+        /*
         if (serialPort.isClosed()) {
             //this.parent.logInfo(this.log, "serialPort is already closed.");
             return;
         }
+
         try {
             serialPort.close();
         } catch (IOException e) {
             this.parent.logError(this.log, "Error closing port: " + e.getMessage());
         }
+        */
     }
 
 

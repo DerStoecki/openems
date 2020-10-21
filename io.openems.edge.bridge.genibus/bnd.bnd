@@ -32,6 +32,7 @@ Import-Package: \
     org.apache.felix.scr,\
     org.osgi.compendium,\
     osgi.annotation,\
+    com.fazecast.jSerialComm,\
     org.openmuc.jrxtx;version=1.0.1,\
     com.google.gson,\
     com.google.guava,\
