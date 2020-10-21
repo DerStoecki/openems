@@ -236,7 +236,7 @@ public interface ChpInformationChannel extends ChpPowerPercentage {
         return this.channel(ChannelId.STATUS);
     }
 
-    default Channel<Integer> getOperatingMoude() {
+    default Channel<Integer> getOperatingMode() {
         return this.channel(ChannelId.OPERATING_MODE);
     }
 

@@ -137,13 +137,13 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                 new FC3ReadRegistersTask(24576, Priority.HIGH,
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE_SET_POINT, new UnsignedWordElement(24576)),
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE_MINIMAL_FORWARD, new UnsignedWordElement(24577)),
-                        m(BioMassHeater.ChannelId.SLIDE_IN_PERCENTAGE_VALUE, new UnsignedWordElement(24578)),
+                        m(BioMassHeater.ChannelId.SLIDE_IN_PERCENTAGE_VALUE_READ, new UnsignedWordElement(24578)),
                         m(BioMassHeater.ChannelId.EXHAUST_PERFORMANCE_MIN, new UnsignedWordElement(24579)),
                         m(BioMassHeater.ChannelId.EXHAUST_PERFORMANCE_MAX, new UnsignedWordElement(24580)),
                         m(BioMassHeater.ChannelId.OXYGEN_PERFORMANCE_MIN, new UnsignedWordElement(24581)),
                         m(BioMassHeater.ChannelId.OXYGEN_PERFORMANCE_MAX, new UnsignedWordElement(24582)),
-                        m(BioMassHeater.ChannelId.SLIDE_IN_MIN, new UnsignedWordElement(24583)),
-                        m(BioMassHeater.ChannelId.SLIDE_IN_MAX, new UnsignedWordElement(24584))
+                        m(BioMassHeater.ChannelId.SLIDE_IN_MIN_READ, new UnsignedWordElement(24583)),
+                        m(BioMassHeater.ChannelId.SLIDE_IN_MAX_READ, new UnsignedWordElement(24584))
                 ),
                 new FC6WriteRegisterTask(24576,
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE_SET_POINT, new UnsignedWordElement(24576))),

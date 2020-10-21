@@ -17,6 +17,7 @@ public interface BioMassHeater extends OpenemsComponent {
                 .accessMode(AccessMode.READ_WRITE)),
         BOILER_TEMPERATURE_MINIMAL_FORWARD(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)
                 .accessMode(AccessMode.READ_WRITE)),
+        SLIDE_IN_PERCENTAGE_VALUE_READ(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
         SLIDE_IN_PERCENTAGE_VALUE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)
                 .accessMode(AccessMode.READ_WRITE)),
         EXHAUST_PERFORMANCE_MIN(Doc.of(OpenemsType.INTEGER).unit(Unit.DEZIDEGREE_CELSIUS)
@@ -27,8 +28,10 @@ public interface BioMassHeater extends OpenemsComponent {
                 .accessMode(AccessMode.READ_WRITE)),
         OXYGEN_PERFORMANCE_MAX(Doc.of(OpenemsType.FLOAT).unit(Unit.PERCENT)
                 .accessMode(AccessMode.READ_WRITE)),
+        SLIDE_IN_MIN_READ(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
         SLIDE_IN_MIN(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)
                 .accessMode(AccessMode.READ_WRITE)),
+        SLIDE_IN_MAX_READ(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
         SLIDE_IN_MAX(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)
                 .accessMode(AccessMode.READ_WRITE)),
 

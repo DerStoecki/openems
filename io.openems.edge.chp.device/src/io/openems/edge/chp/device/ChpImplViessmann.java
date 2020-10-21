@@ -10,9 +10,11 @@ import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.*;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.chp.device.api.ChpInformationChannel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.chp.device.task.ChpTaskImpl;
 import io.openems.edge.chp.module.api.ChpModule;
 
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -31,6 +33,7 @@ import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -61,7 +64,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     public ChpImplViessmann() {
         super(OpenemsComponent.ChannelId.values(),
-       // ChpPowerPercentage.ChannelId.values(),
+                ChpPowerPercentage.ChannelId.values(),
                 ChpInformationChannel.ChannelId.values());
     }
 
@@ -154,6 +157,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     @Override
     public String debugLog() {
+        getInformations();
         if (this.accessMode.equals("rw")) {
             if (this.getPowerLevelChannel().getNextValue().get() != null) {
                 if (chpType != null) {
@@ -169,6 +173,16 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         } else {
             return this.getErrorChannel().getNextValue().get() + "\n";
         }
+    }
+
+    private void getInformations() {
+        List<Channel<?>> all = new ArrayList<>();
+        Arrays.stream(ChpInformationChannel.ChannelId.values()).forEach(consumer -> {
+            if (!consumer.id().contains("ErrorBits")) {
+                all.add(this.channel(consumer));
+            }
+        });
+        all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
     }
 
 
@@ -329,13 +343,13 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         }
         //All occuring errors in openemsChannel.
 
-            if ((errorSummary.size() > 0)) {
-                getErrorChannel().setNextValue(errorSummary.toString());
-                isErrorOccured().setNextValue(true);
-            } else {
-                getErrorChannel().setNextValue("No Errors found.");
-                isErrorOccured().setNextValue(false);
-            }
+        if ((errorSummary.size() > 0)) {
+            getErrorChannel().setNextValue(errorSummary.toString());
+            isErrorOccured().setNextValue(true);
+        } else {
+            getErrorChannel().setNextValue("No Errors found.");
+            isErrorOccured().setNextValue(false);
+        }
 
     }
 
