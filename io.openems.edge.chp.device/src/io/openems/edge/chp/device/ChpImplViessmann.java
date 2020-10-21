@@ -177,12 +177,14 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     private void getInformations() {
         List<Channel<?>> all = new ArrayList<>();
+        System.out.println("-----------------------------" + super.id() + "-----------------------------");
         Arrays.stream(ChpInformationChannel.ChannelId.values()).forEach(consumer -> {
             if (!consumer.id().contains("ErrorBits")) {
                 all.add(this.channel(consumer));
             }
         });
         all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
+        System.out.println("----------------------------------------------------------");
     }
 
 
