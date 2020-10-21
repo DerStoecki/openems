@@ -38,7 +38,7 @@ import java.util.List;
 @Component(name = "Chp",
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true,
-        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_WRITE)
+        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
 public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements OpenemsComponent, ChpInformationChannel, EventHandler, Heater {
     private Mcp mcp;
     private ChpType chpType;
@@ -344,42 +344,42 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         String errorBitsAsString = "";
         String dummyString = "0000000000000000";
         if (getErrorOne().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorOne().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorTwo().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorTwo().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorThree().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorThree().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorFour().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFour().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorFive().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorFive().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorSix().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSix().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorSeven().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorSeven().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }
         if (getErrorEight().getNextValue().isDefined()) {
-            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(" ", "0");
+            errorBitsAsString += String.format("%16s", Integer.toBinaryString(getErrorEight().getNextValue().get())).replace(' ', '0');
         } else {
             errorBitsAsString += dummyString;
         }

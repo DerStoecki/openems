@@ -147,7 +147,7 @@ public class LucidControlBridgeImpl extends AbstractOpenemsComponent implements 
             tasks.values().forEach(task -> {
                 if (task.isRead() || task.writeTaskDefined()) {
 
-                    String[] command = {"bash", "-c", "sudo " + lucidIoPath + " -d" + task.getPath() + task.getRequest()};
+                    String[] command = {"bash", "-c", lucidIoPath + " -d" + task.getPath() + task.getRequest()};
 
                     String value = execCmd(command, task.isRead());
                     if (task.isRead()) {

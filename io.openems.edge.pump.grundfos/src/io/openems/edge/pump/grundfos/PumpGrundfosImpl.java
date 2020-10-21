@@ -90,6 +90,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         switch (pumpType) {
             case "Magna3":
                 this.pumpType = PumpType.MAGNA_3;
+                this.warnBits = WarnBits.MAGNA_3;
                 break;
         }
     }

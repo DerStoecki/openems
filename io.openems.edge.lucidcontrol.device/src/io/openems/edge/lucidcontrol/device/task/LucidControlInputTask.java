@@ -46,6 +46,7 @@ public class LucidControlInputTask extends AbstractLucidControlBridgeTask implem
     public void setResponse(double voltageRead) {
 
         this.voltageChannel.setNextValue(voltageRead);
+        double percent = (voltageRead * 100) / maxVoltage;
         this.barChannel.setNextValue((voltageRead * maxPressure) / maxVoltage);
 
     }
