@@ -64,9 +64,6 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     @Reference
     ConfigurationAdmin cm;
 
-    @Reference
-    ComponentManager cpm;
-
 
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     ManagerValve managerValve;
@@ -97,7 +94,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
             this.open = this.opens.get();
         }
 
-        if (this.open != null && this.closes != null && config.shouldCloseOnActivation() == true) {
+        if (this.open.id().equals(config.opening_Relays()) && this.closes.id().equals(config.closing_Relays()) && config.shouldCloseOnActivation() == true) {
             this.forceClose();
         }
 
@@ -122,7 +119,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     public boolean readyToChange() {
         long currentTime = getMilliSecondTime();
         if (this.isForced) {
-            if ((currentTime - timeStampValveInitial)
+            if (this.timeStampValveCurrent == -1 || (currentTime - timeStampValveInitial)
                     < ((this.getTimeNeeded().getNextValue().get() * 1000))) {
                 return false;
             }
@@ -329,6 +326,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         valveClose();
         this.getIsBusy().setNextValue(true);
         this.isChanging = true;
+        this.isClosing = true;
         this.timeStampValveCurrent = -1;
 
     }
@@ -346,6 +344,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         valveOpen();
         this.getIsBusy().setNextValue(true);
         this.isChanging = true;
+        this.isClosing = false;
         this.timeStampValveCurrent = -1;
 
     }
