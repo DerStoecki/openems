@@ -15,6 +15,12 @@ import java.util.List;
     @AttributeDefinition(name = "Mqtt Dummy Component - ID", description = "Id of Mqtt Bridge.")
     String id() default "Mqtt";
 
+    @AttributeDefinition(name = "Mqtt ID Broker", description = "ID Appearing in MQTT")
+    String mqttId() default "Chp";
+
+    @AttributeDefinition(name = "Number", description = "No of this Componenttype")
+    String number() default "0";
+
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
 

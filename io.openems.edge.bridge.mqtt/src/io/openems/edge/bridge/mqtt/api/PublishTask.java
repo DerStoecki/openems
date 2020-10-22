@@ -49,9 +49,9 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
         StringBuilder builder = new StringBuilder();
         builder.append("{\n\t");
         if (getAddTime()) {
-            builder.append("sentOn : ").append(now).append(", \n\t");
+            builder.append("time : ").append(now).append(", \n\t");
         }
-        builder.append("ID : ").append(super.id).append(",\n\t \"metrics\" : {");
+        builder.append("ID : ").append(super.id); //.append(",\n\t \"metrics\" : {")
         String[] tokens = super.configuredPayload.split(":");
         AtomicInteger counter = new AtomicInteger(0);
         Arrays.stream(tokens).forEachOrdered(consumer -> {
@@ -76,7 +76,7 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
             }
             counter.getAndIncrement();
         });
-        builder.append("\n\t}\n}");
+        builder.append("\n}"); // "\n\t}"
         //UPDATED PAYLOAD saved.
         super.payloadToOrFromBroker = builder.toString();
     }

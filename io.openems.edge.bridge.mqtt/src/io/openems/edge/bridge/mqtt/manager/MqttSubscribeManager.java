@@ -6,6 +6,7 @@ import io.openems.edge.bridge.mqtt.api.MqttType;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionSubscribeImpl;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,12 @@ public class MqttSubscribeManager extends AbstractMqttManager {
                     if (task.isReady(super.getCurrentTime())) {
                         //Response to new message.
                         ((MqttSubscribeTask) task).response(this.connections.get(task.getMqttType()).getPayload(task.getTopic()));
+                        try {
+                            ((MqttSubscribeTask) task).convertTime(super.formatter);
+                        } catch (ParseException e) {
+                            //TODO better Exception handling
+                            System.out.println("Error while converting Time at path: " + task.getTopic());
+                        }
                     }
                 }
             });

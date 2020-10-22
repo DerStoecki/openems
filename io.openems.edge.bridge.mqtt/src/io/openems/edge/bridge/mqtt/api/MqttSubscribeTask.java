@@ -3,6 +3,7 @@ package io.openems.edge.bridge.mqtt.api;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 public interface MqttSubscribeTask extends MqttTask {
 
@@ -30,4 +31,6 @@ public interface MqttSubscribeTask extends MqttTask {
     boolean timeAvailable();
 
     void setTime(Date date);
+
+    Map<MqttCommandType, CommandWrapper> getCommandValues();
 }

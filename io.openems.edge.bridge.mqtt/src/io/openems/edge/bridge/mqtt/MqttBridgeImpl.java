@@ -192,6 +192,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     }
 
 
+    @Override
+    public SimpleDateFormat getFormatter() {
+        return this.formatter;
+    }
+
     /**
      * Add Mqtt Task. Usually called by AbstractMqttComponent.
      *

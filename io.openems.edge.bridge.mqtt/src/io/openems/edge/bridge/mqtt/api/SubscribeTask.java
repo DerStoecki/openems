@@ -17,11 +17,12 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     private List<String> channelIds;
     //time as String, usually from payload
     private String time;
-    //converted timestamp
+    //converted time
     private Date timeDate;
     //                                               //name in Broker   // ID of channel
     //Map of ID For Broker and ChannelID --> e.g. roomTemperature: temperature.channelId.id();
     private Map<String, String> nameIdAndChannelIdMap;
+    private Map<MqttCommandType, CommandWrapper> commandValueMap;
 
     public SubscribeTask(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
                          int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask,
@@ -39,6 +40,8 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         for (int x = 0; x < tokens.length; x += 2) {
             this.nameIdAndChannelIdMap.put(tokens[x], tokens[x + 1]);
         }
+        commandValueMap = new HashMap<>();
+        Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper(null, null)));
     }
 
     @Override
@@ -56,7 +59,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
      * Standard Response for subscription.
      * <p>Each ID from broker has a value.
      * message contains {
-     * "SentOnDate": Timestamp,
+     * "SentOnDate": time,
      * "NameOfBrokerParam": "ID of Sensor"
      * "metrics":{
      * "NameOfBrokerParam": "Value for Param"
@@ -81,39 +84,98 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
      */
     private void standardResponse() {
         String response = super.payloadToOrFromBroker;
-        //Events and Commands need to be handled by Component itself, only telemetry is allowed to update Channels directly.
-        if (response.equals("") || !super.getMqttType().equals(MqttType.TELEMETRY)) {
+        if (response.equals("")) {
             super.configuredPayload = response;
             return;
         }
-        // ID of Name in mqtt  , VALUE for the channel
-        Map<String, String> idChannelValueMap = new HashMap<>();
+
         String[] tokensWithTime = {null};
         //Contains Time
-        if (response.contains("sentOn")) {
+        if (response.contains("time")) {
             String responseContainsTime = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
             //split after each entry
             tokensWithTime = responseContainsTime.split(",");
             //first entry is always sentOn in standard response
             this.time = tokensWithTime[0].substring(tokensWithTime[0].indexOf(':'));
 
-            response = Arrays.stream(tokensWithTime).filter(entry -> !entry.contains("sentOn")).collect(Collectors.toList()).toString();
+            response = Arrays.stream(tokensWithTime).filter(entry -> !entry.contains("time")).collect(Collectors.toList()).toString();
 
         }
         String[] tokens;
 
         if (tokensWithTime[0] != null) {
-            //"New response" --> no timestamp
+            //"New response" --> no time
             response = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
         }
         response = response.replaceAll(",", ":");
         tokens = response.split(":");
-        //handle tokenValues
+
+        switch (this.getMqttType()) {
+            case TELEMETRY:
+                standardTelemetryResponse(tokens);
+                break;
+            case COMMAND:
+                standardCommandResponse(tokens);
+                break;
+            case EVENT:
+                standardEventResponse(tokens);
+                break;
+        }
+
+    }
+
+    private void standardEventResponse(String[] tokens) {
+        System.out.println("Events are not supported by Subscribers!");
+    }
+
+    private void standardCommandResponse(String[] tokens) {
+        if (!super.getMqttType().equals(MqttType.COMMAND)) {
+            return;
+        }
+        String lastMqttCommand = "";
+        MqttCommandType mqttType = null;
+        if (tokens.length > 0) {
+            for (int x = 0; x < tokens.length; ) {
+
+                switch (tokens[x]) {
+                    case "method":
+                        lastMqttCommand = tokens[x + 1].toUpperCase();
+                        mqttType = MqttCommandType.valueOf(lastMqttCommand);
+                        x += 2;
+                        break;
+                    case "value":
+                        if (this.commandValueMap.containsKey(mqttType)) {
+                            this.commandValueMap.get(mqttType).setValue(tokens[x + 1]);
+                            x += 2;
+                        }
+                        break;
+                    case "expires":
+                        this.commandValueMap.get(mqttType).setValue(tokens[x + 1]);
+                        x += 2;
+                        break;
+                    default:
+                        x++;
+                        break;
+                }
+
+            }
+        }
+
+    }
+
+    private void standardTelemetryResponse(String[] tokens) {
+        //Events and Commands need to be handled by Component itself, only telemetry is allowed to update Channels directly.
+        if (!super.getMqttType().equals(MqttType.TELEMETRY)) {
+            return;
+        }
+        // ID of Name in mqtt  , VALUE for the channel
+        Map<String, String> idChannelValueMap = new HashMap<>();
+
         if (tokens.length > 0) {
             for (int x = 0; x < tokens.length; ) {
                 if (tokens[x].equals("metrics")) {
                     x++;
-                } else if (tokens[x].equals("sentOn")) {
+                } else if (tokens[x].equals("time")) {
                     x += 3;
                 } else {
                     if (!tokens[x].equals("ID")) {
@@ -169,4 +231,11 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     public void setTime(Date date) {
         this.timeDate = date;
     }
+
+    @Override
+    public Map<MqttCommandType, CommandWrapper> getCommandValues() {
+        return this.commandValueMap;
+    }
+
+
 }

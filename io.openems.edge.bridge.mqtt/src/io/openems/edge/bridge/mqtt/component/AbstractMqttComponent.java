@@ -178,7 +178,7 @@ public abstract class AbstractMqttComponent {
                             //Create PubTasks
                             //Publish tasks will use payload to map ID and the actual ChannelValue of the ChannelID
                             PublishTask task = new PublishTask(type, priority, topic, qos, retainFlag, useTime, timeToWait,
-                                    channelMapForTask, payloadForTask, PayloadStyle.STANDARD, this.id);
+                                    channelMapForTask, payloadForTask, style, this.id);
                             this.publishTasks.put(topic, task);
                         }
 

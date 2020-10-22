@@ -1,7 +1,6 @@
 package io.openems.edge.bridge.mqtt.dummys;
 
-import io.openems.edge.bridge.mqtt.api.MqttBridge;
-import io.openems.edge.bridge.mqtt.api.MqttComponent;
+import io.openems.edge.bridge.mqtt.api.*;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.bridge.mqtt.component.AbstractMqttComponent;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -17,7 +16,9 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Designate(ocd = ConfigDummyComponent.class, factory = true)
 @Component(name = "Dummy.Mqtt.Component",
@@ -80,11 +81,43 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     @Override
     public void reactToCommand() {
+        this.mqttBridge.getSubscribeTasks(super.id()).stream().filter(entry -> entry.getMqttType().equals(MqttType.COMMAND)).collect(Collectors.toList()).forEach(entry -> {
+            if (entry instanceof MqttSubscribeTask) {
+                MqttSubscribeTask task = (MqttSubscribeTask) entry;
+                task.getCommandValues().forEach((key, value) -> {
+                    if (!expired(task, key))
+                        reactToComponentCommand(key, value);
+                });
+            }
+        });
         if (this.getCommands().value().isDefined() && this.getCommandsValue().value().isDefined()) {
             System.out.println("REACTING TO: " + this.getCommands().value().get() + " WITH VALUE: "
                     + this.getCommandsValue().value().get());
         } else {
             System.out.println("No Value for Commands yet");
+        }
+    }
+
+    private boolean expired(MqttSubscribeTask task, MqttCommandType key) {
+        Date now = new Date(System.currentTimeMillis());
+        Date expiration = new Date(task.getTime().getTime() + Long.parseLong(task.getCommandValues().get(key).getExpiration()));
+        return now.after(expiration);
+
+    }
+
+    private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
+        switch (key) {
+            case SETPOWER:
+                System.out.println("SET POWER WILL BE SET");
+                this.getPower().setNextValue(value);
+                System.out.println(this.getPower().getNextValue().get());
+                break;
+            case SETPERFORMANCE:
+                break;
+            case SETSCHEDULE:
+                break;
+            case SETTEMPERATURE:
+                break;
         }
     }
 
@@ -113,7 +146,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         MqttComponentDummyImpl(String id, List<String> subConfigList,
                                List<String> pubConfigList, List<String> payloads,
                                boolean createdByOsgi, MqttBridge mqttBridge) {
-            super(id, subConfigList, pubConfigList, payloads, createdByOsgi,  mqttBridge);
+            super(id, subConfigList, pubConfigList, payloads, createdByOsgi, mqttBridge);
         }
     }
 

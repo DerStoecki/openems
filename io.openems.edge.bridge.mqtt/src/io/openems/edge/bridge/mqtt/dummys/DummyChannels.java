@@ -18,7 +18,9 @@ public interface DummyChannels extends OpenemsComponent {
 
         DUMMY_FOUR(Doc.of(OpenemsType.INTEGER)),
 
-        TEMPERATURE(Doc.of(OpenemsType.INTEGER));
+        TEMPERATURE(Doc.of(OpenemsType.INTEGER)),
+
+        POWER(Doc.of(OpenemsType.DOUBLE));
 
 
         private final Doc doc;
@@ -51,5 +53,9 @@ public interface DummyChannels extends OpenemsComponent {
 
     default Channel<Integer> getTemperature() {
         return this.channel(ChannelId.TEMPERATURE);
+    }
+
+    default Channel<Integer> getPower() {
+        return this.channel(ChannelId.POWER);
     }
 }
