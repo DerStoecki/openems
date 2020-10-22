@@ -195,27 +195,27 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
                         }
                         switch (controlModeSetting) {
                             case CONST_PRESSURE:
-                                if (pumpChannels.getActualControlMode().value().get().equals("Constant pressure") == false) {
+                                if (pumpChannels.getActualControlMode().value().orElse("").equals("Constant pressure") == false) {
                                     changeControlMode();
                                 }
                                 break;
                             case CONST_FREQUENCY:
-                                if (pumpChannels.getActualControlMode().value().get().equals("Constant frequency") == false) {
+                                if (pumpChannels.getActualControlMode().value().orElse("").equals("Constant frequency") == false) {
                                     changeControlMode();
                                 }
                                 break;
                             case MIN_MOTOR_CURVE:
-                                if (pumpChannels.getActualControlMode().value().get().equals("Constant frequency - Min") == false) {
+                                if (pumpChannels.getActualControlMode().value().orElse("").equals("Constant frequency - Min") == false) {
                                     changeControlMode();
                                 }
                                 break;
                             case MAX_MOTOR_CURVE:
-                                if (pumpChannels.getActualControlMode().value().get().equals("Constant frequency - Max") == false) {
+                                if (pumpChannels.getActualControlMode().value().orElse("").equals("Constant frequency - Max") == false) {
                                     changeControlMode();
                                 }
                                 break;
                             case AUTO_ADAPT:
-                                if (pumpChannels.getActualControlMode().value().get().equals("AutoAdapt") == false) {
+                                if (pumpChannels.getActualControlMode().value().orElse("").equals("AutoAdapt or FlowAdapt") == false) {
                                     changeControlMode();
                                 }
                                 break;
@@ -367,6 +367,9 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
                 this.logInfo(this.log, "");
                 break;
         }
+        //this.logInfo(this.log, "ActMode1Bits: " + pumpChannels.getActMode1Bits().value().get());
+        //this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
+
 
         /*
         this.logInfo(this.log, "Sensor:");

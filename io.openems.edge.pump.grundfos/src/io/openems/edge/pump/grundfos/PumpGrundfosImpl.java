@@ -52,6 +52,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     private boolean broadcast = false;
     private boolean changeAddress;
     private double newAddress;
+    private boolean isMagna3;
 
     private final Logger log = LoggerFactory.getLogger(PumpGrundfosImpl.class);
 
@@ -72,6 +73,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                     + " is not a (configured) GENIbus bridge.");
         }
 
+        isMagna3 = config.isMagna3();
         //allocatePumpType(config.pumpType());
         allocatePumpType("Magna3");
         pumpWink = config.pumpWink();
@@ -232,6 +234,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                 new PumpReadTask8bit(this.pumpType.getrMin(), this.pumpType.getrMinHeadClass(), getRmin(), "Standard", Priority.HIGH),
                 new PumpReadTask8bit(this.pumpType.getrMax(), this.pumpType.getrMaxHeadClass(), getRmax(), "Standard", Priority.HIGH),
                 new PumpReadTask8bit(this.pumpType.getControlMode(), this.pumpType.getControlModeHeadClass(), getActualControlModeBits(), "Standard", Priority.HIGH),
+                new PumpReadTask8bit(81, 2, getActMode1Bits(), "Standard", Priority.HIGH),
                 new PumpReadTask8bit(this.pumpType.getWarnCode(), this.pumpType.getWarnCodeHeadClass(), getWarnCode(), "Standard", Priority.HIGH),
                 new PumpReadTask8bit(this.pumpType.getAlarmCode(), this.pumpType.getAlarmCodeHeadClass(), getAlarmCode(), "Standard", Priority.HIGH),
                 new PumpReadTask8bit(this.pumpType.getWarnBits1(), this.pumpType.getWarnBits1HeadClass(), getWarnBits_1(), "Standard", Priority.HIGH),
@@ -324,8 +327,6 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         // Get connection status from pump, put it in the channel.
         isConnectionOk().setNextValue(pumpDevice.isConnectionOk());
 
-
-
         // Parse ControlSource value to a string.
         if (getControlSourceBits().value().isDefined()) {
             int controlSourceBits = (int)Math.round(getControlSourceBits().value().get());
@@ -353,62 +354,120 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             }
             getControlSource().setNextValue("Command source: " + source + ", priority: " + priorityBits);
 
-            // Parse ActualControlMode value to an enum.
-            if (getActualControlModeBits().value().isDefined()) {
-                int controlModeValue = (int)Math.round(getActualControlModeBits().value().get());
-                String mode;
-                switch (priorityBits) {
-                    case 7:
-                        mode = "Stopp";
-                        break;
-                    case 8:
-                        mode = "Constant frequency - Max";
-                        break;
-                    case 9:
-                        mode = "Constant frequency - Min";
-                        break;
-                    default:
-                        switch (controlModeValue) {
-                            case 0:
-                                mode = "Constant pressure";
-                                break;
-                            case 1:
-                                mode = "Proportional pressure";
-                                break;
-                            case 2:
-                                mode = "Constant frequency";
-                                break;
-                            case 5:
-                                mode = "AutoAdapt";
-                                break;
-                            case 6:
-                                mode = "Constant temperature";
-                                break;
-                            case 7:
-                                mode = "Closed loop sensor control";
-                                break;
-                            case 8:
-                                mode = "Constant flow";
-                                break;
-                            case 9:
-                                mode = "Constant level";
-                                break;
-                            case 10:
-                                mode = "FlowAdapt";
-                                break;
-                            case 11:
-                                mode = "Constant differential pressure";
-                                break;
-                            case 12:
-                                mode = "Constant differential temperature";
-                                break;
-                            default:
-                                mode = "unknown";
-                        }
+
+            if (isMagna3) {
+                // The following code was tested to work with a Magna3 pump, but did not Work with an MGE pump.
+                // The MGE has different priority values. At const. press. the Magna3 has priority 10 while the MGE has
+                // priority 6. Also, getActualControlModeBits() does not work on the MGE.
+
+                // Parse ActualControlMode value to an enum.
+                if (getActualControlModeBits().value().isDefined()) {
+                    int controlModeValue = (int)Math.round(getActualControlModeBits().value().get());
+                    String mode;
+                    switch (priorityBits) {
+                        case 7:
+                            mode = "Stopp";
+                            break;
+                        case 8:
+                            mode = "Constant frequency - Max";
+                            break;
+                        case 9:
+                            mode = "Constant frequency - Min";
+                            break;
+                        default:
+                            switch (controlModeValue) {
+                                case 0:
+                                    mode = "Constant pressure";
+                                    break;
+                                case 1:
+                                    mode = "Proportional pressure";
+                                    break;
+                                case 2:
+                                    mode = "Constant frequency";
+                                    break;
+                                case 5:
+                                    mode = "AutoAdapt";
+                                    break;
+                                case 6:
+                                    mode = "Constant temperature";
+                                    break;
+                                case 7:
+                                    mode = "Closed loop sensor control";
+                                    break;
+                                case 8:
+                                    mode = "Constant flow";
+                                    break;
+                                case 9:
+                                    mode = "Constant level";
+                                    break;
+                                case 10:
+                                    mode = "FlowAdapt";
+                                    break;
+                                case 11:
+                                    mode = "Constant differential pressure";
+                                    break;
+                                case 12:
+                                    mode = "Constant differential temperature";
+                                    break;
+                                default:
+                                    mode = "unknown";
+                            }
+                    }
+                    getActualControlMode().setNextValue(mode);
+                } else {
+                    getActualControlMode().setNextValue("unknown");
                 }
-                getActualControlMode().setNextValue(mode);
+            } else {
+                // Parse ActualControlMode value to an enum.
+                if (getActMode1Bits().value().isDefined()) {
+                    int controlModeBits = (int)Math.round(getActualControlModeBits().value().get());
+                    int operatingModes = controlModeBits & 0b111;
+                    int controlModes = (controlModeBits >> 3) & 0b111;
+                    boolean testMode = (controlModeBits >> 7) > 0;
+                    String mode = "unknown";
+                    switch (operatingModes) {
+                        case 0:
+                            //mode = "Start";
+                            break;
+                        case 1:
+                            mode = "Stop";
+                            break;
+                        case 2:
+                            mode = "Constant frequency - Min";
+                            break;
+                        case 3:
+                            mode = "Constant frequency - Max";
+                            break;
+                        case 7:
+                            mode = "Hand mode";
+                            break;
+                    }
+                    switch (controlModes) {
+                        case 0:
+                            mode = "Constant pressure";
+                            break;
+                        case 1:
+                            mode = "Proportional pressure";
+                            break;
+                        case 2:
+                            mode = "Constant frequency";
+                            break;
+                        case 5:
+                            mode = "AutoAdapt or FlowAdapt";
+                            break;
+                        case 6:
+                            mode = "Other";
+                            break;
+                    }
+                    if (testMode) {
+                        mode = "Test";
+                    }
+                    getActualControlMode().setNextValue(mode);
+                }
             }
         }
+
+
 
         // Parse unit family, type and version
         StringBuilder allInfo = new StringBuilder();

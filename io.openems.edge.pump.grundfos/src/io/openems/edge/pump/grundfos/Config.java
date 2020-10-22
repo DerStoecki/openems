@@ -45,5 +45,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     //@AttributeDefinition(name = "PumpType", description = "Denotation of the Pump.")
     //String pumpType() default "Magna3";
 
+    @AttributeDefinition(name = "Is Magna3?", description = "Is this a Magna3 pump?")
+    boolean isMagna3() default false;
+
     String webconsole_configurationFactory_nameHint()default"Pump Grundfos [{id}]";
 }

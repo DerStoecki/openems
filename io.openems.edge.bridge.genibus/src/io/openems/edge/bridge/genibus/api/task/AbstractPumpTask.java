@@ -188,8 +188,8 @@ public abstract class AbstractPumpTask implements GenibusTask {
             }
         }
 
-        // Extract pressure sensor interval from h_diff
-        if (headerNumber == 2 && address == 23) {
+        // Extract pressure sensor interval from h (used to be h_diff (2, 23), but that does not work with pump MGE).
+        if (headerNumber == 2 && address == 37) {
             if (unitString != null) {
                 switch (unitString) {
                     case "m/10000":

@@ -74,7 +74,7 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * <li> Magna3: 8 bit Measured Data: 2, 23 h_diff
          * </ul>
          * */
-        DIFFERENTIAL_PRESSURE_HEAD(Doc.of(OpenemsType.DOUBLE)),
+        DIFFERENTIAL_PRESSURE_HEAD(Doc.of(OpenemsType.DOUBLE).unit(Unit.BAR)),
         /**
          * Electronics Temperature.
          * <ul>
@@ -182,6 +182,15 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * </ul>
          * */
         R_MAX(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Actual mode status No. 1 bits.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 81  act_mode1
+         * </ul>
+         * */
+        ACT_MODE1(Doc.of(OpenemsType.DOUBLE)),
         /**
          * Control source bits.
          * Currently active control source. From which source the pump is currently taking commands.
@@ -704,6 +713,10 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
 
     default Channel<Double> getMotorFrequency() {
         return this.channel(ChannelId.MOTOR_FREQUENCY);
+    }
+
+    default Channel<Double> getActMode1Bits() {
+        return this.channel(ChannelId.ACT_MODE1);
     }
 
     default Channel<Double> getActualControlModeBits() {
