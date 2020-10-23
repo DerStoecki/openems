@@ -9,6 +9,7 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.internal.security.SSLSocketFactoryFactory;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
@@ -25,7 +26,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
 
 /**
  * The Mqtt Bridge.
@@ -90,6 +90,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         super.activate(context, config.id(), config.alias(), config.enabled());
         if (config.mqttPriorities().length != MqttPriority.values().length || config.mqttTypes().length != MqttPriority.values().length) {
             updateConfig();
+            return;
         }
         try {
             this.formatter = new SimpleDateFormat(config.timeFormat(), new Locale.Builder().setRegion(config.locale()).build());
@@ -154,14 +155,13 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
      */
     private void createMqttSession(Config config) throws MqttException {
         //Create Broker URL/IP etc
-        //TCP OR SSL
-        String broker = config.connection().equals("Tcp") ? "tcp" : "ssl";
-        boolean isTcp = broker.equals("tcp");
+        //TCP SSL OR WSS
+        String broker = config.connection().toLowerCase();
+
         broker += "://" + config.ipBroker() + ":" + config.portBroker();
         this.mqttBroker = broker;
         this.mqttUsername = config.username();
 
-        //TODO ENCRYPT PASSWORD IF TCP NOT TLS!
         this.mqttPassword = config.password();
         //ClientID will be automatically altered by Managers depending on what they're doing
         this.mqttClientId = config.clientId();

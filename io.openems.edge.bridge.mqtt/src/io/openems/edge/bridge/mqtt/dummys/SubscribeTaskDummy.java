@@ -1,12 +1,11 @@
 package io.openems.edge.bridge.mqtt.dummys;
 
-import io.openems.edge.bridge.mqtt.api.MqttPriority;
-import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
-import io.openems.edge.bridge.mqtt.api.MqttType;
+import io.openems.edge.bridge.mqtt.api.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSubscribeTask {
 
@@ -52,6 +51,11 @@ public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSub
     @Override
     public void setTime(Date date) {
 
+    }
+
+    @Override
+    public Map<MqttCommandType, CommandWrapper> getCommandValues() {
+        return null;
     }
 
 }

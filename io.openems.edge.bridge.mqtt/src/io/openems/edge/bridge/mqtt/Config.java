@@ -24,7 +24,7 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Broker URL", description = "URL of the Broker (if any given)")
     String brokerUrl() default "";
 
-    @AttributeDefinition(name = "Port", description = "The Port the broker opened for communication")
+    @AttributeDefinition(name = "Port", description = "The Port the broker opened for communication(1883 or 8883 are common)")
     int portBroker() default 1883;
 
     //Username Pw; Type: tcp / SSL ; Keep Alive ; ClientName ; MQTT version
@@ -37,7 +37,8 @@ import org.osgi.service.metatype.annotations.Option;
     @AttributeDefinition(name = "Connection Type", description = "Tcp or TLS",
             options = {
                     @Option(label = "Tcp", value = "Tcp"),
-                    @Option(label = "TLS", value = "TLS")
+                    @Option(label = "TLS", value = "TLS"),
+                    @Option(label = "Websocket", value = "Wss")
             })
     String connection() default "Tcp";
 
