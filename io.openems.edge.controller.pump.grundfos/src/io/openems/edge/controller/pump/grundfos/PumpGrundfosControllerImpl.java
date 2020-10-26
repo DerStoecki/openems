@@ -26,9 +26,14 @@ import java.text.DecimalFormat;
 public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent implements Controller, OpenemsComponent, PumpGrundfosControllerChannels {
 
 
+    /*
     @Reference(policy = ReferencePolicy.STATIC,
             policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     PumpGrundfosChannels pumpChannels;
+    */
+
+    private PumpGrundfosChannels pumpChannels;
+    private Config config;
 
     @Reference
     ComponentManager cpm;
@@ -55,6 +60,8 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
+
+        this.config = config;
 
         // Allocate components.
         if (cpm.getComponent(config.pumpId()) instanceof PumpGrundfosChannels) {
@@ -142,11 +149,28 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         }
     }
 
+    private boolean componentIsMissing() {
+        try {
+            if (this.pumpChannels.isEnabled() == false) {
+                this.pumpChannels = cpm.getComponent(config.pumpId());
+            }
+            return false;
+        } catch (OpenemsError.OpenemsNamedException e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
     /**
      * Gets the Commands usually from config; or REST/JSON Request and writes ReferenceValues in channels.
      */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
+
+        if (componentIsMissing()) {
+            log.warn("Missing component in: " + super.id());
+            return;
+        }
 
         // Copy "write" to "nextValue".
         boolean writeChannelsHaveValues = setControlMode().getNextWriteValue().isPresent()
@@ -299,16 +323,39 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
     }
 
     private void channelOutput() {
+        double motorSpeedPercent = 0;
+        boolean motorSpeedValueAvailable = false;
+        if (pumpChannels.getMotorFrequency().value().isDefined() && pumpChannels.setFupper().value().isDefined()) {
+            double maxFrequency = pumpChannels.setFupper().value().get();
+            if (maxFrequency > 0) {
+                motorSpeedPercent = 100 * pumpChannels.getMotorFrequency().value().get() / maxFrequency;
+                motorSpeedValueAvailable = true;
+            }
+        }
+
         this.logInfo(this.log, "--Status of pump " + pumpChannels.getPumpDevice().getPumpDeviceId() + "--");
         this.logInfo(this.log, "GENIbus address: " + pumpChannels.getPumpDevice().getGenibusAddress()
                 + ", product number: " + pumpChannels.getProductNumber().value().get() + ", "
                 + "serial number: " + pumpChannels.getSerialNumber().value().get());
         this.logInfo(this.log, "Multipump Status: " + pumpChannels.getMultipumpStatusString().value().get());
         this.logInfo(this.log, "Power consumption: " + formatter2.format(pumpChannels.getPowerConsumption().value().orElse(0.0)) + " W");
+
+        if (motorSpeedValueAvailable) {
+            this.logInfo(this.log, "Motor speed: " + formatter1.format(motorSpeedPercent) + " %.");
+        } else {
+            this.logInfo(this.log, "Motor speed: not available");
+        }
+
+        // Frequency values are probably not correct, so rather give speed %, which should be correct. Frequency values
+        // are not correct because there seems to be an error involved with their unit. Wrong frequency readout was seen
+        // on two pumps so far.
+        /*
         this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
         this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
+        */
+
         this.logInfo(this.log, "Pump pressure: " + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0)) + " bar or "
                 + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0) * 10) + " m");
         //this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
@@ -382,6 +429,10 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
 
 
         this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
+        this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
+                + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
+        this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
+                + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
         this.logInfo(this.log, "f_upper: " + pumpChannels.setFupper().value().get());
         this.logInfo(this.log, "f_nom: " + pumpChannels.setFnom().value().get());
         this.logInfo(this.log, "f_min: " + pumpChannels.setFmin().value().get());

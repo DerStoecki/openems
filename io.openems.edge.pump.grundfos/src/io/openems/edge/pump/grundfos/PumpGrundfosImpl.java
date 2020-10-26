@@ -15,6 +15,7 @@ import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.pump.grundfos.api.PumpGrundfosChannels;
 import io.openems.edge.pump.grundfos.api.PumpType;
 import io.openems.edge.pump.grundfos.api.WarnBits;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -38,12 +40,22 @@ import java.util.List;
 public class PumpGrundfosImpl extends AbstractOpenemsComponent implements OpenemsComponent, PumpGrundfosChannels, EventHandler {
 
 
+
+    private AtomicReference<Genibus> genibusId = new AtomicReference<Genibus>(null);
+
+    private Genibus genibus;
+
+    /*
     @Reference(policy = ReferencePolicy.STATIC,
             policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     Genibus genibus;
+    */
 
     @Reference
     ComponentManager cpm;
+
+    @Reference
+    protected ConfigurationAdmin cm;
 
     private PumpType pumpType;
     private WarnBits warnBits;
@@ -65,6 +77,11 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
         super.activate(context, config.id(), config.alias(), config.enabled());
 
+        if (OpenemsComponent.updateReferenceFilter(cm, this.servicePid(), "Genibus", config.genibusBridgeId()) == false) {
+            genibus = this.genibusId.get();
+        }
+
+        /*
         // Allocate components.
         if (cpm.getComponent(config.genibusBridgeId()) instanceof Genibus) {
             genibus = cpm.getComponent(config.genibusBridgeId());
@@ -72,6 +89,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             throw new ConfigurationException(config.genibusBridgeId(), "The GENIbus bridge " + config.genibusBridgeId()
                     + " is not a (configured) GENIbus bridge.");
         }
+        */
 
         isMagna3 = config.isMagna3();
         //allocatePumpType(config.pumpType());
@@ -94,6 +112,27 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                 this.pumpType = PumpType.MAGNA_3;
                 this.warnBits = WarnBits.MAGNA_3;
                 break;
+        }
+    }
+
+    @Deactivate
+    public void deactivate() {
+        Genibus genibus = this.genibusId.getAndSet(null);
+        if (genibus != null) {
+            genibus.removeDevice(super.id());
+        }
+        super.deactivate();
+    }
+
+    @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+    protected void setGenibus(Genibus genibus) {
+        this.genibusId.set(genibus);
+    }
+
+    protected void unsetGenibus(Genibus genibus) {
+        this.genibusId.compareAndSet(genibus, null);
+        if (genibus != null) {
+            genibus.removeDevice(super.id());
         }
     }
 
@@ -301,12 +340,6 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
         genibus.addDevice(pumpDevice);
     }
 
-    @Deactivate
-    public void deactivate() {
-        genibus.removeDevice(super.id());
-        super.deactivate();
-    }
-
     @Override
     public PumpDevice getPumpDevice() {
         return pumpDevice;
@@ -355,15 +388,15 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
             getControlSource().setNextValue("Command source: " + source + ", priority: " + priorityBits);
 
 
+            String mode = "unknown";
             if (isMagna3) {
                 // The following code was tested to work with a Magna3 pump, but did not Work with an MGE pump.
                 // The MGE has different priority values. At const. press. the Magna3 has priority 10 while the MGE has
                 // priority 6. Also, getActualControlModeBits() does not work on the MGE.
 
-                // Parse ActualControlMode value to an enum.
+                // Parse ActualControlMode value to a string.
                 if (getActualControlModeBits().value().isDefined()) {
                     int controlModeValue = (int)Math.round(getActualControlModeBits().value().get());
-                    String mode;
                     switch (priorityBits) {
                         case 7:
                             mode = "Stopp";
@@ -409,25 +442,20 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                                 case 12:
                                     mode = "Constant differential temperature";
                                     break;
-                                default:
-                                    mode = "unknown";
                             }
                     }
-                    getActualControlMode().setNextValue(mode);
-                } else {
-                    getActualControlMode().setNextValue("unknown");
                 }
             } else {
-                // Parse ActualControlMode value to an enum.
+
+                // Parse ActualControlMode value to a string.
                 if (getActMode1Bits().value().isDefined()) {
                     int controlModeBits = (int)Math.round(getActualControlModeBits().value().get());
                     int operatingModes = controlModeBits & 0b111;
                     int controlModes = (controlModeBits >> 3) & 0b111;
                     boolean testMode = (controlModeBits >> 7) > 0;
-                    String mode = "unknown";
                     switch (operatingModes) {
                         case 0:
-                            //mode = "Start";
+                            //mode = "Start";   // Don't need that, since there should never be just "start" alone.
                             break;
                         case 1:
                             mode = "Stop";
@@ -462,9 +490,9 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                     if (testMode) {
                         mode = "Test";
                     }
-                    getActualControlMode().setNextValue(mode);
                 }
             }
+            getActualControlMode().setNextValue(mode);
         }
 
 
