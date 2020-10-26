@@ -368,6 +368,11 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "AlarmCode: " + pumpChannels.getAlarmCode().value().get());
         this.logInfo(this.log, "WarnCode: " + pumpChannels.getWarnCode().value().get());
         this.logInfo(this.log, "Warn message: " + pumpChannels.getWarnMessage().value().get());
+        this.logInfo(this.log, "Alarm log1: " + pumpChannels.getAlarmLog1().value().get());
+        this.logInfo(this.log, "Alarm log2: " + pumpChannels.getAlarmLog2().value().get());
+        this.logInfo(this.log, "Alarm log3: " + pumpChannels.getAlarmLog3().value().get());
+        this.logInfo(this.log, "Alarm log4: " + pumpChannels.getAlarmLog4().value().get());
+        this.logInfo(this.log, "Alarm log5: " + pumpChannels.getAlarmLog5().value().get());
         switch (controlModeSetting) {
             case MIN_MOTOR_CURVE:
                 this.logInfo(this.log, "");

@@ -449,7 +449,7 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
                 // Parse ActualControlMode value to a string.
                 if (getActMode1Bits().value().isDefined()) {
-                    int controlModeBits = (int)Math.round(getActualControlModeBits().value().get());
+                    int controlModeBits = (int)Math.round(getActMode1Bits().value().get());
                     int operatingModes = controlModeBits & 0b111;
                     int controlModes = (controlModeBits >> 3) & 0b111;
                     boolean testMode = (controlModeBits >> 7) > 0;
