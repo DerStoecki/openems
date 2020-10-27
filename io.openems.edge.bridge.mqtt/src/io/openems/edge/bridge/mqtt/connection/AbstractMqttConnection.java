@@ -4,12 +4,11 @@ import io.openems.edge.bridge.mqtt.api.MqttConnection;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.internal.security.SSLSocketFactoryFactory;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.eclipse.paho.client.mqttv3.logging.Logger;
 
-import java.util.Properties;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+import java.net.Socket;
 
 
 /**
@@ -51,13 +50,15 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         mqttConnectOptions.setKeepAliveInterval(keepAlive);
         //8883 == TLS and 443 == WSS
         if (mqttBroker.contains("ssl") || mqttBroker.contains("8883") || mqttBroker.contains("443")) {
-            SSLSocketFactoryFactory factory = new SSLSocketFactoryFactory();
-            factory.createSocketFactory(SSLSocketFactoryFactory.DEFAULT_PROTOCOL);
-            Properties properties = factory.getConfiguration(SSLSocketFactoryFactory.DEFAULT_PROTOCOL);
-            mqttConnectOptions.setSSLProperties(properties);
+            //TODO TLS CONNECTION!!!!
+           // SocketFactory basicSocketFactory = SocketFactory.getDefault();
+           // Socket s = basicSocketFactory.createSocket("localhost", 443);
+           // SSLSocketFactory tlsSocketFactory = SSLSocketFactory.getDefault();
+           // s = tlsSocketFactory.createSocket(s,"localhost", 443, true);
+           // mqttConnectOptions.;
+            //mqttConnectoptions.setSocketFactory(SslUtil.getSocketFactory("caFilePath", "clientCrtFilePath", "clientKeyFilePath", "password"));
+            System.out.println("Future Work");
         }
-
-
     }
 
 

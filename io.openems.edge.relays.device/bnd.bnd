@@ -19,7 +19,9 @@ Private-Package: \
     	io.openems.edge.relays.module.api;version=latest,\
     	io.openems.edge.i2c.mcp.api;version=latest,\
     	io.openems.edge.relays.device.api;version=latest,\
-	io.openems.edge.generic.pi4j;version=latest,\
+	    io.openems.edge.generic.pi4j;version=latest,\
+	    io.openems.edge.bridge.mqtt;version=latest,\
+	    org.eclipse.paho.client.mqttv3;version=1.2.0,\
 
 
 -testpath: \

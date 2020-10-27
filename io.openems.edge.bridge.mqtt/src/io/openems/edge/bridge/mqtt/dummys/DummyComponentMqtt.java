@@ -1,6 +1,7 @@
 package io.openems.edge.bridge.mqtt.dummys;
 
 import io.openems.edge.bridge.mqtt.api.*;
+import io.openems.edge.bridge.mqtt.component.MqttConfigurationComponent;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.bridge.mqtt.component.AbstractMqttComponent;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -36,6 +37,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
 
     private MqttComponentDummyImpl component;
+
 
 
     public DummyComponentMqtt() {
@@ -105,7 +107,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     }
 
-    private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
+    public void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
         switch (key) {
             case SETPOWER:
                 System.out.println("SET POWER WILL BE SET");

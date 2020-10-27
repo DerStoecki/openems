@@ -138,6 +138,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
             for (int x = 0; x < tokens.length; ) {
 
                 switch (tokens[x]) {
+                    //Method Name reacting to if defined
                     case "method":
                         lastMqttCommand = tokens[x + 1].toUpperCase();
                         mqttType = MqttCommandType.valueOf(lastMqttCommand);
@@ -150,7 +151,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
                         }
                         break;
                     case "expires":
-                        this.commandValueMap.get(mqttType).setValue(tokens[x + 1]);
+                        this.commandValueMap.get(mqttType).setExpiration(tokens[x + 1]);
                         x += 2;
                         break;
                     default:

@@ -15,6 +15,7 @@ Private-Package:  \
 	io.openems.edge.bridge.mqtt.connection,\
 	io.openems.edge.bridge.mqtt.dummys,\
 	io.openems.edge.bridge.mqtt.manager,\
+	io.openems.edge.bridge.mqtt.testing,\
 
 
 -includeresource: {readme.md}
@@ -23,7 +24,9 @@ Private-Package:  \
 	osgi.enroute.base.api;version=2.1,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	org.eclipse.paho.client.mqttv3;version=1.2.0,\
+    org.eclipse.paho.client.mqttv3;version=1.2.0,\
+    org.bouncycastle:bcprov-jdk15on;version=1.66,\
+    org.bouncycastle:bcprov-jdk15on;version=1.66,\
 	com.google.guava,\
 
 -testpath: \

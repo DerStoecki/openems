@@ -18,11 +18,14 @@ import java.util.List;
     @AttributeDefinition(name = "Mqtt ID Broker", description = "ID Appearing in MQTT")
     String mqttId() default "Chp";
 
-    @AttributeDefinition(name = "Number", description = "No of this Componenttype")
+    @AttributeDefinition(name = "Number", description = "No of this ComponentType")
     String number() default "0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable name for this Component.")
     String alias() default "";
+
+    @AttributeDefinition(name = "Use MQTT", description = "Should this component use Mqtt")
+    boolean useMqtt() default true;
 
     @AttributeDefinition(name = "Created by Osgi Config", description = "If you want to configure via Apache Felix tick this, otherwise you need to configure via JSON File.")
     boolean createdByOsgiConfig() default true;

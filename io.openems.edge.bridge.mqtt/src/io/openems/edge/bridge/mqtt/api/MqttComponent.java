@@ -1,5 +1,6 @@
 package io.openems.edge.bridge.mqtt.api;
 
+import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
@@ -101,7 +102,7 @@ public interface MqttComponent extends OpenemsComponent {
     /**
      * Called By Mqtt Bridge. Component has to implement what to do on commands set by mqtt bridge.
      */
-    void reactToCommand();
+    void reactToCommand() throws OpenemsError.OpenemsNamedException;
 
     /**
      * Updates the JSON Config. Called by MqttBridge.
@@ -110,5 +111,8 @@ public interface MqttComponent extends OpenemsComponent {
      * @throws ConfigurationException if the configuration is wrong.
      */
     void updateJsonConfig() throws MqttException, ConfigurationException;
+
+
+    void reactToComponentCommand(MqttCommandType key, CommandWrapper value) throws OpenemsError.OpenemsNamedException;
 
 }
