@@ -5,7 +5,6 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.controller.debug.detailedlog.DebugDetailedLog;
 import io.openems.edge.heater.api.Heater;
 import io.openems.edge.meter.heatmeter.api.HeatMeterMbus;
 import io.openems.edge.thermometer.api.Thermometer;
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
         immediate = true)
 public class MultipleHeaterCombinedController extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
 
-    private final Logger log = LoggerFactory.getLogger(DebugDetailedLog.class);
+    private final Logger log = LoggerFactory.getLogger(MultipleHeaterCombinedController.class);
 
     @Reference
     protected ComponentManager cpm;
