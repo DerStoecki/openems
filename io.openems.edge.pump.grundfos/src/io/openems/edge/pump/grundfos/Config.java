@@ -42,6 +42,23 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "New address", description = "A value between 32 and 231 (inclusive).")
     int newAddress() default 231;
 
+    @AttributeDefinition(name = "Multipump system setup", description = "Configure this pump as part of a multipump "
+            + "system. After the setup was successful, disable this option. Pump operation is not possible in setup mode.")
+    boolean mpSetup() default false;
+
+    @AttributeDefinition(name = "Multipump system end", description = "End the participation in a multipump system.")
+    boolean mpEnd() default false;
+
+    @AttributeDefinition(name = "Multipump master", description = "Configure this pump as the multipump master.")
+    boolean mpMaster() default false;
+
+    @AttributeDefinition(name = "Multipump master address", description = "For a pump that is not the master, enter the "
+            + "address of the master pump.")
+    int mpMasterAddress() default 231;
+
+    @AttributeDefinition(name = "Multipump mode", description = "How the multiple pumps work together.")
+    TpModeSetting tpMode() default TpModeSetting.TIME_ALTERNATING;
+
     //@AttributeDefinition(name = "PumpType", description = "Denotation of the Pump.")
     //String pumpType() default "Magna3";
 

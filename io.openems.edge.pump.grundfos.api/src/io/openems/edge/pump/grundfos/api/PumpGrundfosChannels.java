@@ -48,7 +48,16 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
 
         // Measured Data //
         /**
-         * Multipump status.
+         * Multipump members. Indicating presence of pump 1-8. 8 bit value, where each bit stands for one pump.
+         * <ul>
+         * <li>Interface: PumpGrundfosChannels
+         * <li>Type: Double
+         * <li> Magna3: 8 bit Measured Data: 2, 1 multi_pump_members
+         * </ul>
+         * */
+        MULTI_PUMP_MEMBERS(Doc.of(OpenemsType.DOUBLE)),
+        /**
+         * Twinpump status.
          * 0: Single pump. Not part of a multi pump
          * 1: Twin-pump master. Contact to twin pump slave OK
          * 2: Twin-pump master. No contact to twin pump slave
@@ -354,6 +363,15 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * */
         FREQUENCY_F_MAX(Doc.of(OpenemsType.DOUBLE).unit(Unit.HERTZ).accessMode(AccessMode.READ_WRITE)),
         /**
+         * Address of the multipump master. Copied to unit_addr if it is sent to a pump that is the master.
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 45 mp_master_addr
+         * </ul>
+         * */
+        MP_MASTER_ADDR(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
          * Pump GENIbus address.
          * <ul>
          *        <li> Interface: PumpGrundfosChannels
@@ -492,7 +510,25 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * */
         GRF_SENSOR_PRESS_FUNC(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
         /**
-         * Maximum pressure range (=20m).
+         * Twinpump/Multipump mode.
+         * 0: None, not part of a multi pump
+         * 1: Time alternating mode
+         * 2: Load (power) alternating mode
+         * 3: Cascade control mode
+         * 4: Backup mode
+         * <ul>
+         *        <li> Interface: PumpGrundfosChannels
+         *        <li> Type: Double
+         *        <li> Magna3: 8 bit Configuration Parameters: 4, 241 tp_mode
+         * </ul>
+         * */
+        TP_MODE(Doc.of(OpenemsType.DOUBLE).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Twinpump/Multipump mode parsed to a string.
+         * */
+        TP_MODE_STRING(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Maximum pressure range.
          * <ul>
          *        <li> Interface: PumpGrundfosChannels
          *        <li> Type: Double
@@ -578,6 +614,56 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
          * */
         AUTO_ADAPT(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         /**
+         * Multipump master. Appoints this pump the master in a multipump system.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 40 mp_master
+         * </ul>
+         *
+         * */
+        MP_Master(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Multipump start search. Start wireless multipump assistant.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 87 mp_start_search
+         * </ul>
+         *
+         * */
+        MP_START_SEARCH(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Accept multipump join request.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 88 mp_join_req_accepted
+         * </ul>
+         *
+         * */
+        MP_JOIN_REQ_ACCEPTED(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * Start multipump.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 92 mp_start_multi_pump
+         * </ul>
+         *
+         * */
+        MP_START_MULTI_PUMP(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
+         * End multipump. If sent to master, also ends multipump on the slaves.
+         * <ul>
+         *       <li> Interface: PumpGrundfosChannels
+         *       <li> Type: Boolean
+         *       <li> Magna3: Commands: 3, 93 mp_end_multi_pump
+         * </ul>
+         *
+         * */
+        MP_END_MULTI_PUMP(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        /**
          * Turn on center LED flashing.
          * <ul>
          *       <li> Interface: PumpGrundfosChannels
@@ -661,11 +747,15 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.UNIT_BUS_MODE);
     }
 
-    default Channel<Double> getMultipumpStatus() {
+    default Channel<Double> getMultipumpMembers() {
+        return this.channel(ChannelId.MULTI_PUMP_MEMBERS);
+    }
+
+    default Channel<Double> getTwinpumpStatus() {
         return this.channel(ChannelId.TP_STATUS);
     }
 
-    default Channel<String> getMultipumpStatusString() {
+    default Channel<String> getTwinpumpStatusString() {
         return this.channel(ChannelId.TP_STATUS_STRING);
     }
 
@@ -794,7 +884,6 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
 
     default Channel<Double> getAlarmLog5() { return this.channel(ChannelId.ALARM_LOG_5); }
 
-
     default Channel<Double> getRmin() {
         return this.channel(ChannelId.R_MIN);
     }
@@ -907,14 +996,34 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
         return this.channel(ChannelId.WINK_OFF);
     }
 
+    default WriteChannel<Boolean> setMpMaster() {
+        return this.channel(ChannelId.MP_Master);
+    }
 
-    //reference Value
+    default WriteChannel<Boolean> setMpStartSearch() {
+        return this.channel(ChannelId.MP_START_SEARCH);
+    }
+
+    default WriteChannel<Boolean> setMpJoinReqAccepted() {
+        return this.channel(ChannelId.MP_JOIN_REQ_ACCEPTED);
+    }
+
+    default WriteChannel<Boolean> setMpStartMultipump() {
+        return this.channel(ChannelId.MP_START_MULTI_PUMP);
+    }
+
+    default WriteChannel<Boolean> setMpEndMultipump() {
+        return this.channel(ChannelId.MP_END_MULTI_PUMP);
+    }
+
+
+    // Reference Value
     default WriteChannel<Double> setRefRem() {
         return this.channel(ChannelId.REF_REM);
     }
 
 
-    //frequency
+    // Frequency
     default WriteChannel<Double> setFupper() {
         return this.channel(ChannelId.FREQUENCY_F_UPPER);
     }
@@ -930,6 +1039,20 @@ public interface PumpGrundfosChannels extends OpenemsComponent {
     default WriteChannel<Double> setFmax() {
         return this.channel(ChannelId.FREQUENCY_F_MAX);
     }
+
+    // Multipump
+    default WriteChannel<Double> setMpMasterAddr() {
+        return this.channel(ChannelId.MP_MASTER_ADDR);
+    }
+
+    default WriteChannel<Double> setTpMode() {
+        return this.channel(ChannelId.TP_MODE);
+    }
+
+    default Channel<String> getTpModeString() {
+        return this.channel(ChannelId.TP_MODE_STRING);
+    }
+
 
     // Strings
     default Channel<String> getProductNumber() {

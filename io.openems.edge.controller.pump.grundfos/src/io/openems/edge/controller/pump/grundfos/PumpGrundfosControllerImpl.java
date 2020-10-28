@@ -337,7 +337,8 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         this.logInfo(this.log, "GENIbus address: " + pumpChannels.getPumpDevice().getGenibusAddress()
                 + ", product number: " + pumpChannels.getProductNumber().value().get() + ", "
                 + "serial number: " + pumpChannels.getSerialNumber().value().get());
-        this.logInfo(this.log, "Multipump Status: " + pumpChannels.getMultipumpStatusString().value().get());
+        this.logInfo(this.log, "Twinpump Status: " + pumpChannels.getTwinpumpStatusString().value().get());
+        this.logInfo(this.log, "Multipump Mode: " + pumpChannels.getTpModeString().value().get());
         this.logInfo(this.log, "Power consumption: " + formatter2.format(pumpChannels.getPowerConsumption().value().orElse(0.0)) + " W");
 
         if (motorSpeedValueAvailable) {
