@@ -415,6 +415,9 @@ public enum Unit {
             case VOLT_AMPERE_HOURS:
             case VOLT_AMPERE_REACTIVE_HOURS:
             case WATT_HOURS_BY_WATT_PEAK:
+            case CUBICMETER_PER_HOUR:
+            case CUBICMETER_PER_SECOND:
+            case CUBIC_METER:
                 return value + " " + this.symbol;
             case ON_OFF:
                 boolean booleanValue = (Boolean) value;

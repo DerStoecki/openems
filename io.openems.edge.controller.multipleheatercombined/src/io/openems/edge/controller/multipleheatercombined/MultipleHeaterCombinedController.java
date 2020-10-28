@@ -5,16 +5,12 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
-import io.openems.edge.controller.debug.detailedlog.DebugDetailedLog;
 import io.openems.edge.heater.api.Heater;
 import io.openems.edge.meter.heatmeter.api.HeatMeterMbus;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +21,8 @@ import org.slf4j.LoggerFactory;
         immediate = true)
 public class MultipleHeaterCombinedController extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
 
-    private final Logger log = LoggerFactory.getLogger(DebugDetailedLog.class);
+    private final Logger log = LoggerFactory.getLogger(MultipleHeaterCombinedController.class);
+
     @Reference
     protected ComponentManager cpm;
 
@@ -55,9 +52,13 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private int heaterSecondaryMin;
     private int heaterBackupMax;
     private int heaterBackupMin;
-    private int maxGasBoilerPower;
-    private int maxWoodChipPower;
-    private int maxChpWarmPower;
+    private float currentBuffer = 1.0f;
+
+    private long initTimeStamp;
+    //Wait 10 min --> Average Hour Consumption is calculated
+    private int timeToWait = 10 * 60 * 1000;
+    private boolean timeIsUp;
+    private boolean heatOnlyControlled;
 
 
     public MultipleHeaterCombinedController() {
@@ -68,7 +69,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     }
 
     @Activate
-    public void activate(ComponentContext context, Config config) {
+    public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException, ConfigurationException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
         allocateComponent(config.chp_Id(), "Heater", "Heater1");
@@ -77,14 +78,14 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         if (config.communicating_mbus()) {
             allocateComponent(config.heatMeter_Id(), "HeatMeterMbus", "");
         }
-        allocateComponent(config.chp_TemperatureSensor_min(), "Temperature", "THeater_1_ḾIN");
-        allocateComponent(config.chp_TemperatureSensor_max(), "Temperature", "THeater_1_ḾAX");
+        allocateComponent(config.chp_TemperatureSensor_min(), "Temperature", "11");
+        allocateComponent(config.chp_TemperatureSensor_max(), "Temperature", "12");
 
-        allocateComponent(config.woodChip_TemperatureSensor_min(), "Temperature", "THeater_2_ḾIN");
-        allocateComponent(config.woodChip_TemperatureSensor_max(), "Temperature", "THeater_2_ḾAX");
+        allocateComponent(config.woodChip_TemperatureSensor_min(), "Temperature", "21");
+        allocateComponent(config.woodChip_TemperatureSensor_max(), "Temperature", "22");
 
-        allocateComponent(config.gasBoiler_TemperatureSensor_min(), "Temperature", "THeater_3_ḾIN");
-        allocateComponent(config.gasBoiler_TemperatureSensor_max(), "Temperature", "THeater_3_ḾAX");
+        allocateComponent(config.gasBoiler_TemperatureSensor_min(), "Temperature", "31");
+        allocateComponent(config.gasBoiler_TemperatureSensor_max(), "Temperature", "32");
 
         this.minTemperatureBufferValue = config.minTemperatureBufferValue();
         this.maxTemperatureBufferValue = config.maxTemperatureBufferValue();
@@ -98,32 +99,25 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         this.heaterSecondaryMin = config.woodChip_Temperature_min();
         this.heaterBackupMax = config.gasBoiler_Temperature_max();
         this.heaterBackupMin = config.gasBoiler_Temperature_min();
-
-        this.maxChpWarmPower = config.heater_1_max_performance();
-        this.maxWoodChipPower = config.heater_2_max_performance();
-        this.maxGasBoilerPower = config.heater_3_max_performance();
-
-
+        this.initTimeStamp = System.currentTimeMillis();
+        timeToWait = config.minWaitTime() * 60 * 1000;
+        timeIsUp = false;
+        this.heatOnlyControlled = config.heatOnlyControlled();
     }
 
-    private void allocateComponent(String device, String type, String concreteType) {
-
-        try {
-            switch (type) {
-                case "Heater":
-                    allocateHeater(device, concreteType);
-                    break;
-                case "Temperature":
-                    allocateTemperatureSensor(device, concreteType);
-                    break;
-
-                case "HeatMeterMbus":
-                    allocateHeatMeterMbus(device, concreteType);
-            }
+    private void allocateComponent(String device, String type, String concreteType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
 
 
-        } catch (OpenemsError.OpenemsNamedException | ConfigurationException e) {
-            e.printStackTrace();
+        switch (type) {
+            case "Heater":
+                allocateHeater(device, concreteType);
+                break;
+            case "Temperature":
+                allocateTemperatureSensor(device, concreteType);
+                break;
+
+            case "HeatMeterMbus":
+                allocateHeatMeterMbus(device, concreteType);
         }
 
 
@@ -162,26 +156,26 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         if (cpm.getComponent(device) instanceof Thermometer) {
             Thermometer th = cpm.getComponent(device);
             switch (concreteType) {
-                case "THeater_1_MIN":
+                case "11":
                     this.temperatureSensorHeater1On = th;
                     break;
-                case "THeater_1_MAX":
+                case "12":
                     this.temperatureSensorHeater1Off = th;
                     break;
-                case "THeater_2_MIN":
+                case "21":
                     this.temperatureSensorHeater2On = th;
                     break;
-                case "THeater_2_MAX":
+                case "22":
                     this.temperatureSensorHeater2Off = th;
                     break;
-                case "THeater_3_MIN":
+                case "31":
                     this.temperatureSensorHeater3On = th;
                     break;
-                case "THeater_3_MAX":
+                case "32":
                     this.temperatureSensorHeater3Off = th;
                     break;
-
-
+                default:
+                    throw new ConfigurationException("This exception shouldn't occur somethings wrong with identifier", "identifier wrong");
             }
         } else {
             throw new ConfigurationException("The Device " + device
@@ -206,30 +200,33 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //in kW
-        if (heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
-            int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().get();
-
+        if (!heatOnlyControlled) {
+            if (!timeIsUp && System.currentTimeMillis() - initTimeStamp >= timeToWait) {
+                timeIsUp = true;
+            }
+        }
+        if (!timeIsUp || heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
+            int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().isDefined() ? heatMeter.getAverageHourConsumption().getNextValue().get() : 0;
+            this.currentBuffer = getCorrectBufferValue();
             if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.heaterPrimaryMax) {
                 heaterPrimary.setOffline();
             } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.heaterPrimaryMin) {
-                thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+                thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
-            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || thermicalPerformanceDemand <= 0) {
+            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || (thermicalPerformanceDemand <= 0 && timeIsUp)) {
                 heaterSecondary.setOffline();
 
             } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.heaterSecondaryMin) {
 
-                thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+                thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
 
-            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || thermicalPerformanceDemand <= 0) {
+            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || (thermicalPerformanceDemand <= 0 && timeIsUp)) {
                 this.heaterBackup.setOffline();
-
-            }
-            if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.heaterBackupMin) {
-                thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+            } else if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.heaterBackupMin) {
+                thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
             if (thermicalPerformanceDemand > 0) {
@@ -250,12 +247,12 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private float getCorrectBufferValue() {
         float averageTemperature = 0;
         if (temperatureSensorHeater1On.getTemperature().getNextValue().isDefined()) {
-            averageTemperature += this.temperatureSensorHeater1On.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater1Off.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater2On.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater2Off.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater3On.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater3Off.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater1On.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater1On.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater1Off.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater2On.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater2On.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater2Off.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater3On.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater3On.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater3Off.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() : 0;
             averageTemperature = averageTemperature / 6;
 
             if (averageTemperature >= bufferMaxTemperature) {
@@ -268,5 +265,10 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         } else {
             return minTemperatureBufferValue;
         }
+    }
+
+    @Deactivate
+    public void deactivate() {
+        super.deactivate();
     }
 }

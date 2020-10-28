@@ -43,12 +43,19 @@ import org.osgi.service.metatype.annotations.Option;
             })
     String chpType() default "EM_140_207";
 
-    @AttributeDefinition(name =  "Access Type", description = "Do you want to only read Information from the Chp or rw?",
-    options = {
-            @Option(label = "read", value = "r"),
-            @Option(label = "read/write", value = "rw")
-    })
+    @AttributeDefinition(name = "Access Type", description = "Do you want to only read Information from the Chp or rw?",
+            options = {
+                    @Option(label = "read", value = "r"),
+                    @Option(label = "read/write", value = "rw")
+            })
     String accesMode() default "r";
+
+
+    @AttributeDefinition(name = "Relays needed for CHP", description = "Some chps need a relays to be set on and off for external use")
+    boolean useRelay() default true;
+
+    @AttributeDefinition(name = "External Use RelayID", description = "If the CHP Needs a Relay to be active")
+    String relayId() default "Relay0";
 
     @AttributeDefinition(name = "ChpModule Id", description = "Id of the ChpModule you previously activated.")
     String chpModuleId() default "ChpModule0";
@@ -70,9 +77,16 @@ import org.osgi.service.metatype.annotations.Option;
     String modbusBridgeId() default "modbus0";
 
     @AttributeDefinition(name = "ModBus-Unit Id", description = "Integer Unit Id of the Component.")
-            int modbusUnitId() default 0;
+    int modbusUnitId() default 0;
+
+    @AttributeDefinition(name = "Start on Activation", description = "Should the CHP Start on Activation")
+    boolean startOnActivation() default false;
+
+    @AttributeDefinition(name = "Activation value ind %", description = "Will only be used if prev. Start on Activation is set to true")
+    int startPercentage() default 50;
 
     boolean enabled() default true;
+
 
     String webconsole_configurationFactory_nameHint() default "Chp Device [{id}]";
 

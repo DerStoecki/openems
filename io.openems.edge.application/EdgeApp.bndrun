@@ -79,6 +79,7 @@
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
+	bnd.identity;id='io.openems.edge.controller.multipleheatercombined',\
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter',\
 	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
 	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator',\
@@ -270,6 +271,7 @@
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
+	io.openems.edge.controller.multipleheatercombined;version=snapshot,\
 	io.openems.edge.controller.passing.controlcenter;version=snapshot,\
 	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
 	io.openems.edge.controller.passing.heatingcurveregulator;version=snapshot,\

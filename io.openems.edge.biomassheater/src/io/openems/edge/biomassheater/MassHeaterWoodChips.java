@@ -38,7 +38,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     }
 
     //in kW
-    private int maxThermicPerformance = 160;
+    private int maxThermicPerformance = 1400;
 
     private Config config;
 
@@ -162,21 +162,27 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                 new FC6WriteRegisterTask(24583,
                         m(BioMassHeater.ChannelId.SLIDE_IN_MIN, new UnsignedWordElement(24583))),
                 new FC6WriteRegisterTask(24584,
-                        m(BioMassHeater.ChannelId.SLIDE_IN_MAX, new UnsignedWordElement(24584)))
+                        m(BioMassHeater.ChannelId.SLIDE_IN_MAX, new UnsignedWordElement(24584))),
+                new FC5WriteCoilTask(16387,
+                        m(BioMassHeater.ChannelId.EXTERNAL_CONTROL, new CoilElement(16387)))
         );
     }
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-        float powerValue = Math.round(demand * bufferValue);
+      /*  float powerValue = Math.round(demand * bufferValue);
         if (powerValue >= maxThermicPerformance) {
             powerValue = maxThermicPerformance;
             getSlideInPercentageValue().setNextWriteValue(100);
         } else {
             getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / (float) maxThermicPerformance) * 100));
         }
-
-        return (int) powerValue;
+            */
+        if (this.getDisturbance().value().isDefined() && this.getDisturbance().value().get()) {
+            return 0;
+        }
+        this.getExternalControl().setNextWriteValue(true);
+        return this.maxThermicPerformance;
     }
 
     @Override
@@ -186,17 +192,17 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
 
     @Override
     public void setOffline() throws OpenemsError.OpenemsNamedException {
-        getSlideInPercentageValue().setNextWriteValue(0);
+        this.getExternalControl().setNextWriteValue(false);
     }
 
     @Override
     public String debugLog() {
         String out = "";
-        List<Channel<?>> all = new ArrayList<>();
-        Arrays.stream(BioMassHeater.ChannelId.values()).forEach(consumer -> {
-            all.add(this.channel(consumer));
-        });
-        all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
+        // List<Channel<?>> all = new ArrayList<>();
+        //Arrays.stream(BioMassHeater.ChannelId.values()).forEach(consumer -> {
+        //    all.add(this.channel(consumer));
+        //});
+        //all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
 
         if (this.getWarning().value().isDefined()) {
             if (this.getWarning().value().get()) {

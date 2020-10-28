@@ -14,7 +14,6 @@ import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.chp.device.task.ChpTaskImpl;
 import io.openems.edge.chp.module.api.ChpModule;
 
-import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -22,6 +21,7 @@ import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.heater.api.Heater;
 import io.openems.edge.i2c.mcp.api.Mcp;
 
+import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 
@@ -33,7 +33,6 @@ import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -45,9 +44,13 @@ import java.util.List;
 public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements OpenemsComponent, ChpInformationChannel, EventHandler, Heater {
     private Mcp mcp;
     private ChpType chpType;
-    private String accessMode;
     private int thermicalOutput;
     private int electricalOutput;
+    private ActuatorRelaysChannel relay;
+    private boolean useRelay;
+    private AccessChp accessChp;
+
+    private Config config;
 
     private String[] errorPossibilities = ErrorPossibilities.STANDARD_ERRORS.getErrorList();
 
@@ -71,7 +74,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     @Activate
     public void activate(ComponentContext context, Config config) throws OpenemsError.OpenemsNamedException {
         super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus", config.modbusBridgeId());
-
+        this.config = config;
         switch (config.chpType()) {
             case "EM_6_15":
                 this.chpType = ChpType.Vito_EM_6_15;
@@ -132,7 +135,10 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
                 break;
 
         }
+        this.accessChp = AccessChp.READ;
+        this.useRelay = config.useRelay();
         if (config.accesMode().equals("rw")) {
+            this.accessChp = AccessChp.READWRITE;
             if (cpm.getComponent(config.chpModuleId()) instanceof ChpModule) {
                 ChpModule chpModule = cpm.getComponent(config.chpModuleId());
                 mcp = chpModule.getMcp();
@@ -140,8 +146,21 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
                         config.position(), config.minLimit(), config.maxLimit(),
                         config.percentageRange(), 4096.f, this.getPowerLevelChannel()));
             }
+            if (this.useRelay == true) {
+                if (cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
+                    this.relay = cpm.getComponent(config.relayId());
+                    this.relay.getRelaysChannel().setNextWriteValue(false);
+                }
+
+                if (config.startOnActivation()) {
+                    this.getPowerLevelChannel().setNextValue(config.startPercentage());
+                    if (this.useRelay) {
+                        this.relay.getRelaysChannel().setNextWriteValue(true);
+                    }
+                }
+
+            }
         }
-        this.accessMode = config.accesMode();
         this.thermicalOutput = Math.round(this.chpType.getThermalOutput());
         this.electricalOutput = Math.round(this.chpType.getElectricalOutput());
     }
@@ -149,16 +168,23 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        if (this.accessMode.equals("rw")) {
+        if (this.accessChp == AccessChp.READWRITE) {
             this.mcp.removeTask(super.id());
+        }
+        if (this.useRelay) {
+            try {
+                this.relay.getRelaysChannel().setNextWriteValue(false);
+            } catch (OpenemsError.OpenemsNamedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
 
     @Override
     public String debugLog() {
-        getInformations();
-        if (this.accessMode.equals("rw")) {
+        //getInformations();
+        if (this.accessChp == AccessChp.READWRITE) {
             if (this.getPowerLevelChannel().getNextValue().get() != null) {
                 if (chpType != null) {
                     return "Chp: " + this.chpType.getName() + "is at " + this.getPowerLevelChannel().getNextValue().get()
@@ -175,7 +201,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         }
     }
 
-    private void getInformations() {
+    /*private void getInformations() {
         List<Channel<?>> all = new ArrayList<>();
         System.out.println("-----------------------------" + super.id() + "-----------------------------");
         Arrays.stream(ChpInformationChannel.ChannelId.values()).forEach(consumer -> {
@@ -185,7 +211,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         });
         all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
         System.out.println("----------------------------------------------------------");
-    }
+    }*/
 
 
     @Override
@@ -306,16 +332,24 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-        int providedPower = Math.round(demand * bufferValue);
+        //percent
+        if (this.isErrorOccured().value().isDefined() && this.isErrorOccured().value().get()) {
+            return 0;
+        }
+        int providedPower = Math.round(((demand * bufferValue) * 100) / thermicalOutput);
+        if (this.useRelay == true) {
+            this.relay.getRelaysChannel().setNextWriteValue(true);
+        }
 
-        if (providedPower >= thermicalOutput) {
+        if (providedPower >= 100) {
 
             getPowerLevelChannel().setNextWriteValue(100);
             return thermicalOutput;
 
         } else {
             getPowerLevelChannel().setNextWriteValue(providedPower);
-            return providedPower;
+            providedPower = providedPower < this.config.startPercentage() ? config.startPercentage() : providedPower;
+            return (providedPower * thermicalOutput) / 100;
         }
     }
 
@@ -326,6 +360,9 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     @Override
     public void setOffline() throws OpenemsError.OpenemsNamedException {
+        if (this.useRelay == true) {
+            this.relay.getRelaysChannel().setNextWriteValue(true);
+        }
         getPowerLevelChannel().setNextWriteValue(0);
     }
 
@@ -339,8 +376,12 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         //int errorBitLength = 16;
         for (int i = 0, errorListPosition = 0; i < errorMax; i++) {
             if (allErrorsAsChar[i] == '1') {
-                errorSummary.add(errorListPosition, errorPossibilities[i]);
-                errorListPosition++;
+                if (errorPossibilities[i].toLowerCase().contains("reserve")) {
+                    errorListPosition++;
+                } else {
+                    errorSummary.add(errorListPosition, errorPossibilities[i]);
+                    errorListPosition++;
+                }
             }
         }
         //All occuring errors in openemsChannel.

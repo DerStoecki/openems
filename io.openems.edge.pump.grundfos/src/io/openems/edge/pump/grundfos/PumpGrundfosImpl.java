@@ -698,9 +698,9 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
 
         if (broadcast) {
             boolean signalReceived = isConnectionOk().value().isDefined() && isConnectionOk().value().get();
-            this.logInfo(this.log, "--GENIbus broadcast--");
+            //this.logInfo(this.log, "--GENIbus broadcast--");
             if (signalReceived == false) {
-                this.logInfo(this.log, "No signal received so far.");
+                //this.logInfo(this.log, "No signal received so far.");
             } else {
                 String genibusAddress = "null";
                 if (setUnitAddr().value().isDefined()) {
@@ -719,17 +719,17 @@ public class PumpGrundfosImpl extends AbstractOpenemsComponent implements Openem
                     busMode = "" + Math.round(getUnitBusMode().value().get());
                 }
 
-                this.logInfo(this.log, "Pump found - " + getUnitInfo().value().get());
-                this.logInfo(this.log, "GENIbus address: " + genibusAddress);
-                this.logInfo(this.log, "Group address: " + groupAddress);
-                this.logInfo(this.log, "Buffer length: " + bufferLength);
-                this.logInfo(this.log, "Bus mode: " + busMode);
+                //this.logInfo(this.log, "Pump found - " + getUnitInfo().value().get());
+                //this.logInfo(this.log, "GENIbus address: " + genibusAddress);
+                //this.logInfo(this.log, "Group address: " + groupAddress);
+                //this.logInfo(this.log, "Buffer length: " + bufferLength);
+                //this.logInfo(this.log, "Bus mode: " + busMode);
             }
         } else if (changeAddress) {
             if (newAddress > 31 && newAddress < 232) {
                 try {
                     setUnitAddr().setNextWriteValue(newAddress);
-                    this.logInfo(this.log, "Pump address changed. New address = " + (Math.round(newAddress)) + ".");
+                    //this.logInfo(this.log, "Pump address changed. New address = " + (Math.round(newAddress)) + ".");
                 } catch (OpenemsError.OpenemsNamedException e) {
                     this.logError(this.log, "Address change failed!");
                     e.printStackTrace();

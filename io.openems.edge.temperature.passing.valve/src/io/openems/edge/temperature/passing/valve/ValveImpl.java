@@ -2,7 +2,6 @@ package io.openems.edge.temperature.passing.valve;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
-import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.manager.valve.api.ManagerValve;
 import io.openems.edge.relays.device.api.ActuatorRelaysChannel;
@@ -58,6 +57,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
     private boolean isClosing = false;
     private boolean wasAlreadyReset = false;
     private boolean isForced;
+    private static int EXTRA_BUFFER_TIME = 2000;
 
     private Config config;
 
@@ -120,7 +120,7 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         long currentTime = getMilliSecondTime();
         if (this.isForced) {
             if (this.timeStampValveCurrent == -1 || (currentTime - timeStampValveInitial)
-                    < ((this.getTimeNeeded().getNextValue().get() * 1000))) {
+                    < ((this.getTimeNeeded().getNextValue().get() * 1000) + EXTRA_BUFFER_TIME)) {
                 return false;
             }
             this.getIsBusy().setNextValue(false);

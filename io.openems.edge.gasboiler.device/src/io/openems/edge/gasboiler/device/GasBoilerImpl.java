@@ -254,8 +254,8 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-        float providedPower = Math.round(demand * bufferValue);
-        if (providedPower >= thermicalOutput) {
+        float providedPower = Math.round(((demand * bufferValue) * 100) / this.thermicalOutput);
+        if (providedPower >= 100) {
             //for boiler 1 == 0.5%
             getHeatBoilerPerformanceSetPointValue().setNextWriteValue(200);
             getHeatBoilerPerformanceSetPointValuePercent().setNextValue(100);
@@ -263,10 +263,10 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
 
         } else {
             //for boiler
-            getHeatBoilerPerformanceSetPointValue().setNextWriteValue((int) Math.floor((providedPower / (float) thermicalOutput) * 200));
+            getHeatBoilerPerformanceSetPointValue().setNextWriteValue((int) Math.floor((providedPower * 200)));
             //for user
-            getHeatBoilerPerformanceSetPointValuePercent().setNextValue((int) Math.floor((providedPower / (float) thermicalOutput) * 100));
-            return (int) providedPower;
+            getHeatBoilerPerformanceSetPointValuePercent().setNextValue((int) Math.floor((providedPower  * 100)));
+            return (int) (providedPower * thermicalOutput) / 100;
         }
 
 
