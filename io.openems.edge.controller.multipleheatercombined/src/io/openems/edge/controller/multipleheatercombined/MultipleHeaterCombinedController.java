@@ -55,9 +55,6 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private int heaterSecondaryMin;
     private int heaterBackupMax;
     private int heaterBackupMin;
-    private int maxGasBoilerPower;
-    private int maxWoodChipPower;
-    private int maxChpWarmPower;
     private float currentBuffer = 1.0f;
 
 
@@ -99,12 +96,6 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         this.heaterSecondaryMin = config.woodChip_Temperature_min();
         this.heaterBackupMax = config.gasBoiler_Temperature_max();
         this.heaterBackupMin = config.gasBoiler_Temperature_min();
-
-        this.maxChpWarmPower = config.heater_1_max_performance();
-        this.maxWoodChipPower = config.heater_2_max_performance();
-        this.maxGasBoilerPower = config.heater_3_max_performance();
-
-
     }
 
     private void allocateComponent(String device, String type, String concreteType) {

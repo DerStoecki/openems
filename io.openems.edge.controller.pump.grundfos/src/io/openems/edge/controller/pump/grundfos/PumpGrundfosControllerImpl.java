@@ -190,7 +190,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             // Puts the pump in remote mode. Send every second.
             this.pumpChannels.setRemote().setNextWriteValue(true);
 
-            boolean channelsHaveValues =  setControlMode().value().isDefined()
+            boolean channelsHaveValues = setControlMode().value().isDefined()
                     && setStopPump().value().isDefined()
                     && setPressureSetpoint().value().isDefined()
                     && setFrequencySetpoint().value().isDefined()
@@ -252,7 +252,8 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
                             case AUTO_ADAPT:
                                 break;
                             case CONST_FREQUENCY:
-                                double minFrequencySetpoint = pumpChannels.setFmin().value().orElse(0.0);;
+                                double minFrequencySetpoint = pumpChannels.setFmin().value().orElse(0.0);
+                                ;
                                 if (frequencySetpoint < minFrequencySetpoint) {
                                     frequencySetpoint = minFrequencySetpoint;
                                     setFrequencySetpoint().setNextWriteValue(frequencySetpoint);  // Update both containers to have correct values next cycle.
@@ -333,7 +334,7 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
             }
         }
 
-        this.logInfo(this.log, "--Status of pump " + pumpChannels.getPumpDevice().getPumpDeviceId() + "--");
+        //this.logInfo(this.log, "--Status of pump " + pumpChannels.getPumpDevice().getPumpDeviceId() + "--");
         this.logInfo(this.log, "GENIbus address: " + pumpChannels.getPumpDevice().getGenibusAddress()
                 + ", product number: " + pumpChannels.getProductNumber().value().get() + ", "
                 + "serial number: " + pumpChannels.getSerialNumber().value().get());
@@ -350,103 +351,104 @@ public class PumpGrundfosControllerImpl extends AbstractOpenemsComponent impleme
         // are not correct because there seems to be an error involved with their unit. Wrong frequency readout was seen
         // on two pumps so far.
         /*
-        this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
+        //this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
-        this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
+        //this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
         */
 
         this.logInfo(this.log, "Pump pressure: " + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0)) + " bar or "
                 + formatter2.format(pumpChannels.getCurrentPressure().value().orElse(0.0) * 10) + " m");
-        //this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
+        this.logInfo(this.log, "Pump max pressure: " + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0)) + " bar or "
+                + formatter2.format(pumpChannels.setMaxPressure().value().orElse(0.0) * 10) + " m");
         this.logInfo(this.log, "Pump flow: " + formatter2.format(pumpChannels.getCurrentPumpFlow().value().orElse(0.0)) + " m³/h");
-        //this.logInfo(this.log, "Pump flow max: " + formatter2.format(pumpChannels.setPumpMaxFlow().value().orElse(0.0)) + " m³/h");
+        this.logInfo(this.log, "Pump flow max: " + formatter2.format(pumpChannels.setPumpMaxFlow().value().orElse(0.0)) + " m³/h");
         this.logInfo(this.log, "Pumped medium temperature: " + formatter1.format(pumpChannels.getPumpedWaterMediumTemperature().value().orElse(0.0) / 10) + "°C");
         this.logInfo(this.log, "Control mode: " + pumpChannels.getActualControlMode().value().get());
-        this.logInfo(this.log, pumpChannels.getControlSource().value().orElse("Command source:"));
-        //this.logInfo(this.log, "Buffer length: " + pumpChannels.getBufferLength().value().get());
-        this.logInfo(this.log, "AlarmCode: " + pumpChannels.getAlarmCode().value().get());
-        this.logInfo(this.log, "WarnCode: " + pumpChannels.getWarnCode().value().get());
-        this.logInfo(this.log, "Warn message: " + pumpChannels.getWarnMessage().value().get());
-        this.logInfo(this.log, "Alarm log1: " + pumpChannels.getAlarmLog1().value().get());
-        this.logInfo(this.log, "Alarm log2: " + pumpChannels.getAlarmLog2().value().get());
-        this.logInfo(this.log, "Alarm log3: " + pumpChannels.getAlarmLog3().value().get());
-        this.logInfo(this.log, "Alarm log4: " + pumpChannels.getAlarmLog4().value().get());
-        this.logInfo(this.log, "Alarm log5: " + pumpChannels.getAlarmLog5().value().get());
+        //this.logInfo(this.log, pumpChannels.getControlSource().value().orElse("Command source:"));
+        ////this.logInfo(this.log, "Buffer length: " + pumpChannels.getBufferLength().value().get());
+        //this.logInfo(this.log, "AlarmCode: " + pumpChannels.getAlarmCode().value().get());
+        //this.logInfo(this.log, "WarnCode: " + pumpChannels.getWarnCode().value().get());
+        //this.logInfo(this.log, "Warn message: " + pumpChannels.getWarnMessage().value().get());
+        //this.logInfo(this.log, "Alarm log1: " + pumpChannels.getAlarmLog1().value().get());
+        //this.logInfo(this.log, "Alarm log2: " + pumpChannels.getAlarmLog2().value().get());
+        //this.logInfo(this.log, "Alarm log3: " + pumpChannels.getAlarmLog3().value().get());
+        //this.logInfo(this.log, "Alarm log4: " + pumpChannels.getAlarmLog4().value().get());
+        //this.logInfo(this.log, "Alarm log5: " + pumpChannels.getAlarmLog5().value().get());
         switch (controlModeSetting) {
             case MIN_MOTOR_CURVE:
-                this.logInfo(this.log, "");
-                this.logInfo(this.log, "Controller setpoint: min motor curve = "
-                        + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)
-                        * pumpChannels.setFmin().value().orElse(0.0)) + " Hz or "
-                        + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)
-                        * pumpChannels.setFmin().value().orElse(0.0) * 60) + " rpm.");
-                this.logInfo(this.log, "");
+                //this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Controller setpoint: min motor curve = "
+                //    + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)
+                //  * pumpChannels.setFmin().value().orElse(0.0)) + " Hz or "
+                // + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)
+                //* pumpChannels.setFmin().value().orElse(0.0) * 60) + " rpm.");
+                //this.logInfo(this.log, "");
                 break;
             case MAX_MOTOR_CURVE:
-                this.logInfo(this.log, "");
-                this.logInfo(this.log, "Controller setpoint: max motor curve = "
-                        + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz or "
-                        + formatter2.format(pumpChannels.setFnom().value().orElse(0.0) * 60) + " rpm.");
-                this.logInfo(this.log, "");
+                //this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Controller setpoint: max motor curve = "
+                //+ formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz or "
+                //   + formatter2.format(pumpChannels.setFnom().value().orElse(0.0) * 60) + " rpm.");
+                //this.logInfo(this.log, "");
                 break;
             case AUTO_ADAPT:
-                this.logInfo(this.log, "");
-                this.logInfo(this.log, "Controller setpoint: auto adapt");
-                this.logInfo(this.log, "");
+                //this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Controller setpoint: auto adapt");
+                //this.logInfo(this.log, "");
                 break;
             case CONST_FREQUENCY:
-                this.logInfo(this.log, "Actual setpoint (pump internal): " + formatter2.format(pumpChannels.getRefAct().value().orElse(0.0) * 100) + "% of interval range.");
-                this.logInfo(this.log, "Motor frequency setpoint maximum: " + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz or "
-                        + formatter2.format(pumpChannels.setFnom().value().orElse(0.0) * 60) + " rpm");
-                this.logInfo(this.log, "Minimum pump speed: " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum.");
-                this.logInfo(this.log, "");
-                this.logInfo(this.log, "Controller setpoint: " + frequencySetpoint + "% of " + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz.");
-                this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Actual setpoint (pump internal): " + formatter2.format(pumpChannels.getRefAct().value().orElse(0.0) * 100) + "% of interval range.");
+                //this.logInfo(this.log, "Motor frequency setpoint maximum: " + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz or "
+                // + formatter2.format(pumpChannels.setFnom().value().orElse(0.0) * 60) + " rpm");
+                //this.logInfo(this.log, "Minimum pump speed: " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum.");
+                //this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Controller setpoint: " + frequencySetpoint + "% of " + formatter2.format(pumpChannels.setFnom().value().orElse(0.0)) + " Hz.");
+                //this.logInfo(this.log, "");
                 break;
             case CONST_PRESSURE:
-                this.logInfo(this.log, "Actual setpoint (pump internal): " + formatter2.format(pumpChannels.getRefAct().value().orElse(0.0) * 100) + "% of interval range.");
-                //this.logInfo(this.log, "Interval min (internal): " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
-                //this.logInfo(this.log, "Interval max (internal): " + formatter2.format(pumpChannels.getRmax().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
-                this.logInfo(this.log, "Maximum pressure setpoint: " + (pumpChannels.getPumpDevice().getPressureSensorMinBar()
-                        + pumpChannels.getPumpDevice().getPressureSensorRangeBar()) + " bar / "
-                        + (pumpChannels.getPumpDevice().getPressureSensorMinBar() + pumpChannels.getPumpDevice().getPressureSensorRangeBar()) * 10 + " m.");
-                this.logInfo(this.log, "Minimum pressure setpoint: " + pumpChannels.getPumpDevice().getPressureSensorMinBar()
-                        + " bar / " + pumpChannels.getPumpDevice().getPressureSensorMinBar() * 10 + " m.");
-                this.logInfo(this.log, "");
-                this.logInfo(this.log, "Controller setpoint: " + pressureSetpoint + " bar / " + pressureSetpoint * 10 + " m or "
-                        + formatter2.format(pumpChannels.setRefRem().value().orElse(0.0) * 100) + "% of interval range.");
-                this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Actual setpoint (pump internal): " + formatter2.format(pumpChannels.getRefAct().value().orElse(0.0) * 100) + "% of interval range.");
+                ////this.logInfo(this.log, "Interval min (internal): " + formatter2.format(pumpChannels.getRmin().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
+                ////this.logInfo(this.log, "Interval max (internal): " + formatter2.format(pumpChannels.getRmax().value().orElse(0.0) * 100) + "% of maximum pumping head (Förderhöhe).");
+                //this.logInfo(this.log, "Maximum pressure setpoint: " + (pumpChannels.getPumpDevice().getPressureSensorMinBar()
+                // + pumpChannels.getPumpDevice().getPressureSensorRangeBar()) + " bar / "
+                // + (pumpChannels.getPumpDevice().getPressureSensorMinBar() + pumpChannels.getPumpDevice().getPressureSensorRangeBar()) * 10 + " m.");
+                //this.logInfo(this.log, "Minimum pressure setpoint: " + pumpChannels.getPumpDevice().getPressureSensorMinBar()
+                // + " bar / " + pumpChannels.getPumpDevice().getPressureSensorMinBar() * 10 + " m.");
+                //this.logInfo(this.log, "");
+                //this.logInfo(this.log, "Controller setpoint: " + pressureSetpoint + " bar / " + pressureSetpoint * 10 + " m or "
+                // + formatter2.format(pumpChannels.setRefRem().value().orElse(0.0) * 100) + "% of interval range.");
+                //this.logInfo(this.log, "");
                 break;
         }
-        //this.logInfo(this.log, "ActMode1Bits: " + pumpChannels.getActMode1Bits().value().get());
-        //this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
+        ////this.logInfo(this.log, "ActMode1Bits: " + pumpChannels.getActMode1Bits().value().get());
+        ////this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
 
 
         /*
-        this.logInfo(this.log, "Sensor:");
-        this.logInfo(this.log, "ana_in_1_func: " + pumpChannels.setSensor1Func().value().get());
-        this.logInfo(this.log, "ana_in_1_applic: " + pumpChannels.setSensor1Applic().value().get());
-        this.logInfo(this.log, "ana_in_1_unit: " + pumpChannels.setSensor1Unit().value().get());
-        this.logInfo(this.log, "ana_in_1_min: " + pumpChannels.setSensor1Min().value().get());
-        this.logInfo(this.log, "ana_in_1_max: " + pumpChannels.setSensor1Max().value().get());
+        //this.logInfo(this.log, "Sensor:");
+        //this.logInfo(this.log, "ana_in_1_func: " + pumpChannels.setSensor1Func().value().get());
+        //this.logInfo(this.log, "ana_in_1_applic: " + pumpChannels.setSensor1Applic().value().get());
+        //this.logInfo(this.log, "ana_in_1_unit: " + pumpChannels.setSensor1Unit().value().get());
+        //this.logInfo(this.log, "ana_in_1_min: " + pumpChannels.setSensor1Min().value().get());
+        //this.logInfo(this.log, "ana_in_1_max: " + pumpChannels.setSensor1Max().value().get());
 
 
 
-        this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
-        this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
+        //this.logInfo(this.log, "ref_norm: " + pumpChannels.getRefNorm().value().get());
+        //this.logInfo(this.log, "Motor frequency: " + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.getMotorFrequency().value().orElse(0.0) * 60) + " rpm");
-        this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
+        //this.logInfo(this.log, "Maximum motor frequency: " + formatter2.format(pumpChannels.setFupper().value().orElse(0.0)) + " Hz or "
                 + formatter2.format(pumpChannels.setFupper().value().orElse(0.0) * 60) + " rpm");
-        this.logInfo(this.log, "f_upper: " + pumpChannels.setFupper().value().get());
-        this.logInfo(this.log, "f_nom: " + pumpChannels.setFnom().value().get());
-        this.logInfo(this.log, "f_min: " + pumpChannels.setFmin().value().get());
-        this.logInfo(this.log, "f_max: " + pumpChannels.setFmax().value().get());
-        this.logInfo(this.log, "h_const_ref_min: " + pumpChannels.setConstRefMinH().value().get());
-        this.logInfo(this.log, "h_const_ref_max: " + pumpChannels.setConstRefMaxH().value().get());
-        this.logInfo(this.log, "h_range: " + pumpChannels.setHrange().value().get());
-        this.logInfo(this.log, "ref_rem: " + pumpChannels.setRefRem().value().get());
-        //this.logInfo(this.log, "ref_rem write: " + pumpChannels.setRefRem().getNextWriteValue().get());
+        //this.logInfo(this.log, "f_upper: " + pumpChannels.setFupper().value().get());
+        //this.logInfo(this.log, "f_nom: " + pumpChannels.setFnom().value().get());
+        //this.logInfo(this.log, "f_min: " + pumpChannels.setFmin().value().get());
+        //this.logInfo(this.log, "f_max: " + pumpChannels.setFmax().value().get());
+        //this.logInfo(this.log, "h_const_ref_min: " + pumpChannels.setConstRefMinH().value().get());
+        //this.logInfo(this.log, "h_const_ref_max: " + pumpChannels.setConstRefMaxH().value().get());
+        //this.logInfo(this.log, "h_range: " + pumpChannels.setHrange().value().get());
+        //this.logInfo(this.log, "ref_rem: " + pumpChannels.setRefRem().value().get());
+        ////this.logInfo(this.log, "ref_rem write: " + pumpChannels.setRefRem().getNextWriteValue().get());
         */
 
 

@@ -2,6 +2,7 @@ package io.openems.edge.gasboiler.device;
 
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
+import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.gasboiler.device.api.GasBoiler;
 import io.openems.edge.heater.api.Heater;
@@ -11,7 +12,6 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 
-import java.util.concurrent.atomic.AtomicReference;
 
 @Designate(ocd = ConfigOneRelay.class, factory = true)
 @Component(name = "GasBoilerOneRelay",
@@ -19,23 +19,16 @@ import java.util.concurrent.atomic.AtomicReference;
         immediate = true)
 public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements OpenemsComponent, GasBoiler, Heater {
 
-
-    @Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-    protected void setRelay(ActuatorRelaysChannel relay) {
-        relayRef.set(relay);
-    }
-
-    protected void unsetRelay(ActuatorRelaysChannel relay) throws OpenemsError.OpenemsNamedException {
-        this.deactivate();
-    }
-
     @Reference
     ConfigurationAdmin cm;
 
-    private AtomicReference<ActuatorRelaysChannel> relayRef = new AtomicReference<>();
+    @Reference
+    ComponentManager cpm;
 
     private ActuatorRelaysChannel relay;
     private int thermicalOutput;
+
+    ConfigOneRelay config;
 
 
     public GasBoilerOneRelayImpl() {
@@ -44,12 +37,14 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
 
 
     @Activate
-    public void activate(ComponentContext context, ConfigOneRelay config) {
+    public void activate(ComponentContext context, ConfigOneRelay config) throws OpenemsError.OpenemsNamedException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
 
-        if (OpenemsComponent.updateReferenceFilter(cm, this.servicePid(), "Relay", config.relayId()) == false) {
-            this.relay = relayRef.get();
+        this.config = config;
+
+        if (this.cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
+            this.relay = this.cpm.getComponent(config.relayId());
         }
         this.thermicalOutput = config.maxThermicalOutput();
     }
@@ -70,13 +65,24 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-        if (this.relay != null) {
+        if (this.relay != null && this.relay.isEnabled()) {
             this.relay.getRelaysChannel().setNextWriteValue(true);
             return this.thermicalOutput;
         } else {
-            return 0;
+            try {
+                if (cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
+                    this.relay = cpm.getComponent(config.relayId());
+                }
+            } catch (OpenemsError.OpenemsNamedException e) {
+                System.out.println("Couldn't find component!");
+
+
+            }
+
         }
+        return 0;
     }
+
 
     @Override
     public int getMaximumThermicalOutput() {

@@ -4,7 +4,7 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-        name = "Controller Consolinno Passing",
+        name = "Controller Consolinno Multiple Heater",
         description = "This Controller regulates the Pump and Valves for Heating."
 )
 @interface Config {
@@ -27,22 +27,11 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Heating Device 1 Name", description = "Unique Id of the first Heating Device.")
     String chp_Id() default "Chp0";
 
-    @AttributeDefinition(name = "Max Performance Heating Device 1", description = "Maximum Heat Power of the Heater Unit: kW.")
-    int heater_1_max_performance() default 100;
-
     @AttributeDefinition(name = "Heating Device 2 Name", description = "Unique Id of the second Heating Device.")
     String woodChip_Id() default "WoodChipHeater0";
 
-    @AttributeDefinition(name = "Max Performance Heating Device 2", description = "Maximum Heat Power of the Heater Unit: kW.")
-    int heater_2_max_performance() default 50;
-
-
     @AttributeDefinition(name = "Heating Device 3 Name", description = "Unique Id of the third Heating Device.")
     String gasBoiler_Id() default "GasBoiler0";
-
-    @AttributeDefinition(name = "Max Performance Heating Device 3", description = "Maximum Heat Power of the Heater Unit: kW.")
-    int heater_3_max_performance() default 30;
-
 
 
     @AttributeDefinition(name = "Heating Device 1 MAX Temperature in dC", description = "Threshold of the Heating Device 1 should be turned OFF(in dC --> 1°C == 10°dC).")
@@ -55,9 +44,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "HeatingDevice 1 TemperatureSensor MIN", description = "The Temperature-Sensor for the Heating Device 1 Temperature MIN.")
     String chp_TemperatureSensor_min() default "TemperatureSensor1";
-
-
-
+    
 
     @AttributeDefinition(name = "Heating Device 2 MAX Temperature in dC", description = "Threshold of the Heating Device 2 should be turned OFF(in dC --> 1°C == 10°dC).")
     int woodChip_Temperature_max() default 800;

@@ -59,7 +59,9 @@ public class HeatMeterTask extends MbusTask {
                 //Average Hour Consumption is either (max-min) / available values XOR (max-min)/60 <-- hours
                 if (this.counterFilling <= consumptionData.length) {
                     //from watthours to kw
-                    averageHourConsumption.setNextValue((maxValueOfData - minValueOfData) / (counterFilling * KILOWATT_CONVERTER));
+                    if (counterFilling != 0) {
+                        averageHourConsumption.setNextValue((maxValueOfData - minValueOfData) / (counterFilling * KILOWATT_CONVERTER));
+                    }
                 } else {
                     averageHourConsumption.setNextValue((maxValueOfData - minValueOfData) / (consumptionData.length * KILOWATT_CONVERTER));
                 }
