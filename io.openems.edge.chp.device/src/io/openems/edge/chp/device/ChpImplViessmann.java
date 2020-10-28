@@ -333,6 +333,9 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
         //percent
+        if (this.isErrorOccured().value().isDefined() && this.isErrorOccured().value().get()) {
+            return 0;
+        }
         int providedPower = Math.round(((demand * bufferValue) * 100) / thermicalOutput);
         if (this.useRelay == true) {
             this.relay.getRelaysChannel().setNextWriteValue(true);

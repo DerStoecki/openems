@@ -11,10 +11,7 @@ import io.openems.edge.meter.heatmeter.api.HeatMeterMbus;
 import io.openems.edge.thermometer.api.Thermometer;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +23,7 @@ import org.slf4j.LoggerFactory;
 public class MultipleHeaterCombinedController extends AbstractOpenemsComponent implements OpenemsComponent, Controller {
 
     private final Logger log = LoggerFactory.getLogger(DebugDetailedLog.class);
+
     @Reference
     protected ComponentManager cpm;
 
@@ -56,6 +54,11 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private int heaterBackupMax;
     private int heaterBackupMin;
     private float currentBuffer = 1.0f;
+
+    private long initTimeStamp;
+    //Wait 10 min --> Average Hour Consumption is calculated
+    private int timeToWait = 10 * 60 * 1000;
+    private boolean timeIsUp;
 
 
     public MultipleHeaterCombinedController() {
@@ -96,6 +99,8 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         this.heaterSecondaryMin = config.woodChip_Temperature_min();
         this.heaterBackupMax = config.gasBoiler_Temperature_max();
         this.heaterBackupMin = config.gasBoiler_Temperature_min();
+        this.initTimeStamp = System.currentTimeMillis();
+        timeToWait = config.minWaitTime();
     }
 
     private void allocateComponent(String device, String type, String concreteType) {
@@ -198,6 +203,9 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         //in kW
+        if (!timeIsUp && System.currentTimeMillis() - initTimeStamp >= timeToWait) {
+            timeIsUp = true;
+        }
         if (heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
             int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().get();
             this.currentBuffer = getCorrectBufferValue();
@@ -207,7 +215,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
                 thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
-            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || thermicalPerformanceDemand <= 0) {
+            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || (thermicalPerformanceDemand <= 0 && timeIsUp)) {
                 heaterSecondary.setOffline();
 
             } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.heaterSecondaryMin) {
@@ -216,9 +224,8 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
             }
 
 
-            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || thermicalPerformanceDemand <= 0) {
+            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || (thermicalPerformanceDemand <= 0 && timeIsUp)) {
                 this.heaterBackup.setOffline();
-
             }
             if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.heaterBackupMin) {
                 thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
@@ -260,5 +267,10 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         } else {
             return minTemperatureBufferValue;
         }
+    }
+
+    @Deactivate
+    public void deactivate() {
+        super.deactivate();
     }
 }

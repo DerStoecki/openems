@@ -178,6 +178,9 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
             getSlideInPercentageValue().setNextWriteValue((int) Math.floor((powerValue / (float) maxThermicPerformance) * 100));
         }
             */
+        if (this.getDisturbance().value().isDefined() && this.getDisturbance().value().get()) {
+            return 0;
+        }
         this.getExternalControl().setNextWriteValue(true);
         return this.maxThermicPerformance;
     }
@@ -195,7 +198,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     @Override
     public String debugLog() {
         String out = "";
-       // List<Channel<?>> all = new ArrayList<>();
+        // List<Channel<?>> all = new ArrayList<>();
         //Arrays.stream(BioMassHeater.ChannelId.values()).forEach(consumer -> {
         //    all.add(this.channel(consumer));
         //});
