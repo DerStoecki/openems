@@ -104,7 +104,14 @@ public interface BioMassHeater extends OpenemsComponent {
         HELIX_ASH_1(Doc.of(OpenemsType.BOOLEAN)),
         HELIX_ASH_2(Doc.of(OpenemsType.BOOLEAN)),
         SIGNAL_CONTACT_1(Doc.of(OpenemsType.BOOLEAN)),
-        SIGNAL_CONTACT_2(Doc.of(OpenemsType.BOOLEAN));
+        SIGNAL_CONTACT_2(Doc.of(OpenemsType.BOOLEAN)),
+
+
+        /*
+         * Write Single Coil Task FC 5 16387 for external usage (true for activation; false for deactivation...use this primarily for controlling
+         *
+         * */
+        EXTERNAL_CONTROL(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE));
 
         private final Doc doc;
 
@@ -399,6 +406,10 @@ public interface BioMassHeater extends OpenemsComponent {
 
     default Channel<Boolean> getSignalContact_2() {
         return this.channel(ChannelId.SIGNAL_CONTACT_2);
+    }
+
+    default WriteChannel<Boolean> getExternalControl() {
+        return this.channel(ChannelId.EXTERNAL_CONTROL);
     }
 
 

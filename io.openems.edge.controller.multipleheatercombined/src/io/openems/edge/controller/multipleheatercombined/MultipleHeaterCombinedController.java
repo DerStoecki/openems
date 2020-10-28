@@ -58,6 +58,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private int maxGasBoilerPower;
     private int maxWoodChipPower;
     private int maxChpWarmPower;
+    private float currentBuffer = 1.0f;
 
 
     public MultipleHeaterCombinedController() {
@@ -208,11 +209,11 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         //in kW
         if (heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
             int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().get();
-
+            this.currentBuffer = getCorrectBufferValue();
             if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.heaterPrimaryMax) {
                 heaterPrimary.setOffline();
             } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.heaterPrimaryMin) {
-                thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+                thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
             if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || thermicalPerformanceDemand <= 0) {
@@ -220,7 +221,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
 
             } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.heaterSecondaryMin) {
 
-                thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+                thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
 
@@ -229,7 +230,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
 
             }
             if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.heaterBackupMin) {
-                thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, getCorrectBufferValue());
+                thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
             }
 
             if (thermicalPerformanceDemand > 0) {
@@ -250,12 +251,12 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private float getCorrectBufferValue() {
         float averageTemperature = 0;
         if (temperatureSensorHeater1On.getTemperature().getNextValue().isDefined()) {
-            averageTemperature += this.temperatureSensorHeater1On.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater1Off.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater2On.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater2Off.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater3On.getTemperature().getNextValue().get();
-            averageTemperature += this.temperatureSensorHeater3Off.getTemperature().getNextValue().get();
+            averageTemperature += this.temperatureSensorHeater1On.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater1On.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater1Off.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater2On.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater2On.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater2Off.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater3On.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater3On.getTemperature().getNextValue().get() : 0;
+            averageTemperature += this.temperatureSensorHeater3Off.getTemperature().getNextValue().isDefined() ? this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() : 0;
             averageTemperature = averageTemperature / 6;
 
             if (averageTemperature >= bufferMaxTemperature) {
