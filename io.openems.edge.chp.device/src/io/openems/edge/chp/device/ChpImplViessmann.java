@@ -348,6 +348,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
         } else {
             getPowerLevelChannel().setNextWriteValue(providedPower);
+            providedPower = providedPower < this.config.startPercentage() ? config.startPercentage() : providedPower;
             return (providedPower * thermicalOutput) / 100;
         }
     }
