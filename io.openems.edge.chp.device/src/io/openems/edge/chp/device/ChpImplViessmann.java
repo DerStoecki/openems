@@ -149,6 +149,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
             if (this.useRelay == true) {
                 if (cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
                     this.relay = cpm.getComponent(config.relayId());
+                    this.relay.getRelaysChannel().setNextWriteValue(false);
                 }
 
                 if (config.startOnActivation()) {
@@ -331,19 +332,20 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-        int providedPower = Math.round(demand * bufferValue);
+        //percent
+        int providedPower = Math.round(((demand * bufferValue) * 100) / thermicalOutput);
         if (this.useRelay == true) {
             this.relay.getRelaysChannel().setNextWriteValue(true);
         }
 
-        if (providedPower >= thermicalOutput) {
+        if (providedPower >= 100) {
 
             getPowerLevelChannel().setNextWriteValue(100);
             return thermicalOutput;
 
         } else {
             getPowerLevelChannel().setNextWriteValue(providedPower);
-            return providedPower;
+            return (providedPower * thermicalOutput) / 100;
         }
     }
 

@@ -122,8 +122,8 @@ public class SignalSensorSpiImpl extends AbstractOpenemsComponent implements Ope
         }
 
         if (bridgeSpi.getTasks().containsKey(super.id())) {
-            return "The Signal Sensor " + message + "\nSignalType: "
-                    + this.getSignalType().getNextValue().get() + "\nSignalMessage: " + signalMessage;
+            return "The Signal Sensor " + message + "\tSignalType: "
+                    + this.getSignalType().getNextValue().get() + "\tSignalMessage: " + signalMessage + "\n";
         } else {
             return "\n";
         }
