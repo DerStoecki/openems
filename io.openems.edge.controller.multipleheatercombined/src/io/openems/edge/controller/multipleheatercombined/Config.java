@@ -93,6 +93,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             "Waiting Time = Ignore for this time the starting Hour Consumption")
     int minWaitTime() default 10;
 
+    @AttributeDefinition(name = "Infinite Time; TemperatureOnly Controlled", description = "Control the heater only by Temperature")
+            boolean heatOnlyControlled() default true;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Controller Multiple Heater Combined [{id}]";

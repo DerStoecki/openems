@@ -375,8 +375,12 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
         //int errorBitLength = 16;
         for (int i = 0, errorListPosition = 0; i < errorMax; i++) {
             if (allErrorsAsChar[i] == '1') {
-                errorSummary.add(errorListPosition, errorPossibilities[i]);
-                errorListPosition++;
+                if (errorPossibilities[i].toLowerCase().contains("reserve")) {
+                    errorListPosition++;
+                } else {
+                    errorSummary.add(errorListPosition, errorPossibilities[i]);
+                    errorListPosition++;
+                }
             }
         }
         //All occuring errors in openemsChannel.
