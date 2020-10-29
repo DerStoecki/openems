@@ -67,12 +67,27 @@ class GenibusWorker extends AbstractCycleWorker {
             }
             return;
         }
+        PumpDevice currentDevice = deviceList.get(0);   // Only done so Intellij does not complain about "variable might not be initialized".
 
-        // This handles the different pumps
-        if (deviceList.size() <= currentDeviceCounter) {
-            currentDeviceCounter = 0;
+        // This handles the switching to the next pump. Selects the next pump in line, unless that pump is offline.
+        for (int i = 0; i < deviceList.size(); i++) {
+            if (deviceList.size() <= currentDeviceCounter) {
+                currentDeviceCounter = 0;
+            }
+            currentDevice = deviceList.get(currentDeviceCounter);
+
+            // The timeoutCounter is 0 when the device is responding. If the device has not responded 3 times in a row,
+            // pump is most likely offline or wrong address. Wait 5 seconds before trying again, otherwise skip the pump.
+            if (currentDevice.getTimeoutCounter() > 2) {
+                long timeSinceLastTry = System.currentTimeMillis() - currentDevice.getTimestamp();
+                if (timeSinceLastTry > 5000 || timeSinceLastTry < 0) {  // < 0 for overflow protection.
+                    break;
+                }
+                currentDeviceCounter++;
+            } else {
+                break;
+            }
         }
-        PumpDevice currentDevice = deviceList.get(currentDeviceCounter);
 
         // Remaining bytes that can be put in this telegram. More bytes will result in a buffer overflow in the device
         // and there will be no answer.
@@ -108,6 +123,7 @@ class GenibusWorker extends AbstractCycleWorker {
                 }
                 sendEmptyTelegram(currentDevice);
             }
+            currentDeviceCounter++;
             return;
         }
 

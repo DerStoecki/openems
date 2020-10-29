@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import io.openems.edge.bridge.genibus.api.PumpDevice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /*
@@ -315,7 +316,7 @@ public class Handler {
             }
 
             // Save return function/Task
-            return handleResponse(timeout, debug);
+            return handleResponse(timeout, debug, telegram.getPumpDevice());
 
         } catch (Exception e) {
             this.parent.logError(this.log, "Error while sending data: " + e.getMessage());
@@ -323,7 +324,7 @@ public class Handler {
         return null;
     }
 
-    private Telegram handleResponse(long timeout, boolean debug) {
+    private Telegram handleResponse(long timeout, boolean debug, PumpDevice pumpDevice) {
         try {
             long startTime = System.currentTimeMillis();
             //timeout = 500;
@@ -405,6 +406,11 @@ public class Handler {
             e.printStackTrace();
         }
         this.parent.logWarn(this.log, "Telegram response timeout");
+        int timeoutCounter = pumpDevice.getTimeoutCounter();
+        if (timeoutCounter < 3) {
+            timeoutCounter++;
+        }
+        pumpDevice.setTimeoutCounter(timeoutCounter);
         return null;
     }
 

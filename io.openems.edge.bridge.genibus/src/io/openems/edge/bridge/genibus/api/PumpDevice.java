@@ -51,6 +51,7 @@ public class PumpDevice {
 
     private boolean firstTelegram = true;
     private boolean emptyTelegramSent = false;
+    private int timeoutCounter = 0;
 
     // These are needed to calculate the setpoint, since GENIbus setpoints are relative to the sensor range.
     private double pressureSensorMinBar = 0;
@@ -280,5 +281,13 @@ public class PumpDevice {
 
     public void setFirstTelegram(boolean firstTelegram) {
         this.firstTelegram = firstTelegram;
+    }
+
+    public int getTimeoutCounter() {
+        return timeoutCounter;
+    }
+
+    public void setTimeoutCounter(int timeoutCounter) {
+        this.timeoutCounter = timeoutCounter;
     }
 }
