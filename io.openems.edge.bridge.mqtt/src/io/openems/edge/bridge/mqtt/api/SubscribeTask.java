@@ -213,7 +213,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
 
     @Override
     public void convertTime(SimpleDateFormat formatter) throws ParseException {
-        if (!this.time.equals("")) {
+        if (this.time != null && !this.time.equals("")) {
             this.timeDate = formatter.parse(this.time);
         }
     }

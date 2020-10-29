@@ -39,7 +39,6 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
     private MqttComponentDummyImpl component;
 
 
-
     public DummyComponentMqtt() {
         super(OpenemsComponent.ChannelId.values(),
                 MqttComponent.ChannelId.values(),
@@ -87,8 +86,10 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             if (entry instanceof MqttSubscribeTask) {
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
-                    if (!expired(task, key))
-                        reactToComponentCommand(key, value);
+                    if (value.getValue() != null) {
+                        if (!expired(task, key))
+                            reactToComponentCommand(key, value);
+                    }
                 });
             }
         });
@@ -102,6 +103,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     private boolean expired(MqttSubscribeTask task, MqttCommandType key) {
         Date now = new Date(System.currentTimeMillis());
+        if (task.getTime() == null) {
+            return false;
+        }
         Date expiration = new Date(task.getTime().getTime() + Long.parseLong(task.getCommandValues().get(key).getExpiration()));
         return now.after(expiration);
 
@@ -111,7 +115,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         switch (key) {
             case SETPOWER:
                 System.out.println("SET POWER WILL BE SET");
-                this.getPower().setNextValue(value);
+                this.getPower().setNextValue(value.getValue());
                 System.out.println(this.getPower().getNextValue().get());
                 break;
             case SETPERFORMANCE:
@@ -119,6 +123,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             case SETSCHEDULE:
                 break;
             case SETTEMPERATURE:
+                System.out.println("SETTEMPERATURE WILL BE SET");
+                this.getTemperature().setNextValue(value.getValue());
+                System.out.println(this.getTemperature().getNextValue().get());
                 break;
         }
     }

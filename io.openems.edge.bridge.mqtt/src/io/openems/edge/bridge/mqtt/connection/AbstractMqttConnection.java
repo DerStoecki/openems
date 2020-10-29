@@ -49,8 +49,12 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     private void createMqttSessionBasicSetup(String mqttBroker, String mqttClientId, String username, String mqttPassword,
                                              boolean cleanSession, int keepAlive) throws MqttException {
         this.mqttClient = new MqttClient(mqttBroker, mqttClientId, this.persistence);
-        mqttConnectOptions.setUserName(username);
-        mqttConnectOptions.setPassword(mqttPassword.toCharArray());
+        if(!username.trim().equals("")) {
+            mqttConnectOptions.setUserName(username);
+        }
+        if(!username.trim().equals("")) {
+            mqttConnectOptions.setPassword(mqttPassword.toCharArray());
+        }
         mqttConnectOptions.setCleanSession(cleanSession);
         mqttConnectOptions.setKeepAliveInterval(keepAlive);
         //8883 == TLS and 443 == WSS

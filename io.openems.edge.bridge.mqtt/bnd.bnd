@@ -15,8 +15,6 @@ Private-Package:  \
 	io.openems.edge.bridge.mqtt.connection,\
 	io.openems.edge.bridge.mqtt.dummys,\
 	io.openems.edge.bridge.mqtt.manager,\
-	io.openems.edge.bridge.mqtt.testing,\
-
 
 -includeresource: {readme.md}
 

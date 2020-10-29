@@ -32,5 +32,7 @@ public interface MqttSubscribeTask extends MqttTask {
 
     void setTime(Date date);
 
+
+
     Map<MqttCommandType, CommandWrapper> getCommandValues();
 }
