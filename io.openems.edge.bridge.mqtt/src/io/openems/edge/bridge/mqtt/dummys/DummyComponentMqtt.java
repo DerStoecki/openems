@@ -107,7 +107,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     }
 
-    public void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
+    private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
         switch (key) {
             case SETPOWER:
                 System.out.println("SET POWER WILL BE SET");

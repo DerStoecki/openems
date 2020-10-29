@@ -5,10 +5,15 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import sun.security.ssl.SSLContextImpl;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 
 /**
@@ -49,16 +54,22 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         mqttConnectOptions.setCleanSession(cleanSession);
         mqttConnectOptions.setKeepAliveInterval(keepAlive);
         //8883 == TLS and 443 == WSS
-        if (mqttBroker.contains("ssl") || mqttBroker.contains("8883") || mqttBroker.contains("443")) {
-            //TODO TLS CONNECTION!!!!
-           // SocketFactory basicSocketFactory = SocketFactory.getDefault();
-           // Socket s = basicSocketFactory.createSocket("localhost", 443);
-           // SSLSocketFactory tlsSocketFactory = SSLSocketFactory.getDefault();
-           // s = tlsSocketFactory.createSocket(s,"localhost", 443, true);
-           // mqttConnectOptions.;
-            //mqttConnectoptions.setSocketFactory(SslUtil.getSocketFactory("caFilePath", "clientCrtFilePath", "clientKeyFilePath", "password"));
-            System.out.println("Future Work");
-        }
+        //if (mqttBroker.contains("ssl") || mqttBroker.contains("8883") || mqttBroker.contains("443")) {
+        // TLS CONNECTION!!!!
+        //  String[] protocols = new String[]{"TLSv1.3", "TLSv1.2", SSLContextImpl.TLSContext};
+        // String[] cipherSuits = new String[] {"TLS_AES_128_GCM_SHA256"};
+        // SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(InetAddress.getLocalHost(), 8883);
+        // socket.setEnabledProtocols(protocols);
+
+
+        // SocketFactory basicSocketFactory = SocketFactory.getDefault();
+        // Socket s = basicSocketFactory.createSocket("localhost", 443);
+        // SSLSocketFactory tlsSocketFactory = SSLSocketFactory.getDefault();
+        // s = tlsSocketFactory.createSocket(s,"localhost", 443, true);
+        // mqttConnectOptions.;
+        //mqttConnectoptions.setSocketFactory(SslUtil.getSocketFactory("caFilePath", "clientCrtFilePath", "clientKeyFilePath", "password"));
+        // System.out.println("Future Work");
+        //}
     }
 
 

@@ -19,6 +19,8 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -36,6 +38,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     @Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
     MqttBridge mqttBridge;
 
+    private final Logger log = LoggerFactory.getLogger(RelaysActuatorImpl.class);
 
     private Mcp allocatedMcp;
 
@@ -125,26 +128,19 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     }
 
     @Override
-    public void reactToCommand() throws OpenemsError.OpenemsNamedException {
-        OpenemsError.OpenemsNamedException[] ex = {null};
+    public void reactToCommand() {
+
         this.mqttBridge.getSubscribeTasks(super.id()).stream().filter(entry -> entry.getMqttType()
                 .equals(MqttType.COMMAND)).collect(Collectors.toList()).forEach(entry -> {
             if (entry instanceof MqttSubscribeTask) {
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
                     if (this.mqttConfigurationComponent.expired(task, key)) {
-                        try {
-                            reactToComponentCommand(key, value);
-                        } catch (OpenemsError.OpenemsNamedException e) {
-                            ex[0] = e;
-                        }
+                        reactToComponentCommand(key, value);
                     }
                 });
             }
         });
-        if (ex[0] != null) {
-            throw ex[0];
-        }
     }
 
     @Override
@@ -152,13 +148,16 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
 
     }
 
-    @Override
-    public void reactToComponentCommand(MqttCommandType key, CommandWrapper value) throws OpenemsError.OpenemsNamedException {
+    private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
         switch (key) {
             case SETPOWER:
-                this.getRelaysChannel().setNextWriteValue(Boolean.parseBoolean(value.getValue()));
+                try {
+                    this.getRelaysChannel().setNextWriteValue(Boolean.parseBoolean(value.getValue()));
+                } catch (OpenemsError.OpenemsNamedException e) {
+                    log.warn("Couldn't write : " + value.getValue() + "To the Channel: " + this.getRelaysChannel().channelId());
+                }
             default:
-                System.out.println("Command " + key + " is not supported by Class " + this.getClass());
+                log.warn("Command " + key + " is not supported by Class " + this.getClass());
         }
     }
 }

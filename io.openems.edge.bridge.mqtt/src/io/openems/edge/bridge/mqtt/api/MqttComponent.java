@@ -102,7 +102,7 @@ public interface MqttComponent extends OpenemsComponent {
     /**
      * Called By Mqtt Bridge. Component has to implement what to do on commands set by mqtt bridge.
      */
-    void reactToCommand() throws OpenemsError.OpenemsNamedException;
+    void reactToCommand();
 
     /**
      * Updates the JSON Config. Called by MqttBridge.
@@ -111,8 +111,4 @@ public interface MqttComponent extends OpenemsComponent {
      * @throws ConfigurationException if the configuration is wrong.
      */
     void updateJsonConfig() throws MqttException, ConfigurationException;
-
-
-    void reactToComponentCommand(MqttCommandType key, CommandWrapper value) throws OpenemsError.OpenemsNamedException;
-
 }

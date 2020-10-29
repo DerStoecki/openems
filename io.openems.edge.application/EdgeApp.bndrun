@@ -11,7 +11,8 @@
 
 -runee: JavaSE-1.8
 
--runsystempackages: sun.misc, com.sun.net.httpserver, javax.crypto,javax.crypto.spec,javax.net.ssl,javax.security
+-runsystempackages: sun.misc, com.sun.net.httpserver, javax.crypto,javax.crypto.spec,javax.net.ssl,javax.security, \
+                    javax.net.ssl.keyStore, javax.net.ssl.keyStorePassword
 
 -runrequires: \
  osgi.identity;filter:='(osgi.identity=io.openems.edge.meter.simulated)',\
