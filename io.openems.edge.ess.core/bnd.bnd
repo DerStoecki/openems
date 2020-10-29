@@ -14,7 +14,10 @@ Export-Package: io.openems.edge.ess.core.power
 	com.google.guava,\
 	org.apache.commons.math3,\
 	slf4j.api,\
-	com.google.gson
+	com.google.gson,\
+	lib/guava-28.1-jre.jar;version=file,\
+
+
 
 -testpath: ${testpath}
 
