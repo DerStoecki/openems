@@ -94,14 +94,8 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             updateConfig();
             return;
         }
-        DateTime time;
         try {
-            if (config.locale().equals("")) {
-                time = DateTime.now(DateTimeZone.UTC);
-            } else {
-                time = new DateTime(new Locale.Builder().setRegion(config.locale()).build());
-            }
-            this.timeZone = time.getZone();
+            this.timeZone = config.locale().equals("") ? DateTimeZone.UTC : DateTimeZone.forID(config.locale());
             //Important for last will.
             this.bridgePublisher = new MqttConnectionPublishImpl();
             this.createMqttSession(config);
