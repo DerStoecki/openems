@@ -94,6 +94,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
                 channels, config.channelIdList().length);
         if (this.mqttConfigurationComponent.hasBeenConfigured() && config.configurationDone()) {
             this.mqttConfigurationComponent.initTasks(new ArrayList<>(this.channels()));
+            this.mqttBridge.addMqttComponent(super.id(), this);
         }
     }
 
@@ -146,6 +147,11 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     @Override
     public void updateJsonConfig() throws MqttException, ConfigurationException {
 
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return this.mqttConfigurationComponent.isConfigurated();
     }
 
     private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {

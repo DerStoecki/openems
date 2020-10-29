@@ -292,8 +292,10 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                                 + " configuration or MqttConnection");
                     }
                 }
-                value.reactToEvent();
-                value.reactToCommand();
+                if (value.isConfigured()) {
+                    value.reactToEvent();
+                    value.reactToCommand();
+                }
             });
         }
     }

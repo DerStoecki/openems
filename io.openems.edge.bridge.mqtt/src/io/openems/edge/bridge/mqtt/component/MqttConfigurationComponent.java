@@ -19,4 +19,6 @@ public interface MqttConfigurationComponent {
     boolean expired(MqttSubscribeTask task, MqttCommandType key);
 
     void update(Configuration configuration, String channelIdList, List<Channel<?>> channels, int length);
+
+    boolean isConfigurated();
 }

@@ -72,7 +72,7 @@ import org.osgi.service.metatype.annotations.Option;
     boolean timeStampEnabled() default true;
 
     @AttributeDefinition(name = "Date Format", description = "What Format should your Date have?")
-    String timeFormat() default "yyy-MM-dd 'at' HH:mm:ss";
+    String timeFormat() default "yyy-MM-dd 'T' HH:mm:ss:ms z";
 
     @AttributeDefinition(name = "Region", description = "Set Region of your Device e.g. DE")
     String locale() default "DE";

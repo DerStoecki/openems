@@ -52,10 +52,9 @@ public class MqttPublishManager extends AbstractMqttManager {
                 }
                 //Sends message via mqttconnection start and stop time
                 int qos = task.getQos();
-                long time = System.nanoTime();
+                long time = System.currentTimeMillis();
                 this.connections.get(qos).sendMessage(task.getTopic(), task.getPayload(), qos, task.getRetainFlag());
-                time = System.nanoTime() - time;
-                time = TimeUnit.MILLISECONDS.convert(time, TimeUnit.NANOSECONDS);
+                time = System.currentTimeMillis() - time;
                 //Time Calculation
                 AtomicInteger counter = super.counterForQos.get(qos);
                 super.timeForQos.get(qos).add(counter.get(), time);

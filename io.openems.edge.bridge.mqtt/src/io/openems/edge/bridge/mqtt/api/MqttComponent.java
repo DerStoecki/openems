@@ -111,4 +111,12 @@ public interface MqttComponent extends OpenemsComponent {
      * @throws ConfigurationException if the configuration is wrong.
      */
     void updateJsonConfig() throws MqttException, ConfigurationException;
+
+
+    /**
+     * Configuration done? --> either JSON Configuration done OR OSGi important for Bridge
+     *
+     * @return aboolean;
+     */
+    boolean isConfigured();
 }

@@ -1,10 +1,13 @@
 package io.openems.edge.bridge.mqtt.api;
 
+import com.google.gson.Gson;
 import io.openems.edge.common.channel.Channel;
+import com.google.gson.JsonObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
@@ -29,16 +32,19 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
                          PayloadStyle payloadStyle, String id) {
         super(topic, type, retainFlag, useTime, qos, priority, channelMapForTask, payloadForTask, timeToWait,
                 payloadStyle, id);
-        this.nameIds = new ArrayList<>();
+        if (type.equals(MqttType.TELEMETRY)) {
+            this.nameIds = new ArrayList<>();
 
-        //ChannelID --> Used to identify value the pub tasks get / value to put for sub task
-        this.channelIds = new ArrayList<>();
-        this.nameIdAndChannelIdMap = new HashMap<>();
-        //Important for Telemetry --> Mapping
-        String[] tokens = payloadForTask.split(":");
+            //ChannelID --> Used to identify value the pub tasks get / value to put for sub task
+            this.channelIds = new ArrayList<>();
+            this.nameIdAndChannelIdMap = new HashMap<>();
+            //Important for Telemetry --> Mapping
 
-        for (int x = 0; x < tokens.length; x += 2) {
-            this.nameIdAndChannelIdMap.put(tokens[x], tokens[x + 1]);
+            String[] tokens = payloadForTask.split(":");
+
+            for (int x = 0; x < tokens.length; x += 2) {
+                this.nameIdAndChannelIdMap.put(tokens[x], tokens[x + 1]);
+            }
         }
         commandValueMap = new HashMap<>();
         Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper(null, null)));
@@ -91,101 +97,64 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
 
         String[] tokensWithTime = {null};
         //Contains Time
+
+        JsonObject responseJson = new Gson().fromJson(response, JsonObject.class);
         if (response.contains("time")) {
-            String responseContainsTime = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
-            //split after each entry
-            tokensWithTime = responseContainsTime.split(",");
-            //first entry is always sentOn in standard response
-            this.time = tokensWithTime[0].substring(tokensWithTime[0].indexOf(':'));
-
-            response = Arrays.stream(tokensWithTime).filter(entry -> !entry.contains("time")).collect(Collectors.toList()).toString();
-
+            this.time = responseJson.get("time").toString();
         }
-        String[] tokens;
-
-        if (tokensWithTime[0] != null) {
-            //"New response" --> no time
-            response = response.replaceAll(("[^A-Za-z0-9.:,]"), "");
-        }
-        response = response.replaceAll(",", ":");
-        tokens = response.split(":");
 
         switch (this.getMqttType()) {
             case TELEMETRY:
-                standardTelemetryResponse(tokens);
+                standardTelemetryResponse(responseJson);
                 break;
             case COMMAND:
-                standardCommandResponse(tokens);
+                standardCommandResponse(responseJson);
                 break;
             case EVENT:
-                standardEventResponse(tokens);
+                standardEventResponse(responseJson);
                 break;
         }
 
     }
 
-    private void standardEventResponse(String[] tokens) {
+    private void standardEventResponse(JsonObject tokens) {
         System.out.println("Events are not supported by Subscribers!");
     }
 
-    private void standardCommandResponse(String[] tokens) {
+    private void standardCommandResponse(JsonObject tokens) {
         if (!super.getMqttType().equals(MqttType.COMMAND)) {
             return;
         }
-        String lastMqttCommand = "";
-        MqttCommandType mqttType = null;
-        if (tokens.length > 0) {
-            for (int x = 0; x < tokens.length; ) {
+        AtomicReference<String> commandTypeString = new AtomicReference<>("NotDefined");
 
-                switch (tokens[x]) {
-                    //Method Name reacting to if defined
-                    case "method":
-                        lastMqttCommand = tokens[x + 1].toUpperCase();
-                        mqttType = MqttCommandType.valueOf(lastMqttCommand);
-                        x += 2;
-                        break;
-                    case "value":
-                        if (this.commandValueMap.containsKey(mqttType)) {
-                            this.commandValueMap.get(mqttType).setValue(tokens[x + 1]);
-                            x += 2;
-                        }
-                        break;
-                    case "expires":
-                        this.commandValueMap.get(mqttType).setExpiration(tokens[x + 1]);
-                        x += 2;
-                        break;
-                    default:
-                        x++;
-                        break;
-                }
+
+        tokens.keySet().forEach(entry -> {
+            if (entry.contains("method")) {
+                commandTypeString.set(tokens.get(entry).toString().toUpperCase());
 
             }
-        }
-
+            if (entry.contains("value")) {
+                this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setValue(tokens.get(entry).toString());
+            }
+            if (entry.contains("expires")) {
+                this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setExpiration(tokens.get(entry).toString());
+            }
+        });
     }
 
-    private void standardTelemetryResponse(String[] tokens) {
+    private void standardTelemetryResponse(JsonObject tokens) {
         //Events and Commands need to be handled by Component itself, only telemetry is allowed to update Channels directly.
         if (!super.getMqttType().equals(MqttType.TELEMETRY)) {
             return;
         }
+
+
         // ID of Name in mqtt  , VALUE for the channel
         Map<String, String> idChannelValueMap = new HashMap<>();
-
-        if (tokens.length > 0) {
-            for (int x = 0; x < tokens.length; ) {
-                if (tokens[x].equals("metrics")) {
-                    x++;
-                } else if (tokens[x].equals("time")) {
-                    x += 3;
-                } else {
-                    if (!tokens[x].equals("ID")) {
-                        idChannelValueMap.put(tokens[x], tokens[x + 1]);
-                    }
-                    x += 2;
-                }
-            }
-        }
+        tokens.keySet().stream().filter(entry -> !entry.equals("metrics") && !entry.equals("time") && !entry.equals("ID"))
+                .collect(Collectors.toList()).forEach(key -> {
+            idChannelValueMap.put(key, tokens.get(key).toString());
+        });
         //Set the Value of this channel for each entry
         idChannelValueMap.forEach((key, value) -> {
             //index of nameIds is the same as for ChannelIds.

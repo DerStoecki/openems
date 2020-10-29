@@ -1,9 +1,11 @@
 package io.openems.edge.bridge.mqtt.api;
 
+import com.google.gson.JsonObject;
 import io.openems.edge.common.channel.Channel;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,39 +48,29 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
      */
     private void createStandardPayload(String now) {
 
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\n\t");
+
+        JsonObject payload = new JsonObject();
         if (getAddTime()) {
-            builder.append("time : ").append(now).append(", \n\t");
+            payload.addProperty("time", now);
         }
-        builder.append("ID : ").append(super.id); //.append(",\n\t \"metrics\" : {")
-        String[] tokens = super.configuredPayload.split(":");
-        AtomicInteger counter = new AtomicInteger(0);
-        Arrays.stream(tokens).forEachOrdered(consumer -> {
-            //The counter is either by ID or by a channel therefore appends either the ID and the : or the channelvalue
-            if (counter.get() % 2 == 0) {
-                builder.append("\n\t\t");
-                builder.append(tokens[counter.get()]).append(" : ");
-            } else {
-                //Get the Channel by the ChannelID
-                Channel<?> channel = super.channels.get(tokens[counter.get()]);
-                //Value
+        payload.addProperty("ID", super.id);
+        AtomicInteger tokenCounter = new AtomicInteger(0);
+        String[] configuredPayload = super.configuredPayload.split(":");
+        Map<String, String> keyValue = new HashMap<>();
+        AtomicInteger jsonCounter = new AtomicInteger(0);
+        Arrays.stream(configuredPayload).forEachOrdered(consumer -> {
+            if (jsonCounter.get() % 2 == 0) {
+                String value = "Not Defined Yet";
+                Channel<?> channel = super.channels.get(configuredPayload[jsonCounter.incrementAndGet()]);
                 if (channel.value().isDefined()) {
-                    builder.append(channel.value().get()).append(channel.channelDoc().getUnit().getSymbol());
-                } else {
-                    //If no Value defined
-                    builder.append("Not Defined Yet");
-                    //prevent of adding , after last value
-                    if (counter.get() < tokens.length - 1) {
-                        builder.append(",\n\t\t");
-                    }
+                    value = channel.value().get() + channel.channelDoc().getUnit().getSymbol();
                 }
+                payload.addProperty(consumer, value);
+                jsonCounter.getAndIncrement();
             }
-            counter.getAndIncrement();
         });
-        builder.append("\n}"); // "\n\t}"
         //UPDATED PAYLOAD saved.
-        super.payloadToOrFromBroker = builder.toString();
+        super.payloadToOrFromBroker = payload.toString();
     }
 
 }

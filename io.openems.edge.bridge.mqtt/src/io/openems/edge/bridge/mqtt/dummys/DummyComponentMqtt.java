@@ -56,6 +56,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         List<String> subList = Arrays.asList(config.subscriptionList());
         List<String> pubList = Arrays.asList(config.publishList());
         List<String> payloads = Arrays.asList(config.payloads());
@@ -65,9 +66,10 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         this.component.update(c, "channelIdList", channels, config.channelIdList().length);
         if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
             this.component.initTasks(channels);
+            this.mqttBridge.addMqttComponent(super.id(), this);
         }
         this.getDummyOne().setNextValue(10);
-        this.mqttBridge.addMqttComponent(super.id(), this);
+
     }
 
     @Override
@@ -137,6 +139,11 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             this.component.initJson(new ArrayList<>(this.channels()), configuration);
             this.getConfiguration().setNextValue("");
         }
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return this.component.isInitialized();
     }
 
 

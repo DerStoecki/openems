@@ -33,6 +33,7 @@ public abstract class AbstractMqttComponent {
     private String id;
     private boolean createdByOsgi;
     private boolean hasBeenConfigured;
+    private boolean isInitialized;
     private String jsonConfig = "";
 
     /**
@@ -84,9 +85,12 @@ public abstract class AbstractMqttComponent {
      * @throws MqttException          if a problem with Mqtt occurred
      */
     private void createMqttTasksFromOsgi(List<Channel<?>> channelIds) throws ConfigurationException, MqttException {
-
-        createTasks(this.pubConfigList, false, channelIds);
-        createTasks(this.subConfigList, true, channelIds);
+        if (this.pubConfigList.size() > 0 && !this.pubConfigList.get(0).equals("")) {
+            createTasks(this.pubConfigList, false, channelIds);
+        }
+        if (this.subConfigList.size() > 0 && !this.subConfigList.get(0).equals("")) {
+            createTasks(this.subConfigList, true, channelIds);
+        }
         MqttException[] exMqtt = {null};
         this.subscribeTasks.forEach((key, value) -> {
             try {
@@ -146,7 +150,7 @@ public abstract class AbstractMqttComponent {
                 //Default is low for pub tasks --> no real priority
                 MqttPriority priority = MqttPriority.LOW;
                 if (subTasks) {
-                    priority = MqttPriority.valueOf(tokens[1]);
+                    priority = MqttPriority.valueOf(tokens[1].toUpperCase());
                 }
                 //Topic
                 String topic = tokens[2];
@@ -207,6 +211,9 @@ public abstract class AbstractMqttComponent {
     private Map<String, Channel<?>> configureChannelMapForTask(List<Channel<?>> givenChannels, int payloadNo) throws ConfigurationException {
         Map<String, Channel<?>> channelMapForTask = new HashMap<>();
         String currentPayload = this.payloads.get(payloadNo);
+        if (!currentPayload.contains(":")) {
+            return channelMapForTask;
+        }
         //PAYLOADconfig is: ID:CHANNELID:ID:CHANNELID....
         //ID == Name available in Broker
         List<String> ids = new ArrayList<>();
@@ -345,6 +352,10 @@ public abstract class AbstractMqttComponent {
 
     public boolean hasBeenConfigured() {
         return this.hasBeenConfigured;
+    }
+
+    public boolean isInitialized() {
+        return this.isInitialized;
     }
 
     public void deactivate() {

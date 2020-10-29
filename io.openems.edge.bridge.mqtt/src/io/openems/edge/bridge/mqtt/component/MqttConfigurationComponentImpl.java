@@ -17,6 +17,7 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
 
 
     private MqttComponentImpl mqttComponent;
+    private boolean configurated;
 
     public MqttConfigurationComponentImpl(String[] subscribtions, String[] publish, String[] payloads, String id,
                                           boolean createdByOsgi, MqttBridge mqttBridge){
@@ -26,7 +27,13 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
 
     @Override
     public void initTasks(List<Channel<?>> channels) throws MqttException, ConfigurationException {
-        this.mqttComponent.initTasks(channels);
+        try {
+            this.mqttComponent.initTasks(channels);
+            this.configurated = true;
+        } catch (MqttException | ConfigurationException e){
+            configurated = false;
+            throw e;
+        }
     }
 
     @Override
@@ -44,6 +51,11 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     @Override
     public void update(Configuration configuration, String channelIdList, List<Channel<?>> channels, int length) {
         this.mqttComponent.update(configuration, channelIdList, channels, length);
+    }
+
+    @Override
+    public boolean isConfigurated() {
+        return this.configurated;
     }
 
 
