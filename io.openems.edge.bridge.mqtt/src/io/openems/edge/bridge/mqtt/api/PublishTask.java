@@ -1,6 +1,9 @@
 package io.openems.edge.bridge.mqtt.api;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 
 import java.text.SimpleDateFormat;
@@ -54,21 +57,22 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
             payload.addProperty("time", now);
         }
         payload.addProperty("ID", super.id);
-        AtomicInteger tokenCounter = new AtomicInteger(0);
         String[] configuredPayload = super.configuredPayload.split(":");
-        Map<String, String> keyValue = new HashMap<>();
         AtomicInteger jsonCounter = new AtomicInteger(0);
         Arrays.stream(configuredPayload).forEachOrdered(consumer -> {
             if (jsonCounter.get() % 2 == 0) {
                 String value = "Not Defined Yet";
                 Channel<?> channel = super.channels.get(configuredPayload[jsonCounter.incrementAndGet()]);
-                if (channel.value().isDefined()) {
-                    value = channel.value().get() + channel.channelDoc().getUnit().getSymbol();
+                if (channel.value().isDefined() && !channel.channelDoc().getType().equals(OpenemsType.STRING)) {
+                   // String valueObj = channel.value().get() + channel.channelDoc().getUnit().getSymbol();
+                    JsonElement channelObj = new Gson().toJsonTree(channel.value().get());
+                    payload.add(consumer, channelObj);
+                } else {
+                    payload.addProperty(consumer, value);
                 }
-                payload.addProperty(consumer, value);
-                jsonCounter.getAndIncrement();
             }
         });
+
         //UPDATED PAYLOAD saved.
         super.payloadToOrFromBroker = payload.toString();
     }

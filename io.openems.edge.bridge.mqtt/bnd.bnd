@@ -25,7 +25,7 @@ Private-Package:  \
     org.eclipse.paho.client.mqttv3;version=1.2.0,\
 	com.google.guava,\
 	com.google.gson,\
-
+	joda-time,\
 
 -testpath: \
 	osgi.enroute.junit.wrapper;version=4.12, \

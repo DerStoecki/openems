@@ -3,9 +3,10 @@ package io.openems.edge.bridge.mqtt.api;
 import com.google.gson.Gson;
 import io.openems.edge.common.channel.Channel;
 import com.google.gson.JsonObject;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     //time as String, usually from payload
     private String time;
     //converted time
-    private Date timeDate;
+    private DateTime timeDate;
     //                                               //name in Broker   // ID of channel
     //Map of ID For Broker and ChannelID --> e.g. roomTemperature: temperature.channelId.id();
     private Map<String, String> nameIdAndChannelIdMap;
@@ -95,12 +96,9 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
             return;
         }
 
-        String[] tokensWithTime = {null};
-        //Contains Time
-
         JsonObject responseJson = new Gson().fromJson(response, JsonObject.class);
         if (response.contains("time")) {
-            this.time = responseJson.get("time").toString();
+            this.time = responseJson.get("time").getAsString();
         }
 
         switch (this.getMqttType()) {
@@ -130,13 +128,11 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
 
         tokens.keySet().forEach(entry -> {
             if (entry.contains("method")) {
-                commandTypeString.set(tokens.get(entry).toString().toUpperCase());
+                commandTypeString.set(tokens.get(entry).toString().toUpperCase().replaceAll("\"", ""));
 
-            }
-            if (entry.contains("value")) {
+            } else if (entry.contains("value")) {
                 this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setValue(tokens.get(entry).toString());
-            }
-            if (entry.contains("expires")) {
+            } else if (entry.contains("expires")) {
                 this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setExpiration(tokens.get(entry).toString());
             }
         });
@@ -147,8 +143,6 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
         if (!super.getMqttType().equals(MqttType.TELEMETRY)) {
             return;
         }
-
-
         // ID of Name in mqtt  , VALUE for the channel
         Map<String, String> idChannelValueMap = new HashMap<>();
         tokens.keySet().stream().filter(entry -> !entry.equals("metrics") && !entry.equals("time") && !entry.equals("ID"))
@@ -162,7 +156,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
                 String channelId = this.nameIdAndChannelIdMap.get(key);
                 Channel<?> channel = super.channels.get(channelId);
                 channel.setNextValue(value);
-                System.out.println("Update Channel: " + channelId + "with Value: " + value);
+                System.out.println("Update Channel: " + channelId + " with Value: " + value);
             } else {
                 System.out.println("Value not defined yet for: " + this.nameIdAndChannelIdMap.get(key));
             }
@@ -181,14 +175,14 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     }
 
     @Override
-    public void convertTime(SimpleDateFormat formatter) throws ParseException {
+    public void convertTime(DateTimeZone timeZone) throws ParseException {
         if (this.time != null && !this.time.equals("")) {
-            this.timeDate = formatter.parse(this.time);
+            this.timeDate = DateTime.now(timeZone);
         }
     }
 
     @Override
-    public Date getTime() {
+    public DateTime getTime() {
         return timeDate;
     }
 
@@ -198,7 +192,7 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     }
 
     @Override
-    public void setTime(Date date) {
+    public void setTime(DateTime date) {
         this.timeDate = date;
     }
 

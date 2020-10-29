@@ -1,7 +1,6 @@
 package io.openems.edge.bridge.mqtt.component;
 
-import io.openems.edge.bridge.mqtt.api.MqttCommandType;
-import io.openems.edge.bridge.mqtt.api.MqttComponent;
+import io.openems.edge.bridge.mqtt.api.CommandWrapper;
 import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
 import io.openems.edge.common.channel.Channel;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -16,9 +15,9 @@ public interface MqttConfigurationComponent {
 
     boolean hasBeenConfigured();
 
-    boolean expired(MqttSubscribeTask task, MqttCommandType key);
+    boolean expired(MqttSubscribeTask task, CommandWrapper key);
 
     void update(Configuration configuration, String channelIdList, List<Channel<?>> channels, int length);
 
-    boolean isConfigurated();
+    boolean isConfigured();
 }

@@ -7,6 +7,7 @@ import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.joda.time.DateTimeZone;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,7 +16,7 @@ import java.util.List;
 
 public interface MqttBridge extends OpenemsComponent {
 
-    SimpleDateFormat getFormatter();
+    DateTimeZone getTimeZone();
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         //TODO Own Channel With Disconnects etc etc

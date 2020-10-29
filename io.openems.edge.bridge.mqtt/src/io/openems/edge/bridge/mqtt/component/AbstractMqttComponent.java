@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import io.openems.edge.bridge.mqtt.api.*;
 import io.openems.edge.common.channel.Channel;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.joda.time.DateTime;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
@@ -377,6 +378,15 @@ public abstract class AbstractMqttComponent {
             this.jsonConfig = jsonConfig;
             //TODO DO SOMETHING WITH CONFIG
         }
+    }
+
+    public boolean expired(MqttSubscribeTask task, long expirationTime){
+        DateTime now = new DateTime(mqttBridge.getTimeZone());
+        if(task.getTime() == null){
+            return false;
+        }
+        DateTime expiraton = task.getTime().plus(expirationTime);
+        return now.isAfter(expiraton);
     }
 }
 

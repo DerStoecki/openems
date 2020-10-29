@@ -1,8 +1,9 @@
 package io.openems.edge.bridge.mqtt.api;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Map;
 
 public interface MqttSubscribeTask extends MqttTask {
@@ -24,13 +25,13 @@ public interface MqttSubscribeTask extends MqttTask {
 
     int getMessageId();
 
-    void convertTime(SimpleDateFormat formatter) throws ParseException;
+    void convertTime(DateTimeZone timeZone) throws ParseException;
 
-    Date getTime();
+    DateTime getTime();
 
     boolean timeAvailable();
 
-    void setTime(Date date);
+    void setTime(DateTime date);
 
 
 

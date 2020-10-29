@@ -9,7 +9,8 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.internal.security.SSLSocketFactoryFactory;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
@@ -23,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -69,7 +69,6 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     private String mqttBrokerUrl;
     private String mqttClientId;
     static int subscribeIdCounter = 0;
-    private SimpleDateFormat formatter;
 
     //ONLY DEBUG SUBSCRIBE
     private String subscribeId;
@@ -77,6 +76,9 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     //FOR LAST WILL
     private MqttConnectionPublishImpl bridgePublisher;
+
+    //TimeZone Available for all classes
+    private DateTimeZone timeZone = DateTimeZone.UTC;
 
     public MqttBridgeImpl() {
         super(OpenemsComponent.ChannelId.values(),
@@ -92,8 +94,14 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             updateConfig();
             return;
         }
+        DateTime time;
         try {
-            this.formatter = new SimpleDateFormat(config.timeFormat(), new Locale.Builder().setRegion(config.locale()).build());
+            if (config.locale().equals("")) {
+                time = DateTime.now(DateTimeZone.UTC);
+            } else {
+                time = new DateTime(new Locale.Builder().setRegion(config.locale()).build());
+            }
+            this.timeZone = time.getZone();
             //Important for last will.
             this.bridgePublisher = new MqttConnectionPublishImpl();
             this.createMqttSession(config);
@@ -102,10 +110,10 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         }
 
         publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, config.keepAlive(), this.mqttClientId, config.timeStampEnabled(), formatter);
+                this.mqttPassword, config.keepAlive(), this.mqttClientId, config.timeStampEnabled(), timeZone);
         //ClientId --> + CLIENT_SUB_0
         subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), formatter);
+                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), timeZone);
 
         publishManager.activate(super.id() + "_publish");
         subscribeManager.activate(super.id() + "_subscribe");
@@ -172,7 +180,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         if (config.lastWillSet()) {
             this.bridgePublisher.addLastWill(config.topicLastWill(),
                     config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.retainedFlag(),
-                    formatter.format(new Date(System.currentTimeMillis())));
+                    DateTime.now().toString());
         }
         //External Call bc Last will can be set
         this.bridgePublisher.connect();
@@ -193,8 +201,8 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
 
     @Override
-    public SimpleDateFormat getFormatter() {
-        return this.formatter;
+    public DateTimeZone getTimeZone() {
+        return this.timeZone;
     }
 
     /**

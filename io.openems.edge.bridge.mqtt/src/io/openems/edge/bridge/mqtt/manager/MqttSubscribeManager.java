@@ -5,12 +5,9 @@ import io.openems.edge.bridge.mqtt.api.MqttTask;
 import io.openems.edge.bridge.mqtt.api.MqttType;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionSubscribeImpl;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.joda.time.DateTimeZone;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +19,10 @@ public class MqttSubscribeManager extends AbstractMqttManager {
 
     public MqttSubscribeManager(Map<String, List<MqttTask>> subscribeTasks, String mqttBroker, String mqttBrokerUrl,
                                 String mqttUsername, String mqttPassword, String mqttClientId, int keepAlive,
-                                boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
+                                boolean timeEnabled, DateTimeZone timeZone) throws MqttException {
 
         super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, subscribeTasks,
-                timeEnabled, formatter, false);
+                timeEnabled, timeZone, false);
         MqttType[] types = MqttType.values();
         //Create MqttConnections for each mqttType
         for (int x = 0; x < types.length; x++) {
@@ -49,7 +46,7 @@ public class MqttSubscribeManager extends AbstractMqttManager {
                         //Response to new message.
                         ((MqttSubscribeTask) task).response(this.connections.get(task.getMqttType()).getPayload(task.getTopic()));
                         try {
-                            ((MqttSubscribeTask) task).convertTime(super.formatter);
+                            ((MqttSubscribeTask) task).convertTime(super.timeZone);
                         } catch (ParseException e) {
                             //TODO better Exception handling
                             System.out.println("Error while converting Time at path: " + task.getTopic());

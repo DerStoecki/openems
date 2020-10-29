@@ -7,6 +7,7 @@ import io.openems.edge.bridge.mqtt.component.AbstractMqttComponent;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.joda.time.DateTime;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
@@ -89,8 +90,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
                     if (value.getValue() != null) {
-                        if (!expired(task, key))
+                        if (!this.component.expired(task, Long.parseLong(value.getExpiration()))) {
                             reactToComponentCommand(key, value);
+                        }
                     }
                 });
             }
@@ -101,16 +103,6 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         } else {
             System.out.println("No Value for Commands yet");
         }
-    }
-
-    private boolean expired(MqttSubscribeTask task, MqttCommandType key) {
-        Date now = new Date(System.currentTimeMillis());
-        if (task.getTime() == null) {
-            return false;
-        }
-        Date expiration = new Date(task.getTime().getTime() + Long.parseLong(task.getCommandValues().get(key).getExpiration()));
-        return now.after(expiration);
-
     }
 
     private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {

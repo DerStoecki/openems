@@ -4,18 +4,15 @@ import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionPublishImpl;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openems.edge.bridge.mqtt.api.MqttTask;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class MqttPublishManager extends AbstractMqttManager {
     //              QOS       MqttConnector
@@ -23,7 +20,7 @@ public class MqttPublishManager extends AbstractMqttManager {
 
     public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker, String mqttBrokerUrl,
                               String mqttUsername, String mqttPassword, int keepAlive, String mqttClientId,
-                              boolean timeEnabled, SimpleDateFormat formatter) throws MqttException {
+                              boolean timeEnabled, DateTimeZone formatter) throws MqttException {
 
         super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, publishTasks,
                 timeEnabled, formatter, true);
@@ -47,7 +44,7 @@ public class MqttPublishManager extends AbstractMqttManager {
                 //Update Payload
                 if (task instanceof MqttPublishTask) {
                     MqttPublishTask task1 = ((MqttPublishTask) task);
-                    String now = formatter.format(new Date(System.currentTimeMillis()));
+                    String now = DateTime.now(timeZone).toString();
                     task1.updatePayload(now);
                 }
                 //Sends message via mqttconnection start and stop time

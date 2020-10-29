@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -136,7 +135,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
             if (entry instanceof MqttSubscribeTask) {
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
-                    if (this.mqttConfigurationComponent.expired(task, key)) {
+                    if (this.mqttConfigurationComponent.expired(task, value)) {
                         reactToComponentCommand(key, value);
                     }
                 });
@@ -151,7 +150,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
 
     @Override
     public boolean isConfigured() {
-        return this.mqttConfigurationComponent.isConfigurated();
+        return this.mqttConfigurationComponent.isConfigured();
     }
 
     private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {

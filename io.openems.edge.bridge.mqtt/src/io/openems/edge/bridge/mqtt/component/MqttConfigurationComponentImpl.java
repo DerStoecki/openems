@@ -1,26 +1,22 @@
 package io.openems.edge.bridge.mqtt.component;
 
-import io.openems.edge.bridge.mqtt.api.MqttBridge;
-import io.openems.edge.bridge.mqtt.api.MqttCommandType;
-import io.openems.edge.bridge.mqtt.api.MqttComponent;
-import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
+import io.openems.edge.bridge.mqtt.api.*;
 import io.openems.edge.common.channel.Channel;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationException;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
-public class MqttConfigurationComponentImpl implements MqttConfigurationComponent{
+public class MqttConfigurationComponentImpl implements MqttConfigurationComponent {
 
 
     private MqttComponentImpl mqttComponent;
-    private boolean configurated;
+    private boolean configured;
 
     public MqttConfigurationComponentImpl(String[] subscribtions, String[] publish, String[] payloads, String id,
-                                          boolean createdByOsgi, MqttBridge mqttBridge){
+                                          boolean createdByOsgi, MqttBridge mqttBridge) {
         this.mqttComponent = new MqttComponentImpl(id, Arrays.asList(subscribtions), Arrays.asList(publish),
                 Arrays.asList(payloads), createdByOsgi, mqttBridge);
     }
@@ -29,9 +25,9 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     public void initTasks(List<Channel<?>> channels) throws MqttException, ConfigurationException {
         try {
             this.mqttComponent.initTasks(channels);
-            this.configurated = true;
-        } catch (MqttException | ConfigurationException e){
-            configurated = false;
+            this.configured = true;
+        } catch (MqttException | ConfigurationException e) {
+            configured = false;
             throw e;
         }
     }
@@ -42,10 +38,8 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     }
 
     @Override
-    public boolean expired(MqttSubscribeTask task, MqttCommandType key) {
-        Date now = new Date(System.currentTimeMillis());
-        Date expiration = new Date(task.getTime().getTime() + Long.parseLong(task.getCommandValues().get(key).getExpiration()));
-        return now.after(expiration);
+    public boolean expired(MqttSubscribeTask task, CommandWrapper key) {
+        return this.mqttComponent.expired(task, Long.parseLong(key.getExpiration()));
     }
 
     @Override
@@ -54,8 +48,8 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     }
 
     @Override
-    public boolean isConfigurated() {
-        return this.configurated;
+    public boolean isConfigured() {
+        return this.configured;
     }
 
 
@@ -75,7 +69,6 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
             super(id, subConfigList, pubConfigList, payloads, createdByOsgi, mqttBridge);
         }
     }
-
 
 
 }

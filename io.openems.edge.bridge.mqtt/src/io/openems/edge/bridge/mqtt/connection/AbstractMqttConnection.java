@@ -1,5 +1,7 @@
 package io.openems.edge.bridge.mqtt.connection;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import io.openems.edge.bridge.mqtt.api.MqttConnection;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -14,6 +16,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -49,10 +53,10 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     private void createMqttSessionBasicSetup(String mqttBroker, String mqttClientId, String username, String mqttPassword,
                                              boolean cleanSession, int keepAlive) throws MqttException {
         this.mqttClient = new MqttClient(mqttBroker, mqttClientId, this.persistence);
-        if(!username.trim().equals("")) {
+        if (!username.trim().equals("")) {
             mqttConnectOptions.setUserName(username);
         }
-        if(!username.trim().equals("")) {
+        if (!username.trim().equals("")) {
             mqttConnectOptions.setPassword(mqttPassword.toCharArray());
         }
         mqttConnectOptions.setCleanSession(cleanSession);
@@ -124,15 +128,25 @@ public abstract class AbstractMqttConnection implements MqttConnection {
      */
     @Override
     public void addLastWill(String topicLastWill, String payloadLastWill, int qosLastWill, boolean shouldAddTime, boolean retainedFlag, String time) {
+        JsonObject lastWillPayload = new JsonObject();
+        ;
         if (shouldAddTime) {
-            payloadLastWill = addTimeToPayload(payloadLastWill, time);
+            lastWillPayload.addProperty("time", time);
+
         }
+        String[] payload = payloadLastWill.split(":");
+        AtomicInteger counter = new AtomicInteger(0);
+        Arrays.stream(payload).forEachOrdered(consumer -> {
+            if (counter.get() % 2 == 0) {
+                lastWillPayload.addProperty(consumer, payload[counter.incrementAndGet()]);
+            }
+        });
         mqttConnectOptions.setWill(topicLastWill, payloadLastWill.getBytes(), qosLastWill, retainedFlag);
     }
 
 
     String addTimeToPayload(String payload, String time) {
-        payload = "\n\t \"sentOn\": " + time + ",\n" + payload;
+        payload = "\n\t \"time\": " + time + ",\n" + payload;
         return payload;
     }
 

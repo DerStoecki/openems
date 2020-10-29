@@ -1,9 +1,10 @@
 package io.openems.edge.bridge.mqtt.dummys;
 
 import io.openems.edge.bridge.mqtt.api.*;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
@@ -34,12 +35,12 @@ public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSub
     }
 
     @Override
-    public void convertTime(SimpleDateFormat formatter) throws ParseException {
+    public void convertTime(DateTimeZone timeZone) throws ParseException {
 
     }
 
     @Override
-    public Date getTime() {
+    public DateTime getTime() {
         return null;
     }
 
@@ -49,7 +50,7 @@ public class SubscribeTaskDummy extends DummyAbstractMqttTask implements MqttSub
     }
 
     @Override
-    public void setTime(Date date) {
+    public void setTime(DateTime date) {
 
     }
 

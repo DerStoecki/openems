@@ -57,7 +57,7 @@ import org.osgi.service.metatype.annotations.Option;
 
 
     @AttributeDefinition(name = "LastWill Payload", description = "Payload for the last Will")
-    String payloadLastWill() default "\"Status\": Connected";
+    String payloadLastWill() default "Status : Connected";
 
     @AttributeDefinition(name = "QoS of Last Will", description = "Quality of Service of last Will Msg")
     int qosLastWill() default 0;
