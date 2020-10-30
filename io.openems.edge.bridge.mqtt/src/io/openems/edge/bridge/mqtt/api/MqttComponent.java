@@ -8,6 +8,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.ConfigurationException;
 
+import java.io.IOException;
 import java.util.stream.Stream;
 
 public interface MqttComponent extends OpenemsComponent {
@@ -110,7 +111,7 @@ public interface MqttComponent extends OpenemsComponent {
      * @throws MqttException          If a problem occured with the mqtt connection.
      * @throws ConfigurationException if the configuration is wrong.
      */
-    void updateJsonConfig() throws MqttException, ConfigurationException;
+    void updateJsonConfig() throws MqttException, ConfigurationException, IOException;
 
 
     /**

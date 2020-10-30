@@ -19,6 +19,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * This Dummy MQTT COmponent is just an example, initially it will be created by OSGi but you can modify this
+ * component by Sending a JSON File to the corresponding Channel
+ */
 @Designate(ocd = ConfigDummyComponent.class, factory = true)
 @Component(name = "Dummy.Mqtt.Component",
         immediate = true,
@@ -35,6 +39,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
 
     private MqttComponentDummyImpl component;
+    private boolean isInitialized;
 
 
     public DummyComponentMqtt() {
@@ -65,6 +70,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
             this.component.initTasks(channels);
             this.mqttBridge.addMqttComponent(super.id(), this);
+            this.isInitialized = true;
         }
         this.getDummyOne().setNextValue(10);
 
@@ -127,11 +133,13 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             String configuration = this.getConfiguration().value().get();
             this.component.initJson(new ArrayList<>(this.channels()), configuration);
             this.getConfiguration().setNextValue("");
+            this.isInitialized = true;
         }
     }
+
     @Override
     public boolean isConfigured() {
-        return this.component.isInitialized();
+        return this.isInitialized;
     }
 
 

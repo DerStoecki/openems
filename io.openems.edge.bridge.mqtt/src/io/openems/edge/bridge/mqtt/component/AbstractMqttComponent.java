@@ -40,7 +40,6 @@ public abstract class AbstractMqttComponent {
     private boolean hasBeenConfigured;
     private String jsonConfig = "";
     private String mqttId;
-    private boolean initialized;
 
     /**
      * Initially update Config and after that set params for initTasks.
@@ -141,7 +140,7 @@ public abstract class AbstractMqttComponent {
         ConfigurationException[] exConfig = {null};
 
         //For Each ConfigEntry (sub/pub) get the Channels and map them, create a task and add them at the end to the mqtt bridge.
-        configList.stream().forEach(entry -> {
+        configList.forEach(entry -> {
             Map<String, Channel<?>> channelMapForTask;
             //futurePayload
             String payloadForTask;
@@ -521,10 +520,6 @@ public abstract class AbstractMqttComponent {
         }
         DateTime expiraton = task.getTime().plus(expirationTime);
         return now.isAfter(expiraton);
-    }
-
-    public boolean isInitialized() {
-        return this.initialized;
     }
 }
 

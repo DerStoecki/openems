@@ -59,6 +59,11 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
         this.mqttComponent.initJsonFromFile(channels, pathForJson);
     }
 
+    @Override
+    public void updateJsonByChannel(ArrayList<Channel<?>> channels, String config) throws ConfigurationException {
+        this.mqttComponent.initJson(channels, config);
+    }
+
 
     private class MqttComponentImpl extends AbstractMqttComponent {
         /**

@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -148,8 +147,8 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     }
 
     @Override
-    public void updateJsonConfig() throws MqttException, ConfigurationException {
-
+    public void updateJsonConfig() throws MqttException, ConfigurationException, IOException {
+                this.mqttConfigurationComponent.updateJsonByChannel(new ArrayList<>(this.channels()), this.getConfiguration().value().get());
     }
 
     @Override
