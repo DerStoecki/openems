@@ -112,4 +112,8 @@ public class MqttSubscribeManager extends AbstractMqttManager {
     public String getPayloadFromTopic(String topic, MqttType type) {
         return this.connections.get(type).getPayload(topic);
     }
+
+    public void unsubscribeFromTopic(MqttTask task) throws MqttException {
+        this.connections.get(task.getMqttType()).unsubscribeFromTopic(task.getTopic());
+    }
 }

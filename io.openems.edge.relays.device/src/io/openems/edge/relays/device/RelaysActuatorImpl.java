@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,10 +88,13 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
 
     private void configureMqtt(Config config) throws MqttException, ConfigurationException, IOException {
         this.mqttConfigurationComponent = new MqttConfigurationComponentImpl(config.subscriptionList(), config.publishList(),
-                config.payloads(), super.id(), config.createdByOsgi(), this.mqttBridge);
+                config.payloads(), super.id(), config.createdByOsgi(), this.mqttBridge, config.mqttId());
         List<Channel<?>> channels = new ArrayList<>(this.channels());
         this.mqttConfigurationComponent.update(ca.getConfiguration(this.servicePid(), "?"), "channelIdList",
                 channels, config.channelIdList().length);
+        if(!config.createdByOsgi() && !config.pathForJson().trim().equals("")){
+            this.mqttConfigurationComponent.initJson(new ArrayList<>(this.channels()), config.pathForJson());
+        }
         if (this.mqttConfigurationComponent.hasBeenConfigured() && config.configurationDone()) {
             this.mqttConfigurationComponent.initTasks(new ArrayList<>(this.channels()));
             this.mqttBridge.addMqttComponent(super.id(), this);

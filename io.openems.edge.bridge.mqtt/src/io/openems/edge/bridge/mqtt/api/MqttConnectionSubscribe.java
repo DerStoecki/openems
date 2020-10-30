@@ -38,4 +38,6 @@ public interface MqttConnectionSubscribe {
      * @return a boolean.F
      */
     boolean isConnectionLost();
+
+    void unsubscribeFromTopic(String topic) throws MqttException;
 }

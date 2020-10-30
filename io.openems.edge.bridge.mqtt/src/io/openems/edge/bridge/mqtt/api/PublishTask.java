@@ -6,9 +6,7 @@ import com.google.gson.JsonObject;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,9 +20,9 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
 
 
     public PublishTask(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
-                       int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask, PayloadStyle style, String id) {
+                       int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask, PayloadStyle style, String id, String mqttId) {
         super(topic, type, retainFlag, useTime, qos, priority, channelMapForTask,
-                payloadForTask, timeToWait, style, id);
+                payloadForTask, timeToWait, style, id, mqttId);
 
     }
 
@@ -56,7 +54,7 @@ public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
         if (getAddTime()) {
             payload.addProperty("time", now);
         }
-        payload.addProperty("ID", super.id);
+        payload.addProperty("ID", super.mqttId);
         String[] configuredPayload = super.configuredPayload.split(":");
         AtomicInteger jsonCounter = new AtomicInteger(0);
         Arrays.stream(configuredPayload).forEachOrdered(consumer -> {

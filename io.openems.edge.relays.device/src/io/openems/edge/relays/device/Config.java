@@ -34,9 +34,13 @@ import org.osgi.service.metatype.annotations.Option;
 
     @AttributeDefinition(name = "Use MQTT", description = "Should this component use Mqtt, else ignore following configurations")
     boolean useMqtt() default true;
+    @AttributeDefinition(name = "Mqtt Id", description = "Id of this component appearing in the Broker")
+    String mqttId() default "Relay-0";
 
     @AttributeDefinition(name = "Created by OSGi", description = "Do you configure your MQTT Component by OSGi/Apache Felix or via JSON")
     boolean createdByOsgi() default true;
+    @AttributeDefinition(name = "JSON File Path", description = " IF created by OSGi is false AND you want to read your config from Json File (Otherwise configure via REST later)")
+    String pathForJson() default "";
 
     @AttributeDefinition(name = "ChannelIds", description = "This List will automatically filled with ChannelIds to configure for Pub and Sub")
     String[] channelIdList() default {};
@@ -64,4 +68,6 @@ import org.osgi.service.metatype.annotations.Option;
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "Relays [{id}]";
+
+
 }

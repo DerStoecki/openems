@@ -22,10 +22,11 @@ public abstract class AbstractMqttTask implements MqttTask {
     String configuredPayload;
     PayloadStyle style;
     String id;
+    String mqttId;
 
     AbstractMqttTask(String topic, MqttType mqttType,
                      boolean retainFlag, boolean addTime, int qos, MqttPriority priority, Map<String, Channel<?>> channels,
-                     String payloadForTask, int timeToWait, PayloadStyle style, String id) {
+                     String payloadForTask, int timeToWait, PayloadStyle style, String id, String mqttId) {
 
         this.topic = topic;
         this.channels = channels;
@@ -38,6 +39,7 @@ public abstract class AbstractMqttTask implements MqttTask {
         this.configuredPayload = payloadForTask;
         this.style = style;
         this.id = id;
+        this.mqttId = mqttId;
 
     }
 

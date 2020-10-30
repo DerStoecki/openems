@@ -104,4 +104,9 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
         return connectionLost;
     }
 
+    @Override
+    public void unsubscribeFromTopic(String topic) throws MqttException {
+        super.mqttClient.unsubscribe(topic);
+    }
+
 }

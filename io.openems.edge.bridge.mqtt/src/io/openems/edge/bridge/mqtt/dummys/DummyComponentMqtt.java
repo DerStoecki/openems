@@ -1,13 +1,11 @@
 package io.openems.edge.bridge.mqtt.dummys;
 
 import io.openems.edge.bridge.mqtt.api.*;
-import io.openems.edge.bridge.mqtt.component.MqttConfigurationComponent;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.bridge.mqtt.component.AbstractMqttComponent;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.joda.time.DateTime;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
@@ -18,7 +16,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +60,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         List<String> payloads = Arrays.asList(config.payloads());
         List<Channel<?>> channels = new ArrayList<>(this.channels());
         this.component = new MqttComponentDummyImpl(super.id(), subList, pubList, payloads,
-                config.createdByOsgiConfig(), mqttBridge);
+                config.createdByOsgiConfig(), mqttBridge, super.id());
         this.component.update(c, "channelIdList", channels, config.channelIdList().length);
         if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
             this.component.initTasks(channels);
@@ -126,13 +123,12 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     @Override
     public void updateJsonConfig() throws MqttException, ConfigurationException {
-        if (this.getConfiguration().value().isDefined()) {
+        if (this.getConfiguration().value().isDefined() && !this.getConfiguration().value().get().equals("")) {
             String configuration = this.getConfiguration().value().get();
             this.component.initJson(new ArrayList<>(this.channels()), configuration);
             this.getConfiguration().setNextValue("");
         }
     }
-
     @Override
     public boolean isConfigured() {
         return this.component.isInitialized();
@@ -153,8 +149,8 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
          */
         MqttComponentDummyImpl(String id, List<String> subConfigList,
                                List<String> pubConfigList, List<String> payloads,
-                               boolean createdByOsgi, MqttBridge mqttBridge) {
-            super(id, subConfigList, pubConfigList, payloads, createdByOsgi, mqttBridge);
+                               boolean createdByOsgi, MqttBridge mqttBridge, String mqttId) {
+            super(id, subConfigList, pubConfigList, payloads, createdByOsgi, mqttBridge, mqttId);
         }
     }
 

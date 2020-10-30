@@ -6,6 +6,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationException;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,9 +18,9 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     private boolean configured;
 
     public MqttConfigurationComponentImpl(String[] subscribtions, String[] publish, String[] payloads, String id,
-                                          boolean createdByOsgi, MqttBridge mqttBridge) {
+                                          boolean createdByOsgi, MqttBridge mqttBridge, String mqttId) {
         this.mqttComponent = new MqttComponentImpl(id, Arrays.asList(subscribtions), Arrays.asList(publish),
-                Arrays.asList(payloads), createdByOsgi, mqttBridge);
+                Arrays.asList(payloads), createdByOsgi, mqttBridge, mqttId);
     }
 
     @Override
@@ -52,21 +54,26 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
         return this.configured;
     }
 
+    @Override
+    public void initJson(ArrayList<Channel<?>> channels, String pathForJson) throws IOException, ConfigurationException {
+        this.mqttComponent.initJsonFromFile(channels, pathForJson);
+    }
+
 
     private class MqttComponentImpl extends AbstractMqttComponent {
         /**
          * Initially update Config and after that set params for initTasks.
-         *
-         * @param id            id of this Component, usually from configuredDevice and it's config.
+         *  @param id            id of this Component, usually from configuredDevice and it's config.
          * @param subConfigList Subscribe ConfigList, containing the Configuration for the subscribeTasks.
          * @param pubConfigList Publish Configlist, containing the Configuration for the publishTasks.
          * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.
          * @param createdByOsgi is this Component configured by OSGi or not. If not --> Read JSON File/Listen to Configuration Channel.
          * @param mqttBridge    mqttBridge of this Component.
+         * @param mqttId
          */
         public MqttComponentImpl(String id, List<String> subConfigList, List<String> pubConfigList, List<String> payloads,
-                                 boolean createdByOsgi, MqttBridge mqttBridge) {
-            super(id, subConfigList, pubConfigList, payloads, createdByOsgi, mqttBridge);
+                                 boolean createdByOsgi, MqttBridge mqttBridge, String mqttId) {
+            super(id, subConfigList, pubConfigList, payloads, createdByOsgi, mqttBridge, mqttId);
         }
     }
 

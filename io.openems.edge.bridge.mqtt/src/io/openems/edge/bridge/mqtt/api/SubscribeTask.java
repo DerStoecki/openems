@@ -30,9 +30,9 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
 
     public SubscribeTask(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
                          int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask,
-                         PayloadStyle payloadStyle, String id) {
+                         PayloadStyle payloadStyle, String id, String mqttId) {
         super(topic, type, retainFlag, useTime, qos, priority, channelMapForTask, payloadForTask, timeToWait,
-                payloadStyle, id);
+                payloadStyle, id, mqttId);
         if (type.equals(MqttType.TELEMETRY)) {
             this.nameIds = new ArrayList<>();
 
