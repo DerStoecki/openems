@@ -183,14 +183,14 @@ public abstract class AbstractMqttComponent {
                         //subtasks will use payload to match their input to channels
                         if (subTasks) {
                             //ID = INTERNAL USE, MQTT ID = EXTERNAL/BROKER
-                            SubscribeTask task = new SubscribeTask(type, priority, topic, qos, retainFlag, useTime,
+                            MqttSubscribeTaskImpl task = new MqttSubscribeTaskImpl(type, priority, topic, qos, retainFlag, useTime,
                                     timeToWait, channelMapForTask, payloadForTask, style, this.id, this.mqttId);
                             this.subscribeTasks.put(topic, task);
                             //Create SubTasks
                         } else {
                             //Create PubTasks
                             //Publish tasks will use payload to map ID and the actual ChannelValue of the ChannelID
-                            PublishTask task = new PublishTask(type, priority, topic, qos, retainFlag, useTime, timeToWait,
+                            MqttPublishTaskImpl task = new MqttPublishTaskImpl(type, priority, topic, qos, retainFlag, useTime, timeToWait,
                                     channelMapForTask, payloadForTask, style, this.id, this.mqttId);
                             this.publishTasks.put(topic, task);
                         }
@@ -469,7 +469,7 @@ public abstract class AbstractMqttComponent {
                     }
                 });
                 if (isSub) {
-                    SubscribeTask task = new SubscribeTask(mqttType, mqttPriority, topic, qos, retain, useTime, timeToWait,
+                    MqttSubscribeTaskImpl task = new MqttSubscribeTaskImpl(mqttType, mqttPriority, topic, qos, retain, useTime, timeToWait,
                             channelMapForTask, payloadString, style, this.id, mqttID);
                     if(init) {
                         this.subscribeTasks.put(topic, task);
@@ -478,7 +478,7 @@ public abstract class AbstractMqttComponent {
                     }
 
                 } else {
-                    PublishTask task = new PublishTask(mqttType, mqttPriority, topic, qos, retain, useTime, timeToWait,
+                    MqttPublishTaskImpl task = new MqttPublishTaskImpl(mqttType, mqttPriority, topic, qos, retain, useTime, timeToWait,
                             channelMapForTask, payloadString, style, this.id, mqttID);
                     if(init){
                         this.publishTasks.put(topic, task);

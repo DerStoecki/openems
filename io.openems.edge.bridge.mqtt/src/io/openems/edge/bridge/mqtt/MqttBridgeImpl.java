@@ -245,7 +245,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             try {
                 this.subscribeManager.unsubscribeFromTopic(task);
             } catch (MqttException e) {
-               log.warn("Couldn't unsubscribe from Topic: " + task.getPayload() + "reason " + e.getMessage());
+               log.warn("Couldn't unsubscribe from Topic: " + task.getTopic() + "reason " + e.getMessage());
             }
         });
         this.subscribeTasks.remove(id);
@@ -296,7 +296,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                 if (value.getConfiguration().value().isDefined() && !value.getConfiguration().value().get().equals("")) {
                     try {
                         value.updateJsonConfig();
-                    } catch (MqttException | ConfigurationException e) {
+                    } catch (MqttException | ConfigurationException | IOException e) {
                         log.warn("Couldn't refresh the config of component " + value.id() + " Please check your"
                                 + " configuration or MqttConnection");
                     }

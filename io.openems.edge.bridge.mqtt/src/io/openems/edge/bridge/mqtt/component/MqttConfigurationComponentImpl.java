@@ -17,9 +17,9 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     private MqttComponentImpl mqttComponent;
     private boolean configured;
 
-    public MqttConfigurationComponentImpl(String[] subscribtions, String[] publish, String[] payloads, String id,
+    public MqttConfigurationComponentImpl(String[] subscriptions, String[] publish, String[] payloads, String id,
                                           boolean createdByOsgi, MqttBridge mqttBridge, String mqttId) {
-        this.mqttComponent = new MqttComponentImpl(id, Arrays.asList(subscribtions), Arrays.asList(publish),
+        this.mqttComponent = new MqttComponentImpl(id, Arrays.asList(subscriptions), Arrays.asList(publish),
                 Arrays.asList(payloads), createdByOsgi, mqttBridge, mqttId);
     }
 
@@ -70,7 +70,7 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
          * Initially update Config and after that set params for initTasks.
          *  @param id            id of this Component, usually from configuredDevice and it's config.
          * @param subConfigList Subscribe ConfigList, containing the Configuration for the subscribeTasks.
-         * @param pubConfigList Publish Configlist, containing the Configuration for the publishTasks.
+         * @param pubConfigList Publish ConfigList, containing the Configuration for the publishTasks.
          * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.
          * @param createdByOsgi is this Component configured by OSGi or not. If not --> Read JSON File/Listen to Configuration Channel.
          * @param mqttBridge    mqttBridge of this Component.

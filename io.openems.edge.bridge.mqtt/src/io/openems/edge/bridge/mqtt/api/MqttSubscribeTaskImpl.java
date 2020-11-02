@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
-public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask {
+public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubscribeTask {
 
     private int messageId;
     //original nameIDs and their position
@@ -28,9 +28,9 @@ public class SubscribeTask extends AbstractMqttTask implements MqttSubscribeTask
     private Map<String, String> nameIdAndChannelIdMap;
     private Map<MqttCommandType, CommandWrapper> commandValueMap;
 
-    public SubscribeTask(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
-                         int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask,
-                         PayloadStyle payloadStyle, String id, String mqttId) {
+    public MqttSubscribeTaskImpl(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
+                                 int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask,
+                                 PayloadStyle payloadStyle, String id, String mqttId) {
         super(topic, type, retainFlag, useTime, qos, priority, channelMapForTask, payloadForTask, timeToWait,
                 payloadStyle, id, mqttId);
         if (type.equals(MqttType.TELEMETRY)) {

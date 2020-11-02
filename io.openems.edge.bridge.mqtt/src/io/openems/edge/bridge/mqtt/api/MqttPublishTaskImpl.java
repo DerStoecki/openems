@@ -16,11 +16,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * the Channels it has to publish.
  * See Code for details.
  */
-public class PublishTask extends AbstractMqttTask implements MqttPublishTask {
+public class MqttPublishTaskImpl extends AbstractMqttTask implements MqttPublishTask {
 
 
-    public PublishTask(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
-                       int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask, PayloadStyle style, String id, String mqttId) {
+    public MqttPublishTaskImpl(MqttType type, MqttPriority priority, String topic, int qos, boolean retainFlag, boolean useTime,
+                               int timeToWait, Map<String, Channel<?>> channelMapForTask, String payloadForTask, PayloadStyle style, String id, String mqttId) {
         super(topic, type, retainFlag, useTime, qos, priority, channelMapForTask,
                 payloadForTask, timeToWait, style, id, mqttId);
 

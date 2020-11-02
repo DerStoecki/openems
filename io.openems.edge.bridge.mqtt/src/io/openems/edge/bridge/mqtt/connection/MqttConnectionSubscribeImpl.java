@@ -96,7 +96,6 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
     //TODO PUBACK AND PUBCOMP
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-
     }
 
     @Override
