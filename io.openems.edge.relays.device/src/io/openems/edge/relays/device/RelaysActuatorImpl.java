@@ -138,7 +138,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
             if (entry instanceof MqttSubscribeTask) {
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
-                    if (this.mqttConfigurationComponent.expired(task, value)) {
+                    if (!this.mqttConfigurationComponent.expired(task, value)) {
                         reactToComponentCommand(key, value);
                     }
                 });
@@ -147,7 +147,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     }
 
     @Override
-    public void updateJsonConfig() throws MqttException, ConfigurationException, IOException {
+    public void updateJsonConfig() throws ConfigurationException {
                 this.mqttConfigurationComponent.updateJsonByChannel(new ArrayList<>(this.channels()), this.getConfiguration().value().get());
     }
 
