@@ -513,13 +513,13 @@ public abstract class AbstractMqttComponent {
         this.initJson(channels, new String(Files.readAllBytes(Paths.get(path))));
     }
 
-    public boolean expired(MqttSubscribeTask task, long expirationTime) {
+    public boolean expired(MqttSubscribeTask task, int expirationTime) {
         DateTime now = new DateTime(mqttBridge.getTimeZone());
         if (task.getTime() == null) {
             return false;
         }
-        DateTime expiraton = task.getTime().plus(expirationTime);
-        return expiraton.isAfter(now);
+        DateTime expiraton = task.getTime().plusSeconds(expirationTime);
+        return now.isAfter(expiraton);
     }
 }
 

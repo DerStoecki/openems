@@ -41,7 +41,7 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
 
     @Override
     public boolean expired(MqttSubscribeTask task, CommandWrapper key) {
-        return this.mqttComponent.expired(task, Long.parseLong(key.getExpiration()));
+        return this.mqttComponent.expired(task, Integer.parseInt(key.getExpiration()));
     }
 
     @Override

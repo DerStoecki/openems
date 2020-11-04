@@ -158,10 +158,14 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     private void createMqttSession(Config config) throws MqttException {
         //Create Broker URL/IP etc
         //TCP SSL OR WSS
-        String broker = config.connection().toLowerCase();
+        if (config.brokerUrl().equals("")) {
+            String broker = config.connection().toLowerCase();
 
-        broker += "://" + config.ipBroker() + ":" + config.portBroker();
-        this.mqttBroker = broker;
+            broker += "://" + config.ipBroker() + ":" + config.portBroker();
+            this.mqttBroker = broker;
+        } else {
+            this.mqttBroker = config.brokerUrl();
+        }
         this.mqttUsername = config.username();
 
         this.mqttPassword = config.password();
@@ -241,11 +245,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
      */
     @Override
     public void removeMqttTasks(String id) {
-        this.subscribeTasks.get(id).forEach(task-> {
+        this.subscribeTasks.get(id).forEach(task -> {
             try {
                 this.subscribeManager.unsubscribeFromTopic(task);
             } catch (MqttException e) {
-               log.warn("Couldn't unsubscribe from Topic: " + task.getTopic() + "reason " + e.getMessage());
+                log.warn("Couldn't unsubscribe from Topic: " + task.getTopic() + "reason " + e.getMessage());
             }
         });
         this.subscribeTasks.remove(id);

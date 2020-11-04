@@ -93,7 +93,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
                     if (value.getValue() != null) {
-                        if (!this.component.expired(task, Long.parseLong(value.getExpiration()))) {
+                        if (!this.component.expired(task, Integer.parseInt(value.getExpiration()))) {
                             reactToComponentCommand(key, value);
                         }
                     }
