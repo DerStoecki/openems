@@ -25,7 +25,7 @@
       "qos": 0,
       "retain": true,
       "useTime": true,
-      "tímeToWait": 10,
+      "timeToWait": 10,
       "payload": {
         "NameIDinBroker": "OpenEMSChannelID",
         "NameIDBroker": "ChannelID",

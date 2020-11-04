@@ -31,8 +31,8 @@ Export-Package: \
 	io.openems.wrapper.websocket;version=latest,\
 	org.apache.felix.scr,\
 	com.google.gson,\
+	com.google.guava,\
 	slf4j.api,\
-	com.google.guava
 
 -testpath: ${testpath}
 
