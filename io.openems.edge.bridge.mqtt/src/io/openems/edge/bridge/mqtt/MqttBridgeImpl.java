@@ -174,7 +174,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         if (config.lastWillSet()) {
             this.bridgePublisher.addLastWill(config.topicLastWill(),
                     config.payloadLastWill(), config.qosLastWill(), config.timeStampEnabled(), config.retainedFlag(),
-                    DateTime.now().toString());
+                    DateTime.now(this.timeZone).toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ"));
         }
         //External Call bc Last will can be set
         this.bridgePublisher.connect();

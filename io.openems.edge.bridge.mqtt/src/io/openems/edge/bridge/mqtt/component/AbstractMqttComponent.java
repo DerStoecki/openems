@@ -519,7 +519,7 @@ public abstract class AbstractMqttComponent {
             return false;
         }
         DateTime expiraton = task.getTime().plus(expirationTime);
-        return now.isAfter(expiraton);
+        return expiraton.isAfter(now);
     }
 }
 

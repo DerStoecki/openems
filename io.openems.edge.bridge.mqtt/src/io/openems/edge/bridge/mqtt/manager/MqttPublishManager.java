@@ -44,7 +44,7 @@ public class MqttPublishManager extends AbstractMqttManager {
                 //Update Payload
                 if (task instanceof MqttPublishTask) {
                     MqttPublishTask task1 = ((MqttPublishTask) task);
-                    String now = DateTime.now(timeZone).toString();
+                    String now = DateTime.now(timeZone).toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
                     task1.updatePayload(now);
                 }
                 //Sends message via mqttconnection start and stop time
