@@ -7,7 +7,7 @@ public interface Heater {
 
     int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException;
 
-    int getMaximumThermicalOutput();
+    int getMaximumThermalOutput();
 
     void setOffline() throws OpenemsError.OpenemsNamedException;
 

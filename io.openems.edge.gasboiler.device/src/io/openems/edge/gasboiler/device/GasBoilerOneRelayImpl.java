@@ -30,7 +30,7 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
     ComponentManager cpm;
 
     private ActuatorRelaysChannel relay;
-    private int thermicalOutput;
+    private int thermalOutput;
 
     ConfigOneRelay config;
 
@@ -50,7 +50,7 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
         if (this.cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
             this.relay = this.cpm.getComponent(config.relayId());
         }
-        this.thermicalOutput = config.maxThermicalOutput();
+        this.thermalOutput = config.maxThermicalOutput();
     }
 
 
@@ -71,13 +71,13 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
         if (this.relay != null && this.relay.isEnabled()) {
             this.relay.getRelaysChannel().setNextWriteValue(true);
-            return this.thermicalOutput;
+            return this.thermalOutput;
         } else {
             try {
                 if (cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
                     this.relay = cpm.getComponent(config.relayId());
                     this.relay.getRelaysChannel().setNextWriteValue(true);
-                    return this.thermicalOutput;
+                    return this.thermalOutput;
                 }
             } catch (OpenemsError.OpenemsNamedException e) {
                 log.warn("Couldn't find component!" + e.getMessage());
@@ -92,8 +92,8 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
 
 
     @Override
-    public int getMaximumThermicalOutput() {
-        return this.thermicalOutput;
+    public int getMaximumThermalOutput() {
+        return this.thermalOutput;
     }
 
     @Override
@@ -106,7 +106,7 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
     @Override
     public int runFullPower() {
         try {
-            return this.calculateProvidedPower(this.thermicalOutput, 1.0f);
+            return this.calculateProvidedPower(this.thermalOutput, 1.0f);
         } catch (OpenemsError.OpenemsNamedException e) {
             log.warn("Couldn't write demand!" + e.getMessage());
             return 0;

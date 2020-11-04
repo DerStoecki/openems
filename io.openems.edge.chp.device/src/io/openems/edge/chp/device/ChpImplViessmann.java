@@ -362,7 +362,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     }
 
     @Override
-    public int getMaximumThermicalOutput() {
+    public int getMaximumThermalOutput() {
         return thermicalOutput;
     }
 
@@ -389,7 +389,7 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
             log.warn("Couldn't Write into Channel! " + e.getMessage());
             return 0;
         }
-        return this.getMaximumThermicalOutput();
+        return this.getMaximumThermalOutput();
     }
 
 

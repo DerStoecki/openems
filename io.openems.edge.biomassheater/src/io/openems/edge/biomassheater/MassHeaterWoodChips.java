@@ -4,12 +4,10 @@ import io.openems.common.exceptions.OpenemsError;
 import io.openems.edge.biomassheater.api.BioMassHeater;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
-import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.CoilElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.*;
-import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.heater.api.Heater;
@@ -20,11 +18,6 @@ import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "WoodChipHeater",
@@ -43,7 +36,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     }
 
     //in kW
-    private int maxThermicPerformance = 1400;
+    private int maxThermalPerformance = 1400;
 
     private Config config;
 
@@ -58,7 +51,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
         super.activate(context, config.id(), config.alias(), config.enabled(), config.modBusUnitId(), this.cm, "Modbus", config.modBusBridgeId());
 
         if (config.maxThermicalOutput() != 0) {
-            this.maxThermicPerformance = config.maxThermicalOutput();
+            this.maxThermalPerformance = config.maxThermicalOutput();
         }
     }
 
@@ -77,7 +70,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                         m(BioMassHeater.ChannelId.WARNING, new CoilElement(10001)),
                         m(BioMassHeater.ChannelId.CLEARING_ACTIVE, new CoilElement(10002)),
                         m(BioMassHeater.ChannelId.VACUUM_CLEANING_ON, new CoilElement(10003)),
-                        m(BioMassHeater.ChannelId.FAN_ON, new CoilElement(10004)),
+                        /* m(BioMassHeater.ChannelId.FAN_ON, new CoilElement(10004)),
                         m(BioMassHeater.ChannelId.FAN_PRIMARY_ON, new CoilElement(10005)),
                         m(BioMassHeater.ChannelId.FAN_SECONDARY_ON, new CoilElement(10006)),
                         m(BioMassHeater.ChannelId.STOKER_ON, new CoilElement(10007)),
@@ -96,7 +89,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                         m(BioMassHeater.ChannelId.LS_LATERAL, new CoilElement(10020)),
                         m(BioMassHeater.ChannelId.LS_PUSHING_FLOOR, new CoilElement(10021)),
                         m(BioMassHeater.ChannelId.HELIX_ASH_1, new CoilElement(10022)),
-                        m(BioMassHeater.ChannelId.HELIX_ASH_2, new CoilElement(10023)),
+                        m(BioMassHeater.ChannelId.HELIX_ASH_2, new CoilElement(10023)),*/
                         m(BioMassHeater.ChannelId.SIGNAL_CONTACT_1, new CoilElement(10024)),
                         m(BioMassHeater.ChannelId.SIGNAL_CONTACT_2, new CoilElement(10025))
 
@@ -104,19 +97,19 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                 new FC4ReadInputRegistersTask(20000, Priority.HIGH,
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE, new UnsignedWordElement(20000)),
                         m(BioMassHeater.ChannelId.REWIND_TEMPERATURE, new UnsignedWordElement(20001)),
-                        m(BioMassHeater.ChannelId.EXHAUST_TEMPERATURE, new UnsignedWordElement(20002)),
-                        m(BioMassHeater.ChannelId.FIRE_ROOM_TEMPERATURE, new UnsignedWordElement(20003)),
+                        // m(BioMassHeater.ChannelId.EXHAUST_TEMPERATURE, new UnsignedWordElement(20002)),
+                        //m(BioMassHeater.ChannelId.FIRE_ROOM_TEMPERATURE, new UnsignedWordElement(20003)),
                         m(BioMassHeater.ChannelId.SLIDE_IN_ACTIVE, new UnsignedWordElement(20004)),
                         m(BioMassHeater.ChannelId.OXYGEN_ACTIVE, new UnsignedWordElement(20005)),
-                        m(BioMassHeater.ChannelId.VACUUM_ACTIVE, new UnsignedWordElement(20006)),
+                        //m(BioMassHeater.ChannelId.VACUUM_ACTIVE, new UnsignedWordElement(20006)),
                         m(BioMassHeater.ChannelId.PERFORMANCE_ACTIVE, new UnsignedWordElement(20007)),
-                        m(BioMassHeater.ChannelId.PERFORMANCE_WM, new UnsignedWordElement(20008)),
+                        //m(BioMassHeater.ChannelId.PERFORMANCE_WM, new UnsignedWordElement(20008)),
                         m(BioMassHeater.ChannelId.PERCOLATION, new UnsignedWordElement(20009)),
                         m(BioMassHeater.ChannelId.REWIND_GRID, new UnsignedWordElement(20010)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_1, new UnsignedWordElement(20011)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_2, new UnsignedWordElement(20012)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_3, new UnsignedWordElement(20013)),
-                        m(BioMassHeater.ChannelId.BUFFER_SENSOR_4, new UnsignedWordElement(20014)),
+                      /*  m(BioMassHeater.ChannelId.BUFFER_SENSOR_4, new UnsignedWordElement(20014)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_5, new UnsignedWordElement(20015)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_6, new UnsignedWordElement(20016)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_7, new UnsignedWordElement(20017)),
@@ -128,7 +121,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_13, new UnsignedWordElement(20023)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_14, new UnsignedWordElement(20024)),
                         m(BioMassHeater.ChannelId.BUFFER_SENSOR_15, new UnsignedWordElement(20025)),
-                        m(BioMassHeater.ChannelId.BUFFER_SENSOR_16, new UnsignedWordElement(20026)),
+                        m(BioMassHeater.ChannelId.BUFFER_SENSOR_16, new UnsignedWordElement(20026)),*/
                         m(BioMassHeater.ChannelId.BOILER_TEMPERATURE_SET_POINT_READ_ONLY, new UnsignedWordElement(20027)),
                         m(BioMassHeater.ChannelId.TEMPERATURE_FORWARD_MIN, new UnsignedWordElement(20028)),
                         m(BioMassHeater.ChannelId.SLIDE_IN_PERCENTAGE_VALUE_READ_ONLY, new UnsignedWordElement(20029)),
@@ -175,7 +168,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
-      /*  float powerValue = Math.round(demand * bufferValue);
+        /*  float powerValue = Math.round(demand * bufferValue);
         if (powerValue >= maxThermicPerformance) {
             powerValue = maxThermicPerformance;
             getSlideInPercentageValue().setNextWriteValue(100);
@@ -184,15 +177,16 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
         }
             */
         if (this.getDisturbance().value().isDefined() && this.getDisturbance().value().get()) {
+            this.setOffline();
             return 0;
         }
         this.getExternalControl().setNextWriteValue(true);
-        return this.maxThermicPerformance;
+        return this.maxThermalPerformance;
     }
 
     @Override
-    public int getMaximumThermicalOutput() {
-        return this.maxThermicPerformance;
+    public int getMaximumThermalOutput() {
+        return this.maxThermalPerformance;
     }
 
     @Override
@@ -203,7 +197,7 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     @Override
     public int runFullPower() {
         try {
-            return this.calculateProvidedPower(this.maxThermicPerformance, 1.0f);
+            return this.calculateProvidedPower(this.maxThermalPerformance, 1.0f);
         } catch (OpenemsError.OpenemsNamedException e) {
             log.warn("Couldn't Write into Channel! " + e.getMessage());
             return 0;
@@ -217,7 +211,8 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
         //Arrays.stream(BioMassHeater.ChannelId.values()).forEach(consumer -> {
         //    all.add(this.channel(consumer));
         //});
-        //all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined() ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
+        //all.forEach(consumer -> System.out.println(consumer.channelId().id() + " value: " + (consumer.value().isDefined()
+        // ? consumer.value().get() : "UNDEFINED ") + (consumer.channelDoc().getUnit().getSymbol())));
 
         if (this.getWarning().value().isDefined()) {
             if (this.getWarning().value().get()) {
