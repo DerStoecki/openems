@@ -16,18 +16,21 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
     private double regressionValueC;
     private int lastValue = -666;
     private long lastTimestamp = 0;
-    //10 °C
-    private static int TEMPERATURE_CHANGE = 1000;
-    private static int TIMESTAMP = 300;
+    private int offset;
+    //8 °C diff
+    private static int TEMPERATURE_CHANGE = 80;
+    //10 Sek Timestamp
+    private static int TIMESTAMP = 10 * 1000;
 
 
     private long pinValue;
 
-    public TemperatureDigitalReadTask(Channel<Integer> channel, String version, Adc adc, int pin) {
+    public TemperatureDigitalReadTask(Channel<Integer> channel, String version, Adc adc, int pin, int offset) {
         super(adc.getSpiChannel());
         this.channel = channel;
         pinValue = adc.getPins().get(pin).getValue();
         allocateRegressionValues(version);
+        this.offset = offset;
     }
 
     private void allocateRegressionValues(String version) {
@@ -68,7 +71,7 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
         digit &= 0xFFF;
         int value = (int) (((this.regressionValueA * digit * digit)
                 + (this.regressionValueB * digit)
-                + (this.regressionValueC)) * 10);
+                + (this.regressionValueC)) * 10) - offset;
         compareLastValueWithCurrent(value);
         if (lastValue == value) {
             this.channel.setNextValue(value);
@@ -97,7 +100,7 @@ public class TemperatureDigitalReadTask extends AbstractSpiTask implements SpiTa
             lastValue = value;
         }
 
-        if (Math.abs(lastValue) - Math.abs(value) > TEMPERATURE_CHANGE || Math.abs(lastValue) - Math.abs(value) < -(TEMPERATURE_CHANGE) && lastTimestamp - System.currentTimeMillis() < TIMESTAMP) {
+        if (value == 1128 || (Math.abs(Math.abs(lastValue) - Math.abs(value)) >= TEMPERATURE_CHANGE  && Math.abs(System.currentTimeMillis() - lastTimestamp) < TIMESTAMP)) {
             return;
         }
         lastTimestamp = System.currentTimeMillis();

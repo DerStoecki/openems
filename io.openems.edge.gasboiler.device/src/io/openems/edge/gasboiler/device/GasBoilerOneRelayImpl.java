@@ -11,6 +11,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Designate(ocd = ConfigOneRelay.class, factory = true)
@@ -18,6 +20,8 @@ import org.osgi.service.metatype.annotations.Designate;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements OpenemsComponent, GasBoiler, Heater {
+
+    private final Logger log = LoggerFactory.getLogger(GasBoilerOneRelayImpl.class);
 
     @Reference
     ConfigurationAdmin cm;
@@ -72,9 +76,12 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
             try {
                 if (cpm.getComponent(config.relayId()) instanceof ActuatorRelaysChannel) {
                     this.relay = cpm.getComponent(config.relayId());
+                    this.relay.getRelaysChannel().setNextWriteValue(true);
+                    return this.thermicalOutput;
                 }
             } catch (OpenemsError.OpenemsNamedException e) {
-                System.out.println("Couldn't find component!");
+                log.warn("Couldn't find component!" + e.getMessage());
+                return 0;
 
 
             }
@@ -93,6 +100,16 @@ public class GasBoilerOneRelayImpl extends AbstractOpenemsComponent implements O
     public void setOffline() throws OpenemsError.OpenemsNamedException {
         if (this.relay != null) {
             this.relay.getRelaysChannel().setNextWriteValue(false);
+        }
+    }
+
+    @Override
+    public int runFullPower() {
+        try {
+            return this.calculateProvidedPower(this.thermicalOutput, 1.0f);
+        } catch (OpenemsError.OpenemsNamedException e) {
+            log.warn("Couldn't write demand!" + e.getMessage());
+            return 0;
         }
     }
 

@@ -18,6 +18,8 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +31,9 @@ import java.util.concurrent.atomic.AtomicReference;
         configurationPolicy = ConfigurationPolicy.REQUIRE,
         immediate = true)
 public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implements OpenemsComponent, BioMassHeater, Heater {
+
+    private final Logger log = LoggerFactory.getLogger(MassHeaterWoodChips.class);
+
     @Reference
     protected ConfigurationAdmin cm;
 
@@ -193,6 +198,16 @@ public class MassHeaterWoodChips extends AbstractOpenemsModbusComponent implemen
     @Override
     public void setOffline() throws OpenemsError.OpenemsNamedException {
         this.getExternalControl().setNextWriteValue(false);
+    }
+
+    @Override
+    public int runFullPower() {
+        try {
+            return this.calculateProvidedPower(this.maxThermicPerformance, 1.0f);
+        } catch (OpenemsError.OpenemsNamedException e) {
+            log.warn("Couldn't Write into Channel! " + e.getMessage());
+            return 0;
+        }
     }
 
     @Override

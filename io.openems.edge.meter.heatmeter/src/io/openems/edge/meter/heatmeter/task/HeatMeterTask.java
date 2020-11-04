@@ -68,8 +68,8 @@ public class HeatMeterTask extends MbusTask {
                 counterFilling++;
                 lastTimeStamp = System.currentTimeMillis();
 
-                //shouldn't occur but just to make sure; if counter reaches max --> reduced to at least 60.
-                if (counterFilling == Integer.MAX_VALUE) {
+                //if counterFilling was at max once --> e.g. 60 --> always stay in between 60-119 --> for correct filling
+                if (counterFilling >= consumptionData.length) {
                     counterFilling = (counterFilling % consumptionData.length) + consumptionData.length;
                 }
             }

@@ -26,6 +26,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
     @AttributeDefinition(name = "Heating Device 1 Name", description = "Unique Id of the first Heating Device.")
     String chp_Id() default "Chp0";
+    @AttributeDefinition(name = "Should Primary Heater be always active and run at 100%", description = "Due to some requirements, this Heater can be run at 100% always")
+    boolean primaryAlwaysActive() default true;
 
     @AttributeDefinition(name = "Heating Device 2 Name", description = "Unique Id of the second Heating Device.")
     String woodChip_Id() default "WoodChipHeater0";

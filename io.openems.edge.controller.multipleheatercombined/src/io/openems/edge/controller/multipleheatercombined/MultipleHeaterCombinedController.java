@@ -59,6 +59,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
     private int timeToWait = 10 * 60 * 1000;
     private boolean timeIsUp;
     private boolean heatOnlyControlled;
+    private boolean primaryHeaterAlwaysActive;
 
 
     public MultipleHeaterCombinedController() {
@@ -103,6 +104,7 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
         timeToWait = config.minWaitTime() * 60 * 1000;
         timeIsUp = false;
         this.heatOnlyControlled = config.heatOnlyControlled();
+        this.primaryHeaterAlwaysActive = config.primaryAlwaysActive();
     }
 
     private void allocateComponent(String device, String type, String concreteType) throws OpenemsError.OpenemsNamedException, ConfigurationException {
@@ -205,32 +207,39 @@ public class MultipleHeaterCombinedController extends AbstractOpenemsComponent i
                 timeIsUp = true;
             }
         }
+        //Performance of Primary Heater
+        int primaryHeaterFullPower = 0;
+        if (primaryHeaterAlwaysActive) {
+            primaryHeaterFullPower = this.heaterPrimary.runFullPower();
+        }
         if (!timeIsUp || heatMeter.getAverageHourConsumption().getNextValue().isDefined()) {
-            int thermicalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().isDefined() ? heatMeter.getAverageHourConsumption().getNextValue().get() : 0;
+            int thermalPerformanceDemand = heatMeter.getAverageHourConsumption().getNextValue().isDefined() ? heatMeter.getAverageHourConsumption().getNextValue().get() : 0;
             this.currentBuffer = getCorrectBufferValue();
-            if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.heaterPrimaryMax) {
+            if (primaryHeaterAlwaysActive) {
+                thermalPerformanceDemand -= primaryHeaterFullPower;
+            } else if (this.temperatureSensorHeater1Off.getTemperature().getNextValue().get() > this.heaterPrimaryMax) {
                 heaterPrimary.setOffline();
             } else if (this.temperatureSensorHeater1On.getTemperature().getNextValue().get() < this.heaterPrimaryMin) {
-                thermicalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
+                thermalPerformanceDemand -= this.heaterPrimary.calculateProvidedPower(thermalPerformanceDemand, this.currentBuffer);
             }
 
-            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || (thermicalPerformanceDemand <= 0 && timeIsUp)) {
+            if (this.temperatureSensorHeater2Off.getTemperature().getNextValue().get() > this.heaterSecondaryMax || (thermalPerformanceDemand <= 0 && timeIsUp)) {
                 heaterSecondary.setOffline();
 
             } else if (this.temperatureSensorHeater2On.getTemperature().getNextValue().get() < this.heaterSecondaryMin) {
 
-                thermicalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
+                thermalPerformanceDemand -= this.heaterSecondary.calculateProvidedPower(thermalPerformanceDemand, this.currentBuffer);
             }
 
 
-            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || (thermicalPerformanceDemand <= 0 && timeIsUp)) {
+            if (this.temperatureSensorHeater3Off.getTemperature().getNextValue().get() > this.heaterBackupMax || (thermalPerformanceDemand <= 0 && timeIsUp)) {
                 this.heaterBackup.setOffline();
             } else if (this.temperatureSensorHeater3On.getTemperature().getNextValue().get() < this.heaterBackupMin) {
-                thermicalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermicalPerformanceDemand, this.currentBuffer);
+                thermalPerformanceDemand -= this.heaterBackup.calculateProvidedPower(thermalPerformanceDemand, this.currentBuffer);
             }
 
-            if (thermicalPerformanceDemand > 0) {
-                logInfo(this.log, "Performance demand that cannot be compensated: " + thermicalPerformanceDemand);
+            if (thermalPerformanceDemand > 0) {
+                logInfo(this.log, "Performance demand that cannot be compensated: " + thermalPerformanceDemand);
             }
 
         }

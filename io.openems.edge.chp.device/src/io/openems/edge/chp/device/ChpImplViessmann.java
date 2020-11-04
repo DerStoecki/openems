@@ -31,6 +31,8 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,8 @@ import java.util.List;
         immediate = true,
         property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE)
 public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements OpenemsComponent, ChpInformationChannel, EventHandler, Heater {
+
+    private final Logger log = LoggerFactory.getLogger(ChpImplViessmann.class);
     private Mcp mcp;
     private ChpType chpType;
     private int thermicalOutput;
@@ -333,23 +337,27 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
     @Override
     public int calculateProvidedPower(int demand, float bufferValue) throws OpenemsError.OpenemsNamedException {
         //percent
-        if (this.isErrorOccured().value().isDefined() && this.isErrorOccured().value().get()) {
-            return 0;
-        }
-        int providedPower = Math.round(((demand * bufferValue) * 100) / thermicalOutput);
-        if (this.useRelay == true) {
-            this.relay.getRelaysChannel().setNextWriteValue(true);
-        }
+        if (this.accessChp.equals(AccessChp.READWRITE)) {
+            if (this.isErrorOccured().value().isDefined() && this.isErrorOccured().value().get()) {
+                return 0;
+            }
+            int providedPower = Math.round(((demand * bufferValue) * 100) / thermicalOutput);
+            if (this.useRelay == true) {
+                this.relay.getRelaysChannel().setNextWriteValue(true);
+            }
 
-        if (providedPower >= 100) {
+            if (providedPower >= 100) {
 
-            getPowerLevelChannel().setNextWriteValue(100);
-            return thermicalOutput;
+                getPowerLevelChannel().setNextWriteValue(100);
+                return thermicalOutput;
 
+            } else {
+                getPowerLevelChannel().setNextWriteValue(providedPower);
+                providedPower = providedPower < this.config.startPercentage() ? config.startPercentage() : providedPower;
+                return (providedPower * thermicalOutput) / 100;
+            }
         } else {
-            getPowerLevelChannel().setNextWriteValue(providedPower);
-            providedPower = providedPower < this.config.startPercentage() ? config.startPercentage() : providedPower;
-            return (providedPower * thermicalOutput) / 100;
+            return 0;
         }
     }
 
@@ -364,6 +372,24 @@ public class ChpImplViessmann extends AbstractOpenemsModbusComponent implements 
             this.relay.getRelaysChannel().setNextWriteValue(true);
         }
         getPowerLevelChannel().setNextWriteValue(0);
+    }
+
+    @Override
+    public int runFullPower() {
+        if (this.isErrorOccured().value().isDefined() && this.isErrorOccured().value().get()) {
+            return 0;
+        }
+        try {
+
+            if (this.useRelay == true) {
+                this.relay.getRelaysChannel().setNextWriteValue(true);
+            }
+            this.getPowerLevelChannel().setNextWriteValue(100);
+        } catch (OpenemsError.OpenemsNamedException e) {
+            log.warn("Couldn't Write into Channel! " + e.getMessage());
+            return 0;
+        }
+        return this.getMaximumThermicalOutput();
     }
 
 

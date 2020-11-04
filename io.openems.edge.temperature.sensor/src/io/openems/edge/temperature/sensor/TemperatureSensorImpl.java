@@ -41,6 +41,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
     private String alias;
     private Adc adcForTemperature;
     private final Logger log = LoggerFactory.getLogger(TemperatureSensorImpl.class);
+    private int offset;
 
 
     public TemperatureSensorImpl() {
@@ -55,6 +56,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
         this.spiChannel = config.spiChannel();
         this.pinPosition = config.pinPosition();
         this.alias = config.alias();
+        this.offset = config.offset();
         createTemperatureDigitalReadTask();
 
     }
@@ -80,7 +82,7 @@ public class TemperatureSensorImpl extends AbstractOpenemsComponent implements O
                     ).findFirst().ifPresent(pinValue -> {
                         if (pinValue.setUsedBy(super.id()) || pinValue.getUsedBy().equals(super.id())) {
                             TemperatureDigitalReadTask task = new TemperatureDigitalReadTask(this.getTemperature(),
-                                    adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition);
+                                    adcForTemperature.getVersionId(), adcForTemperature, this.pinPosition, this.offset);
                             try {
                                 bridgeSpi.addSpiTask(super.id(), task);
                             } catch (ConfigurationException e) {

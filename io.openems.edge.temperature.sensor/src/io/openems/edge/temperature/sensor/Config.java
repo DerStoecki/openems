@@ -22,6 +22,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     @AttributeDefinition(name = "Pin Position", description = "What Pin Position of the Adc you want to use, starting with No. 0")
     short pinPosition() default 0;
 
+    @AttributeDefinition(name = "Temperature Offset in dC", description = "Some T-Sensors can have an offset of the actual T-Value")
+    int offset() default 0;
+
     boolean enabled() default true;
 
     String webconsole_configurationFactory_nameHint() default "TemperatureSensor [{id}]";

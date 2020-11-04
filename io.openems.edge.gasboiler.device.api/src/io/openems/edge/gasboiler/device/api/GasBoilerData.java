@@ -4,6 +4,7 @@ import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
+import io.openems.edge.common.channel.ChannelId;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -499,7 +500,7 @@ public interface GasBoilerData extends OpenemsComponent {
         return this.channel(ChannelId.HEAT_BOILER_TEMPERATURE_SET_POINT_EFFECTIVE);
     }
 
-    default Channel<Boolean> getHeatBoilerPerformanceStatus() {
+    default WriteChannel<Boolean> getHeatBoilerPerformanceStatus() {
         return this.channel(ChannelId.HEAT_BOILER_PERFORMANCE_STATUS);
     }
 
