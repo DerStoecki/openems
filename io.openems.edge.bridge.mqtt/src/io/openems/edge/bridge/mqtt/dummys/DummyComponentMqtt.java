@@ -68,7 +68,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
                 config.createdByOsgiConfig(), mqttBridge, super.id());
         this.component.update(c, "channelIdList", channels, config.channelIdList().length);
         if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
-            this.component.initTasks(channels);
+            this.component.initTasks(channels, config.payloadStyle());
             this.mqttBridge.addMqttComponent(super.id(), this);
             this.isInitialized = true;
         }

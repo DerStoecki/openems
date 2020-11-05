@@ -5,6 +5,7 @@ import io.openems.edge.bridge.mqtt.api.MqttTask;
 import io.openems.edge.bridge.mqtt.api.MqttType;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionSubscribeImpl;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.text.ParseException;
@@ -48,7 +49,6 @@ public class MqttSubscribeManager extends AbstractMqttManager {
                         try {
                             ((MqttSubscribeTask) task).convertTime(super.timeZone);
                         } catch (ParseException e) {
-                            //TODO better Exception handling
                             System.out.println("Error while converting Time at path: " + task.getTopic());
                         }
                     }
@@ -64,12 +64,24 @@ public class MqttSubscribeManager extends AbstractMqttManager {
      */
     private void checkLostConnections() throws MqttException {
         MqttException[] exceptions = {null};
+        //Each connection
         this.connections.forEach((key, value) -> {
-            if (!value.getMqttClient().isConnected() && exceptions[0] == null) {
-                try {
-                    super.tryReconnect(value.getMqttClient());
-                } catch (MqttException e) {
-                    exceptions[0] = e;
+            if (exceptions[0] == null && value.isCleanSession() && value.needsToBeResubscribed()) {
+                //Each of their tasks
+                super.allTasks.forEach((taskKey, taskList) -> {
+                    taskList.forEach(mqttTask -> {
+                        try {
+                            if (exceptions[0] == null) {
+                                this.subscribeToTopic(mqttTask, taskKey);
+                            }
+                        } catch (MqttException e) {
+                            exceptions[0] = e;
+                        }
+                    });
+                });
+                //Set false for resubscribing
+                if (exceptions[0] == null) {
+                    value.setNeedsToBeResubscribed(false);
                 }
             }
 
@@ -87,7 +99,8 @@ public class MqttSubscribeManager extends AbstractMqttManager {
      * @throws MqttException throws exception if callback fails.
      */
     public void subscribeToTopic(MqttTask task, String id) throws MqttException {
-        this.connections.get(task.getMqttType()).subscribeToTopic(task.getTopic(), task.getQos(), id);
+        MqttConnectionSubscribeImpl connection = this.connections.get(task.getMqttType());
+        connection.subscribeToTopic(task.getTopic(), task.getQos(), id);
     }
 
     public void deactivate() {

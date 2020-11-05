@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface MqttConfigurationComponent {
 
-    void initTasks(List<Channel<?>> channels) throws MqttException, ConfigurationException;
+    void initTasks(List<Channel<?>> channels, String payloadStyle) throws MqttException, ConfigurationException;
 
     boolean hasBeenConfigured();
 
@@ -26,4 +26,6 @@ public interface MqttConfigurationComponent {
     void initJson(ArrayList<Channel<?>> channels, String pathForJson) throws IOException, ConfigurationException;
 
     void updateJsonByChannel(ArrayList<Channel<?>> channels, String s) throws ConfigurationException;
+
+    boolean valueLegit(String value);
 }

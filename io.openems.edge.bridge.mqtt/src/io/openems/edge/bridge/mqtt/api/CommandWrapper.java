@@ -4,6 +4,7 @@ public class CommandWrapper {
 
     private String value;
     private String expiration;
+    private boolean infinite;
 
     public CommandWrapper(String value, String expiration) {
         this.value = value;
@@ -22,7 +23,17 @@ public class CommandWrapper {
         return expiration;
     }
 
+    public boolean isInfinite() {
+        return infinite;
+    }
+
     public void setExpiration(String expiration) {
+        if (expiration.toUpperCase().trim().equals("INFINITE")) {
+            this.infinite = true;
+        } else {
+            this.infinite = false;
+        }
+
         this.expiration = expiration;
     }
 }

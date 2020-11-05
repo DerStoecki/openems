@@ -24,9 +24,9 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     }
 
     @Override
-    public void initTasks(List<Channel<?>> channels) throws MqttException, ConfigurationException {
+    public void initTasks(List<Channel<?>> channels, String payloadStyle) throws MqttException, ConfigurationException {
         try {
-            this.mqttComponent.initTasks(channels);
+            this.mqttComponent.initTasks(channels, payloadStyle);
             this.configured = true;
         } catch (MqttException | ConfigurationException e) {
             configured = false;
@@ -41,6 +41,12 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
 
     @Override
     public boolean expired(MqttSubscribeTask task, CommandWrapper key) {
+        if (key.isInfinite()) {
+            return false;
+        }
+        if (key.getValue().equals(null) || key.getValue() == null) {
+            return true;
+        }
         return this.mqttComponent.expired(task, Integer.parseInt(key.getExpiration()));
     }
 
@@ -64,11 +70,17 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
         this.mqttComponent.initJson(channels, config);
     }
 
+    @Override
+    public boolean valueLegit(String value) {
+        return !(value.toUpperCase().equals("NOTDEFINED") || value.toUpperCase().equals("NAN"));
+    }
+
 
     private class MqttComponentImpl extends AbstractMqttComponent {
         /**
          * Initially update Config and after that set params for initTasks.
-         *  @param id            id of this Component, usually from configuredDevice and it's config.
+         *
+         * @param id            id of this Component, usually from configuredDevice and it's config.
          * @param subConfigList Subscribe ConfigList, containing the Configuration for the subscribeTasks.
          * @param pubConfigList Publish ConfigList, containing the Configuration for the publishTasks.
          * @param payloads      containing all the Payloads. ConfigList got the Payload list as well.

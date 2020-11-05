@@ -22,6 +22,7 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
 
     private boolean connectionLost;
     private boolean callBackWasSet;
+    private boolean needsToBeResubscribed;
 
     public MqttConnectionSubscribeImpl() {
         super();
@@ -80,10 +81,9 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
     }
 
 
-    //TODO HANDLE CONNECTION LOST AND DELIVERY COMPLETE
     @Override
     public void connectionLost(Throwable throwable) {
-        this.connectionLost = true;
+        this.needsToBeResubscribed = true;
     }
 
     // REPLACE payload
@@ -93,14 +93,17 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
 
     }
 
-    //TODO PUBACK AND PUBCOMP
+
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
     }
 
-    @Override
-    public boolean isConnectionLost() {
-        return connectionLost;
+    public boolean needsToBeResubscribed() {
+        return this.needsToBeResubscribed;
+    }
+
+    public void setNeedsToBeResubscribed(boolean needsToBeResubscribed) {
+        this.needsToBeResubscribed = needsToBeResubscribed;
     }
 
     @Override

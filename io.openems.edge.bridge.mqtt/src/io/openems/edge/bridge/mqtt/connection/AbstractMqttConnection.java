@@ -30,6 +30,7 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     //TODO INFLIGHT MESSAGES
     private MemoryPersistence persistence;
     private MqttConnectOptions mqttConnectOptions;
+    boolean cleanSessionFlag;
 
     private boolean disconnected = false;
 
@@ -61,23 +62,9 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         }
         mqttConnectOptions.setCleanSession(cleanSession);
         mqttConnectOptions.setKeepAliveInterval(keepAlive);
-        //8883 == TLS and 443 == WSS
-        //if (mqttBroker.contains("ssl") || mqttBroker.contains("8883") || mqttBroker.contains("443")) {
-        // TLS CONNECTION!!!!
-        //  String[] protocols = new String[]{"TLSv1.3", "TLSv1.2", SSLContextImpl.TLSContext};
-        // String[] cipherSuits = new String[] {"TLS_AES_128_GCM_SHA256"};
-        // SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(InetAddress.getLocalHost(), 8883);
-        // socket.setEnabledProtocols(protocols);
-
-
-        // SocketFactory basicSocketFactory = SocketFactory.getDefault();
-        // Socket s = basicSocketFactory.createSocket("localhost", 443);
-        // SSLSocketFactory tlsSocketFactory = SSLSocketFactory.getDefault();
-        // s = tlsSocketFactory.createSocket(s,"localhost", 443, true);
-        // mqttConnectOptions.;
-        //mqttConnectoptions.setSocketFactory(SslUtil.getSocketFactory("caFilePath", "clientCrtFilePath", "clientKeyFilePath", "password"));
-        // System.out.println("Future Work");
-        //}
+        mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
+        mqttConnectOptions.setAutomaticReconnect(true);
+        this.cleanSessionFlag = cleanSession;
     }
 
 
@@ -163,8 +150,6 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         System.out.println("Connected");
     }
 
-    //TODO EXCEPTION HANDLING
-
     @Override
     public void disconnect() throws MqttException {
 
@@ -175,6 +160,11 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     @Override
     public MqttClient getMqttClient() {
         return this.mqttClient;
+    }
+
+    @Override
+    public boolean isCleanSession(){
+        return this.cleanSessionFlag;
     }
 
 }

@@ -21,7 +21,7 @@ Private-Package: \
     	io.openems.edge.relays.device.api;version=latest,\
 	    io.openems.edge.generic.pi4j;version=latest,\
 	    io.openems.edge.bridge.mqtt;version=latest,\
-	    org.eclipse.paho.client.mqttv3;version=1.2.0,\
+	    org.eclipse.paho.client.mqttv3;version=1.2.4,\
 
 
 -testpath: \

@@ -75,9 +75,9 @@ public abstract class AbstractMqttComponent {
      * @throws MqttException          will be thrown if a Problem occurred with the broker.
      * @throws ConfigurationException will be thrown if the configuration was wrong.
      */
-    public void initTasks(List<Channel<?>> channelIds) throws MqttException, ConfigurationException {
+    public void initTasks(List<Channel<?>> channelIds, String payloadStyle) throws MqttException, ConfigurationException {
         if (createdByOsgi) {
-            createMqttTasksFromOsgi(channelIds);
+            createMqttTasksFromOsgi(channelIds, payloadStyle);
         }
     }
 
@@ -91,12 +91,12 @@ public abstract class AbstractMqttComponent {
      * @throws ConfigurationException if the Channels are Wrong
      * @throws MqttException          if a problem with Mqtt occurred
      */
-    private void createMqttTasksFromOsgi(List<Channel<?>> channelIds) throws ConfigurationException, MqttException {
+    private void createMqttTasksFromOsgi(List<Channel<?>> channelIds, String payloadStyle) throws ConfigurationException, MqttException {
         if (this.pubConfigList.size() > 0 && !this.pubConfigList.get(0).equals("")) {
-            createTasks(this.pubConfigList, false, channelIds);
+            createTasks(this.pubConfigList, false, channelIds, payloadStyle);
         }
         if (this.subConfigList.size() > 0 && !this.subConfigList.get(0).equals("")) {
-            createTasks(this.subConfigList, true, channelIds);
+            createTasks(this.subConfigList, true, channelIds, payloadStyle);
         }
         MqttException[] exMqtt = {null};
         this.subscribeTasks.forEach((key, value) -> {
@@ -135,7 +135,7 @@ public abstract class AbstractMqttComponent {
      * @throws ConfigurationException will be thrown if config is wrong/has an Error.
      */
 
-    private void createTasks(List<String> configList, boolean subTasks, List<Channel<?>> channelIds) throws ConfigurationException {
+    private void createTasks(List<String> configList, boolean subTasks, List<Channel<?>> channelIds, String payloadStyle) throws ConfigurationException {
         //
         ConfigurationException[] exConfig = {null};
 
@@ -145,9 +145,9 @@ public abstract class AbstractMqttComponent {
             //futurePayload
             String payloadForTask;
             //split the entry; Each ConfigEntry looks like this:
-            //MqttType!Priority!Topic!QoS!RetainFlag!TimeStampEnabled!PayloadNo!TimeToWait
+            //MqttType!Priority!Topic!QoS!RetainFlag!TimeStampEnabled!PayloadNo!TimeToWait!PayloadStyle
             String[] tokens = entry.split("!");
-            if (tokens.length != 9) {
+            if (tokens.length != 8) {
                 exConfig[0] = new ConfigurationException(entry, "Invalid Config");
             } else {
                 //MqttType
@@ -172,7 +172,7 @@ public abstract class AbstractMqttComponent {
                 //TimeToWait
                 int timeToWait = Integer.parseInt(tokens[7]);
                 //PayloadStyle
-                PayloadStyle style = PayloadStyle.valueOf(tokens[8]);
+                PayloadStyle style = PayloadStyle.valueOf(payloadStyle.toUpperCase());
                 //if Error already occurred save time with this.
                 if (exConfig[0] == null) {
                     try {

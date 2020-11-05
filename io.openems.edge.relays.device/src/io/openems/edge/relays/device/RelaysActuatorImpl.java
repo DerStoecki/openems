@@ -91,11 +91,11 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
         List<Channel<?>> channels = new ArrayList<>(this.channels());
         this.mqttConfigurationComponent.update(ca.getConfiguration(this.servicePid(), "?"), "channelIdList",
                 channels, config.channelIdList().length);
-        if(!config.createdByOsgi() && !config.pathForJson().trim().equals("")){
+        if (!config.createdByOsgi() && !config.pathForJson().trim().equals("")) {
             this.mqttConfigurationComponent.initJson(new ArrayList<>(this.channels()), config.pathForJson());
         }
         if (this.mqttConfigurationComponent.hasBeenConfigured() && config.configurationDone()) {
-            this.mqttConfigurationComponent.initTasks(new ArrayList<>(this.channels()));
+            this.mqttConfigurationComponent.initTasks(new ArrayList<>(this.channels()), config.payloadStyle());
             this.mqttBridge.addMqttComponent(super.id(), this);
         }
     }
@@ -138,9 +138,12 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
             if (entry instanceof MqttSubscribeTask) {
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
-                    if (!this.mqttConfigurationComponent.expired(task, value)) {
-                        reactToComponentCommand(key, value);
-                    }
+                    if (this.mqttConfigurationComponent.valueLegit(value.getValue()))
+
+                        if (!this.mqttConfigurationComponent.expired(task, value)) {
+                            reactToComponentCommand(key, value);
+
+                        }
                 });
             }
         });
@@ -148,7 +151,7 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
 
     @Override
     public void updateJsonConfig() throws ConfigurationException {
-                this.mqttConfigurationComponent.updateJsonByChannel(new ArrayList<>(this.channels()), this.getConfiguration().value().get());
+        this.mqttConfigurationComponent.updateJsonByChannel(new ArrayList<>(this.channels()), this.getConfiguration().value().get());
     }
 
     @Override
@@ -160,10 +163,18 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
         switch (key) {
             case SETPOWER:
                 try {
-                    this.getRelaysChannel().setNextWriteValue(Boolean.parseBoolean(value.getValue()));
+                    //JUST FOR TESTING
+                    boolean onOff = false;
+                    if (Float.parseFloat(value.getValue()) > 70) {
+                        onOff = true;
+                    }
+                    // boolean onOff = Boolean.parseBoolean(value.getValue);
+                    this.getRelaysChannel().setNextWriteValue(onOff);
+                    //this.getRelaysChannel().setNextWriteValue(Boolean.parseBoolean(value.getValue()));
                 } catch (OpenemsError.OpenemsNamedException e) {
                     log.warn("Couldn't write : " + value.getValue() + "To the Channel: " + this.getRelaysChannel().channelId());
                 }
+                break;
             default:
                 log.warn("Command " + key + " is not supported by Class " + this.getClass());
         }

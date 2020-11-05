@@ -32,12 +32,10 @@ public interface MqttConnectionSubscribe {
      */
     List<String> getTopic(String id);
 
-    /**
-     * Is the connection Lost.
-     *
-     * @return a boolean.F
-     */
-    boolean isConnectionLost();
 
     void unsubscribeFromTopic(String topic) throws MqttException;
+
+    boolean needsToBeResubscribed();
+
+    void setNeedsToBeResubscribed(boolean needsToBeResubscribed);
 }

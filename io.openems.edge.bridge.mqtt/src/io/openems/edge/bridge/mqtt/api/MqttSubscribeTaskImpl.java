@@ -48,7 +48,7 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
             }
         }
         commandValueMap = new HashMap<>();
-        Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper(null, null)));
+        Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper("NOTDEFINED", "NOTDEFINED")));
     }
 
     @Override
@@ -97,9 +97,13 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
         }
 
         JsonObject responseJson = new Gson().fromJson(response, JsonObject.class);
-        if (response.contains("time")) {
+
+        if (responseJson.has("time")) {
             this.time = responseJson.get("time").getAsString();
+        } else if (responseJson.has("timestamp")) {
+            this.time = responseJson.get("timestamp").getAsString();
         }
+
 
         switch (this.getMqttType()) {
             case TELEMETRY:
@@ -128,12 +132,16 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
 
         tokens.keySet().forEach(entry -> {
             if (entry.contains("method")) {
-                commandTypeString.set(tokens.get(entry).toString().toUpperCase().replaceAll("\"", ""));
+                commandTypeString.set(tokens.get(entry).getAsString().toUpperCase());
 
             } else if (entry.contains("value")) {
-                this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setValue(tokens.get(entry).toString());
-            } else if (entry.contains("expires")) {
-                this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setExpiration(tokens.get(entry).toString());
+                this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setValue(tokens.get(entry).getAsString());
+            } else if (entry.toUpperCase().contains("EXPIRES") || entry.toUpperCase().contains("EXPIRATION")) {
+                if (tokens.get(entry).isJsonNull()) {
+                    this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setExpiration("Infinite");
+                } else {
+                    this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setExpiration(tokens.get(entry).getAsString());
+                }
             }
         });
     }

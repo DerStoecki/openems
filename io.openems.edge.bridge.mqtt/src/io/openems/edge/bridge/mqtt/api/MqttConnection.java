@@ -21,4 +21,6 @@ public interface MqttConnection {
     void disconnect() throws MqttException;
 
     MqttClient getMqttClient();
+
+    boolean isCleanSession();
 }
