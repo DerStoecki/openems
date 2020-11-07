@@ -153,6 +153,11 @@ public enum Unit {
     WATT_HOURS("Wh"),
 
     /**
+     * Unit of Energy [hWh]
+     */
+    HECTOWATT_HOURS("hWh", WATT_HOURS, 2),
+
+    /**
      * Unit of Energy [kWh]
      */
     KILOWATT_HOURS("kWh", WATT_HOURS, 3),
@@ -208,6 +213,16 @@ public enum Unit {
      * Unit of Temperature [dC]
      */
     DEZIDEGREE_CELSIUS("dC", DEGREE_CELSIUS, -1),
+
+    /**
+     * Unit of Temperature [K]
+     */
+    DEGREE_KELVIN("K"),
+
+    /**
+     * Unit of Temperature [dK]
+     */
+    DEZIDEGREE_KELVIN("dK", DEGREE_KELVIN, -1),
 
     // ##########
     // Time
@@ -299,8 +314,13 @@ public enum Unit {
      * */
     DEGREE("°"),
 
-    MILLI_DEGREE("m°", DEGREE, -3);
+    MILLI_DEGREE("m°", DEGREE, -3),
 
+    // #########
+    // Volume
+    // ########
+
+    LITRES("l");
 
 
 

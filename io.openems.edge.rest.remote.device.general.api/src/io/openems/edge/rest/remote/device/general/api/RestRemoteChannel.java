@@ -2,6 +2,7 @@ package io.openems.edge.rest.remote.device.general.api;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.WriteChannel;
@@ -40,7 +41,9 @@ public interface RestRemoteChannel extends OpenemsComponent {
          * </ul>
          */
         WHAT_TYPE_SET(Doc.of(OpenemsType.STRING)),
-        ALLOW_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
+        ALLOW_REQUEST(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE).onInit(channel -> {
+            ((BooleanWriteChannel) channel).onSetNextWrite(channel::setNextValue);
+        })),
         UNIT(Doc.of(OpenemsType.STRING)),
         IS_INVERSE(Doc.of(OpenemsType.BOOLEAN));
 

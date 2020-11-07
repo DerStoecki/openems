@@ -13,13 +13,17 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
     private boolean isInverse;
     private static final float SCALING = 10.f;
     private int digitValue = -5;
+    private boolean hasLed;
+    private int ledPinPosition;
 
 
-    public PwmDeviceTaskImpl(String deviceId, WriteChannel<Float> powerLevel, String pwmModule, short pinPosition, boolean isInverse) {
+    public PwmDeviceTaskImpl(String deviceId, WriteChannel<Float> powerLevel, String pwmModule, short pinPosition, boolean isInverse, boolean hasLed, int ledPinPosition) {
         super(pwmModule, deviceId);
         this.powerLevel = powerLevel;
         this.pinPosition = pinPosition;
         this.isInverse = isInverse;
+        this.hasLed = hasLed;
+        this.ledPinPosition = ledPinPosition;
     }
 
 
@@ -68,5 +72,18 @@ public class PwmDeviceTaskImpl extends AbstractI2cTask {
         } else {
             return digitValue;
         }
+    }
+
+    @Override
+    public boolean hasLed() {
+        return this.hasLed;
+    }
+
+    @Override
+    public int ledPosition() {
+        if (this.hasLed) {
+            return this.ledPinPosition;
+        }
+        return -1;
     }
 }

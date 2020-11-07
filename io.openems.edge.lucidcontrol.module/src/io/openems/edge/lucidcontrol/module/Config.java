@@ -13,7 +13,7 @@ import org.osgi.service.metatype.annotations.Option;
     String service_pid();
 
     @AttributeDefinition(name = "LucidControlModule-ID", description = "ID of LucidControlModule.")
-    String id() default "LucidControlModule0";
+    String id() default "LucidControlInputModule0";
 
     @AttributeDefinition(name = "Alias", description = "Human readable Name.")
     String alias() default "";

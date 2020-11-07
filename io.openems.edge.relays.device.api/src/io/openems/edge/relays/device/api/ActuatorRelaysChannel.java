@@ -20,7 +20,7 @@ public interface ActuatorRelaysChannel extends OpenemsComponent {
      */
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        ON_OFF(Doc.of(OpenemsType.BOOLEAN).unit(Unit.ON_OFF).accessMode(AccessMode.READ_WRITE)),
+        ON_OFF(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_WRITE)),
         //
         IS_CLOSER(Doc.of(OpenemsType.BOOLEAN).accessMode(AccessMode.READ_ONLY));
         private final Doc doc;

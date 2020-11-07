@@ -24,9 +24,10 @@ public interface LucidControlBridgeTask {
      */
     String getPath();
 
-    /**
-     * Gets the Position of the Connected Device on the LucidModule, needed by CommandLine in forever() Method of Bridge.
-     */
-    int getPinPos();
+    boolean writeTaskDefined();
+
+    String getRequest();
+
+    boolean isRead();
 
 }

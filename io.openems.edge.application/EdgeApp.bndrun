@@ -6,15 +6,16 @@
 
 -runproperties: \
 	org.osgi.service.http.port=8080,\
-	org.osgi.framework.bootdelegation="sun.misc"
+	org.osgi.framework.bootdelegation="sun.misc",\
 	openems.data.dir=c:/openems/data
 
 -runee: JavaSE-1.8
 
--runsystempackages: sun.misc, com.sun.net.httpserver
-<
+-runsystempackages: sun.misc, com.sun.net.httpserver, javax.crypto,javax.crypto.spec,javax.net.ssl,javax.security, \
+                    javax.net.ssl.keyStore, javax.net.ssl.keyStorePassword
+
 -runrequires: \
- osgi.identity;filter:='(osgi.identity=io.openems.edge.meter.simulated)',\
+    osgi.identity;filter:='(osgi.identity=io.openems.edge.meter.simulated)',\
 	bnd.identity;id='org.apache.felix.http.jetty',\
 	bnd.identity;id='org.apache.felix.webconsole',\
 	bnd.identity;id='org.ops4j.pax.logging.pax-logging-service',\
@@ -32,9 +33,12 @@
 	bnd.identity;id='io.openems.edge.bridge.lucidcontrol',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
+	bnd.identity;id='io.openems.edge.bridge.mqtt',\
 	bnd.identity;id='io.openems.edge.bridge.onewire',\
 	bnd.identity;id='io.openems.edge.bridge.rest.communication',\
 	bnd.identity;id='io.openems.edge.bridge.spi',\
+	bnd.identity;id='io.openems.edge.channeltutorial',\
+	bnd.identity;id='io.openems.edge.channeltutorial.api',\
 	bnd.identity;id='io.openems.edge.chp.device',\
 	bnd.identity;id='io.openems.edge.chp.device.api',\
 	bnd.identity;id='io.openems.edge.chp.module',\
@@ -67,14 +71,27 @@
 	bnd.identity;id='io.openems.edge.controller.ess.onefullcycle',\
 	bnd.identity;id='io.openems.edge.controller.evcs',\
 	bnd.identity;id='io.openems.edge.controller.evcs.fixactivepower',\
+	bnd.identity;id='io.openems.edge.controller.heatnetwork.master',\
+	bnd.identity;id='io.openems.edge.controller.heatnetwork.performancebooster',\
 	bnd.identity;id='io.openems.edge.controller.highloadtimeslot',\
-	bnd.identity;id='io.openems.edge.controller.heatpump.device',\
-	bnd.identity;id='io.openems.edge.controller.heatpump.device.api',\
+	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
+	bnd.identity;id='io.openems.edge.controller.pump.grundfos',\
+	bnd.identity;id='io.openems.edge.controller.pump.grundfos.api',\
 	bnd.identity;id='io.openems.edge.controller.io.alarm',\
 	bnd.identity;id='io.openems.edge.controller.io.fixdigitaloutput',\
-	bnd.identity;id='io.openems.edge.controller.pid.passing,\
+	bnd.identity;id='io.openems.edge.controller.passing.controlcenter',\
+	bnd.identity;id='io.openems.edge.controller.passing.controlcenter.api',\
+	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator',\
+	bnd.identity;id='io.openems.edge.controller.passing.heatingcurveregulator.api',\
+	bnd.identity;id='io.openems.edge.controller.passing.valvepumpcontrol',\
+	bnd.identity;id='io.openems.edge.controller.passing.valvepumpcontrol.api',\
+	bnd.identity;id='io.openems.edge.controller.pid.passing',\
 	bnd.identity;id='io.openems.edge.controller.pvinverter.fixpowerlimit',\
 	bnd.identity;id='io.openems.edge.controller.selltogridlimit',\
+	bnd.identity;id='io.openems.edge.controller.signalhotwater',\
+	bnd.identity;id='io.openems.edge.controller.signalhotwater.api',\
+	bnd.identity;id='io.openems.edge.controller.signalhotwater.valvecontroller',\
+	bnd.identity;id='io.openems.edge.controller.signalhotwater.valvecontroller.api',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.balancing',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.balancingschedule',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.fixactivepower',\
@@ -88,7 +105,11 @@
 	bnd.identity;id='io.openems.edge.controller.temperature.overseer',\
 	bnd.identity;id='io.openems.edge.controller.temperature.passing',\
 	bnd.identity;id='io.openems.edge.controller.temperature.passing.api',\
+	bnd.identity;id='io.openems.edge.controller.warmup.passing',\
+	bnd.identity;id='io.openems.edge.controller.warmup.passing.api',\
 	bnd.identity;id='io.openems.edge.core',\
+	bnd.identity;id='io.openems.edge.dachs.gltinterface',\
+	bnd.identity;id='io.openems.edge.dachs.gltinterface.api',\
 	bnd.identity;id='io.openems.edge.ess.byd.container',\
 	bnd.identity;id='io.openems.edge.ess.cluster',\
 	bnd.identity;id='io.openems.edge.ess.core',\
@@ -110,8 +131,11 @@
 	bnd.identity;id='io.openems.edge.gpio.device',\
 	bnd.identity;id='io.openems.edge.gpio.device.api',\
 	bnd.identity;id='io.openems.edge.heater.api',\
-	bnd.identity;id='io.openems.edge.heatpump.device',\
-	bnd.identity;id='io.openems.edge.heatpump.device.api',\
+	bnd.identity;id='io.openems.edge.pump.grundfos',\
+	bnd.identity;id='io.openems.edge.pump.grundfos.api',\
+	bnd.identity;id='io.openems.edge.heatpump.alphainnotec',\
+	bnd.identity;id='io.openems.edge.heatpump.alphainnotec.api',\
+	bnd.identity;id='io.openems.edge.heatpump.smartgrid.generalized.api',\
 	bnd.identity;id='io.openems.edge.i2c.mcp.api',\
 	bnd.identity;id='io.openems.edge.io.kmtronic',\
 	bnd.identity;id='io.openems.edge.io.wago',\
@@ -139,6 +163,7 @@
 	bnd.identity;id='io.openems.edge.meter.weidmueller',\
 	bnd.identity;id='io.openems.edge.onewire.thermometer',\
 	bnd.identity;id='io.openems.edge.thermometer.api',\
+	bnd.identity;id='io.openems.edge.powerplant.analog.api',\
 	bnd.identity;id='io.openems.edge.predictor.persistencemodel',\
 	bnd.identity;id='io.openems.edge.pvinverter.kaco.blueplanet',\
 	bnd.identity;id='io.openems.edge.pvinverter.solarlog',\
@@ -161,6 +186,8 @@
 	bnd.identity;id='io.openems.edge.solaredge',\
 	bnd.identity;id='io.openems.edge.temperature.module',\
 	bnd.identity;id='io.openems.edge.temperature.module.api',\
+	bnd.identity;id='io.openems.edge.temperature.module.signalsensor',\
+	bnd.identity;id='io.openems.edge.temperature.module.signalsensor.api',\
 	bnd.identity;id='io.openems.edge.temperature.passing.api',\
 	bnd.identity;id='io.openems.edge.temperature.passing.pump',\
 	bnd.identity;id='io.openems.edge.temperature.passing.pump.api',\
@@ -180,7 +207,7 @@
 	com.ghgande.j2mod;version='[2.5.5,2.5.6)',\
 	com.github.scribejava.core;version='[6.9.0,6.9.1)',\
 	com.google.gson;version='[2.8.5,2.8.6)',\
-	com.google.guava;version='[28.1.0,28.1.1)',\
+	com.google.guava;version='[20.0.0,29.1.1)',\
 	com.google.guava.failureaccess;version='[1.0.1,1.0.2)',\
 	io.openems.common;version=snapshot,\
 	io.openems.edge.application;version=snapshot,\
@@ -194,9 +221,12 @@
 	io.openems.edge.bridge.lmnwired;version=snapshot,\
 	io.openems.edge.bridge.mbus;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
+	io.openems.edge.bridge.mqtt;version=snapshot,\
 	io.openems.edge.bridge.onewire;version=snapshot,\
 	io.openems.edge.bridge.rest.communcation;version=snapshot,\
 	io.openems.edge.bridge.spi;version=snapshot,\
+	io.openems.edge.channeltutorial;version=snapshot,\
+	io.openems.edge.channeltutorial.api;version=snapshot,\
 	io.openems.edge.chp.device;version=snapshot,\
 	io.openems.edge.chp.device.api;version=snapshot,\
 	io.openems.edge.chp.module;version=snapshot,\
@@ -229,14 +259,27 @@
 	io.openems.edge.controller.ess.onefullcycle;version=snapshot,\
 	io.openems.edge.controller.evcs;version=snapshot,\
 	io.openems.edge.controller.evcs.fixactivepower;version=snapshot,\
-	io.openems.edge.controller.heatpump.device;version=snapshot,\
-	io.openems.edge.controller.heatpump.device.api;version=snapshot,\
+	io.openems.edge.controller.heatnetwork.master;version=snapshot,\
+	io.openems.edge.controller.heatnetwork.performancebooster;version=snapshot,\
+	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
+	io.openems.edge.controller.pump.grundfos;version=snapshot,\
+	io.openems.edge.controller.pump.grundfos.api;version=snapshot,\
 	io.openems.edge.controller.highloadtimeslot;version=snapshot,\
 	io.openems.edge.controller.io.alarm;version=snapshot,\
 	io.openems.edge.controller.io.fixdigitaloutput;version=snapshot,\
+	io.openems.edge.controller.passing.controlcenter;version=snapshot,\
+	io.openems.edge.controller.passing.controlcenter.api;version=snapshot,\
+	io.openems.edge.controller.passing.heatingcurveregulator;version=snapshot,\
+	io.openems.edge.controller.passing.heatingcurveregulator.api;version=snapshot,\
+	io.openems.edge.controller.passing.valvepumpcontrol;version=snapshot,\
+	io.openems.edge.controller.passing.valvepumpcontrol.api;version=snapshot,\
 	io.openems.edge.controller.pid.passing;version=snapshot,\
 	io.openems.edge.controller.pvinverter.fixpowerlimit;version=snapshot,\
 	io.openems.edge.controller.selltogridlimit;version=snapshot,\
+	io.openems.edge.controller.signalhotwater;version=snapshot,\
+	io.openems.edge.controller.signalhotwater.api;version=snapshot,\
+	io.openems.edge.controller.signalhotwater.valvecontroller;version=snapshot,\
+	io.openems.edge.controller.signalhotwater.valvecontroller.api;version=snapshot,\
 	io.openems.edge.controller.symmetric.balancing;version=snapshot,\
 	io.openems.edge.controller.symmetric.balancingschedule;version=snapshot,\
 	io.openems.edge.controller.symmetric.fixactivepower;version=snapshot,\
@@ -250,7 +293,11 @@
 	io.openems.edge.controller.temperature.passing;version=snapshot,\
 	io.openems.edge.controller.temperature.passing.api;version=snapshot,\
 	io.openems.edge.controller.temperature.overseer;version=snapshot,\
+    io.openems.edge.controller.warmup.passing;version=snapshot,\
+    io.openems.edge.controller.warmup.passing.api;version=snapshot,\
 	io.openems.edge.core;version=snapshot,\
+	io.openems.edge.dachs.gltinterface;version=snapshot,\
+	io.openems.edge.dachs.gltinterface.api;version=snapshot,\
 	io.openems.edge.ess.byd.container;version=snapshot,\
 	io.openems.edge.ess.cluster;version=snapshot,\
 	io.openems.edge.ess.core;version=snapshot,\
@@ -272,8 +319,11 @@
 	io.openems.edge.gpio.device;version=snapshot,\
 	io.openems.edge.gpio.device.api;version=snapshot,\
 	io.openems.edge.heater.api;version=snapshot,\
-	io.openems.edge.heatpump.device;version=snapshot,\
-	io.openems.edge.heatpump.device.api;version=snapshot,\
+	io.openems.edge.pump.grundfos;version=snapshot,\
+	io.openems.edge.pump.grundfos.api;version=snapshot,\
+	io.openems.edge.heatpump.alphainnotec;version=snapshot,\
+	io.openems.edge.heatpump.alphainnotec.api;version=snapshot,\
+	io.openems.edge.heatpump.smartgrid.generalized.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.device;version=snapshot,\
 	io.openems.edge.lucidcontrol.device.api;version=snapshot,\
 	io.openems.edge.lucidcontrol.module;version=snapshot,\
@@ -302,6 +352,7 @@
 	io.openems.edge.meter.virtual;version=snapshot,\
 	io.openems.edge.meter.weidmueller;version=snapshot,\
 	io.openems.edge.onewire.thermometer;version=snapshot,\
+	io.openems.edge.powerplant.analog;version=snapshot,\
 	io.openems.edge.pvinverter.solarlog;version=snapshot,\
 	io.openems.edge.pvinverter.sunspec;version=snapshot,\
 	io.openems.edge.pwm.device;version=snapshot,\
@@ -322,6 +373,8 @@
 	io.openems.edge.spi.mcp.api;version=snapshot,\
 	io.openems.edge.temperature.module;version=snapshot,\
 	io.openems.edge.temperature.module.api;version=snapshot,\
+	io.openems.edge.temperature.module.signalsensor;version=snapshot,\
+	io.openems.edge.temperature.module.signalsensor.api;version=snapshot,\
 	io.openems.edge.temperature.passing.api;version=snapshot,\
 	io.openems.edge.temperature.passing.pump;version=snapshot,\
 	io.openems.edge.temperature.passing.pump.api;version=snapshot,\
@@ -337,6 +390,7 @@
 	io.openems.wrapper.opczip;version=snapshot,\
 	io.openems.wrapper.sdnotify;version=snapshot,\
 	io.openems.wrapper.websocket;version=snapshot,\
+	joda-time;version=2.10.8,\
 	json;version='[20160212.0.0,20160212.0.1)',\
 	org.apache.commons.fileupload;version='[1.3.2,1.3.3)',\
 	org.apache.commons.io;version='[2.5.0,2.5.1)',\
@@ -349,6 +403,7 @@
 	org.apache.felix.webconsole;version='[4.2.16,4.2.17)',\
 	org.eclipse.equinox.event;version='[1.3.100,1.3.101)',\
 	org.eclipse.equinox.metatype;version='[1.4.100,1.4.101)',\
+	org.eclipse.paho.client.mqttv3;version=1.2.4,\
 	org.jsr-305;version='[3.0.2,3.0.3)',\
 	org.openmuc.jrxtx;version='[1.0.1,1.0.2)',\
 	org.ops4j.pax.logging.pax-logging-api;version='[1.11.2,1.11.3)',\

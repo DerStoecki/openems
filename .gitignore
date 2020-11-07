@@ -266,3 +266,5 @@ io.openems.edge.relays.module/generated/buildfiles
 io.openems.edge.temperature.passing.valve/generated/buildfiles
 
 buildfiles
+
+io.openems.edge.biomassheater/generated/

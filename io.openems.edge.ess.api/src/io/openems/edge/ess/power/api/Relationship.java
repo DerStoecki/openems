@@ -1,6 +1,7 @@
 package io.openems.edge.ess.power.api;
 
-public enum Relationship {
+public enum
+Relationship {
 
 	/**
 	 * Less or equals [&lt;=]

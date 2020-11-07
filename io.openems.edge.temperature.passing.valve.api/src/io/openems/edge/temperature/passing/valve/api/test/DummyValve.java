@@ -101,23 +101,7 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
         }
     }
 
-    @Override
-    public void forceClose() {
-        this.getIsBusy().setNextValue(false);
-        this.getPowerLevel().setNextValue(0);
-        this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
-        valveClose();
-        this.getIsBusy().setNextValue(true);
-    }
 
-    @Override
-    public void forceOpen() {
-        this.getIsBusy().setNextValue(false);
-        this.getPowerLevel().setNextValue(100);
-        this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
-        valveOpen();
-        this.getIsBusy().setNextValue(true);
-    }
 
 
     public void controlRelays(boolean activate, String whichRelays) {
@@ -141,4 +125,12 @@ public class DummyValve extends AbstractOpenemsComponent implements Valve, Opene
             this.getIsBusy().setNextValue(false);
         }
     }
+
+
+    // Added because of changes to valve interface. Won't compile otherwise.
+    @Override
+    public void forceOpen() {}
+
+    @Override
+    public void forceClose() {}
 }

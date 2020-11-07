@@ -2,7 +2,7 @@ package io.openems.edge.controller.emv.staticValues;
 
 
 import io.openems.common.exceptions.OpenemsError;
-import io.openems.edge.chp.device.api.PowerLevel;
+import io.openems.edge.chp.device.api.ChpPowerPercentage;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -36,11 +36,12 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     private final Logger log = LoggerFactory.getLogger(ControllerEmvStaticValues.class);
 
     private List<ActuatorRelaysChannel> relaysList = new ArrayList<>();
-    private List<PowerLevel> dacList = new ArrayList<>();
+    private List<ChpPowerPercentage> dacList = new ArrayList<>();
     private List<PwmPowerLevelChannel> pwmList = new ArrayList<>();
     private boolean[] relaysValues;
     private double[] dacValues;
     private float[] pwmValues;
+    private int counter = 0;
 
 
     private List<Sc16Nature> uartList = new ArrayList<>();
@@ -80,8 +81,8 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                 case "LED-YELLOW":
                     this.gpioList.add(1);
                     break;
-                case "ENABLE-OUTPUT":
-                    this.gpioList.add(6);
+                case "LED-GREEN":
+                    this.gpioList.add(2);
                     break;
             }
 
@@ -164,7 +165,7 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                             }
                             break;
                         case "Dac":
-                            if (cpm.getComponent(string) instanceof PowerLevel) {
+                            if (cpm.getComponent(string) instanceof ChpPowerPercentage) {
                                 this.dacList.add(counter.intValue(), cpm.getComponent(string));
                             } else {
                                 throw new ConfigurationException("Could not allocate Component: Dac " + string,
@@ -258,8 +259,8 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
                         case 1:
                             uart.ledYellowStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
                             break;
-                        case 6:
-                            uart.enableOutput().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
+                        case 2:
+                            uart.ledGreenStatus().setNextWriteValue(this.uartValues[counter.getAndIncrement()]);
                             break;
                     }
                 }
@@ -278,5 +279,19 @@ public class ControllerEmvStaticValues extends AbstractOpenemsComponent implemen
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
         writeValueToChannel();
+        for (int x = 0; x < this.relaysValues.length; x++) {
+            this.relaysValues[x] = !this.relaysValues[x];
+        }
+        if (counter == 0) {
+            boolean[] newUartValues = new boolean[3];
+            newUartValues[0] = this.uartValues[2];
+            newUartValues[1] = this.uartValues[0];
+            newUartValues[2] = this.uartValues[1];
+
+            System.arraycopy(newUartValues, 0, this.uartValues, 0, this.uartValues.length);
+
+            counter %= 5;
+        }
+        counter++;
     }
 }

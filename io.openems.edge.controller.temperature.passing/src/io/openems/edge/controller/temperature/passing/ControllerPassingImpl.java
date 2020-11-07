@@ -9,6 +9,7 @@ import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.temperature.passing.api.ControllerPassingChannel;
+import io.openems.edge.temperature.passing.api.PassingActivateNature;
 import io.openems.edge.temperature.passing.api.PassingChannel;
 import io.openems.edge.temperature.passing.pump.api.Pump;
 import io.openems.edge.temperature.passing.valve.api.Valve;
@@ -24,7 +25,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Controller.Passing.Main")
-public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, Controller {
+public class ControllerPassingImpl extends AbstractOpenemsComponent implements OpenemsComponent, ControllerPassingChannel, PassingActivateNature, Controller {
 
     @Reference
     protected ComponentManager cpm;
@@ -64,6 +65,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
 
         super(OpenemsComponent.ChannelId.values(),
                 ControllerPassingChannel.ChannelId.values(),
+                PassingActivateNature.ChannelId.values(),
                 Controller.ChannelId.values());
     }
 
@@ -103,7 +105,7 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
     @Deactivate
     public void deactivate() {
         super.deactivate();
-        this.getOnOff_PassingController().setNextValue(false);
+        this.getOnOff().setNextValue(false);
         this.valve.forceClose();
         this.pump.changeByPercentage(-100);
     }
@@ -119,11 +121,10 @@ public class ControllerPassingImpl extends AbstractOpenemsComponent implements O
      */
     @Override
     public void run() throws OpenemsError.OpenemsNamedException {
-        if (this.getMinTemperature().getNextWriteValue().isPresent()
-                && this.getOnOff_PassingController().getNextWriteValue().isPresent()) {
-            this.getMinTemperature().setNextValue(this.getMinTemperature().getNextWriteValue().get());
-            if (this.noError().getNextValue().get()
-                    && this.getOnOff_PassingController().getNextWriteValue().get()) {
+        if (this.getMinTemperature().value().isDefined()
+                && this.getOnOff().value().isDefined()) {
+            if (this.noError().value().get()
+                    && this.getOnOff().value().get()) {
                 try {
                     if (!isOpen) {
                         if (isClosed && valve.readyToChange()) {

@@ -1,8 +1,2 @@
-# io.openems.edge.controller.emvtest Provider
-
-${Bundle-Description}
-
-## Example
-
-## References
+EMV Test Controller. Used to test relays, dac's and pwm's.
 

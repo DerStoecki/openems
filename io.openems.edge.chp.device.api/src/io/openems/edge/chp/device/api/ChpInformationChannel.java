@@ -1,12 +1,13 @@
 package io.openems.edge.chp.device.api;
 
+import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.OpenemsComponent;
 
-public interface ChpInformationChannel extends OpenemsComponent {
+public interface ChpInformationChannel extends ChpPowerPercentage {
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
         /**
          * Module Modus Channel.
@@ -16,7 +17,6 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * <ul>
          *
          *  <li>Type: Integer
-         *
          * *</ul>
          */
         MODE(Doc.of(OpenemsType.INTEGER)),
@@ -46,7 +46,7 @@ public interface ChpInformationChannel extends OpenemsComponent {
          */
         SET_POINT_OPERATION_MODE(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT)),
         /**
-         * Errorbits. Length 2 Byte --> Each bit acts as a flag --> Vitobloc Gateway
+         * ErrorBits. Length 2 Byte --> Each bit acts as a flag --> Vitobloc Gateway
          */
         ERROR_BITS_1(Doc.of(OpenemsType.INTEGER)),
         ERROR_BITS_2(Doc.of(OpenemsType.INTEGER)),
@@ -207,13 +207,14 @@ public interface ChpInformationChannel extends OpenemsComponent {
          * Reserved by Chp.
          * <li>Unit: kWh</li>
          * <li>Type: Integer</li>
-         * */
+         */
         RESERVE(Doc.of(OpenemsType.INTEGER).unit(Unit.KILOWATT_HOURS)),
         /**
          * All occuring Errors as String.
-         *
-         * */
-        ERROR_CHANNEL(Doc.of(OpenemsType.STRING));
+         */
+        ERROR_CHANNEL(Doc.of(OpenemsType.STRING)),
+
+        ERROR_OCCURED(Doc.of(OpenemsType.BOOLEAN));
 
 
         private final Doc doc;
@@ -425,5 +426,9 @@ public interface ChpInformationChannel extends OpenemsComponent {
 
     default Channel<String> getErrorChannel() {
         return this.channel(ChannelId.ERROR_CHANNEL);
+    }
+
+    default Channel<Boolean> isErrorOccured() {
+        return this.channel(ChannelId.ERROR_OCCURED);
     }
 }

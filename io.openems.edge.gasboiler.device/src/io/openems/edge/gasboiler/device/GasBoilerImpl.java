@@ -283,6 +283,7 @@ public class GasBoilerImpl extends AbstractOpenemsModbusComponent implements Ope
         getHeatBoilerPerformanceSetPointValuePercent().setNextValue(0);
     }
 
+
     @Override
     public String debugLog() {
         String out = "";

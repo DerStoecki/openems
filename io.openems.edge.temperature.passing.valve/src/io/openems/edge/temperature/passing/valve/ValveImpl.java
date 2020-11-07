@@ -70,12 +70,12 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      * Closes the valve and sets a time stamp.
      * DO NOT CALL DIRECTLY! Might not work if called directly as the timer for "readyToChange()" is not
      * set properly. Use either "changeByPercentage()" or forceClose / forceOpen.
+     * @param wasForced indicates if the valve was Forced to close or not.
      */
-    private void valveClose() {
-        if (!this.getIsBusy().getNextValue().get()) {
+    private void valveClose(boolean wasForced) {
+        if (!this.getIsBusy().value().get() || wasForced) {
             controlRelays(false, "Open");
             controlRelays(true, "Closed");
-            //            this.getIsBusy().setNextValue(true);
             timeStampValve = System.currentTimeMillis();
         }
     }
@@ -84,10 +84,11 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      * Opens the valve and sets a time stamp.
      * DO NOT CALL DIRECTLY! Might not work if called directly as the timer for "readyToChange()" is not
      * set properly. Use either "changeByPercentage()" or forceClose / forceOpen.
+     * @param wasForced indicates if the valve was forced to Open.
      */
-    private void valveOpen() {
+    private void valveOpen(boolean wasForced) {
         //opens will be set true when closing is done
-        if (!this.getIsBusy().getNextValue().get()) {
+        if (!this.getIsBusy().value().get() || wasForced) {
             controlRelays(false, "Closed");
             controlRelays(true, "Open");
             //            this.getIsBusy().setNextValue(true);
@@ -109,24 +110,14 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         try {
             switch (whichRelays) {
                 case "Open":
-                    if (this.opens.isCloser().value().get()) {
-                        this.opens.getRelaysChannel().setNextWriteValue(activate);
-                    } else {
-                        this.opens.getRelaysChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-                case "Closed":
-                    if (this.closing.isCloser().value().get()) {
-                        this.closing.getRelaysChannel().setNextWriteValue(activate);
-                    } else {
-                        this.closing.getRelaysChannel().setNextWriteValue(!activate);
-                    }
-                    break;
-            }
-            //            if (!activate) {
-            //                this.getIsBusy().setNextValue(false);
-            //            }
 
+                        this.opens.getRelaysChannel().setNextWriteValue(activate);
+                        break;
+
+                case "Closed":
+                        this.closing.getRelaysChannel().setNextWriteValue(activate);
+                        break;
+            }
         } catch (OpenemsError.OpenemsNamedException e) {
             e.printStackTrace();
         }
@@ -174,10 +165,10 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
         double currentPowerLevel;
 
         //opens / closes valve by a certain percentage value
-        if ((this.getIsBusy().getNextValue().get()) || percentage == 0) {
+        if ((this.getIsBusy().value().get()) || percentage == 0) {
             return false;
         } else {
-            currentPowerLevel = this.getPowerLevel().getNextValue().get();
+            currentPowerLevel = this.getPowerLevel().value().get();
             this.getLastPowerLevel().setNextValue(currentPowerLevel);
             currentPowerLevel += percentage;
             if (currentPowerLevel >= 100) {
@@ -197,9 +188,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
                 this.getTimeNeeded().setNextValue(Math.abs(percentage) * secondsPerPercentage);
             }
             if (percentage < 0) {
-                valveClose();
+                valveClose(false);
             } else {
-                valveOpen();
+                valveOpen(false);
             }
             this.getIsBusy().setNextValue(true);
             return true;
@@ -214,10 +205,9 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      */
     @Override
     public void forceClose() {
-        this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(0);
         this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
-        valveClose();
+        valveClose(true);
         this.getIsBusy().setNextValue(true);
     }
 
@@ -228,23 +218,22 @@ public class ValveImpl extends AbstractOpenemsComponent implements OpenemsCompon
      */
     @Override
     public void forceOpen() {
-        this.getIsBusy().setNextValue(false);
         this.getPowerLevel().setNextValue(100);
         this.getTimeNeeded().setNextValue(100 * secondsPerPercentage);
-        valveOpen();
+        valveOpen(true);
         this.getIsBusy().setNextValue(true);
     }
 
     @Override
     public String debugLog() {
-        if (this.getPowerLevel().getNextValue().isDefined()) {
+        if (this.getPowerLevel().value().isDefined()) {
             String name = "";
             if (!super.alias().equals("")) {
                 name = super.alias();
             } else {
                 name = super.id();
             }
-            return "Valve: " + name + ": " + this.getPowerLevel().getNextValue().toString() + "\n";
+            return "Valve: " + name + ": " + this.getPowerLevel().value().toString() + "\n";
         } else {
             return "\n";
         }

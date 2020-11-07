@@ -12,6 +12,8 @@ public interface PassingChannel extends OpenemsComponent {
 
     public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
+
+        // TODO: Why is this a write channel? It does not seem it needs to be. Can it be changed to a read channel if that is sufficient?
         /**
          * PowerLevel.
          *
