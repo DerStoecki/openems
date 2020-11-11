@@ -93,11 +93,11 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
                 channels, config.channelIdList().length);
         if (!config.createdByOsgi() && !config.pathForJson().trim().equals("")) {
             this.mqttConfigurationComponent.initJson(new ArrayList<>(this.channels()), config.pathForJson());
-            this.mqttBridge.addMqttComponent(super.id(), this);
+
         } else if (config.createdByOsgi() && this.mqttConfigurationComponent.hasBeenConfigured() && config.configurationDone()) {
             this.mqttConfigurationComponent.initTasks(new ArrayList<>(this.channels()), config.payloadStyle());
-            this.mqttBridge.addMqttComponent(super.id(), this);
         }
+        this.mqttBridge.addMqttComponent(super.id(), this);
     }
 
 
@@ -109,6 +109,9 @@ public class RelaysActuatorImpl extends AbstractOpenemsComponent implements Actu
     public void deactivate() {
         super.deactivate();
         allocatedMcp.removeTask(this.id());
+        if (this.mqttConfigurationComponent != null) {
+            this.mqttBridge.removeMqttComponent(super.id());
+        }
     }
 
     @Override

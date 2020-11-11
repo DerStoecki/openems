@@ -390,7 +390,7 @@ public abstract class AbstractMqttComponent {
                 default:
                     initStandardJson(jsonConfigObject, channels);
             }
-            this.mqttBridge.removeMqttComponent(id);
+            this.mqttBridge.removeMqttTasks(id);
             if (!subscribeTaskNew.isEmpty()) {
                 this.subscribeTasks.clear();
                 this.subscribeTasks.putAll(this.subscribeTaskNew);

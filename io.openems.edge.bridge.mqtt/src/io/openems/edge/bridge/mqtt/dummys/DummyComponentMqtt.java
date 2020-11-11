@@ -73,8 +73,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
             if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
                 this.component.initTasks(channels, config.payloadStyle());
-                this.mqttBridge.addMqttComponent(super.id(), this);
                 this.isInitialized = true;
+            } else {
+                return;
             }
 
 
@@ -82,11 +83,9 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         if (!config.createdByOsgiConfig() && !config.pathForJson().trim().equals("")) {
             String jsonConfig = new String(Files.readAllBytes(Paths.get(config.pathForJson())));
             this.component.initJson(new ArrayList<>(this.channels()), jsonConfig);
-            this.mqttBridge.addMqttComponent(super.id(), this);
             this.isInitialized = true;
         }
-
-
+        this.mqttBridge.addMqttComponent(super.id(), this);
         this.getDummyOne().setNextValue(10);
         this.getPower().setNextValue(50);
 

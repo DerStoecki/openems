@@ -50,14 +50,14 @@ import org.osgi.service.metatype.annotations.Option;
     String[] payloads() default {};
 
     @AttributeDefinition(name = "SubscriptionConfig", description = "This List is for configuring subscriptions, the accepted form is: "
-            + "MqttType!Priority!Topic!QoS!RetainFlag!TimestampUseBoolean!PayloadNo!TimetoWait")
+            + "MqttType!Priority!Topic!QoS!RetainFlag!TimestampUseBoolean!PayloadNo!TimeToWait")
     String[] subscriptionList() default {
             "MqttType!Priority!Topic!QoS!RetainFlagBoolean!TimestampUseBoolean!PayloadNo!TimeToWait"};
 
     @AttributeDefinition(name = "PublishConfig", description = "This List is for configuring publishes, accepted form is: "
-            + "MqttType!Priority!Topic!QoS!RetainFlag!TimestampUseBoolean!PayloadNo!TimeToWait!PayloadStyle")
+            + "MqttType!Priority!Topic!QoS!RetainFlag!TimestampUseBoolean!PayloadNo!TimeToWait")
     String[] publishList() default {
-            "MqttType!Priority!Topic!Qos!RetainFlagBoolean!TimestampUseBoolean!PayloadNo!TimeToWait!PayloadStyle"
+            "MqttType!Priority!Topic!Qos!RetainFlagBoolean!TimestampUseBoolean!PayloadNo!TimeToWait"
     };
 
     @AttributeDefinition(name = "PayloadStyle", description = "PayloadStyle you want to use (See Mqtt Information Component for more options)")

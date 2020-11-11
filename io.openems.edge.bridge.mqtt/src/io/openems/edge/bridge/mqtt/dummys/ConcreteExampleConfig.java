@@ -6,9 +6,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import java.util.List;
 
 @ObjectClassDefinition(
-        name = "Mqtt Dummy Component",
+        name = "Mqtt Concrete Example Component",
         description = "Mqtt Dummy to test the functionality of AbstrtactMqttComponent and Tasks.")
-@interface ConfigDummyComponent {
+@interface ConcreteExampleConfig {
 
     String service_pid();
 
