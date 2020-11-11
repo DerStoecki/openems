@@ -108,7 +108,9 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
 
     @Override
     public void unsubscribeFromTopic(String topic) throws MqttException {
-        super.mqttClient.unsubscribe(topic);
+        if (this.subscriptions.containsKey(topic)) {
+            super.mqttClient.unsubscribe(topic);
+        }
     }
 
 }

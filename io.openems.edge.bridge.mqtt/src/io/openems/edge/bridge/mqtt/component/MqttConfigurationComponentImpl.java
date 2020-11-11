@@ -61,12 +61,12 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
     }
 
     @Override
-    public void initJson(ArrayList<Channel<?>> channels, String pathForJson) throws IOException, ConfigurationException {
+    public void initJson(ArrayList<Channel<?>> channels, String pathForJson) throws IOException, ConfigurationException, MqttException {
         this.mqttComponent.initJsonFromFile(channels, pathForJson);
     }
 
     @Override
-    public void updateJsonByChannel(ArrayList<Channel<?>> channels, String config) throws ConfigurationException {
+    public void updateJsonByChannel(ArrayList<Channel<?>> channels, String config) throws ConfigurationException, MqttException {
         this.mqttComponent.initJson(channels, config);
     }
 

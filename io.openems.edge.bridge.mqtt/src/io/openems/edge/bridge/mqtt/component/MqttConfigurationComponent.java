@@ -23,9 +23,9 @@ public interface MqttConfigurationComponent {
 
     boolean isConfigured();
 
-    void initJson(ArrayList<Channel<?>> channels, String pathForJson) throws IOException, ConfigurationException;
+    void initJson(ArrayList<Channel<?>> channels, String pathForJson) throws IOException, ConfigurationException, MqttException;
 
-    void updateJsonByChannel(ArrayList<Channel<?>> channels, String s) throws ConfigurationException;
+    void updateJsonByChannel(ArrayList<Channel<?>> channels, String s) throws ConfigurationException, MqttException;
 
     boolean valueLegit(String value);
 }

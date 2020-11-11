@@ -30,6 +30,9 @@ import java.util.List;
     @AttributeDefinition(name = "Created by Osgi Config", description = "If you want to configure via Apache Felix tick this, otherwise you need to configure via JSON File.")
     boolean createdByOsgiConfig() default true;
 
+    @AttributeDefinition(name = "Created by JsonConfig", description = "If you want to configure via Json, put in path")
+    String pathForJson() default "/home/felix/Arbeit/Repository/openems/io.openems.edge.bridge.mqtt/exampleConfig.json";
+
     @AttributeDefinition(name = "ChannelIds", description = "This List will automatically filled with ChannelIds to configure for Pub and Sub")
     String[] channelIdList() default {};
 

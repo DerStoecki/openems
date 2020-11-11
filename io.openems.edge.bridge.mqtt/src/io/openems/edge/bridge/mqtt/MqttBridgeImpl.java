@@ -245,15 +245,19 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
      */
     @Override
     public void removeMqttTasks(String id) {
-        this.subscribeTasks.get(id).forEach(task -> {
-            try {
-                this.subscribeManager.unsubscribeFromTopic(task);
-            } catch (MqttException e) {
-                log.warn("Couldn't unsubscribe from Topic: " + task.getTopic() + "reason " + e.getMessage());
-            }
-        });
-        this.subscribeTasks.remove(id);
-        this.publishTasks.remove(id);
+        if (this.subscribeTasks.containsKey(id)) {
+            this.subscribeTasks.get(id).forEach(task -> {
+                try {
+                    this.subscribeManager.unsubscribeFromTopic(task);
+                } catch (MqttException e) {
+                    log.warn("Couldn't unsubscribe from Topic: " + task.getTopic() + "reason " + e.getMessage());
+                }
+            });
+            this.subscribeTasks.remove(id);
+        }
+        if (this.publishTasks.containsKey(id)) {
+            this.publishTasks.remove(id);
+        }
     }
 
     @Override
@@ -284,8 +288,10 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     @Override
     public void removeMqttComponent(String id) {
-        this.components.remove(id);
-        this.removeMqttTasks(id);
+        if(this.components.containsKey(id)) {
+            this.components.remove(id);
+            this.removeMqttTasks(id);
+        }
     }
 
     @Override

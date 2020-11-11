@@ -14,6 +14,8 @@ import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +52,7 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
 
     @Activate
-    public void activate(ComponentContext context, ConfigDummyComponent config) throws MqttException, ConfigurationException {
+    public void activate(ComponentContext context, ConfigDummyComponent config) throws MqttException, ConfigurationException, IOException {
 
         super.activate(context, config.id(), config.alias(), config.enabled());
         Configuration c = null;
@@ -59,20 +61,34 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         List<String> subList = Arrays.asList(config.subscriptionList());
         List<String> pubList = Arrays.asList(config.publishList());
         List<String> payloads = Arrays.asList(config.payloads());
-        List<Channel<?>> channels = new ArrayList<>(this.channels());
         this.component = new MqttComponentDummyImpl(super.id(), subList, pubList, payloads,
                 config.createdByOsgiConfig(), mqttBridge, super.id());
-        this.component.update(c, "channelIdList", channels, config.channelIdList().length);
-        if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
-            this.component.initTasks(channels, config.payloadStyle());
+
+        if (config.createdByOsgiConfig()) {
+            List<Channel<?>> channels = new ArrayList<>(this.channels());
+            this.component.update(c, "channelIdList", channels, config.channelIdList().length);
+
+            if (this.component.hasBeenConfigured() && config.configurationDone() == true) {
+                this.component.initTasks(channels, config.payloadStyle());
+                this.mqttBridge.addMqttComponent(super.id(), this);
+                this.isInitialized = true;
+            }
+
+
+        }
+        if (!config.createdByOsgiConfig() && !config.pathForJson().trim().equals("")) {
+            String jsonConfig = new String(Files.readAllBytes(Paths.get(config.pathForJson())));
+            this.component.initJson(new ArrayList<>(this.channels()), jsonConfig);
             this.mqttBridge.addMqttComponent(super.id(), this);
             this.isInitialized = true;
         }
+
+
         this.getDummyOne().setNextValue(10);
+        this.getPower().setNextValue(50);
 
     }
 
@@ -92,8 +108,8 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             if (entry instanceof MqttSubscribeTask) {
                 MqttSubscribeTask task = (MqttSubscribeTask) entry;
                 task.getCommandValues().forEach((key, value) -> {
-                    if (value.getValue() != null) {
-                        if (!this.component.expired(task, Integer.parseInt(value.getExpiration()))) {
+                    if (value.getValue() != null && !value.getValue().equals("NOTDEFINED")) {
+                        if (value.getExpiration().equals("NOTDEFINED") || !this.component.expired(task, Integer.parseInt(value.getExpiration()))) {
                             reactToComponentCommand(key, value);
                         }
                     }

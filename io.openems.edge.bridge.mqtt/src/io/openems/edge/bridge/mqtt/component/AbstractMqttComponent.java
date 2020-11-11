@@ -98,6 +98,11 @@ public abstract class AbstractMqttComponent {
         if (this.subConfigList.size() > 0 && !this.subConfigList.get(0).equals("")) {
             createTasks(this.subConfigList, true, channelIds, payloadStyle);
         }
+       addTasksToBridge();
+
+    }
+
+    private void addTasksToBridge() throws MqttException {
         MqttException[] exMqtt = {null};
         this.subscribeTasks.forEach((key, value) -> {
             try {
@@ -123,7 +128,6 @@ public abstract class AbstractMqttComponent {
             mqttBridge.removeMqttTasks(this.id);
             throw exMqtt[0];
         }
-
     }
 
     /**
@@ -374,8 +378,8 @@ public abstract class AbstractMqttComponent {
      *
      * @param jsonConfig
      */
-    public void initJson(List<Channel<?>> channels, String jsonConfig) throws ConfigurationException {
-        if (this.jsonConfig.equals(jsonConfig)) {
+    public void initJson(List<Channel<?>> channels, String jsonConfig) throws ConfigurationException, MqttException {
+        if (this.jsonConfig.equals(jsonConfig) || jsonConfig.equals("")) {
             return;
         } else {
             this.jsonConfig = jsonConfig;
@@ -398,6 +402,7 @@ public abstract class AbstractMqttComponent {
                 this.publishTasksNew.clear();
             }
 
+            addTasksToBridge();
 
         }
     }
@@ -406,7 +411,7 @@ public abstract class AbstractMqttComponent {
      * Create Tasks from Standard Json Config
      *
      * @param jsonConfigObject config from either file or sent via REST.
-     * @param channels Channels of the Component.
+     * @param channels         Channels of the Component.
      */
     private void initStandardJson(JsonObject jsonConfigObject, List<Channel<?>> channels) throws ConfigurationException {
 
@@ -414,8 +419,8 @@ public abstract class AbstractMqttComponent {
         String mqttID = jsonConfigObject.get("mqttID").getAsString();
         JsonArray subscription = jsonConfigObject.getAsJsonArray("subscription");
         JsonArray publish = jsonConfigObject.getAsJsonArray("publish");
-        createTasksJson(subscription, true, channels, mqttID, PayloadStyle.STANDARD, !this.subscribeTasks.isEmpty());
-        createTasksJson(publish, false, channels, mqttID, PayloadStyle.STANDARD, !this.publishTasks.isEmpty());
+        createTasksJson(subscription, true, channels, mqttID, PayloadStyle.STANDARD, this.subscribeTasks.isEmpty());
+        createTasksJson(publish, false, channels, mqttID, PayloadStyle.STANDARD, this.publishTasks.isEmpty());
         //HERE Configuration is done therefore further errors have something to do with broker and connection itself not configuration
 
     }
@@ -438,49 +443,57 @@ public abstract class AbstractMqttComponent {
                 boolean retain = subPub.get("retain").getAsBoolean();
                 boolean useTime = subPub.get("useTime").getAsBoolean();
                 int timeToWait = subPub.get("timeToWait").getAsInt();
-                JsonObject payloads = subPub.getAsJsonObject("payload");
-                //Payloads containing NameForBroker:ChannelId
-                String payloadString = payloads.getAsString().replaceAll("\\{", "").replaceAll("}", "").replaceAll(":", "");
+                JsonObject payloads = new JsonObject();
+                String payloadString = "";
+                if (subPub.has("payload")) {
 
-                payloads.keySet().forEach(key -> {
-                    try {
-                        //see if channelId exists
-                        //Look up this Map otherwise take from list.
-                        //In the end add to channelMapForTask
-                        String channelId = payloads.get(key).getAsString();
-                        if (this.mapOfChannel.containsKey(channelId)) {
-                            channelMapForTask.put(channelId, this.mapOfChannel.get(channelId));
-                        } else if (channels.stream().anyMatch(entry -> entry.channelId().id().equals(channelId))) {
-                            final Channel<?>[] channelToAdd = new Channel<?>[1];
-                            channels.stream().filter(entry -> entry.channelId().id().equals(channelId)).
-                                    findFirst().ifPresent(channel -> channelToAdd[0] = channel);
+                    payloads = subPub.getAsJsonObject("payload");
 
-                            if (channelToAdd[0] != null) {
-                                this.mapOfChannel.put(channelId, channelToAdd[0]);
-                                channelMapForTask.put(channelId, channelToAdd[0]);
-                                channels.remove(channelToAdd[0]);
-                            } else {
-                                throw new ConfigurationException("configurePayload", "incorrect Channel! " + channelId);
+                    //Payloads containing NameForBroker:ChannelId
+                    payloadString = payloads.toString().replaceAll("\\{", "").replaceAll("}", "").replaceAll(",", ":").replaceAll("\"", "");
+                }
+                if (payloads.keySet().size() > 0) {
+                    JsonObject finalPayloads = payloads;
+                    payloads.keySet().forEach(key -> {
+                        try {
+                            //see if channelId exists
+                            //Look up this Map otherwise take from list.
+                            //In the end add to channelMapForTask
+                            String channelId = finalPayloads.get(key).getAsString();
+                            if (this.mapOfChannel.containsKey(channelId)) {
+                                channelMapForTask.put(channelId, this.mapOfChannel.get(channelId));
+                            } else if (channels.stream().anyMatch(entry -> entry.channelId().id().equals(channelId))) {
+                                final Channel<?>[] channelToAdd = new Channel<?>[1];
+                                channels.stream().filter(entry -> entry.channelId().id().equals(channelId)).
+                                        findFirst().ifPresent(channel -> channelToAdd[0] = channel);
+
+                                if (channelToAdd[0] != null) {
+                                    this.mapOfChannel.put(channelId, channelToAdd[0]);
+                                    channelMapForTask.put(channelId, channelToAdd[0]);
+                                    channels.remove(channelToAdd[0]);
+                                } else {
+                                    throw new ConfigurationException("configurePayload", "incorrect Channel! " + channelId);
+                                }
+
                             }
-
+                        } catch (ConfigurationException e) {
+                            exConfig[0] = e;
                         }
-                    } catch (ConfigurationException e) {
-                        exConfig[0] = e;
-                    }
-                });
+                    });
+                }
                 if (isSub) {
                     MqttSubscribeTaskImpl task = new MqttSubscribeTaskImpl(mqttType, mqttPriority, topic, qos, retain, useTime, timeToWait,
                             channelMapForTask, payloadString, style, this.id, mqttID);
-                    if(init) {
+                    if (init) {
                         this.subscribeTasks.put(topic, task);
-                    }else {
-                            this.subscribeTaskNew.put(topic, task);
+                    } else {
+                        this.subscribeTaskNew.put(topic, task);
                     }
 
                 } else {
                     MqttPublishTaskImpl task = new MqttPublishTaskImpl(mqttType, mqttPriority, topic, qos, retain, useTime, timeToWait,
                             channelMapForTask, payloadString, style, this.id, mqttID);
-                    if(init){
+                    if (init) {
                         this.publishTasks.put(topic, task);
                     } else {
                         this.publishTasksNew.put(topic, task);
@@ -506,10 +519,10 @@ public abstract class AbstractMqttComponent {
      *
      * @param channels usually from Calling Class, All Channels.
      * @param path     Path of the JSON File
-     * @throws IOException Throw if Path is wrong.
+     * @throws IOException            Throw if Path is wrong.
      * @throws ConfigurationException if config from Json has an error.
      */
-    public void initJsonFromFile(ArrayList<Channel<?>> channels, String path) throws IOException, ConfigurationException {
+    public void initJsonFromFile(ArrayList<Channel<?>> channels, String path) throws IOException, ConfigurationException, MqttException {
         this.initJson(channels, new String(Files.readAllBytes(Paths.get(path))));
     }
 

@@ -6,6 +6,7 @@ import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.StringWriteChannel;
+import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.ConfigurationException;
@@ -76,7 +77,7 @@ public interface MqttComponent extends OpenemsComponent {
      *
      * @return the channel
      */
-    default Channel<String> getConfiguration() {
+    default WriteChannel<String> getConfiguration() {
         return this.channel(ChannelId.CONFIGURATION);
     }
 
