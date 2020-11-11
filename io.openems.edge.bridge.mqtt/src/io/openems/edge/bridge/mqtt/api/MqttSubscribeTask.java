@@ -23,17 +23,26 @@ public interface MqttSubscribeTask extends MqttTask {
 
     void putMessageId(int messageId);
 
+    /**
+     * For Future Implementation.
+     *
+     * @return the MessageId
+     */
     int getMessageId();
 
-    void convertTime(DateTimeZone timeZone) throws ParseException;
+    /**
+     * Converts the time. Usually Called by Manager.
+     *
+     * @param timeZone given by Manager-Class.
+     */
+    void convertTime(DateTimeZone timeZone);
 
     DateTime getTime();
 
-    boolean timeAvailable();
-
-    void setTime(DateTime date);
-
-
-
+    /**
+     * Get the Commands and their WrapperClass.
+     *
+     * @return The Map.
+     */
     Map<MqttCommandType, CommandWrapper> getCommandValues();
 }

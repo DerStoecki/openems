@@ -4,6 +4,10 @@ import io.openems.edge.common.channel.Channel;
 
 import java.util.Map;
 
+/**
+ * The Abstract MqttTask.
+ * This Class contains most Data that a Task need. Specific Impl. Is found in the MqttSubscribeTaskImpl/MqttPublishTaskImpl
+ */
 public abstract class AbstractMqttTask implements MqttTask {
     private String topic;
     //Either the configured payload that will be published OR the payload from the broker this is how the subscriber gets the message

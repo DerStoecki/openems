@@ -18,16 +18,11 @@ public interface MqttComponent extends OpenemsComponent {
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
-        TELEMETRY(Doc.of(OpenemsType.STRING)),
-
-        COMMANDS(Doc.of(OpenemsType.STRING)),
-        COMMANDS_VALUE(Doc.of(OpenemsType.STRING)),
-
-        EVENTS(Doc.of(OpenemsType.STRING)),
-        EVENTS_VALUE(Doc.of(OpenemsType.STRING)),
-
+        /**
+         * The ConfigurationChannel. If you want to Edit/Init your component via REST/JSON, write to this channel.
+         */
         CONFIGURATION(Doc.of(OpenemsType.STRING).accessMode(AccessMode.READ_WRITE).onInit(
-                channel -> ((StringWriteChannel)channel).onSetNextWrite(channel::setNextValue)
+                channel -> ((StringWriteChannel) channel).onSetNextWrite(channel::setNextValue)
         ));
 
 
@@ -44,59 +39,12 @@ public interface MqttComponent extends OpenemsComponent {
     }
 
     /**
-     * Gets the TelemetrySubscription.
-     *
-     * @return the Channel
-     */
-    default Channel<String> getTelemetry() {
-        return this.channel(ChannelId.TELEMETRY);
-    }
-
-
-    /**
-     * Gets the Event from the Channel (Usually broker publishes here).
-     *
-     * @return the Channel.
-     */
-
-    default Channel<String> getEvents() {
-        return this.channel(ChannelId.EVENTS);
-    }
-
-    /**
-     * Gets the Commands entry of the Channel (Usually broker publishes here).
-     *
-     * @return the Channel.
-     */
-    default Channel<String> getCommands() {
-        return this.channel(ChannelId.COMMANDS);
-    }
-
-    /**
-     * get the Configuration Channel, if configured by REST/ or json file.
+     * Get the Configuration Channel, if configured by REST/ or json file.
      *
      * @return the channel
      */
     default WriteChannel<String> getConfiguration() {
         return this.channel(ChannelId.CONFIGURATION);
-    }
-
-    /**
-     * The Value, corresponding to set command of the component.
-     *
-     * @return the Channel.
-     */
-    default Channel<String> getCommandsValue() {
-        return this.channel(ChannelId.COMMANDS_VALUE);
-    }
-
-    /**
-     * gets the value of the corresponding set event.
-     *
-     * @return the channel.
-     */
-    default Channel<String> getEventValue() {
-        return this.channel(ChannelId.EVENTS_VALUE);
     }
 
     /**
@@ -113,14 +61,14 @@ public interface MqttComponent extends OpenemsComponent {
     /**
      * Updates the JSON Config. Called by MqttBridge.
      *
-     * @throws MqttException          If a problem occured with the mqtt connection.
+     * @throws MqttException          If a problem occurred with the mqtt connection.
      * @throws ConfigurationException if the configuration is wrong.
      */
-    void updateJsonConfig() throws MqttException, ConfigurationException, IOException;
+    void updateJsonConfig() throws MqttException, ConfigurationException;
 
 
     /**
-     * Configuration done? --> either JSON Configuration done OR OSGi important for Bridge
+     * Is Configuration done? --> either JSON Configuration done OR OSGi important for Bridge.
      *
      * @return aboolean;
      */

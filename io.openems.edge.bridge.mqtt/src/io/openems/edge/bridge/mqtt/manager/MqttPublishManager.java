@@ -14,6 +14,10 @@ import io.openems.edge.bridge.mqtt.api.MqttTask;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+/**
+ * Publish Manager created by MqttBridge. Handles all Publish Tasks.
+ * In One Cycle---> Handle currentToDo, calculated by AbstractMqttManager.
+ */
 public class MqttPublishManager extends AbstractMqttManager {
     //              QOS       MqttConnector
     private Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
@@ -37,7 +41,6 @@ public class MqttPublishManager extends AbstractMqttManager {
     @Override
     public void forever() throws InterruptedException, MqttException {
         super.foreverAbstract();
-        this.checkLostConnections();
         //Handle Tasks given by Parent
         super.currentToDo.forEach(task -> {
             try {
@@ -77,23 +80,5 @@ public class MqttPublishManager extends AbstractMqttManager {
                 e.printStackTrace();
             }
         });
-    }
-
-    //Try to Reconnect if Connection is Lost.
-    private void checkLostConnections() throws MqttException {
-        MqttException[] exceptions = {null};
-        this.connections.forEach((key, value) -> {
-            if (!value.getMqttClient().isConnected()) {
-                try {
-                    super.tryReconnect(value.getMqttClient());
-                } catch (MqttException e) {
-                    exceptions[0] = e;
-                }
-            }
-
-        });
-        if (exceptions[0] != null) {
-            throw exceptions[0];
-        }
     }
 }

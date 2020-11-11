@@ -77,8 +77,6 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
             } else {
                 return;
             }
-
-
         }
         if (!config.createdByOsgiConfig() && !config.pathForJson().trim().equals("")) {
             String jsonConfig = new String(Files.readAllBytes(Paths.get(config.pathForJson())));
@@ -91,16 +89,18 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
 
     }
 
+    /**
+     * Called By Mqtt Bridge. Component has to implement what to do with Events (Either a event happened internally and
+     * tells the broker or vice versa).
+     */
     @Override
     public void reactToEvent() {
-        if (this.getEvents().value().isDefined() && this.getEventValue().value().isDefined()) {
-            System.out.println("REACTING TO: " + this.getEvents().value().get() + " WITH VALUE: "
-                    + this.getEventValue().value().get());
-        } else {
-            System.out.println("No Value for Events yet");
-        }
+        System.out.println("No Value for Events yet");
     }
 
+    /**
+     * Called By Mqtt Bridge. Component has to implement what to do on commands set by mqtt bridge.
+     */
     @Override
     public void reactToCommand() {
         this.mqttBridge.getSubscribeTasks(super.id()).stream().filter(entry -> entry.getMqttType().equals(MqttType.COMMAND)).collect(Collectors.toList()).forEach(entry -> {
@@ -115,14 +115,14 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
                 });
             }
         });
-        if (this.getCommands().value().isDefined() && this.getCommandsValue().value().isDefined()) {
-            System.out.println("REACTING TO: " + this.getCommands().value().get() + " WITH VALUE: "
-                    + this.getCommandsValue().value().get());
-        } else {
-            System.out.println("No Value for Commands yet");
-        }
     }
 
+    /**
+     * React to Command depending on the Component. MqttCommandType and Wrapper are given by calling "React to Command".
+     *
+     * @param key   MqttCommandType.
+     * @param value Value of the MqttCommand.
+     */
     private void reactToComponentCommand(MqttCommandType key, CommandWrapper value) {
         switch (key) {
             case SETPOWER:
@@ -131,17 +131,25 @@ public class DummyComponentMqtt extends AbstractOpenemsComponent implements Open
                 System.out.println(this.getPower().getNextValue().get());
                 break;
             case SETPERFORMANCE:
+                System.out.println("SetPerformance triggered");
                 break;
             case SETSCHEDULE:
+                System.out.println("SetSchedule triggered");
                 break;
             case SETTEMPERATURE:
-                System.out.println("SETTEMPERATURE WILL BE SET");
+                System.out.println("SET_TEMPERATURE WILL BE SET");
                 this.getTemperature().setNextValue(value.getValue());
                 System.out.println(this.getTemperature().getNextValue().get());
                 break;
         }
     }
 
+    /**
+     * Updates the JSON Config. Called by MqttBridge.
+     *
+     * @throws MqttException          If a problem occurred with the mqtt connection.
+     * @throws ConfigurationException if the configuration is wrong.
+     */
     @Override
     public void updateJsonConfig() throws MqttException, ConfigurationException {
         if (this.getConfiguration().value().isDefined() && !this.getConfiguration().value().get().equals("")) {

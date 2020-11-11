@@ -57,15 +57,16 @@ public class MqttPublishTaskImpl extends AbstractMqttTask implements MqttPublish
         payload.addProperty("ID", super.mqttId);
         String[] configuredPayload = super.configuredPayload.split(":");
         AtomicInteger jsonCounter = new AtomicInteger(0);
-        if (configuredPayload.equals("")) {
+        if (configuredPayload[0].equals("")) {
             return;
         }
+        //the configuredPayload follows the pattern of NameInBroker:ChannelId:NameInBroker:ChannelId --> therefor key  % 2 == 0
         Arrays.stream(configuredPayload).forEachOrdered(consumer -> {
             if (jsonCounter.get() % 2 == 0) {
                 String value = "Not Defined Yet";
+                //get the ChannelId --> since it's ordered forEach --> get correct Channel .
                 Channel<?> channel = super.channels.get(configuredPayload[jsonCounter.incrementAndGet()]);
                 if (channel.value().isDefined() && !channel.channelDoc().getType().equals(OpenemsType.STRING)) {
-                    // String valueObj = channel.value().get() + channel.channelDoc().getUnit().getSymbol();
                     JsonElement channelObj = new Gson().toJsonTree(channel.value().get());
                     payload.add(consumer, channelObj);
                 } else {

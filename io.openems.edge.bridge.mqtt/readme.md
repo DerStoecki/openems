@@ -5,7 +5,8 @@ Handles inflight messages and If Broker changes. --> QoS > 0 Handling.
 Since only One Bridge is needed (Only one Broker) this Bridge is implemented with SingletonPattern.
 
 Persistent or Clean Session will be configured automatically.
-## Example
 
-## References
+AutoReconnect is also handled automatically.
+
+Two Examples are found in the dummy package.
 

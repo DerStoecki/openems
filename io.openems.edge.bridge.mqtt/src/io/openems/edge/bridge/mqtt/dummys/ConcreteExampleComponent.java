@@ -138,6 +138,8 @@ public class ConcreteExampleComponent extends AbstractOpenemsComponent implement
         switch (key) {
             case SETPOWER:
                 break;
+            case SETTEMPERATURE:
+                System.out.println("Temperature was set with value: " + value);
             default:
                 log.warn("Command " + key + " is not supported by Class " + this.getClass());
         }

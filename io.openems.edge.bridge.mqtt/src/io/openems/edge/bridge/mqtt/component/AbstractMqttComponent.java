@@ -18,7 +18,10 @@ import org.joda.time.DateTime;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationException;
 
-//EventManager to alter Payload
+/**
+ * This is where the most Part of the Magic happens.
+ * In this component, The Publish and Subscribe Task are created and added together by config (Either OSGi or JSON)
+ */
 public abstract class AbstractMqttComponent {
 
     private MqttBridge mqttBridge;
@@ -30,8 +33,8 @@ public abstract class AbstractMqttComponent {
     private Map<String, MqttPublishTask> publishTasks = new HashMap<>();
     private Map<String, MqttSubscribeTask> subscribeTasks = new HashMap<>();
     //IF JSON IS UPTATED THOS WILL BE NEEDED
-    Map<String, MqttPublishTask> publishTasksNew = new HashMap<>();
-    Map<String, MqttSubscribeTask> subscribeTaskNew = new HashMap<>();
+    private Map<String, MqttPublishTask> publishTasksNew = new HashMap<>();
+    private Map<String, MqttSubscribeTask> subscribeTaskNew = new HashMap<>();
 
     //ChannelId ----- Channel Itself
     private Map<String, Channel<?>> mapOfChannel = new ConcurrentHashMap<>();
@@ -98,7 +101,7 @@ public abstract class AbstractMqttComponent {
         if (this.subConfigList.size() > 0 && !this.subConfigList.get(0).equals("")) {
             createTasks(this.subConfigList, true, channelIds, payloadStyle);
         }
-       addTasksToBridge();
+        addTasksToBridge();
 
     }
 
@@ -374,9 +377,12 @@ public abstract class AbstractMqttComponent {
 
 
     /**
-     * Initialize a Json Config or update them
+     * Init a Json by a String (Either from Channel Configuration OR Loaded in json File).
      *
-     * @param jsonConfig
+     * @param channels   channels of the  parent.
+     * @param jsonConfig The JsonConfig.
+     * @throws ConfigurationException If the Config has errors.
+     * @throws MqttException          If the subscription should fail.
      */
     public void initJson(List<Channel<?>> channels, String jsonConfig) throws ConfigurationException, MqttException {
         if (this.jsonConfig.equals(jsonConfig) || jsonConfig.equals("")) {
@@ -384,12 +390,13 @@ public abstract class AbstractMqttComponent {
         } else {
             this.jsonConfig = jsonConfig;
             JsonObject jsonConfigObject = new Gson().fromJson(this.jsonConfig, JsonObject.class);
-            //Get payload Style
+            //Get payload Style and use it as an indicator how the payload should be created (ATM Only STANDARD)
             switch (PayloadStyle.valueOf(jsonConfigObject.get("payloadStyle").getAsString().toUpperCase())) {
                 case STANDARD:
                 default:
                     initStandardJson(jsonConfigObject, channels);
             }
+            //IF no errors occurred --> Remove old MqttTasks (from Bridge and locally) and add the new ones.
             this.mqttBridge.removeMqttTasks(id);
             if (!subscribeTaskNew.isEmpty()) {
                 this.subscribeTasks.clear();
@@ -408,10 +415,11 @@ public abstract class AbstractMqttComponent {
     }
 
     /**
-     * Create Tasks from Standard Json Config
+     * Create Tasks from Standard Json Config.
      *
      * @param jsonConfigObject config from either file or sent via REST.
      * @param channels         Channels of the Component.
+     * @throws ConfigurationException if there's an error with the Config.
      */
     private void initStandardJson(JsonObject jsonConfigObject, List<Channel<?>> channels) throws ConfigurationException {
 
@@ -425,6 +433,17 @@ public abstract class AbstractMqttComponent {
 
     }
 
+    /**
+     * Creates a Task from a json. Internally called by initStandardJson Method.
+     *
+     * @param subOrPub either subscription or Publish tasks
+     * @param isSub    indicates if the Handled payloads /Configuration are for sub or pub list
+     * @param channels The Channels of Parent Component.
+     * @param mqttID   internal MqttId for the Broker (e.g. CHP-1) not nec.  equal to Internal Openems ID!
+     * @param style    payload style
+     * @param init     check if this component was initialized or updated.
+     * @throws ConfigurationException if somethings wrong with the Configuration.
+     */
     private void createTasksJson(JsonArray subOrPub, boolean isSub, List<Channel<?>> channels, String mqttID, PayloadStyle style, boolean init) throws ConfigurationException {
 
         ConfigurationException[] exConfig = {null};
@@ -457,15 +476,15 @@ public abstract class AbstractMqttComponent {
                     payloads.keySet().forEach(key -> {
                         try {
                             //see if channelId exists
-                            //Look up this Map otherwise take from list.
+                            //Look up this Map otherwise take from list and add it to Map afterwards <-- inc. performance
                             //In the end add to channelMapForTask
                             String channelId = finalPayloads.get(key).getAsString();
                             if (this.mapOfChannel.containsKey(channelId)) {
                                 channelMapForTask.put(channelId, this.mapOfChannel.get(channelId));
                             } else if (channels.stream().anyMatch(entry -> entry.channelId().id().equals(channelId))) {
                                 final Channel<?>[] channelToAdd = new Channel<?>[1];
-                                channels.stream().filter(entry -> entry.channelId().id().equals(channelId)).
-                                        findFirst().ifPresent(channel -> channelToAdd[0] = channel);
+                                channels.stream().filter(entry -> entry.channelId().id().equals(channelId))
+                                        .findFirst().ifPresent(channel -> channelToAdd[0] = channel);
 
                                 if (channelToAdd[0] != null) {
                                     this.mapOfChannel.put(channelId, channelToAdd[0]);
@@ -521,8 +540,9 @@ public abstract class AbstractMqttComponent {
      * @param path     Path of the JSON File
      * @throws IOException            Throw if Path is wrong.
      * @throws ConfigurationException if config from Json has an error.
+     * @throws MqttException          if the subscription fails (has usually nothing to do with config but with the broker)
      */
-    public void initJsonFromFile(ArrayList<Channel<?>> channels, String path) throws IOException, ConfigurationException, MqttException {
+    void initJsonFromFile(ArrayList<Channel<?>> channels, String path) throws IOException, ConfigurationException, MqttException {
         this.initJson(channels, new String(Files.readAllBytes(Paths.get(path))));
     }
 
@@ -531,8 +551,8 @@ public abstract class AbstractMqttComponent {
         if (task.getTime() == null) {
             return false;
         }
-        DateTime expiraton = task.getTime().plusSeconds(expirationTime);
-        return now.isAfter(expiraton);
+        DateTime expiration = task.getTime().plusSeconds(expirationTime);
+        return now.isAfter(expiration);
     }
 }
 

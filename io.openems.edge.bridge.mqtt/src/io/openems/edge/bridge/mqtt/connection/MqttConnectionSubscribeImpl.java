@@ -20,9 +20,7 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
     //          ID      Topic
     private Map<String, List<String>> idsAndTopics = new HashMap<>();
 
-    private boolean connectionLost;
     private boolean callBackWasSet;
-    private boolean needsToBeResubscribed;
 
     public MqttConnectionSubscribeImpl() {
         super();
@@ -80,10 +78,11 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
         return this.idsAndTopics.getOrDefault(id, null);
     }
 
-
+    //No Need to override --> Set To Auto Reconnect ; since there is no clean session
+    // --> subscribers don't have to "resubscribe" and callback doesn't need to be set again
     @Override
     public void connectionLost(Throwable throwable) {
-        this.needsToBeResubscribed = true;
+
     }
 
     // REPLACE payload
@@ -96,14 +95,6 @@ public class MqttConnectionSubscribeImpl extends AbstractMqttConnection implemen
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-    }
-
-    public boolean needsToBeResubscribed() {
-        return this.needsToBeResubscribed;
-    }
-
-    public void setNeedsToBeResubscribed(boolean needsToBeResubscribed) {
-        this.needsToBeResubscribed = needsToBeResubscribed;
     }
 
     @Override

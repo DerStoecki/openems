@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Created by MqttBridge. Handles all SubscribeTasks.
+ */
 public class MqttSubscribeManager extends AbstractMqttManager {
 
     private Map<MqttType, MqttConnectionSubscribeImpl> connections = new HashMap<>();
@@ -36,7 +39,6 @@ public class MqttSubscribeManager extends AbstractMqttManager {
 
     @Override
     public void forever() throws MqttException {
-        checkLostConnections();
         super.calculateCurrentTime();
         //Get all tasks and update them.
         super.allTasks.forEach((key, value) -> {
@@ -46,50 +48,13 @@ public class MqttSubscribeManager extends AbstractMqttManager {
                     if (task.isReady(super.getCurrentTime())) {
                         //Response to new message.
                         ((MqttSubscribeTask) task).response(this.connections.get(task.getMqttType()).getPayload(task.getTopic()));
-                        try {
-                            ((MqttSubscribeTask) task).convertTime(super.timeZone);
-                        } catch (ParseException e) {
-                            System.out.println("Error while converting Time at path: " + task.getTopic());
-                        }
+                        ((MqttSubscribeTask) task).convertTime(super.timeZone);
                     }
                 }
             });
         });
     }
 
-    /**
-     * Try to Reconnect to broker if connection is lost.
-     *
-     * @throws MqttException if reconnect fails.
-     */
-    private void checkLostConnections() throws MqttException {
-        MqttException[] exceptions = {null};
-        //Each connection
-        this.connections.forEach((key, value) -> {
-            if (exceptions[0] == null && value.isCleanSession() && value.needsToBeResubscribed()) {
-                //Each of their tasks
-                super.allTasks.forEach((taskKey, taskList) -> {
-                    taskList.forEach(mqttTask -> {
-                        try {
-                            if (exceptions[0] == null) {
-                                this.subscribeToTopic(mqttTask, taskKey);
-                            }
-                        } catch (MqttException e) {
-                            exceptions[0] = e;
-                        }
-                    });
-                });
-                //Set false for resubscribing
-                if (exceptions[0] == null) {
-                    value.setNeedsToBeResubscribed(false);
-                }
-            }
-
-        });
-        if (exceptions[0] != null) {
-            throw exceptions[0];
-        }
-    }
 
     /**
      * Can subscribe to certain topic by params of the task and id.

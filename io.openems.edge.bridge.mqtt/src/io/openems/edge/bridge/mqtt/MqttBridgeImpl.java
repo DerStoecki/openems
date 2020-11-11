@@ -30,8 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The Mqtt Bridge.
  * <p> The MQTT Bridge builds up a Connection with the broker, esp. for last will settings.
- * The User configures Broker settings username and password. as well as last will settings and their timezone.
- * The Bridge creates 2 Manager. The Publish and suscribe manager, those Manager will create each multiple mqtt connections.
+ * The User configures Broker settings username and password. as well as last will settings and their timezone. (Defaults to UTC)
+ * The Bridge creates 2 Manager. The Publish and subscribe manager, those Manager will create each multiple mqtt connections.
  * The Publish manager 3 ; Each for a QoS. and the SubscribeManager n connections depending on the mqttTypes (telemetry/commands/events)
  * </p>
  */
@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component(name = "Bridge.Mqtt",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE
+        property = {EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE}
 )
 public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsComponent, MqttBridge, EventHandler {
 
@@ -150,7 +150,6 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     /**
      * Creates the MQTT Session and connects to broker.
-     * TODO ENCRYPTION TCP socket
      *
      * @param config config of this mqttBridge
      * @throws MqttException if somethings wrong like pw wrong or user etc.
@@ -204,7 +203,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
     }
 
     /**
-     * Add Mqtt Task. Usually called by AbstractMqttComponent.
+     * Adds Mqtt Task to this Bridge. Usually called by AbstractMqttComponent.
      *
      * @param id       usually from MqttComponent / Same as component id
      * @param mqttTask usually created by MqttComponent
@@ -255,9 +254,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             });
             this.subscribeTasks.remove(id);
         }
-        if (this.publishTasks.containsKey(id)) {
-            this.publishTasks.remove(id);
-        }
+        this.publishTasks.remove(id);
     }
 
     @Override
@@ -275,7 +272,13 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
         return this.subscribeManager.getPayloadFromTopic(topic, type);
     }
 
-    //adds the Mqtt Component
+    /**
+     * Adds The MqttComponent to the Bridge. Important for Updating JSON Config and Reacting to Commands and Events
+     *
+     * @param id        id of the MqttComponent usually from config of the Component
+     * @param component the Component itself.
+     * @return true if the MqttComponent was successfully added.
+     */
     @Override
     public boolean addMqttComponent(String id, MqttComponent component) {
         if (this.components.containsKey(id)) {
@@ -288,7 +291,7 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
 
     @Override
     public void removeMqttComponent(String id) {
-        if(this.components.containsKey(id)) {
+        if (this.components.containsKey(id)) {
             this.components.remove(id);
             this.removeMqttTasks(id);
         }
@@ -306,11 +309,12 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
                 if (value.getConfiguration().value().isDefined() && !value.getConfiguration().value().get().equals("")) {
                     try {
                         value.updateJsonConfig();
-                    } catch (MqttException | ConfigurationException | IOException e) {
+                    } catch (MqttException | ConfigurationException e) {
                         log.warn("Couldn't refresh the config of component " + value.id() + " Please check your"
                                 + " configuration or MqttConnection");
                     }
                 }
+                //React to Events and Commands
                 if (value.isConfigured()) {
                     value.reactToEvent();
                     value.reactToCommand();

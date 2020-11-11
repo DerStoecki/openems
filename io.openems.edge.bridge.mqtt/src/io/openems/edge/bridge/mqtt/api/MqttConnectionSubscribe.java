@@ -32,10 +32,11 @@ public interface MqttConnectionSubscribe {
      */
     List<String> getTopic(String id);
 
-
+    /**
+     * Unsubscribe from topic if it was subscribed before.
+     *
+     * @param topic Topic of the subscription
+     * @throws MqttException if a Problem with Mqtt (Broker missing etc) occurs.
+     */
     void unsubscribeFromTopic(String topic) throws MqttException;
-
-    boolean needsToBeResubscribed();
-
-    void setNeedsToBeResubscribed(boolean needsToBeResubscribed);
 }

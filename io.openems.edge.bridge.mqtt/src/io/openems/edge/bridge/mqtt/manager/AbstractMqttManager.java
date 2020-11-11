@@ -24,12 +24,12 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
 
     String mqttBroker;
-    String mqttBrokerUrl;
+    private String mqttBrokerUrl;
     String mqttUsername;
     String mqttPassword;
     String mqttClientId;
     int keepAlive;
-    boolean timeEnabled;
+    private boolean timeEnabled;
     String timeFormat;
     String locale;
     DateTimeZone timeZone;
@@ -41,10 +41,10 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
     //Calculate Random new Time for QoS;
     Random rd = new Random();
 
-    long currentTime;
+    private long currentTime;
 
     //TODO GET EFFECTIVE CYCLE TIME
-    //TODO ATM STANDARD TIME 1000 ms
+    //TODO ATM STANDARD TIME 1000 ms UPDATE Only possible with newer OpenEMS Version (Has not our components --> therefor wait till official pull request)
 
     private long maxTime = 1000;
 
@@ -78,7 +78,6 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         addToFutureAndCurrentToDo(sortTasks());
     }
 
-    //TODO IMPROVE
     private void addToFutureAndCurrentToDo(List<MqttTask> sortedTasks) {
         //Add at the End of Future
         if (sortedTasks != null) {
@@ -101,7 +100,6 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
     }
 
-    //TODO SEE IF SORTED BY PRIORITY
     private List<MqttTask> sortTasks() {
         List<MqttTask> collectionOfAllTasks = new ArrayList<>();
         this.allTasks.forEach((key, value) -> collectionOfAllTasks.addAll(value));
@@ -136,31 +134,12 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         });
     }
 
-    protected int getConnectionLostCounter() {
-        return this.connectionLostCounter;
-    }
 
-    public void tryReconnect(MqttClient connection) throws MqttException {
-        if (connection.isConnected()) {
-            return;
-        } else {
-            try {
-                connection.reconnect();
-            } catch (MqttException e) {
-                if (connectionLostCounter < 10) {
-                    connectionLostCounter++;
-                } else {
-                    throw e;
-                }
-            }
-        }
-    }
-
-    protected void calculateCurrentTime() {
+    void calculateCurrentTime() {
         this.currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
     }
 
-    public long getCurrentTime() {
+    long getCurrentTime() {
         return this.currentTime;
     }
 }

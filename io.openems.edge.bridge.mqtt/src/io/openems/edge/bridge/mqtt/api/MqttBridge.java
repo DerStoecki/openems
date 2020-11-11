@@ -19,7 +19,6 @@ public interface MqttBridge extends OpenemsComponent {
     DateTimeZone getTimeZone();
 
     enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-        //TODO Own Channel With Disconnects etc etc
         SLAVE_COMMUNICATION_FAILED(Doc.of(Level.FAULT) //
                 .debounce(10, Debounce.TRUE_VALUES_IN_A_ROW_TO_SET_TRUE)), //
         CYCLE_TIME_IS_TOO_SHORT(Doc.of(Level.WARNING) //
@@ -64,10 +63,6 @@ public interface MqttBridge extends OpenemsComponent {
 
     List<MqttTask> getSubscribeTasks(String id);
 
-    List<MqttTask> getPublishTasks(String id);
-
-    String getSubscribePayloadFromTopic(String topic, MqttType type);
-
     /**
      * Adds the MqttComponent to the Bridge; Used for Update ; React to Events/ Controls / etc.
      *
@@ -83,6 +78,11 @@ public interface MqttBridge extends OpenemsComponent {
      * @param id id of the Component you want to remove.
      */
     void removeMqttComponent(String id);
+
+    //NOT IN USE RN BUT ARE HERE FOR FUTURE IMPLEMENTATION
+    List<MqttTask> getPublishTasks(String id);
+
+    String getSubscribePayloadFromTopic(String topic, MqttType type);
 }
 
 

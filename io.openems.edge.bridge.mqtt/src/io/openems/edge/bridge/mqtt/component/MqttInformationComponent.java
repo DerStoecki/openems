@@ -14,12 +14,19 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Dictionary;
 
+/**
+ * This is just an Information Component and can be optionally created with default options.
+ * Gives an Overview of available Config settings
+ * e.g. MqttCommandTypes, EventTypes, PayloadStyles etc.
+ */
 @Designate(ocd = ConfigMqttInformationComponent.class, factory = true)
 @Component(name = "Component.Mqtt.Information",
         immediate = true,
         configurationPolicy = ConfigurationPolicy.REQUIRE
 )
+
 public class MqttInformationComponent extends AbstractOpenemsComponent implements OpenemsComponent {
+
 
     @Reference
     ConfigurationAdmin ca;

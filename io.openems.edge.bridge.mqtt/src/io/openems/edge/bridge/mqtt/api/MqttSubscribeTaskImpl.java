@@ -11,15 +11,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-
+/**
+ * The Concrete Implementation of the AbstractMqttTask. The SubscribeTaskImpl handles the
+ */
 public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubscribeTask {
 
     private int messageId;
-    //original nameIDs and their position
-    private List<String> nameIds;
-    //original channelId position
-    private List<String> channelIds;
-    //time as String, usually from payload
     private String time;
     //converted time
     private DateTime timeDate;
@@ -34,10 +31,7 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
         super(topic, type, retainFlag, useTime, qos, priority, channelMapForTask, payloadForTask, timeToWait,
                 payloadStyle, id, mqttId);
         if (type.equals(MqttType.TELEMETRY)) {
-            this.nameIds = new ArrayList<>();
 
-            //ChannelID --> Used to identify value the pub tasks get / value to put for sub task
-            this.channelIds = new ArrayList<>();
             this.nameIdAndChannelIdMap = new HashMap<>();
             //Important for Telemetry --> Mapping
 
@@ -51,6 +45,11 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
         Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper("NOTDEFINED", "NOTDEFINED")));
     }
 
+    /**
+     * Called by MqttSubscribeManager. Response to Payload.
+     *
+     * @param payload the Payload for the concrete MqttTask.
+     */
     @Override
     public void response(String payload) {
         super.payloadToOrFromBroker = payload;
@@ -78,7 +77,7 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
      * It either writes directly in the channel and sets something (e.g. subscribe to telemetry)
      * or
      * MqttType --> Each MqttComponent got a channel for corresponding MqttType and therefore each component can react to
-     * entrys of such channel.
+     * entries of such channel.
      * </p>
      * <p>
      * standard Response works as follows:
@@ -120,7 +119,7 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
     }
 
     private void standardEventResponse(JsonObject tokens) {
-        System.out.println("Events are not supported by Subscribers!");
+        System.out.println("Events are not supported by Subscribers yet!");
     }
 
     private void standardCommandResponse(JsonObject tokens) {
@@ -146,6 +145,11 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
         });
     }
 
+    /**
+     * Standard Telemetry Response. Map the Data from the Broker to the OpenEMS channel.
+     *
+     * @param tokens response as a Json obj.
+     */
     private void standardTelemetryResponse(JsonObject tokens) {
         //Events and Commands need to be handled by Component itself, only telemetry is allowed to update Channels directly.
         if (!super.getMqttType().equals(MqttType.TELEMETRY)) {
@@ -172,18 +176,34 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
 
     }
 
+    /**
+     * MessageId of the MqttTask. Given by the MqttBridge.
+     *
+     * @param messageId the Number of the message.
+     */
+
     @Override
     public void putMessageId(int messageId) {
         this.messageId = messageId;
     }
 
+    /**
+     * For Future Implementation.
+     *
+     * @return the MessageId
+     */
     @Override
     public int getMessageId() {
         return this.messageId;
     }
 
+    /**
+     * Converts the time. Usually Called by Manager.
+     *
+     * @param timeZone given by Manager-Class.
+     */
     @Override
-    public void convertTime(DateTimeZone timeZone) throws ParseException {
+    public void convertTime(DateTimeZone timeZone) {
         if (this.time != null && !this.time.equals("")) {
             this.timeDate = DateTime.now(timeZone);
         }
@@ -194,16 +214,11 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
         return timeDate;
     }
 
-    @Override
-    public boolean timeAvailable() {
-        return this.timeDate == null;
-    }
-
-    @Override
-    public void setTime(DateTime date) {
-        this.timeDate = date;
-    }
-
+    /**
+     * Get the Commands and their WrapperClass.
+     *
+     * @return The Map.
+     */
     @Override
     public Map<MqttCommandType, CommandWrapper> getCommandValues() {
         return this.commandValueMap;

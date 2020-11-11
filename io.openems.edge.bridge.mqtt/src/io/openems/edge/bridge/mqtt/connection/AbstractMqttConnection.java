@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractMqttConnection implements MqttConnection {
     //MqttClient, Informations by MqttBridge
     MqttClient mqttClient;
-    //TODO RESEARCH MEMORYPERSISTENCE!
-    //TODO INFLIGHT MESSAGES
     private MemoryPersistence persistence;
     private MqttConnectOptions mqttConnectOptions;
     boolean cleanSessionFlag;
@@ -43,7 +41,7 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     /**
      * BasicSetup for a Mqtt connection.
      *
-     * @param mqttBroker   Broker URL with tcp:// or ssl:// prefix
+     * @param mqttBroker   Broker URL with tcp:// | ssl:// | wss:// prefix
      * @param mqttClientId Client ID usually from Bridge.
      * @param username     username usually from Bridge.
      * @param mqttPassword password for broker usually from Bridge.
@@ -85,7 +83,7 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     }
 
     /**
-     * Creates the publish connection. Connection not already occurres bc a last will flag could be set.
+     * Creates the publish connection. Connection not already occurs bc a last will flag could be set.
      *
      * @param broker       URL of Broker usually from manager/bridge.
      * @param clientId     ClientID of the Connection.
@@ -93,7 +91,7 @@ public abstract class AbstractMqttConnection implements MqttConnection {
      * @param username     username.
      * @param password     password.
      * @param cleanSession clean session flag.
-     * @throws MqttException if connection fails or other problems occured with mqtt.
+     * @throws MqttException if connection fails or other problems occurred with mqtt.
      */
     @Override
     public void createMqttPublishSession(String broker, String clientId, int keepAlive, String username,
@@ -162,8 +160,14 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         return this.mqttClient;
     }
 
+    /**
+     * Usually false. Usually you don't want a clean session within an EMS. But for Future implementations:
+     * If CleanSessions should be an option.
+     *
+     * @return aBoolean.
+     */
     @Override
-    public boolean isCleanSession(){
+    public boolean isCleanSession() {
         return this.cleanSessionFlag;
     }
 
