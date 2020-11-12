@@ -114,7 +114,7 @@ public abstract class AbstractMqttConnection implements MqttConnection {
     @Override
     public void addLastWill(String topicLastWill, String payloadLastWill, int qosLastWill, boolean shouldAddTime, boolean retainedFlag, String time) {
         JsonObject lastWillPayload = new JsonObject();
-        ;
+
         if (shouldAddTime) {
             lastWillPayload.addProperty("time", time);
 
@@ -129,11 +129,6 @@ public abstract class AbstractMqttConnection implements MqttConnection {
         mqttConnectOptions.setWill(topicLastWill, payloadLastWill.getBytes(), qosLastWill, retainedFlag);
     }
 
-
-    String addTimeToPayload(String payload, String time) {
-        payload = "\n\t \"time\": " + time + ",\n" + payload;
-        return payload;
-    }
 
     /**
      * Connects with it's mqttConnectOptions to the broker.

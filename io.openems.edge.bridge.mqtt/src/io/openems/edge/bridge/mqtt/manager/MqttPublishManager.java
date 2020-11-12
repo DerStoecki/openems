@@ -22,12 +22,12 @@ public class MqttPublishManager extends AbstractMqttManager {
     //              QOS       MqttConnector
     private Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
 
-    public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker, String mqttBrokerUrl,
+    public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker,
                               String mqttUsername, String mqttPassword, int keepAlive, String mqttClientId,
-                              boolean timeEnabled, DateTimeZone formatter) throws MqttException {
+                              DateTimeZone formatter) throws MqttException {
 
-        super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, publishTasks,
-                timeEnabled, formatter, true);
+        super(mqttBroker, mqttUsername, mqttPassword, mqttClientId, keepAlive, publishTasks,
+                formatter);
         //Create new Connection Publish
         //Magic numbers bc there're only 3 QoS available
         for (int x = 0; x < 3; x++) {
@@ -48,9 +48,12 @@ public class MqttPublishManager extends AbstractMqttManager {
                 if (task instanceof MqttPublishTask) {
                     MqttPublishTask task1 = ((MqttPublishTask) task);
                     String now = DateTime.now(timeZone).toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
+                    //add the Timestamp and update the Payload getting values from Channel(Each Task)
                     task1.updatePayload(now);
                 }
-                //Sends message via mqttconnection start and stop time
+                //Sending the message via Mqttconnection + start and stop time to check how long it does take
+                //In Super class qos 0 will be "ignored" since there's no ack etc
+
                 int qos = task.getQos();
                 long time = System.currentTimeMillis();
                 this.connections.get(qos).sendMessage(task.getTopic(), task.getPayload(), qos, task.getRetainFlag());

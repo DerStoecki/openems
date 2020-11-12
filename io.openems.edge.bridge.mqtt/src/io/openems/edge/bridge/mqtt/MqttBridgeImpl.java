@@ -103,11 +103,11 @@ public class MqttBridgeImpl extends AbstractOpenemsComponent implements OpenemsC
             throw new OpenemsException(e.getMessage());
         }
 
-        publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, config.keepAlive(), this.mqttClientId, config.timeStampEnabled(), timeZone);
+        publishManager = new MqttPublishManager(publishTasks, this.mqttBroker, this.mqttUsername,
+                this.mqttPassword, config.keepAlive(), this.mqttClientId, timeZone);
         //ClientId --> + CLIENT_SUB_0
-        subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttBrokerUrl, this.mqttUsername,
-                this.mqttPassword, this.mqttClientId, config.keepAlive(), config.timeStampEnabled(), timeZone);
+        subscribeManager = new MqttSubscribeManager(subscribeTasks, this.mqttBroker, this.mqttUsername,
+                this.mqttPassword, this.mqttClientId, config.keepAlive(), timeZone);
 
         publishManager.activate(super.id() + "_publish");
         subscribeManager.activate(super.id() + "_subscribe");

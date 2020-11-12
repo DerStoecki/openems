@@ -21,12 +21,11 @@ public class MqttSubscribeManager extends AbstractMqttManager {
     private Map<MqttType, MqttConnectionSubscribeImpl> connections = new HashMap<>();
 
 
-    public MqttSubscribeManager(Map<String, List<MqttTask>> subscribeTasks, String mqttBroker, String mqttBrokerUrl,
+    public MqttSubscribeManager(Map<String, List<MqttTask>> subscribeTasks, String mqttBroker,
                                 String mqttUsername, String mqttPassword, String mqttClientId, int keepAlive,
-                                boolean timeEnabled, DateTimeZone timeZone) throws MqttException {
+                                 DateTimeZone timeZone) throws MqttException {
 
-        super(mqttBroker, mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId, keepAlive, subscribeTasks,
-                timeEnabled, timeZone, false);
+        super(mqttBroker, mqttUsername, mqttPassword, mqttClientId, keepAlive, subscribeTasks, timeZone);
         MqttType[] types = MqttType.values();
         //Create MqttConnections for each mqttType
         for (int x = 0; x < types.length; x++) {

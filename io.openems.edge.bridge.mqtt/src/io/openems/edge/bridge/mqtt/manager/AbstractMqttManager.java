@@ -1,45 +1,37 @@
 package io.openems.edge.bridge.mqtt.manager;
 
-import com.google.common.base.Stopwatch;
-import io.openems.common.worker.AbstractCycleWorker;
-import io.openems.edge.bridge.mqtt.api.MqttTask;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.joda.time.DateTimeZone;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import io.openems.common.worker.AbstractCycleWorker;
+import io.openems.edge.bridge.mqtt.api.MqttTask;
+import org.joda.time.DateTimeZone;
+
 
 abstract class AbstractMqttManager extends AbstractCycleWorker {
     //STRING = ID OF COMPONENT
     Map<String, List<MqttTask>> allTasks; //with ID
     List<MqttTask> toDoFuture = new ArrayList<>();
     List<MqttTask> currentToDo = new ArrayList<>();
-    final Stopwatch stopwatch = Stopwatch.createUnstarted();
-
-    private int connectionLostCounter = 0;
-
 
     String mqttBroker;
-    private String mqttBrokerUrl;
     String mqttUsername;
     String mqttPassword;
     String mqttClientId;
     int keepAlive;
-    private boolean timeEnabled;
-    String timeFormat;
-    String locale;
     DateTimeZone timeZone;
     int maxListLength = 30;
     //Counter for Qos --> e.g. QoS 0 has counter 10 --> FOR LIST FILL
     Map<Integer, AtomicInteger> counterForQos = new HashMap<>();
     //Time for QoS in mS
     Map<Integer, List<Long>> timeForQos;
-    //Calculate Random new Time for QoS;
-    Random rd = new Random();
 
     private long currentTime;
 
@@ -50,18 +42,16 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
 
     private List<Long> averageTime = new ArrayList<>();
 
-    AbstractMqttManager(String mqttBroker, String mqttBrokerUrl, String mqttUsername, String mqttPassword,
+    AbstractMqttManager(String mqttBroker, String mqttUsername, String mqttPassword,
                         String mqttClientId, int keepAlive, Map<String, List<MqttTask>> allTasks,
-                        boolean timeEnabled, DateTimeZone timeZone, boolean useAverageTime) {
+                        DateTimeZone timeZone) {
 
         this.mqttBroker = mqttBroker;
-        this.mqttBrokerUrl = mqttBrokerUrl;
         this.mqttUsername = mqttUsername;
         this.mqttPassword = mqttPassword;
         this.mqttClientId = mqttClientId;
         this.keepAlive = keepAlive;
         this.allTasks = allTasks;
-        this.timeEnabled = timeEnabled;
         this.timeForQos = new HashMap<>();
         for (int x = 0; x < 3; x++) {
             this.timeForQos.put(x, new ArrayList<>());
@@ -78,27 +68,44 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         addToFutureAndCurrentToDo(sortTasks());
     }
 
+    /**
+     * Future Task List Publish Manager gets the CURRENT To do, while here's the list for future Tasks created.
+     * <p>
+     * Add all Sorted Tasks to the Future List.
+     * While The Future Task List has an entry --> Get the first entry of FutureTasks and check if their QoS avg. Time is greater than the time left
+     * If yes --> Don't add it and break the loop
+     * otherwise add task to current To do and Remove from Future Task.
+     * Repeat till there's no time left.
+     *</p>
+     * @param sortedTasks sorted Tasks by QoS 0 and the Priority (Bc QoS 0 will always be published) sorted Tasks are from method sortTasks()
+     */
     private void addToFutureAndCurrentToDo(List<MqttTask> sortedTasks) {
         //Add at the End of Future
         if (sortedTasks != null) {
             this.toDoFuture.addAll(sortedTasks);
         }
 
-        boolean timeAvailable = true;
         long timeLeft = maxTime;
-        while (timeAvailable && (toDoFuture.size() > 0)) {
+        while ((toDoFuture.size() > 0)) {
             MqttTask task = toDoFuture.get(0);
             timeLeft = timeLeft - averageTime.get(task.getQos());
             if (timeLeft < 0) {
-                timeAvailable = false;
                 break;
             }
             currentToDo.add(task);
             toDoFuture.remove(0);
         }
-
-
     }
+
+    /**
+     * Sort The all Tasks this class has.
+     * First get all QoS 0 Tasks (and if it's ready --> Cool Down time will be set by user for Each task in the Configuration)
+     * After that all the other Tasks will be handled --> get all remaining "ready" tasks (depending on cool down time)
+     * Sort them afterwards with the Priority (Configuration for each Task done by User)
+     * Return the remaining collection as a List
+     *
+     * @return The sorted List or null of no QoS 1/2 is available.
+     */
 
     private List<MqttTask> sortTasks() {
         List<MqttTask> collectionOfAllTasks = new ArrayList<>();
@@ -107,6 +114,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.getQos() == 0 && mqttTask.isReady(this.currentTime)).forEach(task -> {
             this.currentToDo.add(task);
         });
+        //remove all added Tasks from all tasks that will be filtered now with the Priority
         this.currentToDo.forEach(collectionOfAllTasks::remove);
         if (collectionOfAllTasks.size() > 0) {
             return collectionOfAllTasks.stream().filter(mqttTask -> mqttTask.isReady(this.currentTime)).sorted(Comparator.comparing(MqttTask::getPriority)).collect(Collectors.toList());
@@ -122,6 +130,7 @@ abstract class AbstractMqttManager extends AbstractCycleWorker {
         //for each Time of each QoS --> add and create Average
         AtomicLong time = new AtomicLong(0);
         this.timeForQos.forEach((key, value) -> {
+            //Qos = 0 takes almost no time due to no ACK etc
             if (key == 0) {
                 this.averageTime.add(key, (long) 0);
             } else {
