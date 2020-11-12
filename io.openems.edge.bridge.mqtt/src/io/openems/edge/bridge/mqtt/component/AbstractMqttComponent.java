@@ -163,7 +163,7 @@ public abstract class AbstractMqttComponent {
                 //MqttPriority
                 //Default is low for pub tasks --> no real priority
                 MqttPriority priority = MqttPriority.LOW;
-                if (subTasks) {
+                if (!subTasks) {
                     priority = MqttPriority.valueOf(tokens[1].toUpperCase());
                 }
                 //Topic
