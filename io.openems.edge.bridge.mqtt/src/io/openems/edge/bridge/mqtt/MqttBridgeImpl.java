@@ -1,16 +1,9 @@
 package io.openems.edge.bridge.mqtt;
 
-import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.bridge.mqtt.api.*;
-import io.openems.edge.bridge.mqtt.connection.MqttConnectionPublishImpl;
-import io.openems.edge.bridge.mqtt.manager.MqttPublishManager;
-import io.openems.edge.bridge.mqtt.manager.MqttSubscribeManager;
-import io.openems.edge.common.component.AbstractOpenemsComponent;
-import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.common.event.EdgeEventConstants;
-import org.eclipse.paho.client.mqttv3.*;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
@@ -20,12 +13,29 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
+
+import io.openems.common.exceptions.OpenemsException;
+import io.openems.edge.bridge.mqtt.api.MqttBridge;
+import io.openems.edge.bridge.mqtt.api.MqttTask;
+import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
+import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
+import io.openems.edge.bridge.mqtt.api.MqttComponent;
+import io.openems.edge.bridge.mqtt.api.MqttPriority;
+import io.openems.edge.bridge.mqtt.api.MqttType;
+import io.openems.edge.bridge.mqtt.connection.MqttConnectionPublishImpl;
+import io.openems.edge.bridge.mqtt.manager.MqttPublishManager;
+import io.openems.edge.bridge.mqtt.manager.MqttSubscribeManager;
+import io.openems.edge.common.component.AbstractOpenemsComponent;
+import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.event.EdgeEventConstants;
+import org.eclipse.paho.client.mqttv3.*;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * The Mqtt Bridge.

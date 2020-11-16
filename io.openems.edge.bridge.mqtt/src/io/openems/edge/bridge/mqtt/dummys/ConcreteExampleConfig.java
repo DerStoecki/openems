@@ -3,8 +3,6 @@ package io.openems.edge.bridge.mqtt.dummys;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-import java.util.List;
-
 @ObjectClassDefinition(
         name = "Mqtt Concrete Example Component",
         description = "Mqtt Dummy to test the functionality of AbstrtactMqttComponent and Tasks.")

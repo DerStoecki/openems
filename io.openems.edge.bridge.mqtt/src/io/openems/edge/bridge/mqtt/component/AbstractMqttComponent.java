@@ -3,7 +3,12 @@ package io.openems.edge.bridge.mqtt.component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -11,7 +16,15 @@ import java.util.stream.Collectors;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.openems.edge.bridge.mqtt.api.*;
+import io.openems.edge.bridge.mqtt.api.MqttBridge;
+import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
+import io.openems.edge.bridge.mqtt.api.MqttPublishTaskImpl;
+import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
+import io.openems.edge.bridge.mqtt.api.MqttSubscribeTaskImpl;
+import io.openems.edge.bridge.mqtt.api.MqttType;
+import io.openems.edge.bridge.mqtt.api.MqttPriority;
+import io.openems.edge.bridge.mqtt.api.PayloadStyle;
+
 import io.openems.edge.common.channel.Channel;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.joda.time.DateTime;
@@ -161,7 +174,7 @@ public abstract class AbstractMqttComponent {
                 MqttType type = MqttType.valueOf(tokens[0].toUpperCase());
 
                 //MqttPriority
-                //Default is low for pub tasks --> no real priority
+                //Default is low for sub tasks --> no real priority
                 MqttPriority priority = MqttPriority.LOW;
                 if (!subTasks) {
                     priority = MqttPriority.valueOf(tokens[1].toUpperCase());
@@ -319,9 +332,7 @@ public abstract class AbstractMqttComponent {
     private void updateConfig(Configuration config, String configTarget, List<Channel<?>> channels) {
         AtomicInteger counter = new AtomicInteger(0);
         String[] channelIdArray = new String[channels.size()];
-        channels.forEach(channel -> {
-            channelIdArray[counter.getAndIncrement()] = channel.channelId().id();
-        });
+        channels.forEach(channel -> channelIdArray[counter.getAndIncrement()] = channel.channelId().id());
 
         try {
             Dictionary<String, Object> properties = config.getProperties();

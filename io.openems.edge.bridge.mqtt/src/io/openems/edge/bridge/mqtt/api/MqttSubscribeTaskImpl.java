@@ -1,15 +1,20 @@
 package io.openems.edge.bridge.mqtt.api;
 
-import com.google.gson.Gson;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
 import io.openems.edge.common.channel.Channel;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.text.ParseException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+
 
 /**
  * The Concrete Implementation of the AbstractMqttTask. The SubscribeTaskImpl handles the

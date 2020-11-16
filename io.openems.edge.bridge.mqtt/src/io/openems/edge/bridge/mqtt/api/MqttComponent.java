@@ -1,18 +1,13 @@
 package io.openems.edge.bridge.mqtt.api;
 
 import io.openems.common.channel.AccessMode;
-import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.StringWriteChannel;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.ConfigurationException;
-
-import java.io.IOException;
-import java.util.stream.Stream;
 
 public interface MqttComponent extends OpenemsComponent {
 

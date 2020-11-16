@@ -5,10 +5,8 @@ import io.openems.edge.bridge.mqtt.api.MqttTask;
 import io.openems.edge.bridge.mqtt.api.MqttType;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionSubscribeImpl;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

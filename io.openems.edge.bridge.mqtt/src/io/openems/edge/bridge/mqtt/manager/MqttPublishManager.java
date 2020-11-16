@@ -4,7 +4,6 @@ import io.openems.edge.bridge.mqtt.api.MqttPublishTask;
 import io.openems.edge.bridge.mqtt.connection.MqttConnectionPublishImpl;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,7 @@ import org.joda.time.DateTimeZone;
  */
 public class MqttPublishManager extends AbstractMqttManager {
     //              QOS       MqttConnector
-    private Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
+    private final Map<Integer, MqttConnectionPublishImpl> connections = new HashMap<>();
 
     public MqttPublishManager(Map<String, List<MqttTask>> publishTasks, String mqttBroker,
                               String mqttUsername, String mqttPassword, int keepAlive, String mqttClientId,
@@ -39,7 +38,7 @@ public class MqttPublishManager extends AbstractMqttManager {
     }
 
     @Override
-    public void forever() throws InterruptedException, MqttException {
+    public void forever() {
         super.foreverAbstract();
         //Handle Tasks given by Parent
         super.currentToDo.forEach(task -> {

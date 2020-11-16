@@ -1,6 +1,8 @@
 package io.openems.edge.bridge.mqtt.component;
 
-import io.openems.edge.bridge.mqtt.api.*;
+import io.openems.edge.bridge.mqtt.api.MqttBridge;
+import io.openems.edge.bridge.mqtt.api.MqttSubscribeTask;
+import io.openems.edge.bridge.mqtt.api.CommandWrapper;
 import io.openems.edge.common.channel.Channel;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.osgi.service.cm.Configuration;
@@ -44,7 +46,7 @@ public class MqttConfigurationComponentImpl implements MqttConfigurationComponen
         if (key.isInfinite()) {
             return false;
         }
-        if (key.getValue().equals(null) || key.getValue() == null) {
+        if (key.getValue().equals("NOTDEFINED") || key.getValue() == null) {
             return true;
         }
         return this.mqttComponent.expired(task, Integer.parseInt(key.getExpiration()));
