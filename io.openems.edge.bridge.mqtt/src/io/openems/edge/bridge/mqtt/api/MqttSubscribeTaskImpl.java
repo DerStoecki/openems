@@ -15,7 +15,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 
-
 /**
  * The Concrete Implementation of the AbstractMqttTask. The SubscribeTaskImpl handles the
  */
@@ -160,25 +159,23 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
         if (!super.getMqttType().equals(MqttType.TELEMETRY)) {
             return;
         }
-        // ID of Name in mqtt  , VALUE for the channel
-        Map<String, String> idChannelValueMap = new HashMap<>();
-        tokens.keySet().stream().filter(entry -> !entry.equals("metrics") && !entry.equals("time") && !entry.equals("ID"))
+        tokens.keySet().stream().filter(entry -> !entry.toUpperCase().equals("METRICS") && !entry.toUpperCase().contains("TIME") && !entry.toUpperCase().equals("ID"))
                 .collect(Collectors.toList()).forEach(key -> {
-            idChannelValueMap.put(key, tokens.get(key).toString());
-        });
-        //Set the Value of this channel for each entry
-        idChannelValueMap.forEach((key, value) -> {
-            //index of nameIds is the same as for ChannelIds.
-            if (this.nameIdAndChannelIdMap.containsKey(key) && !value.equals("Not Defined Yet")) {
-                String channelId = this.nameIdAndChannelIdMap.get(key);
-                Channel<?> channel = super.channels.get(channelId);
-                channel.setNextValue(value);
-                System.out.println("Update Channel: " + channelId + " with Value: " + value);
+            String value = tokens.get(key).getAsString();
+            //Check own ChannelId Map if key is in Map and Value
+            if (this.nameIdAndChannelIdMap.containsKey(key)) {
+                if (!value.equals("Not Defined Yet")) {
+                    String channelId = this.nameIdAndChannelIdMap.get(key);
+                    Channel<?> channel = super.channels.get(channelId);
+                    channel.setNextValue(value);
+                    System.out.println("Update Channel: " + channelId + " with Value: " + value);
+                } else {
+                    System.out.println("Value not defined yet for: " + this.nameIdAndChannelIdMap.get(key));
+                }
             } else {
-                System.out.println("Value not defined yet for: " + this.nameIdAndChannelIdMap.get(key));
+                System.out.println("Key: " + key + " was not configured!");
             }
         });
-
     }
 
     /**
