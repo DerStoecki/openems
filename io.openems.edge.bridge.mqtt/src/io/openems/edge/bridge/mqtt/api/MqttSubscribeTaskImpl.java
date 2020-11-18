@@ -134,12 +134,12 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
 
 
         tokens.keySet().forEach(entry -> {
-            if (entry.contains("method")) {
+            if (entry.toLowerCase().contains("method")) {
                 commandTypeString.set(tokens.get(entry).getAsString().toUpperCase());
 
-            } else if (entry.contains("value")) {
+            } else if (entry.toLowerCase().contains("value")) {
                 this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setValue(tokens.get(entry).getAsString());
-            } else if (entry.toUpperCase().contains("EXPIRES") || entry.toUpperCase().contains("EXPIRATION")) {
+            } else if (entry.toLowerCase().contains("expires") || entry.toLowerCase().contains("expiration")) {
                 if (tokens.get(entry).isJsonNull()) {
                     this.commandValueMap.get(MqttCommandType.valueOf(commandTypeString.get())).setExpiration("Infinite");
                 } else {
