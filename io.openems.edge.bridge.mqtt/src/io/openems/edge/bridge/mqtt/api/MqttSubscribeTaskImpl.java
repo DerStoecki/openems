@@ -45,8 +45,10 @@ public class MqttSubscribeTaskImpl extends AbstractMqttTask implements MqttSubsc
                 this.nameIdAndChannelIdMap.put(tokens[x], tokens[x + 1]);
             }
         }
-        commandValueMap = new HashMap<>();
-        Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper("NOTDEFINED", "NOTDEFINED")));
+        else if(type.equals(MqttType.COMMAND)) {
+            commandValueMap = new HashMap<>();
+            Arrays.stream(MqttCommandType.values()).forEach(consumer -> this.commandValueMap.put(consumer, new CommandWrapper("NOTDEFINED", "NOTDEFINED")));
+        }
     }
 
     /**
