@@ -66,12 +66,14 @@ public class MqttPublishTaskImpl extends AbstractMqttTask implements MqttPublish
                 String value = "Not Defined Yet";
                 //get the ChannelId --> since it's ordered forEach --> get correct Channel .
                 Channel<?> channel = super.channels.get(configuredPayload[jsonCounter.incrementAndGet()]);
-                if (channel.value().isDefined() && !channel.channelDoc().getType().equals(OpenemsType.STRING)) {
+                if (channel.value().isDefined()) {
                     JsonElement channelObj = new Gson().toJsonTree(channel.value().get());
                     payload.add(consumer, channelObj);
                 } else {
                     payload.addProperty(consumer, value);
                 }
+            } else {
+                jsonCounter.getAndIncrement();
             }
         });
 

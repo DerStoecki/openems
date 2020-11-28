@@ -152,6 +152,7 @@ public abstract class AbstractMqttComponent {
      * @param configList usually from Parent config.
      * @param subTasks   is the current configList a sub/Pub task.
      * @param channelIds all the Channels that'll be configured
+     * @param payloadStyle the Payloadstyle the component uses.
      * @throws ConfigurationException will be thrown if config is wrong/has an Error.
      */
 
